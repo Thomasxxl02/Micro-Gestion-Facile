@@ -30,11 +30,12 @@ export default defineConfig({
         '**/*.config.*',
         '**/mockData',
       ],
-      // Seuils de couverture (optionnel mais recommandé)
-      lines: 70,
-      functions: 70,
-      branches: 60,
-      statements: 70,
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 60,
+        statements: 70,
+      },
     },
     
     // Setupfiles pour la configuration globale
