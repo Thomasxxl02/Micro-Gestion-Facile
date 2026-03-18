@@ -1,0 +1,31 @@
+# Code Owners for Micro-Gestion-Facile
+# This file determines who is responsible for different parts of the codebase
+
+# Default owner for everything
+* @Thomasxxl02
+
+# React Components
+/components/** @Thomasxxl02
+
+# Services and integrations
+/services/** @Thomasxxl02
+/firebase.ts @Thomasxxl02
+
+# Security-related files
+.env.example @Thomasxxl02
+SECURITY.md @Thomasxxl02
+SECURITY_*.md @Thomasxxl02
+
+# Configuration files
+tsconfig.json @Thomasxxl02
+vite.config.ts @Thomasxxl02
+tailwind.config.ts @Thomasxxl02
+package.json @Thomasxxl02
+
+# CI/CD and DevOps
+.github/** @Thomasxxl02
+.gitignore @Thomasxxl02
+
+# Documentation
+*.md @Thomasxxl02
+/docs/** @Thomasxxl02
