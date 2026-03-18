@@ -8,8 +8,6 @@ updates:
       day: "monday"
       time: "03:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "Thomasxxl02"
     assignees:
       - "Thomasxxl02"
     labels:
@@ -32,8 +30,6 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "03:30"
-    reviewers:
-      - "Thomasxxl02"
     labels:
       - "ci/cd"
       - "github-actions"
