@@ -95,37 +95,44 @@ jobs:
 
       - name: 🔎 Check for exposed secrets
         run: |
-          # Don't exit on error, we'll handle errors explicitly
-          set +e
-          
           echo "🔍 Checking for exposed secrets..."
+          PASS=true
           
-          # Check if .env files are in tracked files (should be empty)
-          ENV_FILES=$(git ls-files --others --cached --exclude-standard | grep -E "\.env($|\.)" | grep -v ".env.example" || true)
-          if [ -n "$ENV_FILES" ]; then
-            echo "❌ ERROR: .env files found in tracked files:"
-            echo "$ENV_FILES"
-            exit 1
+          # Get all tracked files
+          TRACKED_FILES=$(git ls-files)
+          
+          # Check if any .env files are tracked (except .env.example)
+          if echo "$TRACKED_FILES" | grep -E "\.env($|\.)" | grep -v ".env.example"; then
+            echo "❌ ERROR: .env files are tracked in git"
+            PASS=false
           fi
           
-          # Check if Firebase config is tracked (should NOT be)
-          FIREBASE_FILES=$(git ls-files --others --cached --exclude-standard | grep "firebase-applet-config.json" || true)
-          if [ -n "$FIREBASE_FILES" ]; then
-            echo "❌ ERROR: Firebase config file is tracked (should be in .gitignore):"
-            echo "$FIREBASE_FILES"
-            exit 1
+          # Check if Firebase config file is tracked
+          if echo "$TRACKED_FILES" | grep -q "firebase-applet-config.json"; then
+            echo "❌ ERROR: firebase-applet-config.json is tracked - should be in .gitignore"
+            PASS=false
           fi
           
-          # Verify .gitignore has the rules
-          if ! grep -q "firebase-applet-config.json" .gitignore 2>/dev/null; then
-            echo "❌ ERROR: firebase-applet-config.json not in .gitignore"
-            exit 1
+          # Verify .gitignore exists and has required rules
+          if [ ! -f ".gitignore" ]; then
+            echo "❌ ERROR: .gitignore file not found"
+            PASS=false
+          else
+            if ! grep -q "firebase-applet-config.json" .gitignore; then
+              echo "❌ ERROR: firebase-applet-config.json not in .gitignore"
+              PASS=false
+            fi
+            if ! grep -q "\.env" .gitignore; then
+              echo "❌ ERROR: .env patterns not in .gitignore"
+              PASS=false
+            fi
           fi
           
-          if ! grep -q "\.env" .gitignore 2>/dev/null; then
-            echo "❌ ERROR: .env* patterns not in .gitignore"
+          # Final result
+          if [ "$PASS" = true ]; then
+            echo "✅ All secret checks passed"
+            exit 0
+          else
+            echo "❌ Secret checks failed"
             exit 1
           fi
-          
-          echo "✅ All secret checks passed - no sensitive files are tracked"
-          exit 0
