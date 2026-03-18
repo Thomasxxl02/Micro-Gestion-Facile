@@ -10,12 +10,14 @@
 ## ✅ Actions Complétées (Code Sécurisé)
 
 ### 1. Sécurisation Immédiate du Code
+
 - ✅ Suppression de la clé compromise du `firebase-applet-config.json`
 - ✅ Remplacement par un placeholder `REPLACE_WITH_NEW_API_KEY`
 - ✅ Mise à jour de `firebase.ts` pour supporter les variables d'environnement
 - ✅ Mise à jour de `vite.config.ts` pour charger les secrets depuis `.env.local`
 
 ### 2. Infrastructure Sécurisée Créée
+
 ```
 ✅ .gitignore               → Ajout de .env.local et firebase-applet-config.json
 ✅ .env.local              → Fichier local NON commité (créé avec placeholders)
@@ -28,11 +30,13 @@ ement
 ```
 
 ### 3. Documentation Créée
+
 - ✅ `SECURITY_REMEDIATION.md` - Guide complet des étapes de remédiation
 - ✅ `SECURITY_CLEANUP.md` - Guide du nettoyage de l'historique Git
 - ✅ `SECURITY_STATUS.md` - Ce résumé (en temps réel)
 
 ### 4. Compilations Réussies
+
 - ✅ TypeScript Lint: OK (`npm run lint`)
 - ✅ Production Build: OK (`npm run build`)
 - ✅ Dev Server: OK (`npm run dev` démarre sans erreurs)
@@ -43,16 +47,15 @@ ement
 ## 🔴 Actions Requises (À FAIRE IMMÉDIATEMENT PAR L'UTILISATEUR)
 
 ### Phase 1: Révocation (CRITIQUE - < 1 heure)
+
 - [ ] **Révoquer la clé API Google**
   - Accéder à: https://console.cloud.google.com
   - Projet: `gen-lang-client-0231981865`
   - APIs & Services → Credentials
   - Supprimer: `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
-  
 - [ ] **Générer une nouvelle clé API**
   - Dans Google Cloud Console
   - Ajouter les restrictions API (Firestore, Storage, etc.)
-  
 - [ ] **Configurer .env.local**
   ```bash
   cp .env.example .env.local
@@ -60,10 +63,10 @@ ement
   ```
 
 ### Phase 2: Vérification Sécurité (< 24 heures)
+
 - [ ] Vérifier les logs d'accès Firebase
   - https://console.firebase.google.com → Project Settings → Usage
   - Détecter tout accès non autorisé
-  
 - [ ] Nettoyer l'historique Git
   ```bash
   # Option recommandée: BFG
@@ -72,6 +75,7 @@ ement
   ```
 
 ### Phase 3: Déploiement (cette semaine)
+
 - [ ] Déployer la version sécurisée
 - [ ] Documenter le changement pour l'équipe
 - [ ] Implémenter les hooks git-secrets
@@ -81,19 +85,20 @@ ement
 
 ## 📊 État des Fichiers
 
-| Fichier | Avant | Après | Notes |
-|---------|-------|-------|-------|
-| `firebase-applet-config.json` | 🔴 Secret exposé | 🟡 Placeholder | À remplacer avec nouvelle clé |
-| `.gitignore` | ❌ Pas ignoré | ✅ Ignoré | Empêche futurs commits |
-| `.env.local` | ❌ N'existe pas | ✅ Créé | À configurer avec nouvelle clé |
-| `firebase.ts` | 🔴 Hardcodé | ✅ Env vars | Supporte configuration sécurisée |
-| `vite.config.ts` | ⚠️ Limité | ✅ Complet | Charge tous les secrets |
+| Fichier                       | Avant            | Après          | Notes                            |
+| ----------------------------- | ---------------- | -------------- | -------------------------------- |
+| `firebase-applet-config.json` | 🔴 Secret exposé | 🟡 Placeholder | À remplacer avec nouvelle clé    |
+| `.gitignore`                  | ❌ Pas ignoré    | ✅ Ignoré      | Empêche futurs commits           |
+| `.env.local`                  | ❌ N'existe pas  | ✅ Créé        | À configurer avec nouvelle clé   |
+| `firebase.ts`                 | 🔴 Hardcodé      | ✅ Env vars    | Supporte configuration sécurisée |
+| `vite.config.ts`              | ⚠️ Limité        | ✅ Complet     | Charge tous les secrets          |
 
 ---
 
 ## 🔐 Architecture de Sécurité
 
 ### Avant (❌ COMPROMIS)
+
 ```
 firebase-applet-config.json (commité dans Git)
 ├── apiKey: AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4
@@ -106,6 +111,7 @@ firebase-applet-config.json (commité dans Git)
 ```
 
 ### Après (✅ SÉCURISÉ)
+
 ```
 .env.local (LOCAL ONLY, jamais commité)
 ├── VITE_FIREBASE_API_KEY=<nouvelle_clé>
@@ -139,6 +145,7 @@ firebase-applet-config.json (commité dans Git)
 ## 🚀 Prochaines Étapes
 
 ### Court Terme (< 24h)
+
 ```bash
 # 1. Configurer la nouvelle clé
 cp .env.example .env.local
@@ -153,6 +160,7 @@ git diff --cached | grep -E "AIza|secret|token"
 ```
 
 ### Moyen Terme (cette semaine)
+
 ```bash
 # 1. Nettoyer l'historique
 npm install -g bfg
@@ -166,6 +174,7 @@ npx husky install
 ```
 
 ### Long Terme (standard)
+
 - Implémenter GitHub Actions pour scanner les secrets
 - Mettre en place un vault ou secret manager pour la production
 - Documenter la gestion des secrets dans CONTRIBUTING.md
@@ -175,25 +184,25 @@ npx husky install
 
 ## 📞 Support & Ressources
 
-| Topic | Lien |
-|-------|------|
-| **Google Cloud Keys** | https://cloud.google.com/docs/authentication/api-keys |
-| **Firebase Security** | https://firebase.google.com/docs/rules |
-| **GitHub Secrets** | https://docs.github.com/en/code-security/secret-scanning |
-| **BFG Cleaner** | https://rtyley.github.io/bfg-repo-cleaner/ |
-| **git-secrets** | https://github.com/awslabs/git-secrets |
+| Topic                 | Lien                                                     |
+| --------------------- | -------------------------------------------------------- |
+| **Google Cloud Keys** | https://cloud.google.com/docs/authentication/api-keys    |
+| **Firebase Security** | https://firebase.google.com/docs/rules                   |
+| **GitHub Secrets**    | https://docs.github.com/en/code-security/secret-scanning |
+| **BFG Cleaner**       | https://rtyley.github.io/bfg-repo-cleaner/               |
+| **git-secrets**       | https://github.com/awslabs/git-secrets                   |
 
 ---
 
 ## 📈 Metriques
 
-| Métrique | Valeur | État |
-|----------|--------|------|
-| Dépendances | 238 packages | ✅ OK |
-| TypeScript Errors | 0 | ✅ OK |
-| Build Success | 1 (production) | ✅ OK |
-| Dev Server | ✅ Démarre | ✅ OK |
-| Secrets en code | 0 | ✅ OK |
+| Métrique            | Valeur         | État          |
+| ------------------- | -------------- | ------------- |
+| Dépendances         | 238 packages   | ✅ OK         |
+| TypeScript Errors   | 0              | ✅ OK         |
+| Build Success       | 1 (production) | ✅ OK         |
+| Dev Server          | ✅ Démarre     | ✅ OK         |
+| Secrets en code     | 0              | ✅ OK         |
 | Secrets en histoire | 1 (à nettoyer) | ⏳ EN ATTENTE |
 
 ---

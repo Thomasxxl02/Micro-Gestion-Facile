@@ -1,7 +1,7 @@
 coverage:
   precision: 2
   round: down
-  range: "70..100"
+  range: '70..100'
   status:
     project:
       default:
@@ -13,7 +13,7 @@ coverage:
         threshold: 5%
 
 comment:
-  layout: "reach,diff,flags,tree"
+  layout: 'reach,diff,flags,tree'
   require_changes: false
   require_base: false
   require_head: true
@@ -22,11 +22,11 @@ fixes:
   - "C:\\Users\\Thomas\\Micro-Gestion-Facile"
 
 ignore:
-  - "**/*.d.ts"
-  - "**/*.config.ts"
-  - "**/dist"
-  - "**/node_modules"
-  - "**/mockData"
+  - '**/*.d.ts'
+  - '**/*.config.ts'
+  - '**/dist'
+  - '**/node_modules'
+  - '**/mockData'
 
 codecov:
   require_ci_to_pass: true

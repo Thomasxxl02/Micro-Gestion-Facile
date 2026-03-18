@@ -13,13 +13,16 @@
 Une clé API Google a été **divulguée publiquement** dans le fichier `firebase-applet-config.json` qui a été commité dans le dépôt public GitHub.
 
 ### Action Immédiate Prise ✅
+
 Le code a été sécurisé:
+
 - La clé a été remplacée par un placeholder
 - Support des variables d'environnement implémenté
 - Secrets ajoutés au `.gitignore`
 - Tous les tests réussis (TypeScript, Build, Dev Server)
 
 ### Action Manquante ⏳
+
 **Vous devez révoque la clé sur Google Cloud** - C'est la partie CRITIQUE que vous devez faire.
 
 ---
@@ -27,6 +30,7 @@ Le code a été sécurisé:
 ## 📋 Prochaines Étapes (30 minutes)
 
 ### Step 1: Révoquer la Clé Compromise (15 min)
+
 1. Allez sur: https://console.cloud.google.com
 2. Projet: `gen-lang-client-0231981865`
 3. Menu: APIs & Services → Credentials
@@ -34,17 +38,20 @@ Le code a été sécurisé:
 5. Cliquez: **Delete**
 
 ### Step 2: Générer Nouvelle Clé (10 min)
+
 1. Dans Google Cloud Console
 2. **+ Create Credentials** → **API Key**
 3. Restriction: Browser (HTTP/HTTPS)
 4. Copiez la nouvelle clé
 
 ### Step 3: Configurer Localement (5 min)
+
 1. Ouvrez: `.env.local` (déjà créé)
 2. Remplacez: `VITE_FIREBASE_API_KEY=`
 3. Ajoutez: Votre nouvelle clé
 
 ### Step 4: Tester (5 min)
+
 ```bash
 npm run dev
 # Doit démarrer sans erreurs
@@ -54,22 +61,23 @@ npm run dev
 
 ## 📚 Documentation
 
-| Document | Pour Quoi? |
-|----------|-----------|
-| **[DASHBOARD.txt](DASHBOARD.txt)** | Vue d'ensemble rapide (5 min) |
-| **[TODO_SECURITY.md](TODO_SECURITY.md)** | Checklist d'actions (read now) |
-| **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** | Guide rapide (10 min) |
-| **[SECURITY_REMEDIATION.md](SECURITY_REMEDIATION.md)** | Guide complet détaillé |
-| **[SECURITY_CLEANUP.md](SECURITY_CLEANUP.md)** | Nettoyage historique Git |
-| **[SECURITY_STATUS.md](SECURITY_STATUS.md)** | État actuel et checklist |
-| **[.env.example](.env.example)** | Template de configuration |
-| **[CHANGELOG_SECURITY.md](CHANGELOG_SECURITY.md)** | Détail des changements code |
+| Document                                               | Pour Quoi?                     |
+| ------------------------------------------------------ | ------------------------------ |
+| **[DASHBOARD.txt](DASHBOARD.txt)**                     | Vue d'ensemble rapide (5 min)  |
+| **[TODO_SECURITY.md](TODO_SECURITY.md)**               | Checklist d'actions (read now) |
+| **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** | Guide rapide (10 min)          |
+| **[SECURITY_REMEDIATION.md](SECURITY_REMEDIATION.md)** | Guide complet détaillé         |
+| **[SECURITY_CLEANUP.md](SECURITY_CLEANUP.md)**         | Nettoyage historique Git       |
+| **[SECURITY_STATUS.md](SECURITY_STATUS.md)**           | État actuel et checklist       |
+| **[.env.example](.env.example)**                       | Template de configuration      |
+| **[CHANGELOG_SECURITY.md](CHANGELOG_SECURITY.md)**     | Détail des changements code    |
 
 ---
 
 ## ✅ Ce Qui a Été Fait
 
 ### Sécurisation du Code (100%)
+
 ```
 ✅ Clé compromise remplacée
 ✅ Variables d'environnement implémentées
@@ -84,6 +92,7 @@ npm run dev
 ```
 
 ### Documentation (100%)
+
 ```
 ✅ Guide complet écrit
 ✅ Checklist créée
@@ -96,6 +105,7 @@ npm run dev
 ## ⏳ Ce Qu'il Reste À Faire
 
 ### IMMÉDIAT (< 1 heure)
+
 ```
 [ ] Clé Google revoquée
 [ ] Nouvelle clé générée
@@ -105,6 +115,7 @@ npm run dev
 ```
 
 ### AUJOURD'HUI (< 2 heures)
+
 ```
 [ ] Logs Firebase vérifiés
 [ ] Historique Git nettoyé (BFG)
@@ -112,6 +123,7 @@ npm run dev
 ```
 
 ### CETTE SEMAINE
+
 ```
 [ ] Équipe notifiée
 [ ] git-secrets implémenté
@@ -123,6 +135,7 @@ npm run dev
 ## 🚀 Commencer Maintenant
 
 ### Option 1: Guide Rapide (Recommandé)
+
 ```bash
 # 1. Lisez ce fichier (2 min)
 # 2. Ouvrez TODO_SECURITY.md (5 min)
@@ -131,6 +144,7 @@ npm run dev
 ```
 
 ### Option 2: Guide Détaillé
+
 ```bash
 # 1. Ouvrez SECURITY_QUICK_START.md
 # 2. Suivez chaque étape
@@ -138,6 +152,7 @@ npm run dev
 ```
 
 ### Option 3: Checklist
+
 ```bash
 # 1. Ouvrez DASHBOARD.txt
 # 2. Suivez la checklist point par point
@@ -148,6 +163,7 @@ npm run dev
 ## 🔐 Structure de Sécurité
 
 ### Avant (COMPROMIS):
+
 ```json
 firebase-applet-config.json (dans Git)
 {
@@ -156,6 +172,7 @@ firebase-applet-config.json (dans Git)
 ```
 
 ### Après (SÉCURISÉ):
+
 ```
 .env.local (LOCAL ONLY)
 ├── VITE_FIREBASE_API_KEY=<secret>      // 🟢 PRIVÉ
@@ -171,15 +188,15 @@ firebase-applet-config.json (ignoré)
 
 ## 📊 Metrics
 
-| Metrique | Avant | Après |
-|----------|-------|-------|
-| Secrets en clair | ❌ 1 | ✅ 0 |
-| Env vars support | ❌ Non | ✅ Oui |
-| .gitignore | ❌ Non | ✅ Oui |
-| TypeScript errors | ⚠️ À vérifier | ✅ 0 |
-| Build réussit | ⚠️ À vérifier | ✅ Oui |
-| Dev server | ⚠️ À vérifier | ✅ Oui |
-| Documentation | ❌ Non | ✅ 8 files |
+| Metrique          | Avant         | Après      |
+| ----------------- | ------------- | ---------- |
+| Secrets en clair  | ❌ 1          | ✅ 0       |
+| Env vars support  | ❌ Non        | ✅ Oui     |
+| .gitignore        | ❌ Non        | ✅ Oui     |
+| TypeScript errors | ⚠️ À vérifier | ✅ 0       |
+| Build réussit     | ⚠️ À vérifier | ✅ Oui     |
+| Dev server        | ⚠️ À vérifier | ✅ Oui     |
+| Documentation     | ❌ Non        | ✅ 8 files |
 
 ---
 
@@ -240,28 +257,30 @@ A: À notifier après synchronisation (voir docs)
 
 ## 📞 Besoin d'Aide?
 
-| Situation | Consultez |
-|-----------|-----------|
-| "C'est quoi l'étape suivante?" | TODO_SECURITY.md |
-| "Je veux tout les détails" | SECURITY_REMEDIATION.md |
-| "Status actuel?" | SECURITY_STATUS.md ou DASHBOARD.txt |
-| "Comment configurer?" | .env.example |
-| "Erreur TypeScript?" | Lisez CHANGELOG_SECURITY.md |
+| Situation                      | Consultez                           |
+| ------------------------------ | ----------------------------------- |
+| "C'est quoi l'étape suivante?" | TODO_SECURITY.md                    |
+| "Je veux tout les détails"     | SECURITY_REMEDIATION.md             |
+| "Status actuel?"               | SECURITY_STATUS.md ou DASHBOARD.txt |
+| "Comment configurer?"          | .env.example                        |
+| "Erreur TypeScript?"           | Lisez CHANGELOG_SECURITY.md         |
 
 ---
 
 ## ✨ Résumé
 
 **VOUS ÊTES PROTÉGÉ** 🛡️
+
 ```
 Code:           ✅ Sécurisé
-App:            ✅ Fonctionnelle  
+App:            ✅ Fonctionnelle
 Tests:          ✅ Réussis
 Config:         ✅ Prête (manque juste clé)
 Documentation:  ✅ Complète
 ```
 
 **VOUS DEVEZ FAIRE** 🔑
+
 ```
 Révoquer clé Google:  ⏳ 15 min
 Générer nouvelle:     ⏳ 10 min
@@ -286,7 +305,7 @@ TOTAL:                ⏳ ~30 min
 
 **✅ CODE SÉCURISÉ** → Attendez juste votre action de révocation  
 **📋 DOCUMENTATION** → Tout est prêt, lisez TODO_SECURITY.md  
-**⏰ DÉLAI RECOMMANDÉ** → Avant fin de journée  
+**⏰ DÉLAI RECOMMANDÉ** → Avant fin de journée
 
 ---
 

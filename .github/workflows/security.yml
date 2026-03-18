@@ -39,7 +39,7 @@ jobs:
       - name: 🔍 Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{ matrix.language }}"
+          category: '/language:${{ matrix.language }}'
 
   dependency-check:
     name: Dependency Security Check
@@ -74,7 +74,7 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for TruffleHog
+          fetch-depth: 0 # Fetch full history for TruffleHog
 
       - name: 👀 Scan for secrets
         uses: trufflesecurity/trufflehog@main
@@ -83,7 +83,7 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified --json
-        continue-on-error: true  # Don't fail on base=head errors
+        continue-on-error: true # Don't fail on base=head errors
 
   env-check:
     name: Environment Variables Check
@@ -97,22 +97,22 @@ jobs:
         run: |
           echo "🔍 Checking for exposed secrets..."
           PASS=true
-          
+
           # Get all tracked files
           TRACKED_FILES=$(git ls-files)
-          
+
           # Check if any .env files are tracked (except .env.example)
           if echo "$TRACKED_FILES" | grep -E "\.env($|\.)" | grep -v ".env.example"; then
             echo "❌ ERROR: .env files are tracked in git"
             PASS=false
           fi
-          
+
           # Check if Firebase config file is tracked
           if echo "$TRACKED_FILES" | grep -q "firebase-applet-config.json"; then
             echo "❌ ERROR: firebase-applet-config.json is tracked - should be in .gitignore"
             PASS=false
           fi
-          
+
           # Verify .gitignore exists and has required rules
           if [ ! -f ".gitignore" ]; then
             echo "❌ ERROR: .gitignore file not found"
@@ -127,7 +127,7 @@ jobs:
               PASS=false
             fi
           fi
-          
+
           # Final result
           if [ "$PASS" = true ]; then
             echo "✅ All secret checks passed"

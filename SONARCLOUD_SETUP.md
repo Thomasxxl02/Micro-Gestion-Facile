@@ -9,12 +9,14 @@ SonarCloud analyse votre code TypeScript/JavaScript pour identifier les bugs, vu
 ## ✅ Configuration Complétée
 
 ### 1. Fichier de configuration créé
+
 - **`sonar-project.properties`** : Configuration SonarCloud pour le projet
-  - Exclusions des dossiers inutiles (node_modules, dist, __tests__)
+  - Exclusions des dossiers inutiles (node_modules, dist, **tests**)
   - Rapport de couverture LCOV
   - Support TypeScript avec tsconfig.json
 
 ### 2. Workflow GitHub Actions mis à jour
+
 - **`.github/workflows/build.yml`** : Ajout de l'étape de scan SonarCloud
   - Lance après les tests et génération de la couverture
   - Utilise l'action officielle `SonarSource/sonarcloud-github-action`
@@ -67,22 +69,26 @@ SonarCloud analyse votre code TypeScript/JavaScript pour identifier les bugs, vu
 Une fois configuré, vous obtiendrez :
 
 ### 🐛 Détection des bugs
+
 - Erreurs de logique courantes
 - Variables non initialisées
 - Chaînes de comparaison dangereuses
 
 ### 🔒 Sécurité
+
 - Vulnérabilités OWASP
 - Injections XSS potentielles
 - Gestion inadéquate des secrets
 
 ### 📈 Qualité du code
+
 - Couverture de tests
 - Complexité cyclomatique
 - Duplication de code
 - Code mort
 
 ### 🎯 Code smells
+
 - Fonctions trop complexes
 - Paramètres non utilisés
 - Imports inutiles
@@ -93,12 +99,14 @@ Une fois configuré, vous obtiendrez :
 ## 🔧 Intégration avec les Power Requests
 
 ### Sur chaque PR
+
 - SonarCloud ajoute un commentaire avec l'analyse
 - Affiche les nouveaux problèmes introduits
 - Compare avec la branche principale
 - Donne une note de qualité
 
 ### Exemple de rapport
+
 ```
 Quality Gate: PASSED / FAILED
 Lines of Code: 2,345

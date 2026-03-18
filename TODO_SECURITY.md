@@ -3,6 +3,7 @@
 ## IMMÉDIAT (< 30 min)
 
 ### ✅ ÉTAPE 1: Révoquer la Clé Google
+
 ```
 1. Ouvrez: https://console.cloud.google.com
 2. Projet: gen-lang-client-0231981865
@@ -33,7 +34,7 @@ Fichier: .env.local (déjà créé)
 - OU: Double-cliquez .env.local
 
 Remplacez:
-VITE_FIREBASE_API_KEY=AIzaSy... 
+VITE_FIREBASE_API_KEY=AIzaSy...
 →
 VITE_FIREBASE_API_KEY=(votre_nouvelle_clé)
 ```
@@ -85,13 +86,14 @@ git push --force --tags
 ## CETTE SEMAINE
 
 - [ ] Ajouter git-secrets
+
   ```bash
   npm install --save-dev husky
   npx husky install
   ```
 
 - [ ] Documenter pour l'équipe
-  - Envoyer les docs SECURITY_*.md
+  - Envoyer les docs SECURITY\_\*.md
   - Expliquer les changements
 
 - [ ] Déployer version sécurisée
@@ -104,7 +106,7 @@ git push --force --tags
 
 ## 📝 Fichiers À Consulter
 
-1. **Maintenant**: 
+1. **Maintenant**:
    - ➡️ SECURITY_QUICK_START.md (ce fichier)
    - ➡️ SECURITY_REMEDIATION.md (étapes détaillées)
 
@@ -119,16 +121,16 @@ git push --force --tags
 
 ## 🎯 PRIORITÉS
 
-| Priorité | Action | Temps | Quand |
-|----------|--------|-------|-------|
-| 🔴 CRITIQUE | Révoquer clé | 15 min | MAINTENANT |
-| 🔴 CRITIQUE | Générer nouvelle clé | 10 min | MAINTENANT |
-| 🔴 CRITIQUE | Configurer .env.local | 5 min | MAINTENANT |
-| 🟡 URGENT | Tester (npm run dev) | 5 min | MAINTENANT |
-| 🟡 URGENT | Vérifier logs Firebase | 30 min | Aujourd'hui |
-| 🟡 URGENT | Nettoyer Git | 60 min | Aujourd'hui |
-| 🟢 IMPORTANT | Git-secrets setup | 15 min | Cette semaine |
-| 🟢 IMPORTANT | Documentatioon | 30 min | Cette semaine |
+| Priorité     | Action                 | Temps  | Quand         |
+| ------------ | ---------------------- | ------ | ------------- |
+| 🔴 CRITIQUE  | Révoquer clé           | 15 min | MAINTENANT    |
+| 🔴 CRITIQUE  | Générer nouvelle clé   | 10 min | MAINTENANT    |
+| 🔴 CRITIQUE  | Configurer .env.local  | 5 min  | MAINTENANT    |
+| 🟡 URGENT    | Tester (npm run dev)   | 5 min  | MAINTENANT    |
+| 🟡 URGENT    | Vérifier logs Firebase | 30 min | Aujourd'hui   |
+| 🟡 URGENT    | Nettoyer Git           | 60 min | Aujourd'hui   |
+| 🟢 IMPORTANT | Git-secrets setup      | 15 min | Cette semaine |
+| 🟢 IMPORTANT | Documentatioon         | 30 min | Cette semaine |
 
 ---
 
@@ -152,18 +154,21 @@ git push --force --tags
 ## 💡 TIPS
 
 **Besoin de copier la clé rapidement?**
+
 ```
 .env.local ligne 3: VITE_FIREBASE_API_KEY=
 Copiez juste la partie: AIzaSy...
 ```
 
 **Testez votre config?**
+
 ```bash
 npm run dev
 # Regardez la sortie - si voir aucun erreur → OK
 ```
 
 **Pas sûr du format .env.local?**
+
 ```
 Ouvrez .env.example ou
 Consultez .env.local
@@ -174,17 +179,21 @@ Consultez .env.local
 ## 🆘 PROBLÈMES?
 
 **Erreur: "Firebase config not found"**
+
 - Solution: `.env.local` pas configuré
-  
+
 **Erreur: "API key invalid"**
+
 - Vérifiez: La clé dans .env.local est complète?
 - Essayez: Copier-coller à nouveau
 
 **Git refuse de push?**
+
 - Vérifiez: Avez-vous les permissions?
 - Essayez: `git push --force --all`
 
 **Questions?**
+
 - Lisez: SECURITY_REMEDIATION.md
 - Cherchez: Votre erreur dans ce fichier
 

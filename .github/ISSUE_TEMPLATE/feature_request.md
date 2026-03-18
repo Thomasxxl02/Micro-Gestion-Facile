@@ -1,9 +1,9 @@
 ---
 name: ✨ Proposer une amélioration
 about: Proposer une nouvelle idée pour améliorer Micro-Gestion-Facile
-title: "[FEATURE] - Courte description"
+title: '[FEATURE] - Courte description'
 labels: enhancement
-assignees: ""
+assignees: ''
 ---
 
 ## 📝 Description de l'amélioration
@@ -15,6 +15,7 @@ Décrivez clairement votre idée. C'est quoi l'objectif ? Comment améliore-t-el
 Décrivez le cas d'usage spécifique au micro-entrepreneur qui bénéficierait de cette feature.
 
 Exemple :
+
 - En tant que [rôle], je veux [fonctionnalité] pour [raison]
 
 ## 🔧 Solution proposée
@@ -32,6 +33,7 @@ Ajoutez d'autres contextes pertinents, des captures d'écran si applicable.
 ## 🔗 Tickets liés
 
 Liez à d'autres issues ou discussions pertinentes :
+
 - Closes: #XXX
 - Related to: #YYY
 
