@@ -95,18 +95,20 @@ jobs:
 
       - name: 🔎 Check for exposed secrets
         run: |
-          set -e  # Exit on any error
+          # Initialize error counter
+          ERRORS=0
           
           # Check if .env files are committed (only in current repo, not all history)
+          # We expect this to find nothing (exit code 1 means not found, which is good)
           if git ls-files | grep -E "\.env($|\.)" | grep -v ".env.example"; then
             echo "⚠️ Warning: .env files detected in tracked files"
-            exit 1
+            ERRORS=$((ERRORS+1))
           fi
           
           # Check Firebase config in current tracked files
-          if git ls-files | grep "firebase-applet-config.json"; then
+          if git ls-files | grep -q "firebase-applet-config.json"; then
             echo "❌ Firebase config IS committed (should be ignored)"
-            exit 1
+            ERRORS=$((ERRORS+1))
           fi
           
           # Verify .gitignore contains the rules
@@ -114,8 +116,14 @@ jobs:
             echo "✅ Secrets properly ignored in .gitignore"
           else
             echo "❌ Missing ignore rules in .gitignore"
-            exit 1
+            ERRORS=$((ERRORS+1))
           fi
           
-          echo "✅ Environment variables check passed"
-          exit 0
+          # Exit with appropriate code
+          if [ $ERRORS -eq 0 ]; then
+            echo "✅ Environment variables check passed"
+            exit 0
+          else
+            echo "❌ Found $ERRORS security issue(s)"
+            exit 1
+          fi
