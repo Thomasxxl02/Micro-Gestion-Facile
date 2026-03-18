@@ -14,6 +14,7 @@ Courte description de ce que cette PR accomplit.
 ## 📝 Changements
 
 Listez les changements principaux :
+
 - Change 1
 - Change 2
 - Change 3
@@ -57,9 +58,11 @@ npm run dev
 Pour les changements UX :
 
 ### Avant
+
 [Screenshot du comportement précédent]
 
-### Après  
+### Après
+
 [Screenshot du nouveau comportement]
 
 ## 🚀 Performance

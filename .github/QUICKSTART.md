@@ -5,6 +5,7 @@
 ## 1️⃣ Préparation (2 min)
 
 ### Fork et cloner
+
 ```bash
 # 1. Allez sur GitHub et cliquez "Fork"
 # 2. Cloner votre fork
@@ -16,6 +17,7 @@ git remote add upstream https://github.com/Thomasxxl02/Micro-Gestion-Facile.git
 ```
 
 ### Configuration locale
+
 ```bash
 # Installer les dépendances
 npm install
@@ -30,6 +32,7 @@ cp .env.example .env.local
 ## 2️⃣ Développement (2 min)
 
 ### Démarrer le serveur
+
 ```bash
 npm run dev
 ```
@@ -37,6 +40,7 @@ npm run dev
 Accédez à [http://localhost:5173](http://localhost:5173)
 
 ### Vérifier votre code
+
 ```bash
 npm run lint  # Vérifier les types TypeScript
 ```
@@ -46,6 +50,7 @@ npm run lint  # Vérifier les types TypeScript
 ## 3️⃣ Soumettre une contribution (1 min)
 
 ### Créer une branche
+
 ```bash
 # Mettez à jour depuis upstream
 git fetch upstream
@@ -57,6 +62,7 @@ git checkout -b feature/ma-feature
 ```
 
 ### Faire vos changements
+
 ```bash
 # Développez votre feature
 # Testez bien !
@@ -68,6 +74,7 @@ git commit -m "feat: description courte"
 ```
 
 ### Pusher et créer une PR
+
 ```bash
 # Pusher votre branche
 git push origin feature/ma-feature
@@ -89,6 +96,7 @@ git push origin feature/ma-feature
 ## ❓ Questions fréquentes
 
 ### Q: Comment testé mon code ?
+
 ```bash
 npm run dev          # Lancer en local
 npm run lint         # Vérifier les types
@@ -96,11 +104,13 @@ npm run build        # Tester le build
 ```
 
 ### Q: Le port 5173 est occupé ?
+
 ```bash
 npm run dev -- --port 3000
 ```
 
 ### Q: Comment créer une branche depuis une issue ?
+
 ```bash
 # Utilisez le GitHub CLI si disponible
 gh issue develop 123
@@ -110,6 +120,7 @@ git checkout -b feature/issue-123-description
 ```
 
 ### Q: Mes changements ne fonctionnent pas ?
+
 ```bash
 # Vérifier les logs
 npm run dev       # Les erreurs s'affichent ici
@@ -123,6 +134,7 @@ npm install
 ```
 
 ### Q: Comment mettre à jour depuis upstream ?
+
 ```bash
 git fetch upstream
 git rebase upstream/main
@@ -138,7 +150,7 @@ git push origin feature/ma-feature --force-with-lease
 ✅ Tester avant de soumettre une PR  
 ✅ Lire CONTRIBUTING.md avant le premier commit  
 ✅ Respecter le style de code du projet (TypeScript strict)  
-✅ Ne jamais commiter .env.local  
+✅ Ne jamais commiter .env.local
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 name: 🐛 Signaler un bug
 about: Créer un rapport pour nous aider à corriger les bugs
-title: "[BUG] - Courte description"
+title: '[BUG] - Courte description'
 labels: bug
-assignees: ""
+assignees: ''
 ---
 
 ## 📋 Description du bug

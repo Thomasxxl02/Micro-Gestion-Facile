@@ -9,6 +9,7 @@ La clé API Google `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4` a été divulguée 
 ## ✅ Actions Complétées
 
 ### 1. Sécurisation du dépôt
+
 - [x] Ajout de `.env.local` et `firebase-applet-config.json` au `.gitignore`
 - [x] Création de fichiers exemple (`.env.example`, `firebase-applet-config.example.json`)
 - [x] Suppression de la clé compromise du fichier de configuration
@@ -16,6 +17,7 @@ La clé API Google `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4` a été divulguée 
 - [x] Remplacement de la clé compromise par un placeholder
 
 ### 2. Structure Sécurisée Mise en Place
+
 ```
 .env.local                          # ← À ne JAMAIS commiter
 .env.example                        # ← Template pour les contributeurs
@@ -28,6 +30,7 @@ firebase-applet-config.example.json # ← Template obligatoire
 ## 🔴 Actions Requises (À FAIRE IMMÉDIATEMENT PAR L'UTILISATEUR)
 
 ### Étape 1: Révoquer la Clé Compromise
+
 1. Accédez à [Google Cloud Console](https://console.cloud.google.com)
 2. Sélectionnez le projet: **gen-lang-client-0231981865**
 3. Allez dans: **APIs & Services** → **Credentials**
@@ -36,6 +39,7 @@ firebase-applet-config.example.json # ← Template obligatoire
 6. ⚠️ Confirmez la suppression
 
 ### Étape 2: Générer une Nouvelle Clé API
+
 1. Dans Google Cloud Console, cliquez sur **+ Create Credentials**
 2. Choisissez **API Key**
 3. Sélectionnez **Browser (Web browsers)**
@@ -46,6 +50,7 @@ firebase-applet-config.example.json # ← Template obligatoire
    - ✅ Firebase Rules API
 
 ### Étape 3: Mettre à Jour les Secrets Locaux
+
 1. Ouvrez `.env.local`
 2. Remplacez `REPLACE_WITH_YOUR_NEW_API_KEY` par votre nouvelle clé
 3. Sauvegardez le fichier
@@ -59,6 +64,7 @@ VITE_FIREBASE_API_KEY=AIzaSy... (NOUVELLE CLÉ)
 ```
 
 ### Étape 4: Vérifier les Logs de Sécurité
+
 1. Dans [Firebase Console](https://console.firebase.google.com):
    - Allez dans **Project Settings** → **Usage and Billing**
    - Vérifiez les accès et statistiques
@@ -66,7 +72,9 @@ VITE_FIREBASE_API_KEY=AIzaSy... (NOUVELLE CLÉ)
 3. Vérifiez les **Firestore Usage Metrics**
 
 ### Étape 5: Configurer les Restrictions API
+
 Dans Google Cloud Console:
+
 1. **APIs & Services** → votre nouvelle **clé API**
 2. **API Restrictions** → Ajouter uniquement les APIs utilisées:
    - Firestore API
@@ -79,6 +87,7 @@ Dans Google Cloud Console:
 ## 🚀 Configuration pour le Développement
 
 ### Installation Locale
+
 ```bash
 # 1. Copier le fichier exemple
 cp .env.example .env.local
@@ -91,6 +100,7 @@ npm run dev
 ```
 
 ### Variables Disponibles
+
 - `VITE_FIREBASE_PROJECT_ID` - ID du projet Firebase
 - `VITE_FIREBASE_API_KEY` - **Nouvelle clé API**
 - `VITE_FIREBASE_APP_ID` - ID de l'application
@@ -118,6 +128,7 @@ npm run dev
 ## 🛡️ Bonnes Pratiques à Partir de Maintenant
 
 1. **JAMAIS** commiter de fichiers contenant des secrets
+
    ```bash
    # ✅ Toujours ignorer ces fichiers
    .env.local
@@ -127,6 +138,7 @@ npm run dev
    ```
 
 2. **Utiliser des variables d'environnement** pour tous les secrets
+
    ```typescript
    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
    ```
@@ -134,6 +146,7 @@ npm run dev
 3. **Rotationner les clés régulièrement** (mensuellement recommandé)
 
 4. **Auditer les commits** avant de pusher
+
    ```bash
    git diff --cached  # Vérifier les changements
    git log -p        # Vérifier l'historique
@@ -156,6 +169,7 @@ npm run dev
 ---
 
 ⚠️ **Cette alerte ne pourra être fermée que lorsque**:
+
 1. La clé originale aura été revoquée
 2. Une nouvelle clé aura remplacé l'ancienne
 3. Les logs de sécurité auront été vérifiés

@@ -138,6 +138,7 @@ Via **Settings → General → About** :
 ### GitHub Discussions
 
 Organization > Settings → Features :
+
 - ✅ Activer Discussions
 - Créer des catégories :
   - 💡 Ideas
@@ -166,7 +167,7 @@ jobs:
     steps:
       - uses: actions/labeler@v5
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
           configuration-path: '.github/labeler.yml'
 ```
 
@@ -222,6 +223,7 @@ jobs:
 ### GitHub Analytics
 
 Via **Insights** :
+
 - 📊 Traffic
 - 📈 Forks
 - ⭐ Stargazers
@@ -230,6 +232,7 @@ Via **Insights** :
 ### Code Quality
 
 Intégrez (optionnel) :
+
 - 🔍 Codecov pour la couverture de tests
 - 🔗 SonarCloud pour l'analyse
 - 🚀 Snyk pour les vulnérabilités

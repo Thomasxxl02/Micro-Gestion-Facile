@@ -8,6 +8,7 @@
 ## ✅ Travail Complété
 
 ### 1. Sécurisation du Code (100% ✅)
+
 - ✅ Clé API compromise remplacée par un placeholder
 - ✅ Support des variables d'environnement implémenté
 - ✅ Configuration Vite mise à jour pour charger les secrets
@@ -16,6 +17,7 @@
 - ✅ Serveur de développement démarre
 
 ### 2. Fichiers Créés (6 fichiers sécurité)
+
 ```
 ✅ .env.example                    → 602 bytes  (template public)
 ✅ .env.local                      → 632 bytes  (local secret config)
@@ -27,6 +29,7 @@
 ```
 
 ### 3. Fichiers Modifiés (4 fichiers essentiels)
+
 ```
 ✅ .gitignore                      → Secrets ignorés
 ✅ firebase-applet-config.json     → Clé remplacée
@@ -35,6 +38,7 @@
 ```
 
 ### 4. Validations (Tests Réussis)
+
 ```
 ✅ TypeScript Lint       : PASS (0 erreurs)
 ✅ Production Build      : PASS (dist/ créé)
@@ -79,6 +83,7 @@ VITE_FIREBASE_API_KEY=AIzaSy... (NOUVELLE CLÉ)
 ```
 
 Exemple `.env.local` rempli:
+
 ```env
 VITE_FIREBASE_PROJECT_ID=gen-lang-client-0231981865
 VITE_FIREBASE_APP_ID=1:633323055678:web:29863eeb20c8b3201c7f6f
@@ -152,30 +157,33 @@ git push --force --all
 
 ## 📚 Documentation Créée
 
-| Document | Contenu | Consultez Si... |
-|----------|---------|-----------------|
-| **SECURITY_REMEDIATION.md** | Guide complet des 5 étapes | Vous voulez tous les détails |
-| **SECURITY_CLEANUP.md** | Nettoyage de l'historique Git | Vous devez nettoyer le dépôt |
-| **SECURITY_STATUS.md** | Résumé et état actuel | Vous avez besoin d'un aperçu |
-| **CHANGELOG_SECURITY.md** | Détail de chaque changement | Vous voulez voir le code modifié |
-| **.env.example** | Template configuration | Vous ajoutez une nousse variable |
-| **.env.local** | Configuration locale (à remplir) | Vous configurez le développement |
+| Document                    | Contenu                          | Consultez Si...                  |
+| --------------------------- | -------------------------------- | -------------------------------- |
+| **SECURITY_REMEDIATION.md** | Guide complet des 5 étapes       | Vous voulez tous les détails     |
+| **SECURITY_CLEANUP.md**     | Nettoyage de l'historique Git    | Vous devez nettoyer le dépôt     |
+| **SECURITY_STATUS.md**      | Résumé et état actuel            | Vous avez besoin d'un aperçu     |
+| **CHANGELOG_SECURITY.md**   | Détail de chaque changement      | Vous voulez voir le code modifié |
+| **.env.example**            | Template configuration           | Vous ajoutez une nousse variable |
+| **.env.local**              | Configuration locale (à remplir) | Vous configurez le développement |
 
 ---
 
 ## 🚀 Prochaines Étapes (Long Terme)
 
 ### Cette Semaine
+
 - [ ] Déployer la version sécurisée
-- [ ] Notifier l'équipe locale  
+- [ ] Notifier l'équipe locale
 - [ ] Implémenter git-secrets (hooks pré-commit)
 
 ### Ce Mois
+
 - [ ] Ajouter GitHub Actions secret scanner
 - [ ] Documenter les meilleures pratiques
 - [ ] Former l'équipe à la sécurité des secrets
 
 ### Long Terme
+
 - [ ] Mettre en place un vault de secrets (HashiCorp Vault, AWS Secrets Manager, etc.)
 - [ ] Implémenter la rotation automatique des clés
 - [ ] Auditer régulièrement pour les secrets exposés
@@ -184,27 +192,29 @@ git push --force --all
 
 ## ⏱️ Temps Estimé par Étape
 
-| Étape | Temps | Priorité |
-|-------|-------|----------|
-| 1. Révoquer clé | 15 min | 🔴 CRITIQUE |
-| 2. Générer nouvelle clé | 10 min | 🔴 CRITIQUE |
-| 3. Configurer `.env.local` | 5 min | 🔴 CRITIQUE |
-| 4. Tester | 5 min | 🟡 IMPORTANT |
-| 5. Nettoyer historique Git | 60 min | 🟡 IMPORTANT |
-| 6. Vérifier logs | 30 min | 🟢 RECOMMANDÉ |
-| **TOTAL** | **~2.5h** | - |
+| Étape                      | Temps     | Priorité      |
+| -------------------------- | --------- | ------------- |
+| 1. Révoquer clé            | 15 min    | 🔴 CRITIQUE   |
+| 2. Générer nouvelle clé    | 10 min    | 🔴 CRITIQUE   |
+| 3. Configurer `.env.local` | 5 min     | 🔴 CRITIQUE   |
+| 4. Tester                  | 5 min     | 🟡 IMPORTANT  |
+| 5. Nettoyer historique Git | 60 min    | 🟡 IMPORTANT  |
+| 6. Vérifier logs           | 30 min    | 🟢 RECOMMANDÉ |
+| **TOTAL**                  | **~2.5h** | -             |
 
 ---
 
 ## 🔐 Sécurité Maintenant vs Avant
 
 ### Avant (❌ COMPROMISE)
+
 - Secret en clair dans `firebase-applet-config.json`
 - Visible sur GitHub publiquement
 - Stocké dans l'historique Git
 - Une clé unique → trop large
 
 ### Après (✅ SÉCURISÉ)
+
 - Secret dans `.env.local` (local only)
 - Jamais commité dans Git
 - Utilise variables d'environnement
@@ -215,14 +225,14 @@ git push --force --all
 
 ## 📊 Statut Final
 
-| Domaine | Avant | Après |
-|---------|-------|-------|
-| **Code** | 🔴 Compromise | ✅ Sécurisé |
-| **Config** | 🔴 Dur-codée | ✅ Env vars |
-| **Secrets** | 🔴 Publics | ✅ Privés |
-| **TypeScript** | ⚠️ À vérifier | ✅ Valide |
-| **Build** | ⚠️ À vérifier | ✅ Réussit |
-| **Tests** | ⚠️ À vérifier | ✅ Démarre |
+| Domaine            | Avant         | Après         |
+| ------------------ | ------------- | ------------- |
+| **Code**           | 🔴 Compromise | ✅ Sécurisé   |
+| **Config**         | 🔴 Dur-codée  | ✅ Env vars   |
+| **Secrets**        | 🔴 Publics    | ✅ Privés     |
+| **TypeScript**     | ⚠️ À vérifier | ✅ Valide     |
+| **Build**          | ⚠️ À vérifier | ✅ Réussit    |
+| **Tests**          | ⚠️ À vérifier | ✅ Démarre    |
 | **Historique Git** | 🔴 Compromise | ⏳ À nettoyer |
 
 ---
@@ -230,12 +240,14 @@ git push --force --all
 ## 🚨 Alertes GitHub
 
 **Alerte Actuelle**:
+
 - **Type**: Clé API Google divulguée
 - **Secret**: `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
 - **Statut**: 🟡 En cours de remédiation
 - **Action**: Peut être fermée quand la clé est revoquée + historique nettoyé
 
 **Pour Fermer l'Alerte**:
+
 1. Aller sur GitHub → Security → Secret Scanning
 2. Cliquer sur l'alerte
 3. Sélectionner "Mark as revoked"
@@ -245,6 +257,7 @@ git push --force --all
 ## 💡 Conseils Rapides
 
 ### Éviter à l'Avenir
+
 ```bash
 # ❌ À NE JAMAIS FAIRE
 commit firebase-applet-config.json
@@ -272,13 +285,13 @@ npx husky install
 
 ## 📞 Besoin d'Aide?
 
-| Questions | Consultez |
-|-----------|-----------|
-| **"Quels secrets changer?"** | SECURITY_REMEDIATION.md étape 2 |
-| **"Comment nettoyer Git?"** | SECURITY_CLEANUP.md |
-| **"Quel statut actuellement?"** | SECURITY_STATUS.md|
-| **"Quel fichier a changé?"** | CHANGELOG_SECURITY.md |
-| **"Comment configurer?"** | .env.example |
+| Questions                       | Consultez                       |
+| ------------------------------- | ------------------------------- |
+| **"Quels secrets changer?"**    | SECURITY_REMEDIATION.md étape 2 |
+| **"Comment nettoyer Git?"**     | SECURITY_CLEANUP.md             |
+| **"Quel statut actuellement?"** | SECURITY_STATUS.md              |
+| **"Quel fichier a changé?"**    | CHANGELOG_SECURITY.md           |
+| **"Comment configurer?"**       | .env.example                    |
 
 ---
 
@@ -287,6 +300,7 @@ npx husky install
 **L'application est sécurisée au niveau du code.**
 
 Les 5 étapes critiques pour compléter la remédiation:
+
 1. ✅ Code sécurisé (FAIT)
 2. ⏳ Révoquer la clé Google (À FAIRE)
 3. ⏳ Configurer `.env.local` (À FAIRE)

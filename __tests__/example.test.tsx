@@ -16,7 +16,7 @@ describe('Button Component', () => {
   it('devrait afficher le texte du bouton', () => {
     const handleClick = vi.fn();
     render(<Button onClick={handleClick}>Cliquer ici</Button>);
-    
+
     const button = screen.getByRole('button');
     expect(button).toBeTruthy();
     expect(button.textContent).toBe('Cliquer ici');
@@ -26,9 +26,9 @@ describe('Button Component', () => {
     const user = userEvent.setup();
     const handleClick = vi.fn();
     render(<Button onClick={handleClick}>Cliquer</Button>);
-    
+
     await user.click(screen.getByRole('button'));
-    
+
     expect(handleClick).toHaveBeenCalledOnce();
   });
 });

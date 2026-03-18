@@ -8,28 +8,22 @@ export default defineConfig({
   test: {
     // Utiliser le navigateur virtuel jsdom pour simuler le DOM
     environment: 'jsdom',
-    
+
     // Configuration des fichiers de test
     globals: true, // Utiliser les APIs globales (describe, it, expect, etc.)
-    
+
     // Inclure les fichiers de test
     include: ['**/*.{test,spec}.{ts,tsx}'],
-    
+
     // Exclure les dossiers
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-    
+
     // Configuration de la couverture de code
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportOnFailure: true,
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/mockData',
-      ],
+      exclude: ['node_modules/', 'dist/', '**/*.d.ts', '**/*.config.*', '**/mockData'],
       thresholds: {
         lines: 70,
         functions: 70,
@@ -37,7 +31,7 @@ export default defineConfig({
         statements: 70,
       },
     },
-    
+
     // Setupfiles pour la configuration globale
     setupFiles: ['./vitest.setup.ts'],
   },

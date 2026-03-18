@@ -32,29 +32,35 @@ Tout non-respect sera adressé sérieusement.
 ## 🎯 Types de contributions
 
 ### 🐛 Corrections de bugs
+
 - Rapporter et corriger des bugs existants
 - Améliorer la stabilité et la fiabilité
 
 ### ✨ Nouvelles fonctionnalités
+
 - Ajouter de nouvelles capacités
 - Améliorer l'expérience utilisateur
 
 ### 📚 Documentation
+
 - Améliorer les READMEs et guides
 - Ajouter des commentaires de code
 - Créer des tutoriels et exemples
 
 ### 🎨 Amélioration de l'UX/UI
+
 - Refonte de l'interface
 - Amélioration du design responsive
 - Optimisations d'accessibilité
 
 ### 🔧 Refactoring
+
 - Nettoyer et structurer le code
 - Améliorer la performance
 - Augmenter la couverture de tests
 
 ### 🔒 Sécurité
+
 - Améliorer les protections
 - Corriger les vulnérabilités
 - Auditer le code
@@ -64,7 +70,9 @@ Tout non-respect sera adressé sérieusement.
 ## 📝 Avant de commencer
 
 ### 1. Vérifiez les issues existantes
+
 Avant de commencer, consultez :
+
 - [Issues ouvertes](https://github.com/Thomasxxl02/Micro-Gestion-Facile/issues)
 - [Discussions](https://github.com/Thomasxxl02/Micro-Gestion-Facile/discussions)
 
@@ -90,6 +98,7 @@ git checkout -b feature/ma-feature
 ### 3. Préparez votre environnement
 
 Installez les extensions VS Code recommandées :
+
 - ESLint
 - Prettier
 - TypeScript Vue Plugin
@@ -157,6 +166,7 @@ git push origin feature/ma-feature
 ## 💻 Directives de code
 
 ### TypeScript obligatoire
+
 - ✅ Typage strict activé dans `tsconfig.json`
 - ✅ Pas de `any` sauf cas exceptionnels (avec comment)
 - ✅ Interfaces et types bien documentés
@@ -170,7 +180,7 @@ interface User {
 }
 
 // ❌ MAUVAIS
-const user: any = { name: "John" };
+const user: any = { name: 'John' };
 ```
 
 ### Structure de fichiers
@@ -195,7 +205,7 @@ utils/
 // ✅ Utilisez les hooks modernes
 const MyComponent = () => {
   const [state, setState] = React.useState<string>("");
-  
+
   React.useEffect(() => {
     // Effet
   }, [state]);
@@ -214,7 +224,7 @@ try {
   await fetchData();
 } catch (error) {
   if (error instanceof Error) {
-    console.error("Error:", error.message);
+    console.error('Error:', error.message);
   }
 }
 
@@ -227,11 +237,11 @@ try {
 
 ```typescript
 // ✅ BON avec big.js ou decimal.js
-import Decimal from "decimal.js";
-const total = new Decimal("10.50").plus(new Decimal("5.25"));
+import Decimal from 'decimal.js';
+const total = new Decimal('10.50').plus(new Decimal('5.25'));
 
 // ❌ MAUVAIS avec des floats
-const total = 10.50 + 5.25; // Erreurs d'arrondi !
+const total = 10.5 + 5.25; // Erreurs d'arrondi !
 ```
 
 ---
@@ -285,21 +295,25 @@ Fixes #123
 
 ```markdown
 ## 📋 Description
+
 Courte description de la PR
 
 ## 🎯 Type de changement
+
 - [ ] Bug fix
 - [ ] Nouvelle fonctionnalité
 - [ ] Breaking change
 - [ ] Amélioration de documentation
 
 ## ✅ Checklist
+
 - [ ] J'ai testé localement
 - [ ] J'ai ajouté des tests
 - [ ] J'ai mis à jour la doc
 - [ ] Les types TypeScript sont vérifiés
 
 ## 📸 Capture d'écran (Si applicable)
+
 Ajoutez une capture pour l'UX changes
 ```
 
@@ -383,7 +397,7 @@ Félicitations ! Après le merge :
 
 <div align="center">
 
-**Merci de votre contribution !** 
+**Merci de votre contribution !**
 
 Ensemble, nous rendons Micro-Gestion-Facile meilleure ❤️
 
