@@ -95,6 +95,8 @@ jobs:
 
       - name: 🔎 Check for exposed secrets
         run: |
+          set -e  # Exit on any error
+          
           # Check if .env files are committed (only in current repo, not all history)
           if git ls-files | grep -E "\.env($|\.)" | grep -v ".env.example"; then
             echo "⚠️ Warning: .env files detected in tracked files"
@@ -108,9 +110,12 @@ jobs:
           fi
           
           # Verify .gitignore contains the rules
-          if grep -E "firebase-applet-config.json|\.env" .gitignore >/dev/null; then
+          if grep -q -E "firebase-applet-config.json|\.env" .gitignore; then
             echo "✅ Secrets properly ignored in .gitignore"
           else
             echo "❌ Missing ignore rules in .gitignore"
             exit 1
           fi
+          
+          echo "✅ Environment variables check passed"
+          exit 0
