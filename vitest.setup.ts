@@ -1,4 +1,4 @@
-import { expect, afterEach, vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Nettoyer après chaque test
@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 // Mock des APIs navigateur non disponibles dans jsdom
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(globalThis, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
     matches: false,
@@ -22,9 +22,9 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock de crypto si nécessaire
-if (!global.crypto) {
-  global.crypto = {
-    getRandomValues: (arr) => {
+if (!globalThis.crypto) {
+  globalThis.crypto = {
+    getRandomValues: (arr: Uint8Array | Uint32Array) => {
       for (let i = 0; i < arr.length; i++) {
         arr[i] = Math.floor(Math.random() * 256);
       }
