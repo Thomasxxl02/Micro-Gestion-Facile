@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
 import {
   calculateInvoiceTax,
@@ -14,9 +14,6 @@ import {
   SOCIAL_CONTRIBUTION_RATES,
   VAT_RATES,
   MICRO_INCOME_TAX_RATE,
-  type TaxCalculationInput,
-  type InvoiceCalculationResult,
-  type MicroEntrepreneurTaxResult,
 } from '../lib/invoiceCalculations';
 
 /**
