@@ -93,7 +93,7 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔎 Check for exposed secrets
+      - name: 🔎 Check for exposed secrets in version control
         run: |
           echo "🔍 Checking for exposed secrets..."
           PASS=true
@@ -130,9 +130,29 @@ jobs:
 
           # Final result
           if [ "$PASS" = true ]; then
-            echo "✅ All secret checks passed"
+            echo "✅ All secret exposure checks passed"
             exit 0
           else
-            echo "❌ Secret checks failed"
+            echo "❌ Secret exposure checks failed"
             exit 1
           fi
+
+      - name: 📋 Document Required Secrets
+        run: |
+          echo "📋 **Repository Secrets Configuration Guide**" > /tmp/secrets-check.md
+          echo "" >> /tmp/secrets-check.md
+          echo "**Required Firebase Secrets:**" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_PROJECT_ID" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_APP_ID" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_API_KEY" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_AUTH_DOMAIN" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_FIRESTORE_DATABASE_ID" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_STORAGE_BUCKET" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_MESSAGING_SENDER_ID" >> /tmp/secrets-check.md
+          echo "- VITE_FIREBASE_MEASUREMENT_ID" >> /tmp/secrets-check.md
+          echo "" >> /tmp/secrets-check.md
+          echo "**Required API Keys:**" >> /tmp/secrets-check.md
+          echo "- GEMINI_API_KEY" >> /tmp/secrets-check.md
+          echo "" >> /tmp/secrets-check.md
+          echo "**Configure at:** Settings > Secrets and variables > Actions" >> /tmp/secrets-check.md
+          cat /tmp/secrets-check.md
