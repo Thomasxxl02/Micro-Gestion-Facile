@@ -54,7 +54,7 @@ jobs:
           echo "✅ All required secrets are configured"
 
       - name: �📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📦 Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
@@ -98,4 +98,14 @@ jobs:
             echo "Build failed: dist directory not created"
             exit 1
           fi
-          echo "✅ Build successful"
+
+      - name: ✨ Run ESLint & Prettier
+        run: npm run lint --fix
+        continue-on-error: true
+
+      - name: 🚀 Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.run_id }}
+          path: dist/
+          retention-days: 5
