@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Invoice, InvoiceItem, InvoiceStatus, Client, UserProfile, DocumentType, Product } from '../types';
-import { Plus, Trash2, Printer, Wand2, ArrowLeft, FileText, Repeat, FileCheck, ShoppingBag, Receipt, Link as LinkIcon, ArrowRightCircle, Download, Calendar, ChevronDown, ChevronUp, CheckSquare, Square, Eye, ThumbsUp, ThumbsDown, ExternalLink, Bell, Edit3, AlertCircle, Percent, Truck, Coins, Calculator, Package, Copy, Mail, X, Search, Zap, ShieldCheck, Clock } from 'lucide-react';
+import { Plus, Trash2, Wand2, ArrowLeft, FileText, Repeat, FileCheck, ShoppingBag, Receipt, Link as LinkIcon, ArrowRightCircle, Download, Calendar, Search, AlertCircle, CheckSquare, Square, Package, ChevronUp, ChevronDown, X, Eye, Zap, Printer, Mail, Bell, Copy, ThumbsUp, ThumbsDown, ShieldCheck, Calculator, Percent, Truck, Coins, Clock, ExternalLink } from 'lucide-react';
 import { suggestInvoiceDescription, generateInvoiceItemsFromPrompt } from '../services/geminiService';
 
 interface InvoiceManagerProps {
@@ -17,47 +17,42 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
   const [activeTab, setActiveTab] = useState<DocumentType>('invoice');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  
-  // New State for Live Preview in Create Mode
   const [showLivePreview, setShowLivePreview] = useState(false);
 
-  // --- ETATS FILTRES & TRI ---
-  const [filters, setFilters] = useState({
-    dateStart: '',
-    dateEnd: '',
-    status: '',
-    clientId: ''
-  });
-  
-  const [sortConfig, setSortConfig] = useState<{ key: 'number' | 'date' | 'client' | 'total'; direction: 'asc' | 'desc' }>({
-    key: 'date',
-    direction: 'desc'
+  // Consolidated form state
+  const [formState, setFormState] = useState({
+    docData: { items: [], date: new Date().toISOString().split('T')[0], dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], type: 'invoice' as DocumentType, discount: 0, shipping: 0, deposit: 0, taxExempt: userProfile.defaultVatRate === 0, eInvoiceFormat: 'Factur-X', operationCategory: 'SERVICES' },
+    clientId: '',
+    isGeneratingDesc: false,
+    isMagicFillOpen: false,
+    magicFillPrompt: '',
+    isMagicFilling: false,
+    productSearch: '',
+    isProductSearchOpen: false,
   });
 
+  const newDocData = formState.docData;
+  const selectedClientId = formState.clientId;
+  const updateForm = (updates: Partial<typeof formState>) => setFormState(s => ({ ...s, ...updates }));
+
+  // Convenient setters to avoid widespread refactor
+  const setNewDocData = (data: Partial<Invoice> | ((prev: Partial<Invoice>) => Partial<Invoice>)) => {
+    const newData = typeof data === 'function' ? data(formState.docData) : data;
+    updateForm({ docData: newData });
+  };
+  const setSelectedClientId = (id: string) => updateForm({ clientId: id });
+  const setIsGeneratingDesc = (val: boolean) => updateForm({ isGeneratingDesc: val });
+  const setIsMagicFillOpen = (val: boolean) => updateForm({ isMagicFillOpen: val });
+  const setMagicFillPrompt = (val: string) => updateForm({ magicFillPrompt: val });
+  const setIsMagicFilling = (val: boolean) => updateForm({ isMagicFilling: val });
+  const setProductSearch = (val: string) => updateForm({ productSearch: val });
+  const setIsProductSearchOpen = (val: boolean) => updateForm({ isProductSearchOpen: val });
+
+  // Filters & sorting
+  const [filters, setFilters] = useState({ dateStart: '', dateEnd: '', status: '', clientId: '' });
+  const [sortConfig, setSortConfig] = useState<{ key: 'number' | 'date' | 'client' | 'total'; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isCustomStatus, setIsCustomStatus] = useState(false);
-
-  // --- ETAT NOUVEAU DOCUMENT ---
-  const [newDocData, setNewDocData] = useState<Partial<Invoice>>({
-    items: [],
-    date: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    type: 'invoice',
-    linkedDocumentId: undefined,
-    discount: 0,
-    shipping: 0,
-    deposit: 0,
-    taxExempt: userProfile.defaultVatRate === 0,
-    eInvoiceFormat: 'Factur-X',
-    operationCategory: 'SERVICES'
-  });
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
-  const [isMagicFillOpen, setIsMagicFillOpen] = useState(false);
-  const [magicFillPrompt, setMagicFillPrompt] = useState('');
-  const [isMagicFilling, setIsMagicFilling] = useState(false);
-  const [productSearch, setProductSearch] = useState('');
-  const [isProductSearchOpen, setIsProductSearchOpen] = useState(false);
 
   // --- LOGIQUE METIER & CALCULS ---
 
@@ -65,14 +60,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   const formTotals = useMemo(() => {
     const items = newDocData.items || [];
     const isExempt = newDocData.taxExempt;
-    
+
     // Subtotal HT (Hors Taxes)
     const subtotalHT = items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-    
+
     // Remise
     const discountAmount = subtotalHT * ((newDocData.discount || 0) / 100);
     const subtotalAfterDiscount = subtotalHT - discountAmount;
-    
+
     // TVA
     let vatAmount = 0;
     if (!isExempt) {
@@ -82,7 +77,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         const itemVat = (itemTotal - itemDiscount) * ((item.vatRate || userProfile.defaultVatRate || 0) / 100);
         return acc + itemVat;
       }, 0);
-      
+
       // TVA sur les frais de port (au taux par défaut)
       if (newDocData.shipping) {
         vatAmount += newDocData.shipping * ((userProfile.defaultVatRate || 0) / 100);
@@ -148,7 +143,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     const docs = invoices.filter(doc => (doc.type || 'invoice') === activeTab);
     const total = docs.reduce((acc, doc) => acc + doc.total, 0);
     const count = docs.length;
-    
+
     let pending = 0;
     let paid = 0;
     let overdue = 0;
@@ -203,27 +198,17 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   const getNextNumber = (type: DocumentType) => {
     const currentYear = new Date().getFullYear();
-    const docsThisYear = invoices.filter(i => 
-      (i.type || 'invoice') === type && 
+    const docsThisYear = invoices.filter(i =>
+      (i.type || 'invoice') === type &&
       i.date.startsWith(currentYear.toString())
     ).length + 1;
-    
+
     let prefix = 'FACT';
     if (type === 'quote') prefix = 'DEVIS';
     if (type === 'order') prefix = 'COMM';
     if (type === 'credit_note') prefix = 'AVOIR';
 
     return `${prefix}-${currentYear}-${docsThisYear.toString().padStart(3, '0')}`;
-  };
-
-  const getThemeColor = (type: DocumentType) => {
-    switch(type) {
-      case 'invoice': return 'brand';
-      case 'quote': return 'brand';
-      case 'order': return 'brand';
-      case 'credit_note': return 'brand';
-      default: return 'brand';
-    }
   };
 
   const getDocumentLabel = (type: DocumentType) => {
@@ -273,10 +258,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   const handleDuplicate = (invoice: Invoice) => {
     if (!confirm("Dupliquer ce document ?")) return;
-    
+
     // Create new items array with new IDs
     const newItems = invoice.items.map(item => ({ ...item, id: Date.now().toString() + Math.random().toString().slice(2) }));
-    
+
     setNewDocData({
         items: newItems,
         date: new Date().toISOString().split('T')[0],
@@ -299,17 +284,17 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
           alert("Le client n'a pas d'adresse email renseignée.");
           return;
       }
-      
+
       const docLabel = getDocumentLabel(invoice.type);
       const subject = `${docLabel} N° ${invoice.number} - ${userProfile.companyName}`;
       const body = `Bonjour ${client.name},\n\nVeuillez trouver ci-joint le document ${invoice.number} daté du ${new Date(invoice.date).toLocaleDateString()}.\n\nCordialement,\n${userProfile.companyName}`;
-      
-      window.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      
+
+      globalThis.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
       // Update status if it's draft
       if (invoice.status === InvoiceStatus.DRAFT) {
           if (confirm("Marquer le document comme 'Envoyé' ?")) {
-              updateStatus(invoice.id, InvoiceStatus.SENT);
+              updateInvoiceField(invoice.id, 'status', InvoiceStatus.SENT);
           }
       }
   };
@@ -319,7 +304,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     const rows = filteredAndSortedDocuments.map(doc => {
         const clientName = clients.find(c => c.id === doc.clientId)?.name || 'Client Inconnu';
         const formattedDate = new Date(doc.date).toISOString().split('T')[0];
-        
+
         // Recalcul simple pour export si champs pas présents
         const subtotal = doc.items.reduce((s, i) => s + (i.quantity * i.unitPrice), 0);
         const discountVal = subtotal * ((doc.discount || 0) / 100);
@@ -327,7 +312,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         return [
             doc.number,
             formattedDate,
-            `"${clientName.replace(/"/g, '""')}"`,
+            `"${clientName.replaceAll('"', '""')}"`,
             `"${doc.status}"`,
             subtotal.toFixed(2),
             discountVal.toFixed(2),
@@ -348,17 +333,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     link.setAttribute("download", `${filename}_export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-  };
-
-  const getExportLabel = () => {
-      switch(activeTab) {
-          case 'invoice': return 'Export Factures';
-          case 'quote': return 'Export Devis';
-          case 'order': return 'Export Commandes';
-          case 'credit_note': return 'Export Avoirs';
-          default: return 'Export CSV';
-      }
+    link.remove();
   };
 
   // --- FORM ITEM MANIPULATION ---
@@ -367,11 +342,11 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     const items = newDocData.items || [];
     setNewDocData({
       ...newDocData,
-      items: [...items, { 
-        id: Date.now().toString(), 
-        description: '', 
-        quantity: 1, 
-        unitPrice: 0, 
+      items: [...items, {
+        id: Date.now().toString(),
+        description: '',
+        quantity: 1,
+        unitPrice: 0,
         unit: '',
         vatRate: userProfile.defaultVatRate || 0
       }]
@@ -387,14 +362,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         return;
       }
     }
-    
+
     const items = newDocData.items || [];
     setNewDocData({
       ...newDocData,
-      items: [...items, { 
-        id: Date.now().toString(), 
-        description: product.name, 
-        quantity: 1, 
+      items: [...items, {
+        id: Date.now().toString(),
+        description: product.name,
+        quantity: 1,
         unitPrice: product.price,
         unit: product.unit,
         vatRate: userProfile.defaultVatRate || 0
@@ -403,7 +378,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   };
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
-    const items = newDocData.items?.map(item => 
+    const items = newDocData.items?.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     ) || [];
     setNewDocData({ ...newDocData, items });
@@ -425,16 +400,16 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     setIsGeneratingDesc(true);
     const suggestion = await suggestInvoiceDescription(client.name, currentDesc || "Service général");
     setIsGeneratingDesc(false);
-    
+
     updateItem(itemId, 'description', suggestion);
   };
 
   const handleMagicFill = async () => {
-    if (!magicFillPrompt.trim()) return;
+    if (!formState.magicFillPrompt.trim()) return;
     setIsMagicFilling(true);
-    const items = await generateInvoiceItemsFromPrompt(magicFillPrompt);
+    const items = await generateInvoiceItemsFromPrompt(formState.magicFillPrompt);
     setIsMagicFilling(false);
-    
+
     if (items && items.length > 0) {
       const formattedItems = items.map((item: any) => ({
         ...item,
@@ -466,8 +441,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       number: getNextNumber(type),
       clientId: selectedClientId,
       linkedDocumentId: newDocData.linkedDocumentId,
-      date: newDocData.date!,
-      dueDate: newDocData.dueDate!,
+      date: newDocData.date,
+      dueDate: newDocData.dueDate,
       items: newDocData.items as InvoiceItem[],
       status: InvoiceStatus.DRAFT,
       total: formTotals.total, // Total TTC final
@@ -477,9 +452,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       vatAmount: formTotals.vatAmount,
       taxExempt: newDocData.taxExempt,
       notes: newDocData.notes,
-      eInvoiceFormat: newDocData.eInvoiceFormat as any,
+      eInvoiceFormat: newDocData.eInvoiceFormat,
       eInvoiceStatus: InvoiceStatus.DRAFT,
-      operationCategory: newDocData.operationCategory as any
+      operationCategory: newDocData.operationCategory
     };
 
     setInvoices([document, ...invoices]);
@@ -491,7 +466,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       type: activeTab,
       linkedDocumentId: undefined,
-      discount: 0, 
+      discount: 0,
       shipping: 0,
       deposit: 0,
       taxExempt: userProfile.defaultVatRate === 0
@@ -501,48 +476,29 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   // --- TRANSFORMATION LOGIC ---
 
-  const convertQuoteToInvoice = (quote: Invoice) => {
-    if (!confirm("Convertir ce devis en facture ?")) return;
+  // Convert quote/order to invoice
+  const convertToInvoice = (doc: Invoice, isQuote: boolean) => {
+    const msg = isQuote ? "Convertir ce devis en facture ?" : "Facturer cette commande ?";
+    if (!confirm(msg)) return;
 
     let updatedInvoices = invoices;
-    if (quote.status !== InvoiceStatus.ACCEPTED) {
-         updatedInvoices = invoices.map(i => 
-            i.id === quote.id ? { ...i, status: InvoiceStatus.ACCEPTED } : i
-        );
+    if (isQuote && doc.status !== InvoiceStatus.ACCEPTED) {
+      updatedInvoices = invoices.map(i => i.id === doc.id ? { ...i, status: InvoiceStatus.ACCEPTED } : i);
     }
 
     const newInvoice: Invoice = {
-        ...quote,
-        id: Date.now().toString(),
-        type: 'invoice',
-        linkedDocumentId: quote.id,
-        number: getNextNumber('invoice'),
-        date: new Date().toISOString().split('T')[0],
-        status: InvoiceStatus.DRAFT,
-        notes: `Facture suite au devis ${quote.number}`
+      ...doc,
+      id: Date.now().toString(),
+      type: 'invoice',
+      linkedDocumentId: doc.id,
+      number: getNextNumber('invoice'),
+      date: new Date().toISOString().split('T')[0],
+      status: InvoiceStatus.DRAFT,
+      notes: isQuote ? `Facture suite au devis ${doc.number}` : `Facture pour la commande ${doc.number}`
     };
-
     setInvoices([newInvoice, ...updatedInvoices]);
     setActiveTab('invoice');
     setSelectedInvoice(newInvoice);
-  };
-
-  const convertOrderToInvoice = (order: Invoice) => {
-     if (!confirm("Facturer cette commande ?")) return;
-     
-     const newInvoice: Invoice = {
-         ...order,
-         id: Date.now().toString(),
-         type: 'invoice',
-         linkedDocumentId: order.id,
-         number: getNextNumber('invoice'),
-         date: new Date().toISOString().split('T')[0],
-         status: InvoiceStatus.DRAFT,
-         notes: `Facture pour la commande ${order.number}`
-     };
-     setInvoices([newInvoice, ...invoices]);
-     setActiveTab('invoice');
-     setSelectedInvoice(newInvoice);
   };
 
   const createCreditNoteFromInvoice = (invoice: Invoice) => {
@@ -562,34 +518,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     setView('create');
   };
 
-  const updateStatus = (id: string, status: string) => {
-    if (status === 'CUSTOM_INPUT') {
+  // Update invoice field and sync state
+  const updateInvoiceField = (id: string, field: 'status' | 'reminderDate', value: any) => {
+    if (field === 'status' && value === 'CUSTOM_INPUT') {
       setIsCustomStatus(true);
       return;
     }
     const inv = invoices.find(i => i.id === id);
     if (inv) {
-        const updated = { ...inv, status };
-        setInvoices(invoices.map(i => i.id === id ? updated : i));
-        if (onSave) onSave(updated);
-        if (selectedInvoice && selectedInvoice.id === id) {
-            setSelectedInvoice(updated);
-        }
+      const updated = { ...inv, [field]: value };
+      setInvoices(invoices.map(i => i.id === id ? updated : i));
+      onSave?.(updated);
+      if (selectedInvoice?.id === id) setSelectedInvoice(updated);
     }
-    setIsCustomStatus(false);
+    if (field === 'status') setIsCustomStatus(false);
   };
-
-  const updateReminder = (id: string, date: string) => {
-    const inv = invoices.find(i => i.id === id);
-    if (inv) {
-        const updated = { ...inv, reminderDate: date };
-        setInvoices(invoices.map(i => i.id === id ? updated : i));
-        if (onSave) onSave(updated);
-        if (selectedInvoice && selectedInvoice.id === id) {
-            setSelectedInvoice(updated);
-        }
-    }
-  }
 
   const deleteDocument = (id: string) => {
      if(confirm("Supprimer ce document définitivement ?")) {
@@ -601,7 +544,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   const handleTransmitPPF = (invoice: Invoice) => {
     if (!confirm(`Transmettre la facture ${invoice.number} au Portail Public de Facturation (PPF) au format ${invoice.eInvoiceFormat || 'Factur-X'} ?`)) return;
-    
+
     // Simulation de transmission
     setTimeout(() => {
         const updatedInvoice = {
@@ -633,19 +576,15 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       setView('create');
   }
 
-  // --- STYLES HELPER ---
-  const themeColor = getThemeColor(activeTab);
-
   // --- RENDER PAPER COMPONENT ---
   const InvoicePaper = ({ invoice, isPreview }: { invoice: Invoice, isPreview?: boolean }) => {
     const client = clients.find(c => c.id === invoice.clientId);
     const docType = invoice.type || 'invoice';
-    const docTheme = getThemeColor(docType);
     const linkedDoc = invoice.linkedDocumentId ? invoices.find(i => i.id === invoice.linkedDocumentId) : null;
 
     let title = 'FACTURE';
     let icon = <FileText size={24} />;
-    
+
     if (docType === 'quote') { title = 'DEVIS'; icon = <FileCheck size={24} />; }
     if (docType === 'order') { title = 'COMMANDE'; icon = <ShoppingBag size={24} />; }
     if (docType === 'credit_note') { title = 'AVOIR'; icon = <Receipt size={24} />; }
@@ -654,7 +593,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     const subtotalHT = invoice.items.reduce((s, i) => s + (i.quantity * i.unitPrice), 0);
     const discountVal = subtotalHT * ((invoice.discount || 0) / 100);
     const subtotalAfterDiscount = subtotalHT - discountVal;
-    
+
     // VAT Calculation for the paper
     let vatAmount = invoice.vatAmount || 0;
     if (invoice.vatAmount === undefined && !invoice.taxExempt) {
@@ -674,10 +613,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     const balanceDue = totalTTC - (invoice.deposit || 0);
 
     return (
-        <div 
-            className="bg-white p-12 shadow-2xl shadow-brand-200/50 rounded-xl min-h-[1000px] relative mx-auto print:shadow-none print:w-full print:m-0 border border-brand-100" 
+        <div
+            className="bg-white p-12 shadow-2xl shadow-brand-200/50 rounded-xl min-h-250 relative mx-auto print:shadow-none print:w-full print:m-0 border border-brand-100 invoice-a4"
             id="invoice-preview"
-            style={{ maxWidth: '210mm' }}
         >
            {isPreview && (
                <div className="absolute top-0 right-0 left-0 bg-brand-900 text-white text-center py-1 text-[10px] font-bold uppercase tracking-[0.2em] no-print rounded-t-xl">
@@ -687,7 +625,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
            {/* Visual Link Banner */}
            {linkedDoc && (
-             <div 
+             <div
                 className="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-8 flex items-center justify-between cursor-pointer hover:bg-brand-100 transition-all print:hidden no-print"
                 onClick={() => !isPreview && openLinkedDocument(linkedDoc.id)}
              >
@@ -721,8 +659,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             <div className="text-right">
               <h2 className="text-5xl font-bold text-brand-900 mb-2 tracking-tighter font-display">{title}</h2>
               <p className="text-brand-500 font-mono font-bold text-lg tracking-wider">#{invoice.number}</p>
-              
-              <div className="mt-10 text-right bg-brand-50/50 p-6 rounded-3xl border border-brand-100 inline-block min-w-[240px]">
+
+              <div className="mt-10 text-right bg-brand-50/50 p-6 rounded-3xl border border-brand-100 inline-block min-w-60">
                 <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.2em] mb-3">Client</h3>
                 <p className="font-bold text-brand-900 text-lg font-display">{client?.name}</p>
                 {client?.contactName && <p className="text-sm text-brand-600 font-semibold">{client.contactName}</p>}
@@ -801,13 +739,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         </div>
                     )}
                 </div>
-                
+
                 <div className="pt-6">
                     <div className="flex justify-between items-end mb-2">
                          <span className="text-brand-900 font-bold text-xl font-display uppercase tracking-tight">Total TTC</span>
                          <span className="text-brand-900 font-bold text-3xl font-display">{totalTTC.toFixed(2)} €</span>
                     </div>
-                    
+
                     {(invoice.deposit || 0) > 0 && (
                         <div className="bg-brand-50 p-5 rounded-2xl border border-brand-100 mt-6">
                             <div className="flex justify-between text-[10px] font-bold text-brand-500 uppercase tracking-wider mb-2">
@@ -887,7 +825,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       <div className="max-w-6xl mx-auto animate-slide-in pb-20 relative">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => setView('list')} className="p-2.5 hover:bg-brand-200 text-brand-500 rounded-xl transition-all">
+            <button onClick={() => setView('list')} className="p-2.5 hover:bg-brand-200 text-brand-500 rounded-xl transition-all" title="Retour à la liste">
               <ArrowLeft size={20} />
             </button>
             <div>
@@ -901,24 +839,25 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             {/* Colonne Gauche : Config & Client */}
             <div className="lg:col-span-2 space-y-6">
                  {/* Card Client & Dates */}
-                <div className="bg-white rounded-[2rem] shadow-sm border border-brand-200 p-8">
+                <div className="bg-white rounded-4xl shadow-sm border border-brand-200 p-8">
                     {newDocData.linkedDocumentId && (
                         <div className="mb-6 inline-flex items-center gap-2 bg-brand-100 text-brand-600 px-3 py-1.5 rounded-full text-xs font-semibold">
                             <LinkIcon size={12} />
                             Lié au document ID: {invoices.find(i => i.id === newDocData.linkedDocumentId)?.number || 'Inconnu'}
                         </div>
                     )}
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Client</label>
-                            <select 
+                            <label htmlFor="client-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Client</label>
+                            <select
+                                id="client-select"
                                 className={`w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900`}
                                 value={selectedClientId}
                                 onChange={(e) => {
                                     const clientId = e.target.value;
                                     setSelectedClientId(clientId);
-                                    
+
                                     // Update due date based on client payment terms
                                     const client = clients.find(c => c.id === clientId);
                                     if (client?.paymentTerms) {
@@ -929,12 +868,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                         else if (client.paymentTerms === '30 jours fin de mois') days = 30; // Simplified
                                         else if (client.paymentTerms === '45 jours') days = 45;
                                         else if (client.paymentTerms === '60 jours') days = 60;
-                                        
+
                                         const newDueDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                                         setNewDocData(prev => ({ ...prev, dueDate: newDueDate }));
                                     }
                                 }}
                                 disabled={!!newDocData.linkedDocumentId}
+                                title="Sélectionner un client"
                             >
                                 <option value="">Sélectionner un client...</option>
                                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -949,21 +889,25 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'émission</label>
-                                <input 
-                                type="date" 
+                                <label htmlFor="emission-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'émission</label>
+                                <input
+                                id="emission-date"
+                                type="date"
                                 className={`w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 font-medium`}
                                 value={newDocData.date}
                                 onChange={(e) => setNewDocData({...newDocData, date: e.target.value})}
+                                title="Date d'émission du document"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'échéance</label>
-                                <input 
-                                type="date" 
+                                <label htmlFor="due-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'échéance</label>
+                                <input
+                                id="due-date"
+                                type="date"
                                 className={`w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 font-medium`}
                                 value={newDocData.dueDate}
                                 onChange={(e) => setNewDocData({...newDocData, dueDate: e.target.value})}
+                                title="Date limite de paiement"
                                 />
                             </div>
                         </div>
@@ -971,7 +915,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                 </div>
 
                 {/* Card Items */}
-                <div className="bg-white rounded-[2rem] shadow-sm border border-brand-200 p-8">
+                <div className="bg-white rounded-4xl shadow-sm border border-brand-200 p-8">
                      <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-brand-900 font-display">Prestations & Produits</h3>
                      </div>
@@ -983,58 +927,66 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                     {index + 1}
                                 </span>
                                 <div className="flex-1 w-full relative">
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         placeholder="Description..."
                                         className="w-full bg-transparent border-b border-brand-200 focus:border-brand-900 outline-none py-1 text-brand-900 font-medium placeholder:text-brand-400"
                                         value={item.description}
                                         onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                     />
-                                     <button 
+                                     <button
                                         onClick={() => handleGenerateDescription(item.id, item.description)}
                                         className="absolute right-0 top-1/2 -translate-y-1/2 text-accent-400 hover:text-accent-600 transition-colors opacity-0 group-hover:opacity-100"
                                         title="Améliorer avec IA"
                                     >
-                                        <Wand2 size={14} className={isGeneratingDesc ? "animate-spin" : ""} />
+                                        <Wand2 size={14} className={formState.isGeneratingDesc ? "animate-spin" : ""} />
                                     </button>
                                 </div>
                                 <div className="flex gap-4 w-full md:w-auto">
                                     <div className="flex flex-col w-20">
-                                        <label className="text-[10px] uppercase font-bold text-brand-400">Qté</label>
-                                        <input 
+                                        <label htmlFor={`qty-${item.id}`} className="text-[10px] uppercase font-bold text-brand-400">Qté</label>
+                                        <input
+                                            id={`qty-${item.id}`}
                                             type="number" min="0" step="0.5"
                                             className="bg-white border border-brand-200 rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-brand-900 font-bold"
                                             value={item.quantity}
-                                            onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value))}
+                                            onChange={(e) => updateItem(item.id, 'quantity', Number.parseFloat(e.target.value))}
+                                            title="Quantité"
                                         />
                                     </div>
                                     <div className="flex flex-col w-16">
-                                        <label className="text-[10px] uppercase font-bold text-brand-400">Unité</label>
-                                        <input 
+                                        <label htmlFor={`unit-${item.id}`} className="text-[10px] uppercase font-bold text-brand-400">Unité</label>
+                                        <input
+                                            id={`unit-${item.id}`}
                                             type="text"
                                             placeholder="u"
                                             className="bg-white border border-brand-200 rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-brand-900 font-medium"
                                             value={item.unit || ''}
                                             onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
+                                            title="Unité de mesure"
                                         />
                                     </div>
                                     <div className="flex flex-col w-24">
-                                        <label className="text-[10px] uppercase font-bold text-brand-400">Prix Uni.</label>
-                                        <input 
+                                        <label htmlFor={`price-${item.id}`} className="text-[10px] uppercase font-bold text-brand-400">Prix Uni.</label>
+                                        <input
+                                            id={`price-${item.id}`}
                                             type="number" min="0" step="0.01"
                                             className="bg-white border border-brand-200 rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-brand-900 font-bold"
                                             value={item.unitPrice}
-                                            onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value))}
+                                            onChange={(e) => updateItem(item.id, 'unitPrice', Number.parseFloat(e.target.value))}
+                                            title="Prix unitaire"
                                         />
                                     </div>
                                     {!newDocData.taxExempt && (
                                         <div className="flex flex-col w-16">
-                                            <label className="text-[10px] uppercase font-bold text-brand-400">TVA %</label>
-                                            <input 
+                                            <label htmlFor={`vat-${item.id}`} className="text-[10px] uppercase font-bold text-brand-400">TVA %</label>
+                                            <input
+                                                id={`vat-${item.id}`}
                                                 type="number" min="0" max="100" step="0.1"
                                                 className="bg-white border border-brand-200 rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-brand-900 font-medium"
                                                 value={item.vatRate || 0}
-                                                onChange={(e) => updateItem(item.id, 'vatRate', parseFloat(e.target.value))}
+                                                onChange={(e) => updateItem(item.id, 'vatRate', Number.parseFloat(e.target.value))}
+                                                title="Taux de TVA"
                                             />
                                         </div>
                                     )}
@@ -1043,7 +995,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                             {(item.quantity * item.unitPrice).toFixed(2)} €
                                         </div>
                                     </div>
-                                    <button onClick={() => removeItem(item.id)} className="self-end mb-2 text-brand-300 hover:text-red-500 transition-colors">
+                                    <button onClick={() => removeItem(item.id)} className="self-end mb-2 text-brand-300 hover:text-red-500 transition-colors" title="Supprimer cette ligne">
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
@@ -1051,28 +1003,29 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         ))}
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button onClick={addItem} className={`flex-1 py-3 border-2 border-dashed border-brand-200 rounded-xl text-brand-500 hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2`}>
+                            <button onClick={addItem} className={`flex-1 py-3 border-2 border-dashed border-brand-200 rounded-xl text-brand-500 hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2`} title="Ajouter une ligne vide">
                                 <Plus size={18} /> Ajouter une ligne vide
                             </button>
-                            
+
                             <div className="relative flex-1">
-                                <button 
-                                    onClick={() => setIsProductSearchOpen(!isProductSearchOpen)}
+                                <button
+                                    onClick={() => setIsProductSearchOpen(!formState.isProductSearchOpen)}
                                     className={`w-full py-3 pl-10 pr-4 border-2 border-dashed border-brand-200 rounded-xl text-brand-500 hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 bg-transparent outline-none`}
+                                    title="Ajouter depuis le catalogue"
                                 >
                                     <Package size={18} /> + Ajouter depuis le catalogue
                                 </button>
-                                
-                                {isProductSearchOpen && (
+
+                                {formState.isProductSearchOpen && (
                                     <div className="absolute bottom-full mb-2 left-0 right-0 bg-white border border-brand-200 rounded-2xl shadow-2xl z-20 overflow-hidden animate-slide-up max-h-64 flex flex-col">
                                         <div className="p-3 border-b border-brand-100 bg-brand-50">
                                             <div className="relative">
                                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400" size={14} />
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     placeholder="Rechercher un produit..."
                                                     className="w-full pl-9 pr-3 py-2 bg-white border border-brand-200 rounded-xl text-xs outline-none focus:border-brand-900"
-                                                    value={productSearch}
+                                                    value={formState.productSearch}
                                                     onChange={e => setProductSearch(e.target.value)}
                                                     autoFocus
                                                 />
@@ -1080,9 +1033,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                         </div>
                                         <div className="overflow-y-auto flex-1">
                                             {products
-                                                .filter(p => !p.archived && p.name.toLowerCase().includes(productSearch.toLowerCase()))
+                                                .filter(p => !p.archived && p.name.toLowerCase().includes(formState.productSearch.toLowerCase()))
                                                 .map(p => (
-                                                    <button 
+                                                    <button
                                                         key={p.id}
                                                         onClick={() => {
                                                             addProductItem(p.id);
@@ -1108,9 +1061,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* Magic Fill Button */}
-                        <button 
+                        <button
                             onClick={() => setIsMagicFillOpen(true)}
                             className="w-full py-3 bg-accent-50 text-accent-600 border border-accent-200 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-accent-100 transition-all"
                         >
@@ -1119,19 +1072,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                      </div>
                 </div>
 
-                <div className="bg-white rounded-[2rem] shadow-sm border border-brand-200 p-8">
-                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Notes & Conditions</label>
-                    <textarea 
+                <div className="bg-white rounded-4xl shadow-sm border border-brand-200 p-8">
+                    <label htmlFor="notes-textarea" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Notes & Conditions</label>
+                    <textarea
+                        id="notes-textarea"
                         className="w-full p-4 bg-brand-50 border border-brand-200 rounded-xl text-sm focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all resize-none text-brand-900 font-medium"
                         rows={3}
                         placeholder="Conditions de paiement, mentions légales spécifiques..."
                         value={newDocData.notes || ''}
                         onChange={e => setNewDocData({...newDocData, notes: e.target.value})}
+                        title="Notes et conditions spécifiques"
                     />
                 </div>
 
                 {/* E-Invoicing 2026 Section */}
-                <div className="bg-white p-8 rounded-[2rem] border border-brand-200 shadow-sm">
+                <div className="bg-white p-8 rounded-4xl border border-brand-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-6 border-b border-brand-50 pb-4">
                         <div className="p-2 bg-accent-50 text-accent-600 rounded-xl">
                             <Zap size={20} />
@@ -1141,11 +1096,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Catégorie d'opération</label>
-                            <select 
+                            <label htmlFor="op-category-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Catégorie d'opération</label>
+                            <select
+                                id="op-category-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.operationCategory || 'SERVICES'}
-                                onChange={(e) => setNewDocData({...newDocData, operationCategory: e.target.value as any})}
+                                onChange={(e) => setNewDocData({...newDocData, operationCategory: e.target.value})}
+                                title="Sélectionner la catégorie d'opération"
                             >
                                 <option value="BIENS">Livraison de biens</option>
                                 <option value="SERVICES">Prestation de services</option>
@@ -1154,11 +1111,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                             <p className="mt-2 text-[10px] text-brand-400 italic">Obligatoire pour la transmission PPF/PDP en 2026.</p>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Format d'export cible</label>
-                            <select 
+                            <label htmlFor="einvoice-format-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Format d'export cible</label>
+                            <select
+                                id="einvoice-format-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.eInvoiceFormat || 'Factur-X'}
-                                onChange={(e) => setNewDocData({...newDocData, eInvoiceFormat: e.target.value as any})}
+                                onChange={(e) => setNewDocData({...newDocData, eInvoiceFormat: e.target.value})}
+                                title="Sélectionner le format d'export"
                             >
                                 <option value="Factur-X">Factur-X (PDF hybride)</option>
                                 <option value="UBL">UBL (XML standard)</option>
@@ -1183,7 +1142,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
             {/* Colonne Droite : Totaux & Validation */}
             <div className="lg:col-span-1 space-y-6">
-                <div className="bg-brand-900 text-white rounded-[2rem] p-8 shadow-xl shadow-brand-900/10 sticky top-6">
+                <div className="bg-brand-900 text-white rounded-4xl p-8 shadow-xl shadow-brand-900/10 sticky top-6">
                     <h3 className="text-lg font-bold mb-6 flex items-center gap-2 font-display">
                         <Calculator size={20} className="text-accent-400" />
                         Récapitulatif
@@ -1194,13 +1153,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                             <span>Sous-total HT</span>
                             <span className="font-bold font-display">{formTotals.subtotalHT.toFixed(2)} €</span>
                         </div>
-                        
+
                         {/* Tax Exempt Toggle */}
                         <div className="flex justify-between items-center py-2 border-y border-white/5">
                             <span className="text-xs text-brand-400 font-medium italic">Exonéré de TVA (Auto-entrepreneur)</span>
-                            <button 
+                            <button
                                 onClick={() => setNewDocData({...newDocData, taxExempt: !newDocData.taxExempt})}
                                 className={`w-10 h-5 rounded-full transition-all relative ${newDocData.taxExempt ? 'bg-accent-500' : 'bg-brand-700'}`}
+                                title="Basculer l'exonération de TVA"
                             >
                                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${newDocData.taxExempt ? 'left-6' : 'left-1'}`} />
                             </button>
@@ -1212,12 +1172,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 <Percent size={14} />
                                 <span>Remise (%)</span>
                             </div>
-                            <input 
+                            <input
+                                id="discount-input"
                                 type="number" min="0" max="100"
                                 className="w-16 bg-brand-800 border border-brand-700 rounded-lg px-2 py-1 text-right text-white outline-none focus:border-accent-500 font-bold"
                                 value={newDocData.discount || ''}
-                                onChange={(e) => setNewDocData({...newDocData, discount: parseFloat(e.target.value)})}
+                                onChange={(e) => setNewDocData({...newDocData, discount: Number.parseFloat(e.target.value)})}
                                 placeholder="0"
+                                title="Taux de remise en pourcentage"
                             />
                         </div>
                         {formTotals.discountAmount > 0 && (
@@ -1232,12 +1194,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 <Truck size={14} />
                                 <span>Frais de port</span>
                             </div>
-                            <input 
+                            <input
+                                id="shipping-input"
                                 type="number" min="0"
                                 className="w-20 bg-brand-800 border border-brand-700 rounded-lg px-2 py-1 text-right text-white outline-none focus:border-accent-500 font-bold"
                                 value={newDocData.shipping || ''}
-                                onChange={(e) => setNewDocData({...newDocData, shipping: parseFloat(e.target.value)})}
+                                onChange={(e) => setNewDocData({...newDocData, shipping: Number.parseFloat(e.target.value)})}
                                 placeholder="0.00"
+                                title="Montant des frais de port"
                             />
                         </div>
 
@@ -1263,12 +1227,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                     <Coins size={12} />
                                     <span>Acompte {activeTab === 'quote' ? 'demandé' : 'versé'}</span>
                                 </div>
-                                <input 
+                                <input
+                                    id="deposit-input"
                                     type="number" min="0"
                                     className="w-24 bg-brand-900 border border-brand-700 rounded-lg px-2 py-1 text-right text-white outline-none focus:border-accent-500 font-bold text-sm"
                                     value={newDocData.deposit || ''}
-                                    onChange={(e) => setNewDocData({...newDocData, deposit: parseFloat(e.target.value)})}
+                                    onChange={(e) => setNewDocData({...newDocData, deposit: Number.parseFloat(e.target.value)})}
                                     placeholder="0.00"
+                                    title="Montant de l'acompte"
                                 />
                             </div>
                             <div className="flex justify-between items-center pt-2 border-t border-white/10">
@@ -1279,15 +1245,15 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     </div>
 
                     <div className="space-y-3">
-                        <button 
+                        <button
                             onClick={saveDocument}
                             className={`w-full bg-white text-brand-900 py-4 rounded-xl hover:bg-brand-50 font-bold shadow-lg shadow-brand-900/20 transition-all hover:scale-[1.02] active:scale-95 text-xs uppercase tracking-widest`}
                         >
                             Enregistrer
                         </button>
-                        
+
                          {selectedClientId && (
-                             <button 
+                             <button
                                 onClick={() => setShowLivePreview(true)}
                                 className="w-full bg-brand-800 text-brand-300 py-3 rounded-xl hover:bg-brand-700 font-bold transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
                             >
@@ -1302,14 +1268,15 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         {/* Live Preview Modal */}
         {showLivePreview && (
             <div className="fixed inset-0 z-50 bg-brand-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-brand-50 w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col shadow-2xl overflow-hidden relative border border-brand-200">
+                <div className="bg-brand-50 w-full max-w-5xl h-[90vh] rounded-4xl flex flex-col shadow-2xl overflow-hidden relative border border-brand-200">
                     <div className="flex justify-between items-center p-4 bg-white border-b border-brand-200">
                         <h3 className="font-bold text-brand-900 flex items-center gap-2 font-display">
                             <Eye size={20} className="text-accent-500"/> Aperçu avant enregistrement
                         </h3>
-                        <button 
+                        <button
                             onClick={() => setShowLivePreview(false)}
                             className="p-2 hover:bg-brand-50 rounded-full text-brand-500 transition-colors"
+                            title="Fermer l'aperçu"
                         >
                             <X size={24} />
                         </button>
@@ -1326,7 +1293,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   if (view === 'detail' && selectedInvoice) {
      const docType = selectedInvoice.type || 'invoice';
-     
+
      // Find linked documents
      const parentDoc = selectedInvoice.linkedDocumentId ? invoices.find(inv => inv.id === selectedInvoice.linkedDocumentId) : null;
      const childDocs = invoices.filter(inv => inv.linkedDocumentId === selectedInvoice.id);
@@ -1334,73 +1301,74 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
        ...(parentDoc ? [{ doc: parentDoc, relation: 'origine' }] : []),
        ...childDocs.map(doc => ({ doc, relation: 'suite' }))
      ];
-     
+
     return (
       <div className="max-w-4xl mx-auto animate-fade-in pb-10">
         <div className="sticky top-0 z-10 bg-brand-50/80 backdrop-blur-md py-4 mb-6 flex justify-between items-center print:hidden border-b border-brand-200/50 no-print">
           <button onClick={() => setView('list')} className="flex items-center gap-2 text-brand-600 hover:text-brand-900 font-bold px-4 py-2 hover:bg-white rounded-xl transition-all uppercase tracking-widest text-[10px]">
             <ArrowLeft size={16} /> Retour
           </button>
-          
+
           <div className="flex items-center gap-3">
              {/* CUSTOM STATUS SELECTOR */}
             <div className="flex items-center gap-2 bg-white border border-brand-200 rounded-xl p-1 pr-3 shadow-sm">
                 <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest ml-3">Statut</span>
                 {isCustomStatus ? (
                   <div className="flex items-center gap-1">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       autoFocus
                       className="text-sm font-bold rounded-lg py-1 px-2 outline-none bg-brand-50 w-32 border border-brand-200"
                       placeholder="Nouveau statut"
                       value={selectedInvoice.status}
-                      onChange={(e) => updateStatus(selectedInvoice.id, e.target.value)}
+                      onChange={(e) => updateInvoiceField(selectedInvoice.id, 'status', e.target.value)}
                       onBlur={() => setIsCustomStatus(false)}
                       onKeyDown={(e) => e.key === 'Enter' && setIsCustomStatus(false)}
                     />
-                    <button onClick={() => setIsCustomStatus(false)} className="text-brand-400 hover:text-brand-600"><CheckSquare size={14}/></button>
+                    <button onClick={() => setIsCustomStatus(false)} className="text-brand-400 hover:text-brand-600" title="Confirmer le statut"><CheckSquare size={14}/></button>
                   </div>
                 ) : (
-                  <select 
+                  <select
                     value={selectedInvoice.status}
-                    onChange={(e) => updateStatus(selectedInvoice.id, e.target.value)}
+                    onChange={(e) => updateInvoiceField(selectedInvoice.id, 'status', e.target.value)}
                     className={`text-sm font-bold rounded-lg py-1 px-2 cursor-pointer outline-none bg-transparent ${
                         selectedInvoice.status === InvoiceStatus.PAID || selectedInvoice.status === InvoiceStatus.ACCEPTED ? 'text-accent-600' :
                         selectedInvoice.status === InvoiceStatus.SENT ? 'text-amber-600' :
                         selectedInvoice.status === InvoiceStatus.REJECTED ? 'text-red-600' :
                         'text-brand-600'
                     }`}
+                    title="Changer le statut"
                   >
                   {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                   <option value="CUSTOM_INPUT" className="font-bold text-brand-600">+ Personnalisé...</option>
                   </select>
                 )}
             </div>
-            
+
             {/* Reminder Feature */}
             {selectedInvoice.status !== InvoiceStatus.PAID && (
                  <div className="flex items-center bg-white border border-brand-200 rounded-xl shadow-sm relative group">
                     <div className="p-2 text-brand-400 group-hover:text-brand-600 transition-colors">
                         <Bell size={16} />
                     </div>
-                    <input 
-                        type="date" 
+                    <input
+                        type="date"
                         className="text-xs font-bold text-brand-600 bg-transparent outline-none w-28 cursor-pointer"
                         value={selectedInvoice.reminderDate || ''}
-                        onChange={(e) => updateReminder(selectedInvoice.id, e.target.value)}
+                        onChange={(e) => updateInvoiceField(selectedInvoice.id, 'reminderDate', e.target.value)}
                         title="Date de rappel"
                     />
                  </div>
             )}
 
-            <button 
+            <button
                 onClick={() => handleEmail(selectedInvoice)}
                 className="p-2.5 text-brand-500 hover:text-brand-900 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-brand-200"
                 title="Envoyer par email"
             >
                 <Mail size={18} />
             </button>
-            <button 
+            <button
                 onClick={() => handleDuplicate(selectedInvoice)}
                 className="p-2.5 text-brand-500 hover:text-brand-900 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-brand-200"
                 title="Dupliquer"
@@ -1410,15 +1378,15 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
             {docType === 'quote' && selectedInvoice.status === InvoiceStatus.SENT && (
                 <>
-                <button 
-                    onClick={() => updateStatus(selectedInvoice.id, InvoiceStatus.ACCEPTED)}
+                <button
+                    onClick={() => updateInvoiceField(selectedInvoice.id, 'status', InvoiceStatus.ACCEPTED)}
                     className="p-2.5 text-accent-600 hover:bg-accent-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-accent-200"
                     title="Accepter"
                 >
                     <ThumbsUp size={18} />
                 </button>
-                 <button 
-                    onClick={() => updateStatus(selectedInvoice.id, InvoiceStatus.REJECTED)}
+                 <button
+                    onClick={() => updateInvoiceField(selectedInvoice.id, 'status', InvoiceStatus.REJECTED)}
                     className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-red-200"
                     title="Refuser"
                 >
@@ -1428,8 +1396,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             )}
 
             {docType === 'quote' && selectedInvoice.status === InvoiceStatus.ACCEPTED && (
-                <button 
-                    onClick={() => convertQuoteToInvoice(selectedInvoice)}
+                <button
+                    onClick={() => convertToInvoice(selectedInvoice, true)}
                     className="p-2.5 text-accent-600 hover:bg-accent-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-accent-200"
                     title="Convertir en Facture"
                 >
@@ -1438,8 +1406,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             )}
 
              {docType === 'order' && (
-                <button 
-                    onClick={() => convertOrderToInvoice(selectedInvoice)}
+                <button
+                    onClick={() => convertToInvoice(selectedInvoice, false)}
                     className="p-2.5 text-brand-600 hover:bg-brand-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-brand-200"
                     title="Facturer"
                 >
@@ -1449,14 +1417,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
             {docType === 'invoice' && (
                 <>
-                    <button 
+                    <button
                         onClick={() => createCreditNoteFromInvoice(selectedInvoice)}
                         className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-rose-200"
                         title="Créer un avoir"
                     >
                         <Receipt size={18} />
                     </button>
-                    <button 
+                    <button
                         onClick={() => handleTransmitPPF(selectedInvoice)}
                         className="p-2.5 text-accent-600 hover:bg-accent-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-accent-200"
                         title="Transmettre au PPF (2026)"
@@ -1465,9 +1433,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     </button>
                 </>
             )}
-            
-            <button 
-              onClick={() => window.print()}
+
+            <button
+              onClick={() => globalThis.print()}
               className="flex items-center gap-2 px-5 py-2.5 bg-brand-900 text-white rounded-xl hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20 font-bold text-xs uppercase tracking-widest"
               title="Télécharger en PDF via l'impression"
             >
@@ -1480,7 +1448,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         {allLinkedDocs.length > 0 && (
           <div className="mb-8 flex flex-wrap gap-4 no-print">
             {allLinkedDocs.map(({ doc, relation }) => (
-              <div key={doc.id} className="flex-1 min-w-[300px] bg-white border border-brand-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+              <div key={doc.id} className="flex-1 min-w-75 bg-white border border-brand-100 rounded-3xl p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-brand-50 rounded-2xl text-brand-600">
                     <LinkIcon size={20} />
@@ -1494,7 +1462,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     </p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setSelectedInvoice(doc);
                     setActiveTab(doc.type);
@@ -1521,7 +1489,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             <h2 className="text-3xl font-bold text-brand-900 dark:text-white font-display tracking-tight">Documents Commerciaux</h2>
             <p className="text-brand-500 dark:text-brand-400 mt-1 text-sm font-medium">Gérez vos factures, devis et commandes en un seul endroit.</p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
             {/* Type Toggle Pills */}
             <div className="bg-brand-100/50 dark:bg-brand-900/50 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 backdrop-blur-sm flex gap-1">
@@ -1532,7 +1500,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             </div>
 
             <div className="flex gap-2">
-                <button 
+                <button
                     onClick={exportCurrentViewCSV}
                     className="bg-white dark:bg-brand-900 text-brand-600 dark:text-brand-300 border border-brand-100 dark:border-brand-800 px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm hover:bg-brand-50 dark:hover:bg-brand-800"
                     title={`Exporter en CSV`}
@@ -1541,9 +1509,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     <span className="hidden sm:inline">Export</span>
                 </button>
 
-                <button 
+                <button
                     onClick={startCreate}
                     className="bg-brand-900 dark:bg-white text-white dark:text-brand-900 px-6 py-2.5 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-brand-900/10 dark:shadow-white/5 text-[10px] font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98]"
+                    title="Créer un nouveau document"
                 >
                     <Plus size={18} />
                     Nouveau
@@ -1619,54 +1588,63 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       {/* FILTER BAR */}
       <div className="bg-white dark:bg-brand-900/30 rounded-3xl p-6 shadow-sm border border-brand-100 dark:border-brand-800 flex flex-wrap gap-6 items-end">
          <div className="flex flex-col gap-2.5">
-             <label className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Période</label>
+             <label htmlFor="filter-date-start" className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Période</label>
              <div className="flex items-center gap-3">
                  <div className="relative">
                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400" size={14} />
-                     <input 
-                        type="date" 
+                     <input
+                        id="filter-date-start"
+                        type="date"
                         className="pl-10 pr-4 py-2.5 bg-brand-50/50 dark:bg-brand-950 border border-brand-100 dark:border-brand-800 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-brand-900/5 dark:focus:ring-white/5 transition-all text-brand-900 dark:text-brand-100 uppercase tracking-wider"
                         value={filters.dateStart}
                         onChange={(e) => setFilters({...filters, dateStart: e.target.value})}
+                        title="Date de début"
                      />
                  </div>
                  <span className="text-brand-300 dark:text-brand-700 font-bold">→</span>
                  <div className="relative">
                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400" size={14} />
-                     <input 
-                        type="date" 
+                     <input
+                        id="filter-date-end"
+                        type="date"
                         className="pl-10 pr-4 py-2.5 bg-brand-50/50 dark:bg-brand-950 border border-brand-100 dark:border-brand-800 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-brand-900/5 dark:focus:ring-white/5 transition-all text-brand-900 dark:text-brand-100 uppercase tracking-wider"
                         value={filters.dateEnd}
                         onChange={(e) => setFilters({...filters, dateEnd: e.target.value})}
+                        title="Date de fin"
                      />
                  </div>
              </div>
          </div>
          <div className="flex flex-col gap-2.5">
-             <label className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Client</label>
-             <select 
+             <label htmlFor="filter-client-select" className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Client</label>
+             <select
+                id="filter-client-select"
                 className="px-5 py-2.5 bg-brand-50/50 dark:bg-brand-950 border border-brand-100 dark:border-brand-800 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-brand-900/5 dark:focus:ring-white/5 transition-all w-56 text-brand-900 dark:text-brand-100 uppercase tracking-wider cursor-pointer"
                 value={filters.clientId}
                 onChange={(e) => setFilters({...filters, clientId: e.target.value})}
+                title="Filtrer par client"
              >
                  <option value="">Tous les clients</option>
                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
              </select>
          </div>
          <div className="flex flex-col gap-2.5">
-             <label className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Statut</label>
-             <select 
+             <label htmlFor="filter-status-select" className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">Statut</label>
+             <select
+                id="filter-status-select"
                 className="px-5 py-2.5 bg-brand-50/50 dark:bg-brand-950 border border-brand-100 dark:border-brand-800 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-brand-900/5 dark:focus:ring-white/5 transition-all w-48 text-brand-900 dark:text-brand-100 uppercase tracking-wider cursor-pointer"
                 value={filters.status}
                 onChange={(e) => setFilters({...filters, status: e.target.value})}
+                title="Filtrer par statut"
              >
                  <option value="">Tous les statuts</option>
                  {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
              </select>
          </div>
-         <button 
+         <button
             onClick={() => setFilters({ dateStart: '', dateEnd: '', status: '', clientId: '' })}
             className="px-5 py-2.5 text-brand-500 hover:text-brand-900 dark:hover:text-brand-100 text-[10px] font-bold uppercase tracking-widest transition-colors"
+            title="Réinitialiser les filtres"
          >
             Réinitialiser
          </button>
@@ -1683,24 +1661,24 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
               </div>
               <div className="flex gap-2">
                    {activeTab !== 'quote' && (
-                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.PAID)} className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-500/20">
+                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.PAID)} className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-500/20" title="Marquer comme payée">
                            Marquer Payée
                        </button>
                    )}
                    {activeTab === 'quote' && (
                        <>
-                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.ACCEPTED)} className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-500/20">
+                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.ACCEPTED)} className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent-500/20" title="Accepter les devis">
                            Accepter
                        </button>
-                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.REJECTED)} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-red-500/20">
+                       <button onClick={() => handleBulkStatusChange(InvoiceStatus.REJECTED)} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-red-500/20" title="Refuser les devis">
                            Refuser
                        </button>
                        </>
                    )}
-                   <button onClick={() => handleBulkStatusChange(InvoiceStatus.SENT)} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20">
+                   <button onClick={() => handleBulkStatusChange(InvoiceStatus.SENT)} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20" title="Marquer comme envoyée">
                        Envoyée
                    </button>
-                   <button onClick={() => setSelectedIds(new Set())} className="p-2 hover:bg-white/10 dark:hover:bg-brand-100 rounded-xl transition-colors">
+                   <button onClick={() => setSelectedIds(new Set())} className="p-2 hover:bg-white/10 dark:hover:bg-brand-100 rounded-xl transition-colors" title="Désélectionner tout">
                        <X size={18} />
                    </button>
               </div>
@@ -1713,7 +1691,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             <thead>
               <tr className="bg-brand-50/50 dark:bg-brand-800/50 text-brand-500 dark:text-brand-400 border-b border-brand-100 dark:border-brand-800">
                 <th className="px-6 py-5 w-12 text-center">
-                    <button onClick={toggleSelectAll} className="text-brand-400 hover:text-brand-600 dark:hover:text-brand-200 transition-colors">
+                    <button onClick={toggleSelectAll} className="text-brand-400 hover:text-brand-600 dark:hover:text-brand-200 transition-colors" title="Sélectionner tout">
                         {selectedIds.size > 0 && selectedIds.size === filteredAndSortedDocuments.length ? <CheckSquare size={20} className="text-brand-900 dark:text-white" /> : <Square size={20} />}
                     </button>
                 </th>
@@ -1737,11 +1715,11 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
               {filteredAndSortedDocuments.map((doc) => {
                  const clientName = clients.find(c => c.id === doc.clientId)?.name || 'Client Inconnu';
                  const type = doc.type || 'invoice';
-                 
+
                  let Icon = FileText;
                  let iconBg = 'bg-brand-50 dark:bg-brand-800';
                  let iconColor = 'text-brand-600 dark:text-brand-400';
-                 
+
                  if (type === 'quote') {
                      Icon = FileCheck;
                      iconBg = 'bg-accent-50 dark:bg-accent-900/20';
@@ -1789,7 +1767,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     </td>
                     <td className="px-6 py-5 text-center">
                       <span className={`inline-flex px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border
-                        ${doc.status === InvoiceStatus.PAID || doc.status === InvoiceStatus.ACCEPTED ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/50' : 
+                        ${doc.status === InvoiceStatus.PAID || doc.status === InvoiceStatus.ACCEPTED ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/50' :
                           doc.status === InvoiceStatus.SENT ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' :
                           doc.status === InvoiceStatus.REJECTED ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/50' :
                           'bg-brand-50 dark:bg-brand-800 text-brand-500 dark:text-brand-400 border-brand-200 dark:border-brand-700'}`}>
@@ -1798,21 +1776,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                        <button 
+                        <button
                             onClick={() => { setSelectedInvoice(doc); setView('detail'); }}
                             className="text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-brand-100 dark:hover:bg-brand-800 p-2.5 rounded-xl transition-all"
                             title="Aperçu"
                         >
                             <Eye size={18} />
                         </button>
-                        <button 
+                        <button
                             onClick={() => { setSelectedInvoice(doc); setView('detail'); }}
                             className="text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-800 p-2.5 rounded-xl transition-all"
                             title="Détails"
                         >
                             <FileText size={18} />
                         </button>
-                        <button 
+                        <button
                             onClick={() => deleteDocument(doc.id)}
                             className="text-brand-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-2.5 rounded-xl transition-all"
                             title="Supprimer"
@@ -1831,7 +1809,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         <FileText size={64} className="mb-4 opacity-50" />
                         <p className="text-lg font-bold text-brand-500 dark:text-brand-400 font-display">Aucun document trouvé</p>
                         <p className="text-sm">Modifiez vos filtres ou créez un nouveau document.</p>
-                        <button 
+                        <button
                             onClick={startCreate}
                             className="mt-8 btn-primary px-6 py-3"
                         >
@@ -1846,10 +1824,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
           </table>
         </div>
       </div>
-      
+
       {/* Magic Fill Modal */}
-      {isMagicFillOpen && (
-          <div className="fixed inset-0 bg-brand-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      {formState.isMagicFillOpen && (
+          <div className="fixed inset-0 bg-brand-900/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
               <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-slide-up">
                   <div className="p-8 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
                       <div className="flex items-center gap-3">
@@ -1861,7 +1839,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                               <p className="text-xs text-brand-500 font-medium">Décrivez ce que vous voulez facturer</p>
                           </div>
                       </div>
-                      <button onClick={() => setIsMagicFillOpen(false)} className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors">
+                      <button onClick={() => setIsMagicFillOpen(false)} className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors" title="Fermer">
                           <X size={20} />
                       </button>
                   </div>
@@ -1869,27 +1847,27 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                       <div className="bg-brand-50 p-4 rounded-2xl border border-brand-100 italic text-sm text-brand-600">
                           "Exemple : 3 jours de consulting IT à 500€/jour et 2 licences logicielles à 150€ l'unité."
                       </div>
-                      <textarea 
+                      <textarea
                           rows={4}
                           className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-4 focus:ring-accent-500/10 focus:border-accent-500 outline-none transition-all resize-none text-brand-900 font-medium"
                           placeholder="Décrivez votre prestation ici..."
-                          value={magicFillPrompt}
+                          value={formState.magicFillPrompt}
                           onChange={e => setMagicFillPrompt(e.target.value)}
                           autoFocus
                       />
                       <div className="flex gap-3">
-                          <button 
+                          <button
                               onClick={() => setIsMagicFillOpen(false)}
                               className="flex-1 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl transition-all"
                           >
                               Annuler
                           </button>
-                          <button 
+                          <button
                               onClick={handleMagicFill}
-                              disabled={isMagicFilling || !magicFillPrompt.trim()}
+                              disabled={formState.isMagicFilling || !formState.magicFillPrompt.trim()}
                               className="flex-1 bg-brand-900 text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20 flex items-center justify-center gap-2 disabled:opacity-50"
                           >
-                              {isMagicFilling ? <Wand2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+                              {formState.isMagicFilling ? <Wand2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                               Générer les lignes
                           </button>
                       </div>

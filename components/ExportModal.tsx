@@ -65,10 +65,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data })
         <div className="flex items-center justify-between p-8 border-b border-brand-100 dark:border-brand-800">
           <div>
             <h2 className="text-2xl font-bold text-brand-900 dark:text-white">
-              Exporter vos donnÃ©es
+              Exporter vos données
             </h2>
             <p className="text-brand-500 text-sm mt-1">
-              ConformitÃ© RGPD Art. 20 - Droit Ã  la portabilitÃ©
+              Conformité RGPD Art. 20 - Droit à la portabilité
             </p>
           </div>
           <button
@@ -177,8 +177,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data })
                 <AlertCircle size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
               </div>
               <div className="text-sm text-blue-800 dark:text-blue-300">
-                <strong>RGPD compliant:</strong> Vos donnÃ©es restent confidentielles. Aucune donnÃ©e
-                n'est transmise Ã  nos serveurs lors de l'export.
+                <strong>RGPD compliant:</strong> Vos données restent confidentielles. Aucune donnée
+                n'est transmise à nos serveurs lors de l'export.
               </div>
             </div>
           </div>

@@ -290,7 +290,7 @@ export function applyFixedDiscount(
  */
 export function formatCurrency(
   amount: NumericInput,
-  locale: string = 'fr-FR'
+  _locale: string = 'fr-FR'
 ): string {
   const decimal = new Decimal(amount);
   return decimal.toFixed(2) + ' €';

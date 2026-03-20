@@ -262,7 +262,7 @@ export const mergeImportData = (
       };
 
     case 'merge':
-    default:
+    default: {
       // Deduplicate by ID, imported takes precedence
       const invoiceMap = new Map((existing.invoices || []).map((i: any) => [i.id, i]));
       (imported.invoices || []).forEach((i: any) => invoiceMap.set(i.id, i));
@@ -276,5 +276,6 @@ export const mergeImportData = (
         clients: Array.from(clientMap.values()),
         // Similar for other collections...
       };
+    }
   }
 };

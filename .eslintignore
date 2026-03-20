@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+coverage
+.git
+__tests__
+*.config.js
+*.config.ts
