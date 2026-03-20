@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import InvoiceManager from './components/InvoiceManager';
@@ -10,93 +10,59 @@ import EmailManager from './components/EmailManager';
 import CalendarManager from './components/CalendarManager';
 import SettingsManager from './components/SettingsManager';
 import AIAssistant from './components/AIAssistant';
-import { ViewState, Invoice, Client, UserProfile, Supplier, Product, Expense, Email, EmailTemplate, CalendarEvent } from './types';
 import { Menu, LogIn, LogOut, Loader2, Sun, Moon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, OperationType, handleFirestoreError } from './firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { collection, onSnapshot, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, onSnapshot, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { useAppStore } from './store/appStore';
+import type { Invoice, Client, Supplier, Product, Expense, Email, EmailTemplate, CalendarEvent, UserProfile } from './types';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('dashboard');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || 
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
+  // ─── ZUSTAND GLOBAL STATE ───
+  const {
+    // UI
+    currentView,
+    setCurrentView,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+    isDarkMode,
+    setIsDarkMode,
+    // Auth
+    user,
+    setUser,
+    isAuthReady,
+    setIsAuthReady,
+    // Data
+    invoices,
+    setInvoices,
+    clients,
+    setClients,
+    suppliers,
+    setSuppliers,
+    products,
+    setProducts,
+    expenses,
+    setExpenses,
+    emails,
+    setEmails,
+    emailTemplates,
+    setEmailTemplates,
+    calendarEvents,
+    setCalendarEvents,
+    userProfile,
+    setUserProfile,
+  } = useAppStore();
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  // --- STATE ---
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [emails, setEmails] = useState<Email[]>([]);
-  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([
-    {
-      id: '1',
-      name: 'Envoi Facture',
-      subject: 'Votre facture {{invoice_number}}',
-      body: 'Bonjour {{client_name}},\n\nVeuillez trouver ci-joint votre facture {{invoice_number}} d\'un montant de {{total}}.\n\nCordialement,\n{{company_name}}',
-      type: 'invoice'
-    },
-    {
-      id: '2',
-      name: 'Relance Paiement',
-      subject: 'Relance : Facture {{invoice_number}} impayée',
-      body: 'Bonjour {{client_name}},\n\nSauf erreur de notre part, le paiement de la facture {{invoice_number}} ne nous est pas parvenu.\n\nMerci de régulariser la situation au plus vite.\n\nCordialement,\n{{company_name}}',
-      type: 'reminder'
-    }
-  ]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    companyName: 'Ma Micro-Entreprise',
-    professionalTitle: 'Consultant Indépendant',
-    siret: '123 456 789 00012',
-    address: '123 Avenue de la République, 75001 Paris',
-    email: 'contact@mon-entreprise.fr',
-    phone: '01 02 03 04 05',
-    website: 'www.mon-entreprise.fr',
-    linkedin: 'linkedin.com/in/mon-profil',
-    bankAccount: 'FR76 1234 5678 9012 3456 7890 123',
-    bic: 'TRPUFRPPXXX',
-    currency: '€',
-    invoicePrefix: 'FAC-',
-    quotePrefix: 'DEV-',
-    orderPrefix: 'COM-',
-    creditNotePrefix: 'AVO-',
-    defaultVatRate: 0,
-    logoColor: '#102a43',
-    activityType: 'SERVICE_BNC',
-    isAcreBeneficiary: false,
-    vatThresholdAlert: true,
-    revenueThresholdAlert: true
-  });
-
-  // --- AUTH ---
+  // ─── AUTH SETUP ───
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
     });
     return () => unsubscribe();
-  }, []);
+  }, [setUser, setIsAuthReady]);
 
-  // --- FIRESTORE SYNC ---
+  // ─── FIRESTORE SYNC (Update Zustand on data changes) ───
   useEffect(() => {
     if (!user) return;
 
@@ -158,9 +124,9 @@ const App: React.FC = () => {
       unsubEvents();
       unsubProfile();
     };
-  }, [user]);
+  }, [user, setInvoices, setClients, setSuppliers, setProducts, setExpenses, setEmails, setEmailTemplates, setCalendarEvents, setUserProfile]);
 
-  // --- WRAPPERS FOR SETTERS ---
+  // ─── FIRESTORE HELPERS ───
   const saveDoc = async (collectionName: string, data: any) => {
     if (!user) return;
     try {
@@ -173,10 +139,7 @@ const App: React.FC = () => {
   const deleteDocFromFirestore = async (collectionName: string, id: string) => {
     if (!user) return;
     try {
-      // We don't have a deleteDoc tool but we can use setDoc with a deleted flag or just use the firebase SDK deleteDoc
-      // Wait, I should import deleteDoc from firebase/firestore
-      const { deleteDoc: firestoreDeleteDoc } = await import('firebase/firestore');
-      await firestoreDeleteDoc(doc(db, collectionName, id));
+      await deleteDoc(doc(db, collectionName, id));
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, `${collectionName}/${id}`);
     }
@@ -188,66 +151,66 @@ const App: React.FC = () => {
         return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
       case 'invoices':
         return (
-          <InvoiceManager 
-            invoices={invoices} 
+          <InvoiceManager
+            invoices={invoices}
             setInvoices={(newInvoices) => {
               // This is a bit complex because InvoiceManager uses setInvoices for everything
               // For now, let's just update the state and we'll need to update the component to use saveDoc
               setInvoices(newInvoices);
-            }} 
-            clients={clients} 
-            userProfile={userProfile} 
-            products={products} 
+            }}
+            clients={clients}
+            userProfile={userProfile}
+            products={products}
             onSave={(inv) => saveDoc('invoices', inv)}
             onDelete={(id) => deleteDocFromFirestore('invoices', id)}
           />
         );
       case 'clients':
         return (
-          <ClientManager 
-            clients={clients} 
-            setClients={setClients} 
-            invoices={invoices} 
+          <ClientManager
+            clients={clients}
+            setClients={setClients}
+            invoices={invoices}
             onSave={(c) => saveDoc('clients', c)}
             onDelete={(id) => deleteDocFromFirestore('clients', id)}
           />
         );
       case 'suppliers':
         return (
-          <SupplierManager 
-            suppliers={suppliers} 
-            setSuppliers={setSuppliers} 
-            expenses={expenses} 
+          <SupplierManager
+            suppliers={suppliers}
+            setSuppliers={setSuppliers}
+            expenses={expenses}
             onSave={(s) => saveDoc('suppliers', s)}
             onDelete={(id) => deleteDocFromFirestore('suppliers', id)}
           />
         );
       case 'products':
         return (
-          <ProductManager 
-            products={products} 
-            setProducts={setProducts} 
+          <ProductManager
+            products={products}
+            setProducts={setProducts}
             onSave={(p) => saveDoc('products', p)}
             onDelete={(id) => deleteDocFromFirestore('products', id)}
           />
         );
       case 'accounting':
         return (
-          <AccountingManager 
-            expenses={expenses} 
-            setExpenses={setExpenses} 
-            invoices={invoices} 
-            suppliers={suppliers} 
+          <AccountingManager
+            expenses={expenses}
+            setExpenses={setExpenses}
+            invoices={invoices}
+            suppliers={suppliers}
             onSaveExpense={(e) => saveDoc('expenses', e)}
             onDeleteExpense={(id) => deleteDocFromFirestore('expenses', id)}
           />
         );
       case 'emails':
         return (
-          <EmailManager 
-            emails={emails} 
-            setEmails={setEmails} 
-            templates={emailTemplates} 
+          <EmailManager
+            emails={emails}
+            setEmails={setEmails}
+            templates={emailTemplates}
             setTemplates={setEmailTemplates}
             clients={clients}
             invoices={invoices}
@@ -260,7 +223,7 @@ const App: React.FC = () => {
         );
       case 'calendar':
         return (
-          <CalendarManager 
+          <CalendarManager
             events={calendarEvents}
             setEvents={setCalendarEvents}
             clients={clients}
@@ -271,8 +234,8 @@ const App: React.FC = () => {
         );
       case 'settings':
         return (
-          <SettingsManager 
-            userProfile={userProfile} 
+          <SettingsManager
+            userProfile={userProfile}
             setUserProfile={setUserProfile}
             onSaveProfile={(p) => {
               if (user) {
@@ -299,7 +262,7 @@ const App: React.FC = () => {
       case 'ai_assistant':
         return <AIAssistant />;
       default:
-        return <Dashboard invoices={invoices} products={products} />;
+        return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
     }
   };
 
@@ -318,22 +281,22 @@ const App: React.FC = () => {
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-200/30 dark:bg-brand-800/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-200/30 dark:bg-accent-800/20 rounded-full blur-3xl animate-pulse delay-700" />
         </div>
-        
+
         <div className="max-w-md w-full glass p-10 rounded-[2.5rem] shadow-2xl text-center border border-white/40 dark:border-white/5 relative z-10 animate-fade-in">
           <div className="w-24 h-24 bg-brand-900 dark:bg-brand-800 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-500">
             <LogIn className="text-white" size={48} />
           </div>
           <h1 className="text-4xl font-bold text-brand-900 dark:text-white mb-4 tracking-tight">Micro Gestion</h1>
           <p className="text-brand-600 dark:text-brand-300 mb-12 text-lg">Votre allié quotidien pour une gestion simplifiée et intelligente.</p>
-          
-          <button 
+
+          <button
             onClick={loginWithGoogle}
             className="w-full py-5 px-8 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl hover:shadow-brand-900/20 dark:hover:shadow-white/10 group"
           >
             <LogIn size={24} className="group-hover:translate-x-1 transition-transform" />
             Se connecter avec Google
           </button>
-          
+
           <p className="mt-10 text-xs text-brand-400 dark:text-brand-500 uppercase tracking-widest font-semibold">Sécurisé par Google Auth</p>
         </div>
       </div>
@@ -342,9 +305,9 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-brand-50 dark:bg-brand-950 font-sans text-brand-900 dark:text-brand-50 selection:bg-brand-200 dark:selection:bg-brand-800 selection:text-brand-900 transition-colors duration-500">
-      <Sidebar 
-        currentView={currentView} 
-        setView={setCurrentView} 
+      <Sidebar
+        currentView={currentView}
+        setView={setCurrentView}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isDarkMode={isDarkMode}
@@ -356,16 +319,17 @@ const App: React.FC = () => {
         <div className="lg:hidden flex justify-between items-center mb-8 sticky top-0 bg-brand-50/80 dark:bg-brand-950/80 backdrop-blur-md z-30 py-4 border-b border-brand-200/50 dark:border-brand-800/50">
           <h1 className="text-xl font-bold text-brand-900 dark:text-white tracking-tight">Micro Gestion</h1>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2.5 bg-white dark:bg-brand-900 rounded-xl shadow-sm border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-200 hover:bg-brand-50 transition-colors"
               title="Changer de thème"
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2.5 bg-brand-900 text-white rounded-xl shadow-lg hover:bg-brand-800 transition-all active:scale-90"
+              title="Ouvrir le menu"
             >
               <Menu size={20} />
             </button>
@@ -387,7 +351,7 @@ const App: React.FC = () => {
                )}
              </div>
              <div className="w-px h-8 bg-brand-200 dark:bg-brand-800 mx-1" />
-             <button 
+             <button
                 onClick={logout}
                 className="p-2 text-brand-400 hover:text-red-500 dark:hover:text-red-400 transition-all hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
                 title="Déconnexion"
