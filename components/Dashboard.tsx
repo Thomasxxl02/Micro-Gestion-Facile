@@ -1,19 +1,18 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { CalendarEvent, Invoice, InvoiceStatus, Product, Expense, UserProfile, ActivityType } from '../types';
+import { CalendarEvent, Invoice, InvoiceStatus, Product, Expense, UserProfile } from '../types';
 import { predictRevenue } from '../services/geminiService';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Legend, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell 
+import {
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, PieChart, Pie
 } from 'recharts';
-import { 
-  Euro, TrendingUp, AlertCircle, ArrowUpRight, ArrowRight, Wallet, 
-  CheckCircle2, Bell, Package, Calculator, TrendingDown, Plus, Users, 
+import {
+  Euro, TrendingUp, AlertCircle, ArrowUpRight, ArrowRight, Wallet,
+  CheckCircle2, Bell, Package, Calculator, TrendingDown, Users,
   ArrowDownRight, FileText, ShoppingCart, Mail, Calendar, Clock, Sparkles, Loader2,
   GripVertical
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import {
-  DndContext, 
+  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -34,7 +33,6 @@ interface DashboardProps {
   invoices: Invoice[];
   products: Product[];
   expenses: Expense[];
-  emails?: any[];
   events?: CalendarEvent[];
   onNavigate: (page: string) => void;
   userProfile: UserProfile;
@@ -67,9 +65,9 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
 
   return (
     <div ref={setNodeRef} style={style} className={`${className} relative group`}>
-      <div 
-        {...attributes} 
-        {...listeners} 
+      <div
+        {...attributes}
+        {...listeners}
         className="absolute top-4 right-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-brand-300 hover:text-brand-600 z-20"
       >
         <GripVertical size={16} />
@@ -79,7 +77,7 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, emails = [], events = [], onNavigate, userProfile }) => {
+const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, _emails = [], events = [], onNavigate, userProfile }) => {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
@@ -124,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
   }, [expenses]);
 
   const netProfit = totalRevenue - totalExpenses;
-  
+
   // URSSAF Calculation Logic
   const urssafRates = {
     'SALE': 12.3,
@@ -148,22 +146,11 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
 
   const currentThresholds = userProfile.activityType ? thresholds[userProfile.activityType] : thresholds['SERVICE_BNC'];
   const vatProgress = Math.min((totalRevenue / currentThresholds.vat) * 100, 100);
-  const revenueProgress = Math.min((totalRevenue / currentThresholds.revenue) * 100, 100);
-
-  const pendingRevenue = useMemo(() => {
-    return invoices
-      .filter(inv => inv.status === InvoiceStatus.SENT)
-      .reduce((sum, inv) => {
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') return sum + inv.total;
-        return sum; 
-      }, 0);
-  }, [invoices]);
 
   const monthlyData = useMemo(() => {
     const data: Record<string, { income: number; expense: number }> = {};
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    
+
     months.forEach(m => data[m] = { income: 0, expense: 0 });
 
     invoices.forEach(inv => {
@@ -182,9 +169,9 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
       data[monthName].expense += exp.amount;
     });
 
-    return months.map(name => ({ 
-        name, 
-        Recettes: data[name].income, 
+    return months.map(name => ({
+        name,
+        Recettes: data[name].income,
         Dépenses: data[name].expense,
         Profit: data[name].income - data[name].expense
     }));
@@ -195,7 +182,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
@@ -254,11 +241,6 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
       .slice(0, 8);
   }, [invoices, expenses]);
 
-  // Thresholds (2024 approx for services)
-  const VAT_THRESHOLD = 36800;
-  
-  const progressPercentage = Math.min((totalRevenue / VAT_THRESHOLD) * 100, 100);
-
   const lowStockProducts = useMemo(() => {
     return products.filter(p => p.type === 'product' && p.stock !== undefined && p.stock <= (p.minStock || 0) && !p.archived);
   }, [products]);
@@ -292,12 +274,12 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
         </div>
       </div>
 
-      <DndContext 
+      <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext 
+        <SortableContext
           items={widgetOrder}
           strategy={verticalListSortingStrategy}
         >
@@ -320,7 +302,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                         </span>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.1em]">Chiffre d'Affaires</p>
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Chiffre d'Affaires</p>
                         <div className="flex items-baseline gap-2 mt-1">
                           <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
                             {totalRevenue.toLocaleString('fr-FR')} €
@@ -336,7 +318,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
 
                   {/* Profit Card */}
                   <SortableWidget id="stats-profit" className="lg:col-span-1">
-                    <div className="bg-brand-900 dark:bg-brand-950 text-white p-6 rounded-[2rem] h-full shadow-xl shadow-brand-900/20 relative overflow-hidden group border border-white/5">
+                    <div className="bg-brand-900 dark:bg-brand-950 text-white p-6 rounded-4xl h-full shadow-xl shadow-brand-900/20 relative overflow-hidden group border border-white/5">
                       <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                           <TrendingUp size={120} />
                       </div>
@@ -349,7 +331,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                         </span>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-brand-300 uppercase tracking-[0.1em]">Résultat Brut</p>
+                        <p className="text-[10px] font-bold text-brand-300 uppercase tracking-widest">Résultat Brut</p>
                         <h3 className="text-2xl font-bold mt-1 tracking-tight font-display">
                           {netProfit.toLocaleString('fr-FR')} €
                         </h3>
@@ -372,7 +354,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                         </div>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.1em]">Revenu Net Est.</p>
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Revenu Net Est.</p>
                         <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 mt-1 tracking-tight font-display">
                           {netAfterTax.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
                         </h3>
@@ -384,7 +366,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                   <SortableWidget id="stats-vat" className="lg:col-span-1">
                     <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden">
                       <div className="relative z-10">
-                         <p className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.1em]">Franchise TVA</p>
+                         <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Franchise TVA</p>
                          <div className="flex justify-between items-end mt-1 mb-3">
                             <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">{vatProgress.toFixed(0)}%</h3>
                             <span className="text-[9px] text-brand-400 mb-1 font-bold uppercase tracking-wider">
@@ -392,8 +374,8 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                             </span>
                          </div>
                          <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full transition-all duration-1000 ease-out ${vatProgress > 85 ? 'bg-red-500' : 'bg-brand-900 dark:bg-brand-50'}`} 
+                            <div
+                                className={`h-full rounded-full transition-all duration-1000 ease-out ${vatProgress > 85 ? 'bg-red-500' : 'bg-brand-900 dark:bg-brand-50'}`}
                                 style={{ width: `${vatProgress}%` }}
                             ></div>
                          </div>
@@ -425,8 +407,8 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                            </div>
                       </div>
                     </div>
-                    
-                    <div className="flex-1 min-h-[300px] w-full">
+
+                    <div className="flex-1 min-h-75 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
@@ -440,23 +422,23 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis 
-                            dataKey="name" 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }} 
+                          <XAxis
+                            dataKey="name"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
                             dy={15}
                           />
-                          <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
                             tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
                             tickFormatter={(value) => `${value/1000}k`}
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              borderRadius: '1.25rem', 
-                              border: 'none', 
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: '1.25rem',
+                              border: 'none',
                               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
                               padding: '16px',
                               backgroundColor: 'var(--card-bg)',
@@ -493,11 +475,11 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                                 paddingAngle={8}
                                 dataKey="value"
                               >
-                                {expensesByCategory.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                {expensesByCategory.map((entry) => (
+                                  <Pie.Cell key={entry.name} fill={COLORS[expensesByCategory.indexOf(entry) % COLORS.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip 
+                              <Tooltip
                                 formatter={(value: number) => [`${value.toFixed(2)} €`, '']}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--card-bg)', color: 'var(--text-main)' }}
                               />
@@ -508,7 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                           {expensesByCategory.map((cat, idx) => (
                             <div key={cat.name} className="flex items-center justify-between group">
                               <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ '--indicator-color': COLORS[idx % COLORS.length] } as React.CSSProperties}></div>
                                 <span className="text-xs font-bold text-brand-600 dark:text-brand-400">{cat.name}</span>
                               </div>
                               <div className="text-right">
@@ -536,14 +518,14 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                           <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 font-display">Activité récente</h3>
                           <p className="text-xs text-brand-400 font-medium">Vos dernières transactions</p>
                        </div>
-                       <button 
+                       <button
                          onClick={() => onNavigate('invoices')}
                          className="text-[10px] font-bold text-brand-600 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-50 transition-colors flex items-center uppercase tracking-widest"
                        >
                          Tout voir <ArrowRight size={14} className="ml-1.5" />
                        </button>
                     </div>
-                    
+
                     <div className="flex-1 overflow-auto -mx-2 px-2 custom-scrollbar">
                       <div className="space-y-2">
                         {recentActivity.map((item) => (
@@ -551,7 +533,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                             <div className="flex items-center gap-4">
                               <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
                                 ${item.activityType === 'invoice' ? (
-                                  (item as Invoice).status === InvoiceStatus.PAID ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400' : 
+                                  (item as Invoice).status === InvoiceStatus.PAID ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400' :
                                   (item as Invoice).status === InvoiceStatus.SENT ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' :
                                   'bg-brand-50 dark:bg-brand-800/50 text-brand-500'
                                 ) : 'bg-red-50 dark:bg-red-900/20 text-red-500'}`}>
@@ -571,7 +553,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                               </p>
                               <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
                                    ${item.activityType === 'invoice' ? (
-                                     (item as Invoice).status === InvoiceStatus.PAID ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400' : 
+                                     (item as Invoice).status === InvoiceStatus.PAID ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400' :
                                      (item as Invoice).status === InvoiceStatus.SENT ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' :
                                      'bg-brand-50 dark:bg-brand-800/50 text-brand-600'
                                    ) : 'bg-red-50 dark:bg-red-900/20 text-red-700'}`}>
@@ -595,7 +577,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                           <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 flex items-center gap-3 font-display">
                               <Calendar size={20} className="text-brand-900 dark:text-brand-50" /> Agenda
                           </h3>
-                          <button 
+                          <button
                             onClick={() => onNavigate('calendar')}
                             className="text-[10px] font-bold text-brand-400 hover:text-brand-900 dark:hover:text-brand-50 uppercase tracking-widest"
                           >
@@ -610,7 +592,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                               .map(event => (
                                   <div key={event.id} className="p-4 rounded-2xl border border-brand-100 dark:border-brand-700 bg-brand-50/50 dark:bg-brand-800/50 hover:bg-brand-50 dark:hover:bg-brand-800 transition-all cursor-pointer group" onClick={() => onNavigate('calendar')}>
                                       <div className="flex justify-between items-start mb-1.5">
-                                          <span className="text-xs font-bold text-brand-900 dark:text-brand-50 truncate max-w-[120px] group-hover:text-brand-950 dark:group-hover:text-white">{event.title}</span>
+                                          <span className="text-xs font-bold text-brand-900 dark:text-brand-50 truncate max-w-30 group-hover:text-brand-950 dark:group-hover:text-white">{event.title}</span>
                                           <span className="text-[9px] font-bold text-brand-400 uppercase">{new Date(event.start).toLocaleDateString()}</span>
                                       </div>
                                       <div className="flex items-center gap-2 text-[10px] font-bold text-brand-500">
@@ -705,7 +687,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
 
               if (id === 'prediction') return (
                 <SortableWidget key={id} id={id} className="lg:col-span-1 row-span-1">
-                  <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-950 text-white border-none shadow-xl shadow-brand-900/20">
+                  <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden bg-linear-to-br from-brand-900 to-brand-950 text-white border-none shadow-xl shadow-brand-900/20">
                     <div className="absolute -right-4 -top-4 p-8 opacity-10">
                         <Sparkles size={120} />
                     </div>
@@ -714,11 +696,11 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                           <p className="text-[10px] font-bold text-brand-300 uppercase tracking-[0.15em]">Prédiction IA</p>
                           <Sparkles size={16} className="text-accent-400" />
                        </div>
-                       
+
                        {prediction ? (
                          <div className="space-y-3">
                             <p className="text-[11px] text-brand-100 leading-relaxed line-clamp-3 font-medium">{prediction}</p>
-                            <button 
+                            <button
                               onClick={handlePredict}
                               disabled={isPredicting}
                               className="text-[9px] font-bold uppercase tracking-widest text-accent-400 hover:text-accent-300 transition-colors flex items-center gap-1.5"
@@ -729,7 +711,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, ema
                          </div>
                        ) : (
                          <div className="flex flex-col items-center justify-center py-2">
-                            <button 
+                            <button
                               onClick={handlePredict}
                               disabled={isPredicting}
                               className="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10"

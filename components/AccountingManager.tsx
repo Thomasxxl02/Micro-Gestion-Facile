@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Expense, Invoice, InvoiceStatus, Supplier } from '../types';
-import { 
-  Plus, Trash2, TrendingUp, TrendingDown, DollarSign, Calendar, 
-  PieChart as PieChartIcon, Download, Search, Filter, BarChart3, 
-  ArrowUpRight, ArrowDownRight, Calculator, Info, ChevronRight,
-  FileSpreadsheet, Camera, Loader2, Sparkles
+import {
+  Plus, Trash2, TrendingUp, TrendingDown, DollarSign, Calendar,
+  PieChart as PieChartIcon, Search, Filter, Calculator,
+  FileSpreadsheet, Camera, Loader2
 } from 'lucide-react';
 import { analyzeReceipt } from '../services/geminiService';
-import { 
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+import {
+  BarChart, Bar, PieChart, Pie, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid
 } from 'recharts';
 
 interface AccountingManagerProps {
@@ -30,7 +29,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
   const [minAmount, setMinAmount] = useState<string>('');
   const [maxAmount, setMaxAmount] = useState<string>('');
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
-  const [taxRate, setTaxRate] = useState(21.1); // Default for services
+  const [taxRate] = useState(21.1); // Default for services
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -57,14 +56,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
           if (type === 'credit_note') return sum - inv.total;
           return sum;
         }, 0);
-      
+
       return { name, revenue: monthRevenue, tax: monthRevenue * (taxRate / 100) };
     });
   }, [invoices, selectedYear, taxRate]);
 
   const totalYearlyRevenue = fiscalData.reduce((sum, d) => sum + d.revenue, 0);
   const totalYearlyTax = fiscalData.reduce((sum, d) => sum + d.tax, 0);
-  
+
   // Form State
   const [newExpense, setNewExpense] = useState<Partial<Expense>>({
     date: new Date().toISOString().split('T')[0],
@@ -88,12 +87,12 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
       reader.onload = async (event) => {
         const base64 = (event.target?.result as string).split(',')[1];
         const result = await analyzeReceipt(base64, file.type);
-        
+
         if (result) {
           // Find supplier if possible
           let supplierId = '';
           if (result.supplierName) {
-            const existingSupplier = suppliers.find(s => 
+            const existingSupplier = suppliers.find(s =>
               s.name.toLowerCase().includes(result.supplierName.toLowerCase())
             );
             if (existingSupplier) supplierId = existingSupplier.id;
@@ -124,9 +123,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
 
     if (editingExpense) {
       const updatedExpense = { ...editingExpense, ...newExpense } as Expense;
-      const updatedExpenses = expenses.map(exp => 
-        exp.id === editingExpense.id 
-          ? updatedExpense 
+      const updatedExpenses = expenses.map(exp =>
+        exp.id === editingExpense.id
+          ? updatedExpense
           : exp
       );
       setExpenses(updatedExpenses);
@@ -214,9 +213,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
       const supplier = suppliers.find(s => s.id === exp.supplierId)?.name || '-';
       return [
         exp.date,
-        `"${exp.description.replace(/"/g, '""')}"`,
+        `"${exp.description.replaceAll('"', '""')}"`,
         `"${exp.category}"`,
-        `"${supplier.replace(/"/g, '""')}"`,
+        `"${supplier.replaceAll('"', '""')}"`,
         exp.amount.toFixed(2)
       ].join(',');
     });
@@ -227,7 +226,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
     link.setAttribute("download", `journal_comptable_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   };
 
   // --- STATISTICS ---
@@ -254,7 +253,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
   const monthlyComparison = useMemo(() => {
     const data: Record<string, { income: number; expense: number }> = {};
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    
+
     months.forEach(m => data[m] = { income: 0, expense: 0 });
 
     invoices.forEach(inv => {
@@ -325,8 +324,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
       const matchesSearch = exp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           suppliers.find(s => s.id === exp.supplierId)?.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !categoryFilter || exp.category === categoryFilter;
-      const matchesMin = !minAmount || exp.amount >= parseFloat(minAmount);
-      const matchesMax = !maxAmount || exp.amount <= parseFloat(maxAmount);
+      const matchesMin = !minAmount || exp.amount >= Number.parseFloat(minAmount);
+      const matchesMax = !maxAmount || exp.amount <= Number.parseFloat(maxAmount);
       return matchesSearch && matchesCategory && matchesMin && matchesMax;
     });
   }, [expenses, searchTerm, categoryFilter, minAmount, maxAmount, suppliers]);
@@ -343,19 +342,19 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
           <p className="text-brand-500 mt-1">Suivi de trésorerie et pilotage financier.</p>
         </div>
         <div className="flex bg-brand-100/50 p-1 rounded-2xl border border-brand-100">
-           <button 
+           <button
              onClick={() => setActiveTab('journal')}
              className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'journal' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
              Journal
            </button>
-           <button 
+           <button
              onClick={() => setActiveTab('bilan')}
              className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'bilan' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
              Bilan
            </button>
-           <button 
+           <button
              onClick={() => setActiveTab('fiscal')}
              className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'fiscal' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
@@ -454,24 +453,24 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={monthlyComparison} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barGap={8}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis 
-                                dataKey="name" 
-                                axisLine={false} 
-                                tickLine={false} 
-                                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }} 
+                            <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
                                 dy={15}
                             />
-                            <YAxis 
-                                axisLine={false} 
-                                tickLine={false} 
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
                                 tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
                                 tickFormatter={(value) => `${value/1000}k`}
                             />
-                            <Tooltip 
+                            <Tooltip
                                 cursor={{ fill: '#f8fafc' }}
-                                contentStyle={{ 
-                                    borderRadius: '1rem', 
-                                    border: 'none', 
+                                contentStyle={{
+                                    borderRadius: '1rem',
+                                    border: 'none',
                                     boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                                     padding: '16px',
                                     backgroundColor: 'white',
@@ -503,11 +502,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                             paddingAngle={8}
                             dataKey="value"
                             >
-                            {expensesByCategory.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            {expensesByCategory.map((entry) => (
+                                <Pie.Cell key={entry.name} fill={COLORS[expensesByCategory.indexOf(entry) % COLORS.length]} />
                             ))}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                                 formatter={(value: number) => [`${value.toFixed(2)} €`, '']}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                             />
@@ -518,7 +517,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                         {expensesByCategory.map((cat, idx) => (
                             <div key={cat.name} className="flex items-center justify-between group">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                    <div className="color-indicator" style={{ '--indicator-color': COLORS[idx % COLORS.length] } as React.CSSProperties}></div>
                                     <span className="text-xs font-semibold text-brand-600">{cat.name}</span>
                                 </div>
                                 <div className="text-right">
@@ -544,7 +543,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
           <div className="card-modern p-8">
             <h3 className="text-lg font-bold text-brand-900 mb-8 font-display">Récapitulatif Trimestriel</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {quarterlyStats.map((q, idx) => (
+                {quarterlyStats.map((q, _idx) => (
                     <div key={q.name} className="p-6 rounded-3xl bg-brand-50/50 border border-brand-100 hover:border-brand-200 transition-all group">
                         <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-4">{q.name}</p>
                         <div className="space-y-3">
@@ -588,9 +587,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
             </div>
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Année</span>
-              <select 
+              <select
+                title="Sélectionner l'année"
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
                 className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-2 text-sm font-bold text-brand-900 outline-none cursor-pointer"
               >
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -658,8 +658,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                 <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400" size={18} />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         placeholder="Rechercher..."
                         className="w-full pl-12 pr-4 py-3 border border-brand-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand-900/5 bg-white shadow-sm transition-all font-medium text-brand-900"
                         value={searchTerm}
@@ -668,7 +668,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                 </div>
                 <div className="flex items-center gap-3 bg-white px-4 py-2 border border-brand-100 rounded-2xl shadow-sm">
                     <Filter size={16} className="text-brand-400" />
-                    <select 
+                    <select
+                        title="Filtrer par catégorie de dépense"
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
                         className="bg-transparent text-xs font-bold text-brand-900 outline-none cursor-pointer uppercase tracking-wider"
@@ -679,17 +680,19 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                 </div>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 border border-brand-100 rounded-2xl shadow-sm">
                     <DollarSign size={14} className="text-brand-400" />
-                    <input 
-                      type="number" 
-                      placeholder="Min" 
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      title="Montant minimum"
                       className="w-16 bg-transparent text-xs font-bold text-brand-900 outline-none"
                       value={minAmount}
                       onChange={e => setMinAmount(e.target.value)}
                     />
                     <span className="text-brand-300">-</span>
-                    <input 
-                      type="number" 
-                      placeholder="Max" 
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      title="Montant maximum"
                       className="w-16 bg-transparent text-xs font-bold text-brand-900 outline-none"
                       value={maxAmount}
                       onChange={e => setMaxAmount(e.target.value)}
@@ -699,7 +702,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
 
              <div className="flex gap-3 w-full sm:w-auto">
                 {selectedExpenses.length > 0 && (
-                  <button 
+                  <button
                       onClick={handleBulkDelete}
                       className="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm"
                   >
@@ -707,14 +710,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                       Supprimer ({selectedExpenses.length})
                   </button>
                 )}
-                <button 
+                <button
                     onClick={exportJournalCSV}
                     className="flex-1 sm:flex-none bg-white hover:bg-brand-50 text-brand-600 border border-brand-100 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm"
                 >
                     <FileSpreadsheet size={16} />
                     Export CSV
                 </button>
-                <button 
+                <button
                     onClick={() => {
                       setEditingExpense(null);
                       setNewExpense({
@@ -734,13 +737,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                     Nouvelle Dépense
                 </button>
                 <div className="relative">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    title="Télécharger une image de ticket"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
                     onChange={handleFileUpload}
                   />
-                  <button 
+                  <button
                       className="w-full sm:w-auto bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-500/10 text-[10px] font-bold uppercase tracking-widest"
                   >
                       <Camera size={18} />
@@ -765,55 +769,63 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                       </span>
                     )}
                   </h3>
-                  <button onClick={() => { setShowForm(false); setEditingExpense(null); }} className="text-brand-400 hover:text-brand-900 dark:hover:text-brand-50 transition-colors">
+                  <button onClick={() => { setShowForm(false); setEditingExpense(null); }} title="Fermer le formulaire" className="text-brand-400 hover:text-brand-900 dark:hover:text-brand-50 transition-colors">
                       <Plus size={24} className="rotate-45" />
                   </button>
               </div>
               <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                 <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Date de l'achat</label>
-                  <input 
-                    type="date" 
+                  <label htmlFor="expense-date" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Date de l'achat</label>
+                  <input
+                    id="expense-date"
+                    type="date"
                     required
+                    title="Sélectionner la date de l'achat"
                     className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium text-brand-900"
                     value={newExpense.date}
                     onChange={e => setNewExpense({...newExpense, date: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Montant TTC (€)</label>
-                  <input 
-                    type="number" 
+                  <label htmlFor="expense-amount" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Montant TTC (€)</label>
+                  <input
+                    id="expense-amount"
+                    type="number"
                     step="0.01"
                     required
                     placeholder="0.00"
+                    title="Montant TTC (TVA incluse)"
                     className="w-full p-4 bg-brand-50/50 dark:bg-brand-800/50 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 dark:text-brand-50"
                     value={newExpense.amount || ''}
                     onChange={e => {
-                      const amount = parseFloat(e.target.value);
+                      const amount = Number.parseFloat(e.target.value);
                       const vatAmount = newExpense.vatRate ? (amount * (newExpense.vatRate / (100 + newExpense.vatRate))) : newExpense.vatAmount;
                       setNewExpense({...newExpense, amount, vatAmount});
                     }}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Montant TVA (€)</label>
-                  <input 
-                    type="number" 
+                  <label htmlFor="expense-vat-amount" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Montant TVA (€)</label>
+                  <input
+                    id="expense-vat-amount"
+                    type="number"
                     step="0.01"
                     placeholder="0.00"
+                    title="Montant de la TVA"
                     className="w-full p-4 bg-brand-50/50 dark:bg-brand-800/50 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 dark:text-brand-50"
                     value={newExpense.vatAmount || ''}
-                    onChange={e => setNewExpense({...newExpense, vatAmount: parseFloat(e.target.value)})}
+                    onChange={e => setNewExpense({...newExpense, vatAmount: Number.parseFloat(e.target.value)})}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Taux TVA (%)</label>
+                  <label htmlFor="expense-vat-rate" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Taux TVA (%)</label>
                   <select
-                    className="w-full p-4 bg-brand-50/50 dark:bg-brand-800/50 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white dark:bg-brand-800 transition-all font-bold text-brand-900 dark:text-brand-50 appearance-none cursor-pointer"
+                    id="expense-vat-rate"
+                    title="Sélectionner le taux TVA"
+                    className="w-full p-4 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white dark:bg-brand-800 transition-all font-bold text-brand-900 dark:text-brand-50 appearance-none cursor-pointer"
                     value={newExpense.vatRate || 0}
                     onChange={e => {
-                      const vatRate = parseFloat(e.target.value);
+                      const vatRate = Number.parseFloat(e.target.value);
                       const vatAmount = newExpense.amount ? (newExpense.amount * (vatRate / (100 + vatRate))) : 0;
                       setNewExpense({...newExpense, vatRate, vatAmount});
                     }}
@@ -825,9 +837,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Catégorie</label>
+                  <label htmlFor="expense-category" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Catégorie</label>
                   <select
-                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
+                    id="expense-category"
+                    title="Sélectionner la catégorie de dépense"
+                    className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
                     value={newExpense.category}
                     onChange={e => setNewExpense({...newExpense, category: e.target.value})}
                   >
@@ -835,20 +849,24 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Description / Libellé</label>
-                  <input 
-                    type="text" 
+                  <label htmlFor="expense-description" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Description / Libellé</label>
+                  <input
+                    id="expense-description"
+                    type="text"
                     required
                     placeholder="Ex: Abonnement Internet, Achat écran..."
-                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium text-brand-900"
+                    title="Description ou libéllé de la dépense"
+                    className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium text-brand-900"
                     value={newExpense.description}
                     onChange={e => setNewExpense({...newExpense, description: e.target.value})}
                   />
                 </div>
                  <div>
-                  <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Fournisseur</label>
+                  <label htmlFor="expense-supplier" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Fournisseur</label>
                   <select
-                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
+                    id="expense-supplier"
+                    title="Sélectionner un fournisseur"
+                    className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
                     value={newExpense.supplierId}
                     onChange={e => setNewExpense({...newExpense, supplierId: e.target.value})}
                   >
@@ -860,15 +878,15 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                 </div>
 
                 <div className="md:col-span-3 flex justify-end gap-4 mt-4">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => { setShowForm(false); setEditingExpense(null); }}
                     className="px-8 py-3 text-brand-600 hover:bg-brand-50 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-colors"
                   >
                     Annuler
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="px-10 py-3 bg-brand-900 text-white rounded-2xl hover:bg-brand-950 font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-brand-900/10 transition-all hover:scale-[1.02]"
                   >
                     {editingExpense ? 'Mettre à jour' : 'Enregistrer la dépense'}
@@ -884,8 +902,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                 <thead>
                     <tr className="bg-brand-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
                     <th className="px-6 py-5 w-12">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
+                        title="Sélectionner toutes les dépenses affichées"
                         className="rounded border-brand-700 bg-brand-800 text-accent-500 focus:ring-accent-500"
                         checked={filteredExpenses.length > 0 && selectedExpenses.length === filteredExpenses.length}
                         onChange={toggleSelectAll}
@@ -906,8 +925,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                     return (
                         <tr key={exp.id} className={`hover:bg-brand-50/50 transition-colors group ${isSelected ? 'bg-brand-50/80' : ''}`}>
                         <td className="px-6 py-6">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
+                            title="Sélectionner cette dépense"
                             className="rounded border-brand-200 text-brand-900 focus:ring-brand-900"
                             checked={isSelected}
                             onChange={() => toggleSelect(exp.id)}
@@ -946,14 +966,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                         </td>
                         <td className="px-8 py-6 text-right">
                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                              <button 
+                              <button
                                 onClick={() => handleEdit(exp)}
                                 className="text-brand-400 hover:text-brand-900 p-2 rounded-xl hover:bg-brand-50"
                                 title="Modifier"
                               >
                                 <Plus size={16} className="rotate-0" />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDelete(exp.id)}
                                 className="text-brand-200 hover:text-red-500 p-2 rounded-xl hover:bg-red-50"
                                 title="Supprimer"

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Email, EmailTemplate, Client, Invoice, UserProfile } from '../types';
-import { Mail, Send, History, FileText, Plus, Trash2, Search, Filter, Clock, CheckCircle2, AlertCircle, X, Edit2, Copy, Wand2, User, Check, Eye } from 'lucide-react';
+import { Mail, Send, History, FileText, Plus, Trash2, Search, Clock, CheckCircle2, AlertCircle, X, Edit2, Copy, Wand2, User, Check, Eye } from 'lucide-react';
 import { draftEmail } from '../services/geminiService';
 
 interface EmailManagerProps {
@@ -17,7 +17,7 @@ interface EmailManagerProps {
   onDeleteTemplate?: (id: string) => void;
 }
 
-const EmailManager: React.FC<EmailManagerProps> = ({ 
+const EmailManager: React.FC<EmailManagerProps> = ({
   emails, setEmails, templates, setTemplates, clients, invoices, userProfile,
   onSaveEmail, onDeleteEmail, onSaveTemplate, onDeleteTemplate
 }) => {
@@ -50,8 +50,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
   const filteredEmails = useMemo(() => {
     return emails
-      .filter(e => 
-        e.to.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      .filter(e =>
+        e.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.subject.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
@@ -60,7 +60,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   const handleAIDraft = async () => {
     const client = clients.find(c => c.id === composeData.clientId);
     const invoice = invoices.find(i => i.id === composeData.invoiceId);
-    
+
     if (!client) {
       alert("Veuillez sélectionner un client pour générer un brouillon.");
       return;
@@ -72,13 +72,13 @@ const EmailManager: React.FC<EmailManagerProps> = ({
         clientName: client.name,
         invoiceNumber: invoice?.number,
         total: invoice?.total.toString(),
-        purpose: composeData.type === 'reminder' ? 'Relance de facture impayée' : 
-                 composeData.type === 'invoice' ? 'Envoi de facture' : 
+        purpose: composeData.type === 'reminder' ? 'Relance de facture impayée' :
+                 composeData.type === 'invoice' ? 'Envoi de facture' :
                  composeData.type === 'quote' ? 'Envoi de devis' : 'Communication diverse',
         tone: 'formal',
         companyName: userProfile.companyName
       });
-      
+
       setComposeData({
         ...composeData,
         subject: draft.subject,
@@ -140,7 +140,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   const applyTemplate = (template: EmailTemplate) => {
     let body = template.body;
     let subject = template.subject;
-    
+
     const client = clients.find(c => c.id === composeData.clientId);
     const invoice = invoices.find(i => i.id === composeData.invoiceId);
 
@@ -154,8 +154,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     };
 
     Object.entries(replacements).forEach(([key, value]) => {
-      body = body.replace(new RegExp(key, 'g'), value);
-      subject = subject.replace(new RegExp(key, 'g'), value);
+      body = body.replaceAll(key, value);
+      subject = subject.replaceAll(key, value);
     });
 
     setComposeData({
@@ -187,7 +187,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           <h2 className="text-2xl font-bold text-brand-900">Emails & Communications</h2>
           <p className="text-brand-500">Gérez vos envois de factures, devis et relances.</p>
         </div>
-        <button 
+        <button
           onClick={() => {
             setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '' });
             setActiveTab('compose');
@@ -201,21 +201,21 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
       {/* Tabs */}
       <div className="flex bg-white p-1 rounded-2xl border border-brand-100 shadow-sm w-fit">
-        <button 
+        <button
           onClick={() => setActiveTab('history')}
           className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-brand-900 text-white shadow-md' : 'text-brand-500 hover:text-brand-700'}`}
         >
           <History size={16} />
           Historique
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('templates')}
           className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'templates' ? 'bg-brand-900 text-white shadow-md' : 'text-brand-500 hover:text-brand-700'}`}
         >
           <FileText size={16} />
           Templates
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('compose')}
           className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'compose' ? 'bg-brand-900 text-white shadow-md' : 'text-brand-500 hover:text-brand-700'}`}
         >
@@ -228,8 +228,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
         <div className="space-y-6">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400" size={18} />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Rechercher un email..."
               className="w-full pl-10 pr-4 py-3 border border-brand-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 bg-white shadow-sm transition-all"
               value={searchTerm}
@@ -273,9 +273,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
+                      <button
                         onClick={() => deleteEmail(email.id)}
                         className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                        title="Supprimer l'email"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -299,7 +300,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       {activeTab === 'templates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Add Template Card */}
-          <button 
+          <button
             onClick={() => {
               setEditingTemplateId(null);
               setTemplateFormData({ name: '', subject: '', body: '', type: 'custom' });
@@ -320,19 +321,21 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   <FileText size={24} />
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
+                  <button
                     onClick={() => {
                       setEditingTemplateId(template.id);
                       setTemplateFormData(template);
                       setIsComposeOpen(true);
                     }}
                     className="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+                    title="Modifier le template"
                   >
                     <Edit2 size={16} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => deleteTemplate(template.id)}
                     className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    title="Supprimer le template"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -343,7 +346,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               <div className="text-sm text-brand-600 line-clamp-3 mb-4 bg-brand-50/50 p-3 rounded-xl italic">
                 {template.subject}
               </div>
-              <button 
+              <button
                 onClick={() => {
                   applyTemplate(template);
                   setActiveTab('compose');
@@ -366,7 +369,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 Nouveau Message
               </h3>
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={handleAIDraft}
                   disabled={isDrafting || !composeData.clientId}
                   className="flex items-center gap-2 px-4 py-2 bg-accent-50 text-accent-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-accent-100 transition-all disabled:opacity-50"
@@ -374,7 +377,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   {isDrafting ? <Clock className="animate-spin" size={14} /> : <Wand2 size={14} />}
                   Aide à la rédaction
                 </button>
-                <button 
+                <button
                   onClick={() => setShowPreview(!showPreview)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showPreview ? 'bg-brand-900 text-white' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'}`}
                 >
@@ -400,7 +403,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   </div>
                 </div>
                 <div className="flex justify-end gap-3">
-                  <button 
+                  <button
                     onClick={() => setShowPreview(false)}
                     className="px-6 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
                   >
@@ -412,21 +415,23 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               <form onSubmit={handleSendEmail} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Client</label>
+                    <label htmlFor="email-client" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Client</label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400" size={16} />
-                      <select 
+                      <select
+                        id="email-client"
                         required
                         className="w-full pl-10 pr-4 py-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                         value={composeData.clientId}
                         onChange={e => {
                           const client = clients.find(c => c.id === e.target.value);
                           setComposeData({
-                            ...composeData, 
+                            ...composeData,
                             clientId: e.target.value,
                             to: client?.email || ''
                           });
                         }}
+                        title="Sélectionner un client"
                       >
                         <option value="">Sélectionner un client...</option>
                         {clients.map(c => (
@@ -436,13 +441,15 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Document Lié (Optionnel)</label>
+                    <label htmlFor="email-document" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Document Lié (Optionnel)</label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400" size={16} />
-                      <select 
+                      <select
+                        id="email-document"
                         className="w-full pl-10 pr-4 py-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                         value={composeData.invoiceId}
                         onChange={e => setComposeData({...composeData, invoiceId: e.target.value, relatedId: e.target.value})}
+                        title="Sélectionner un document lié"
                       >
                         <option value="">Aucun document...</option>
                         {invoices
@@ -459,8 +466,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Destinataire</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       required
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                       value={composeData.to}
@@ -470,10 +477,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Type d'email</label>
-                    <select 
+                    <select
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                       value={composeData.type}
                       onChange={e => setComposeData({...composeData, type: e.target.value as Email['type']})}
+                      title="Sélectionner le type d'email"
                     >
                       <option value="custom">Communication Libre</option>
                       <option value="invoice">Envoi de Facture</option>
@@ -485,8 +493,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Sujet</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-bold"
                     value={composeData.subject}
@@ -498,7 +506,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider">Message</label>
-                    <button 
+                    <button
                       type="button"
                       onClick={handleCopy}
                       className="text-[10px] font-bold text-brand-400 hover:text-brand-600 flex items-center gap-1 transition-colors"
@@ -507,7 +515,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       {copied ? 'Copié !' : 'Copier le corps'}
                     </button>
                   </div>
-                  <textarea 
+                  <textarea
                     rows={10}
                     required
                     className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all resize-none font-medium"
@@ -518,7 +526,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   <div className="mt-4 flex flex-wrap gap-2">
                     <span className="text-[10px] text-brand-400 font-bold uppercase py-1">Variables:</span>
                     {['{{company_name}}', '{{client_name}}', '{{invoice_number}}', '{{total}}', '{{due_date}}'].map(v => (
-                      <button 
+                      <button
                         key={v}
                         type="button"
                         onClick={() => setComposeData({...composeData, body: composeData.body + v})}
@@ -531,14 +539,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setActiveTab('history')}
                     className="px-8 py-3 text-brand-600 font-bold text-sm uppercase tracking-widest hover:bg-brand-50 rounded-2xl transition-all"
                   >
                     Annuler
                   </button>
-                  <button 
+                  <button
                     type="submit"
                     className="bg-brand-900 text-white px-10 py-3 rounded-2xl flex items-center gap-2 hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20 font-bold text-sm uppercase tracking-widest"
                   >
@@ -558,7 +566,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </h4>
               <div className="space-y-3">
                 {templates.map(t => (
-                  <button 
+                  <button
                     key={t.id}
                     onClick={() => applyTemplate(t)}
                     className="w-full p-4 bg-white border border-brand-100 rounded-2xl text-left hover:border-brand-300 hover:shadow-sm transition-all group"
@@ -594,15 +602,16 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-slide-up">
             <div className="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
               <h3 className="text-xl font-bold text-brand-900">{editingTemplateId ? 'Modifier le Template' : 'Nouveau Template'}</h3>
-              <button onClick={() => setIsComposeOpen(false)} className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors">
+              <button onClick={() => setIsComposeOpen(false)} className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors" title="Fermer">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSaveTemplate} className="p-8 space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-brand-700 mb-2">Nom du Template</label>
-                <input 
-                  type="text" 
+                <label htmlFor="template-name" className="block text-sm font-semibold text-brand-700 mb-2">Nom du Template</label>
+                <input
+                  id="template-name"
+                  type="text"
                   required
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                   value={templateFormData.name}
@@ -612,8 +621,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-semibold text-brand-700 mb-2">Sujet par défaut</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                   value={templateFormData.subject}
@@ -623,7 +632,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-semibold text-brand-700 mb-2">Corps du message</label>
-                <textarea 
+                <textarea
                   rows={6}
                   required
                   className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all resize-none"
@@ -633,14 +642,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsComposeOpen(false)}
                   className="px-6 py-2.5 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-xl transition-all"
                 >
                   Annuler
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="bg-brand-900 text-white px-8 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20"
                 >

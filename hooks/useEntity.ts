@@ -64,7 +64,7 @@ interface FilterConfig {
   archiveField?: keyof any; // ex: 'archived'
 }
 
-export const useEntityFilters = <T extends any>(
+export const useEntityFilters = <T>(
   entities: T[],
   config: FilterConfig = {}
 ) => {
@@ -135,7 +135,7 @@ export const useEntityFilters = <T extends any>(
  * Hook: Statistiques d'entité (revenue, count, etc)
  * Utilise useMemo pour ne recalculer que si les données changent
  */
-export const useEntityStats = <T extends any>(
+export const useEntityStats = <T>(
   entities: T[],
   statFunctions: {
     [key: string]: (items: T[]) => any;

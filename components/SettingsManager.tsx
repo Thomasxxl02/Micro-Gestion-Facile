@@ -8,9 +8,9 @@
 import React, { useRef, useState } from 'react';
 import type { UserProfile, Invoice, Client, Supplier, Product, Expense, InvoiceStatus } from '../types';
 import {
-  Building, Wallet, Mail, CheckCircle2, Globe, Phone,
+  Building, Wallet, Globe,
   MapPin, CreditCard, ShieldCheck, Download, Upload,
-  Hash, Palette, Briefcase, Database, Sparkles, Trash2, Save,
+  Hash, Palette, Briefcase, Database, Trash2,
   ShieldAlert, RefreshCw, Zap, Calculator, Mail as MailIcon, Phone as PhoneIcon
 } from 'lucide-react';
 import { FormField, TextAreaField, SelectField, ToggleSwitch, ColorPicker } from './FormFields';
@@ -45,8 +45,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'data' | 'preferences'>('profile');
-  const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-  
+
   // ─── DIALOG STATES ───
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -98,16 +97,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     try {
       const text = await file.text(); // Modern API, replaces FileReader
       const data = JSON.parse(text);
-      
+
       if (data.profile) setUserProfile(data.profile);
       if (data.invoices) setAllData.setInvoices(data.invoices);
       if (data.clients) setAllData.setClients(data.clients);
       if (data.suppliers) setAllData.setSuppliers(data.suppliers);
       if (data.products) setAllData.setProducts(data.products);
       if (data.expenses) setAllData.setExpenses(data.expenses);
-      
+
       showSaveMessage('✓ Données importées avec succès');
-    } catch (err) {
+    } catch {
       setAlertDialog({
         isOpen: true,
         title: '⚠️ Erreur d\'importation',
@@ -206,7 +205,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           <h2 className="text-3xl font-bold text-brand-900 dark:text-white font-display tracking-tight">Paramètres</h2>
           <p className="text-brand-500 dark:text-brand-400 mt-1">Gérez votre profil, votre image de marque et vos données.</p>
         </div>
-        
+
         {/* TAB BUTTONS */}
         <div className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar">
           {['profile', 'billing', 'preferences', 'data'].map((tab) => (

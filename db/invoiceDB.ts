@@ -151,7 +151,7 @@ export const db = new InvoiceDB();
 export async function initializeDB(): Promise<void> {
   try {
     await db.open();
-    console.log('✅ Base de données initialisée avec succès');
+    console.warn('✅ Base de données initialisée avec succès');
 
     // Initialiser le profil utilisateur s'il n'existe pas
     const existingProfile = await db.userProfile.toArray();
@@ -170,7 +170,7 @@ export async function initializeDB(): Promise<void> {
         defaultVatRate: 20,
       };
       await db.userProfile.add(defaultProfile);
-      console.log('✅ Profil utilisateur initialisé');
+      console.warn('✅ Profil utilisateur initialisé');
     }
   } catch (error) {
     console.error("❌ Erreur lors de l'initialisation de la BD:", error);
