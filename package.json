@@ -1,13 +1,51 @@
 {
   "name": "micro-gestion-facile",
+  "version": "1.0.0",
+  "description": "Application Web Progressive (PWA) de gestion complète pour micro-entrepreneurs français - Factures, clients, fournisseurs, comptabilité et fiscalité",
+  "keywords": [
+    "micro-entreprise",
+    "factures",
+    "comptabilité",
+    "gestion",
+    "pwа",
+    "react",
+    "typescript",
+    "firebase",
+    "français"
+  ],
+  "author": "Thomas",
+  "license": "MIT",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Thomasxxl02/Micro-Gestion-Facile.git"
+  },
+  "homepage": "https://github.com/Thomasxxl02/Micro-Gestion-Facile",
+  "bugs": {
+    "url": "https://github.com/Thomasxxl02/Micro-Gestion-Facile/issues"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -25,8 +63,15 @@
     "@tailwindcss/vite": "^4.2.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/expect": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.3.0",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^4.0.18"
   }
 }
