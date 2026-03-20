@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+﻿import React, { useRef, useState } from 'react';
 import { UserProfile, Invoice, Client, Supplier, Product, Expense, InvoiceStatus } from '../types';
-import { 
-  Building, Wallet, Mail, FileText, CheckCircle2, Globe, Phone, 
-  MapPin, CreditCard, ShieldCheck, Download, Upload, RotateCcw, 
-  Hash, Palette, Coins, AlertTriangle, Linkedin, Briefcase,
+import {
+  Building, Wallet, Mail, CheckCircle2, Globe, Phone,
+  MapPin, CreditCard, ShieldCheck, Download, Upload,
+  Hash, Palette, Briefcase,
   Database, Sparkles, Trash2, Save, ShieldAlert, RefreshCw, Zap, Calculator
 } from 'lucide-react';
 
@@ -103,11 +103,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
     ];
 
     const sampleInvoices: Invoice[] = [
-      { 
-        id: 'i1', 
-        type: 'invoice', 
-        number: 'FAC-2024-001', 
-        date: new Date().toISOString().split('T')[0], 
+      {
+        id: 'i1',
+        type: 'invoice',
+        number: 'FAC-2024-001',
+        date: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
         clientId: 'c1',
         items: [{ id: 'it1', description: 'Consulting IT', quantity: 5, unitPrice: 650, unit: 'jour' }],
@@ -119,7 +119,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
     setAllData.setClients([...allData.clients, ...sampleClients]);
     setAllData.setProducts([...allData.products, ...sampleProducts]);
     setAllData.setInvoices([...allData.invoices, ...sampleInvoices]);
-    
+
     alert('Données de test générées !');
   };
 
@@ -131,25 +131,25 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
           <p className="text-brand-500 mt-1">Gérez votre profil, votre image de marque et vos données.</p>
         </div>
         <div className="flex bg-brand-100/50 p-1 rounded-2xl border border-brand-100 overflow-x-auto no-scrollbar">
-           <button 
+           <button
              onClick={() => setActiveTab('profile')}
              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'profile' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
              Profil
            </button>
-           <button 
+           <button
              onClick={() => setActiveTab('billing')}
              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'billing' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
              Facturation
            </button>
-           <button 
+           <button
              onClick={() => setActiveTab('preferences')}
              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'preferences' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
              Préférences
            </button>
-           <button 
+           <button
              onClick={() => setActiveTab('data')}
              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'data' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
            >
@@ -161,7 +161,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
         {/* Left Column: Forms */}
         <div className="xl:col-span-2 space-y-8">
-            
+
             {activeTab === 'profile' && (
               <div className="space-y-8 animate-slide-up">
                 {/* Identity Card */}
@@ -172,13 +172,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <h3 className="text-lg font-bold text-brand-900 font-display">Identité Professionnelle</h3>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Nom commercial / Raison sociale</label>
-                            <input 
-                                type="text" 
-                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900" 
+                            <input
+                                type="text"
+                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900"
                                 value={userProfile.companyName}
                                 onChange={(e) => handleChange('companyName', e.target.value)}
                                 placeholder="Ex: Mon Entreprise Digitale"
@@ -188,9 +188,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Titre Professionnel</label>
                             <div className="relative">
                                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                <input 
-                                    type="text" 
-                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-semibold text-brand-900" 
+                                <input
+                                    type="text"
+                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-semibold text-brand-900"
                                     value={userProfile.professionalTitle || ''}
                                     onChange={(e) => handleChange('professionalTitle', e.target.value)}
                                     placeholder="Ex: Consultant IT, Photographe..."
@@ -199,9 +199,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Numéro SIRET</label>
-                            <input 
-                                type="text" 
-                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm" 
+                            <input
+                                type="text"
+                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm"
                                 value={userProfile.siret}
                                 onChange={(e) => handleChange('siret', e.target.value)}
                                 placeholder="123 456 789 00012"
@@ -209,9 +209,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Numéro SIREN</label>
-                            <input 
-                                type="text" 
-                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm" 
+                            <input
+                                type="text"
+                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm"
                                 value={userProfile.siren || ''}
                                 onChange={(e) => handleChange('siren', e.target.value)}
                                 placeholder="123 456 789"
@@ -234,8 +234,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Adresse du siège</label>
                              <div className="relative">
                                 <MapPin className="absolute left-4 top-4 text-brand-300" size={18} />
-                                <textarea 
-                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none font-medium" 
+                                <textarea
+                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none font-medium"
                                     rows={2}
                                     value={userProfile.address}
                                     onChange={(e) => handleChange('address', e.target.value)}
@@ -243,15 +243,15 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                 />
                             </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <div>
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Email Professionnel</label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                    <input 
-                                        type="email" 
-                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium" 
+                                    <input
+                                        type="email"
+                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium"
                                         value={userProfile.email}
                                         onChange={(e) => handleChange('email', e.target.value)}
                                     />
@@ -261,9 +261,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Téléphone</label>
                                 <div className="relative">
                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                    <input 
-                                        type="text" 
-                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium" 
+                                    <input
+                                        type="text"
+                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium"
                                         value={userProfile.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
                                     />
@@ -273,9 +273,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Site Web</label>
                                 <div className="relative">
                                     <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                    <input 
-                                        type="text" 
-                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium" 
+                                    <input
+                                        type="text"
+                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium"
                                         value={userProfile.website || ''}
                                         onChange={(e) => handleChange('website', e.target.value)}
                                         placeholder="www.mon-site.fr"
@@ -285,10 +285,10 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <div>
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">LinkedIn</label>
                                 <div className="relative">
-                                    <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                    <input 
-                                        type="text" 
-                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium" 
+                                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
+                                    <input
+                                        type="text"
+                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium"
                                         value={userProfile.linkedin || ''}
                                         onChange={(e) => handleChange('linkedin', e.target.value)}
                                         placeholder="linkedin.com/in/profil"
@@ -311,14 +311,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <h3 className="text-lg font-bold text-brand-900 font-display">Identité Visuelle</h3>
                     </div>
-                    
+
                     <div className="space-y-6">
                         <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Couleur de l'entreprise</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="flex items-center gap-6 p-6 bg-brand-50/50 border border-brand-100 rounded-[2rem]">
-                                <input 
-                                    type="color" 
-                                    className="w-20 h-20 rounded-2xl cursor-pointer bg-transparent border-none shadow-lg" 
+                                <input
+                                    type="color"
+                                    className="w-20 h-20 rounded-2xl cursor-pointer bg-transparent border-none shadow-lg"
                                     value={userProfile.logoColor || '#102a43'}
                                     onChange={(e) => handleChange('logoColor', e.target.value)}
                                 />
@@ -329,7 +329,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             </div>
                             <div className="grid grid-cols-4 gap-3">
                                 {['#102a43', '#0f172a', '#1e293b', '#334155', '#059669', '#0891b2', '#4f46e5', '#7c3aed'].map(color => (
-                                    <button 
+                                    <button
                                         key={color}
                                         onClick={() => handleChange('logoColor', color)}
                                         className={`w-full aspect-square rounded-xl border-2 transition-all ${userProfile.logoColor === color ? 'border-brand-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
@@ -356,9 +356,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">IBAN</label>
                                 <div className="relative">
                                     <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" size={18} />
-                                    <input 
-                                        type="text" 
-                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm uppercase" 
+                                    <input
+                                        type="text"
+                                        className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm uppercase"
                                         value={userProfile.bankAccount}
                                         onChange={(e) => handleChange('bankAccount', e.target.value)}
                                         placeholder="FR76 ..."
@@ -367,9 +367,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">BIC / SWIFT</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm uppercase" 
+                                <input
+                                    type="text"
+                                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm uppercase"
                                     value={userProfile.bic || ''}
                                     onChange={(e) => handleChange('bic', e.target.value)}
                                     placeholder="TRPUFRPPXXX"
@@ -379,7 +379,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div>
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Devise</label>
-                                <select 
+                                <select
                                     className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 appearance-none cursor-pointer"
                                     value={userProfile.currency || '€'}
                                     onChange={(e) => handleChange('currency', e.target.value)}
@@ -392,9 +392,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">TVA par défaut (%)</label>
-                                <input 
-                                    type="number" 
-                                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900" 
+                                <input
+                                    type="number"
+                                    className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900"
                                     value={userProfile.defaultVatRate || 0}
                                     onChange={(e) => handleChange('defaultVatRate', parseFloat(e.target.value))}
                                 />
@@ -402,9 +402,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Numéro de TVA Intracommunautaire</label>
-                            <input 
-                                type="text" 
-                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm" 
+                            <input
+                                type="text"
+                                className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm"
                                 value={userProfile.tvaNumber || ''}
                                 onChange={(e) => handleChange('tvaNumber', e.target.value)}
                                 placeholder="FRXX 123456789"
@@ -427,7 +427,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                 <div>
                                     <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Type d'activité (URSSAF)</label>
-                                    <select 
+                                    <select
                                         className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer"
                                         value={userProfile.activityType || 'SERVICE_BNC'}
                                         onChange={(e) => handleChange('activityType', e.target.value)}
@@ -443,7 +443,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                         <p className="text-sm font-bold text-brand-900">Bénéficiaire ACRE</p>
                                         <p className="text-[10px] text-brand-400">Taux réduit de cotisations</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => handleChange('isAcreBeneficiary', !userProfile.isAcreBeneficiary)}
                                         className={`w-12 h-6 rounded-full relative transition-all ${userProfile.isAcreBeneficiary ? 'bg-brand-900' : 'bg-brand-200'}`}
                                     >
@@ -458,7 +458,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                         <p className="text-sm font-bold text-brand-900">Alertes seuil TVA</p>
                                         <p className="text-[10px] text-brand-400">Notifier à l'approche du seuil</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => handleChange('vatThresholdAlert', !userProfile.vatThresholdAlert)}
                                         className={`w-12 h-6 rounded-full relative transition-all ${userProfile.vatThresholdAlert ? 'bg-brand-900' : 'bg-brand-200'}`}
                                     >
@@ -470,7 +470,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                         <p className="text-sm font-bold text-brand-900">Alertes plafond CA</p>
                                         <p className="text-[10px] text-brand-400">Notifier à l'approche du plafond</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => handleChange('revenueThresholdAlert', !userProfile.revenueThresholdAlert)}
                                         className={`w-12 h-6 rounded-full relative transition-all ${userProfile.revenueThresholdAlert ? 'bg-brand-900' : 'bg-brand-200'}`}
                                     >
@@ -495,7 +495,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Format d'échange par défaut</label>
-                                    <select 
+                                    <select
                                         className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer"
                                         value={userProfile.defaultEInvoiceFormat || 'Factur-X'}
                                         onChange={(e) => handleChange('defaultEInvoiceFormat', e.target.value)}
@@ -507,7 +507,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Catégorie d'activité</label>
-                                    <select 
+                                    <select
                                         className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer"
                                         value={userProfile.defaultOperationCategory || 'SERVICES'}
                                         onChange={(e) => handleChange('defaultOperationCategory', e.target.value)}
@@ -518,7 +518,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div className="mt-6 p-4 bg-accent-50/50 rounded-2xl border border-accent-100 flex items-start gap-3">
                                 <ShieldCheck size={18} className="text-accent-600 mt-0.5" />
                                 <p className="text-[10px] text-accent-700 leading-relaxed">
@@ -531,8 +531,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Mentions légales bas de page</label>
                             <div className="relative">
                                 <ShieldCheck className="absolute left-4 top-4 text-brand-300" size={18} />
-                                <textarea 
-                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none text-sm font-medium" 
+                                <textarea
+                                    className="w-full pl-12 p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none text-sm font-medium"
                                     rows={3}
                                     value={userProfile.legalMentions || ''}
                                     onChange={(e) => handleChange('legalMentions', e.target.value)}
@@ -611,7 +611,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                         <p className="text-sm font-bold text-brand-900">Rappels de paiement</p>
                                         <p className="text-[10px] text-brand-400">Recevoir des alertes pour les factures en retard</p>
                                     </div>
-                                    <div 
+                                    <div
                                         onClick={() => {
                                             setShowSaveIndicator(true);
                                             setTimeout(() => setShowSaveIndicator(false), 2000);
@@ -626,7 +626,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                                         <p className="text-sm font-bold text-brand-900">Alertes de stock</p>
                                         <p className="text-[10px] text-brand-400">Recevoir des alertes quand le stock est bas</p>
                                     </div>
-                                    <div 
+                                    <div
                                         onClick={() => {
                                             setShowSaveIndicator(true);
                                             setTimeout(() => setShowSaveIndicator(false), 2000);
@@ -674,23 +674,23 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <button 
+                        <button
                             onClick={handleExportAll}
                             className="flex items-center justify-center gap-3 p-5 bg-brand-900 text-white rounded-2xl hover:bg-brand-950 transition-all font-bold text-sm shadow-xl shadow-brand-900/10"
                         >
                             <Download size={20} /> Exporter mes données (.json)
                         </button>
-                        <button 
+                        <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex items-center justify-center gap-3 p-5 bg-white border border-brand-100 text-brand-700 rounded-2xl hover:bg-brand-50 transition-all font-bold text-sm shadow-sm"
                         >
                             <Upload size={20} /> Importer un fichier (.json)
                         </button>
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            className="hidden" 
-                            accept=".json" 
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept=".json"
                             onChange={handleImportAll}
                         />
                     </div>
@@ -703,7 +703,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                             <div>
                                 <p className="text-sm font-bold text-amber-900 mb-1">Sécurité des données</p>
                                 <p className="text-xs text-amber-700 leading-relaxed">
-                                    Vos données sont stockées localement dans votre navigateur. Elles ne sont jamais envoyées sur un serveur externe. 
+                                    Vos données sont stockées localement dans votre navigateur. Elles ne sont jamais envoyées sur un serveur externe.
                                     Pensez à faire des exports réguliers pour éviter toute perte en cas de suppression de l'historique de votre navigateur.
                                 </p>
                             </div>
@@ -713,13 +713,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                     <div className="border-t border-brand-50 pt-8">
                         <p className="text-sm font-bold text-brand-900 mb-4">Actions avancées</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <button 
+                            <button
                                 onClick={generateSampleData}
                                 className="flex items-center justify-center gap-2 p-4 bg-brand-50 text-brand-700 rounded-xl hover:bg-brand-100 transition-all text-xs font-bold"
                             >
                                 <RefreshCw size={16} /> Générer des données de test
                             </button>
-                            <button 
+                            <button
                                 onClick={handleResetApp}
                                 className="flex items-center justify-center gap-2 p-4 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all text-xs font-bold"
                             >
@@ -742,10 +742,10 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         En direct
                     </div>
                 </div>
-                
+
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-brand-200/50 border border-brand-100 min-h-[500px] flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-[5rem] -mr-10 -mt-10 opacity-20" style={{ backgroundColor: userProfile.logoColor || '#102a43' }}></div>
-                    
+
                     {/* Fake Header */}
                     <div className="border-b border-brand-100 pb-8 mb-8 relative z-10">
                         <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl" style={{ backgroundColor: userProfile.logoColor || '#102a43', boxShadow: `0 12px 20px -5px ${userProfile.logoColor || '#102a43'}50` }}>
@@ -753,7 +753,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                         </div>
                         <h2 className="font-bold text-brand-900 text-xl leading-tight mb-1 font-display">{userProfile.companyName || 'Votre Entreprise'}</h2>
                         {userProfile.professionalTitle && <p className="text-xs font-bold text-brand-400 uppercase tracking-wider mb-2">{userProfile.professionalTitle}</p>}
-                        
+
                         <div className="space-y-1 mt-4">
                             <div className="flex items-center gap-2 text-[11px] text-brand-500">
                                 <Mail size={12} className="text-brand-300" /> {userProfile.email || 'email@exemple.com'}
@@ -798,7 +798,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({ userProfile, setUserP
                          {userProfile.legalMentions && <p className="mt-3 text-[8px] opacity-60 italic leading-tight">{userProfile.legalMentions}</p>}
                     </div>
                 </div>
-                
+
                 <div className="mt-6 flex items-center justify-center gap-3 text-accent-600 bg-white p-4 rounded-2xl border border-brand-100 text-[10px] font-bold uppercase tracking-widest shadow-sm transition-all">
                     {showSaveIndicator ? (
                         <>
