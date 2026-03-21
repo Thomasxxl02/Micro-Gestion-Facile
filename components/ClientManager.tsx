@@ -64,8 +64,8 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
       onSave?.(updated);
     } else {
       const newClient: Client = {
-        id: Date.now().toString(),
         ...form.formData,
+        id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         archived: false,
       } as Client;

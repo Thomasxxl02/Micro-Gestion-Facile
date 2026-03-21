@@ -217,7 +217,7 @@ export const useAppStore = create<AppStoreState>()(
                 action,
                 category,
                 severity,
-                details,
+                details: details || '',
               },
               ...state.activityLogs,
             ].slice(0, 50), // Keep only last 50 logs

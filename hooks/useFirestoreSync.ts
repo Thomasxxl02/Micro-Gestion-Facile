@@ -52,7 +52,7 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
 
         // Notification métadonnées (si provenant du cache)
         if (snapshot.metadata.fromCache) {
-          console.log(`Données ${collectionName} chargées du cache (Mode Hors Ligne)`);
+          console.info(`Données ${collectionName} chargées du cache (Mode Hors Ligne)`);
         }
       },
       (err) => {

@@ -20,7 +20,7 @@ interface CalendarManagerProps {
   onDeleteEvent?: (id: string) => void;
 }
 
-const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, clients, _invoices, onSaveEvent, onDeleteEvent }) => {
+const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, clients, onSaveEvent, onDeleteEvent }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);

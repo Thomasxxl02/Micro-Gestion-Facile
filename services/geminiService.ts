@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import type { Invoice, Client, UserProfile } from '../types';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 // Initialize securely - assumes environment variable is injected
@@ -50,7 +51,7 @@ export const suggestInvoiceDescription = async (clientName: string, serviceType:
   }
 }
 
-export const generateInvoiceItemsFromPrompt = async (prompt: string): Promise<any[]> => {
+export const generateInvoiceItemsFromPrompt = async (prompt: string): Promise<Array<{ description: string; quantity: number; unitPrice: number; unit: string }>> => {
   try {
     const systemPrompt = `Tu es un assistant de facturation.
     L'utilisateur va te donner une description de ce qu'il veut facturer.
@@ -145,7 +146,7 @@ export const analyzeReceipt = async (base64Image: string, mimeType: string): Pro
   }
 };
 
-export const predictRevenue = async (history: any[], quotes: any[]): Promise<string> => {
+export const predictRevenue = async (history: Invoice[], quotes: Invoice[]): Promise<string> => {
   try {
     const prompt = `En tant qu'expert financier pour micro-entrepreneur, analyse l'historique de chiffre d'affaires (factures payées) et les devis en cours (acceptés ou en attente) pour prédire le chiffre d'affaires du mois prochain.
 
@@ -207,11 +208,11 @@ export const checkInvoiceCompliance = async (
       }
     });
 
-    const text = response.text || '{"isCompliant": true, "issues": [], "suggestions": []}';
+    const text = response.text || '{"isCompliant": false, "issues": ["Erreur de réponse"], "suggestions": []}';
     return JSON.parse(text);
   } catch (error) {
     console.error("Erreur Gemini (checkInvoiceCompliance):", error);
-    return { isCompliant: true, issues: [], suggestions: [] };
+    return { isCompliant: false, issues: ["Erreur de service"], suggestions: [] };
   }
 };
 
