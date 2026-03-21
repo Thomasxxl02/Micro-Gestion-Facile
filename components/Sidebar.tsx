@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ViewState } from '../types';
+import type { ViewState } from '../types';
 import { LayoutDashboard, FileText, Users, Settings, Briefcase, Package, Truck, Calculator, Sparkles, Mail, Calendar, Sun, Moon } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,52 +35,63 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isMobileMenuOpe
     <>
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-brand-900/50 backdrop-blur-sm lg:hidden transition-opacity"
+        <button
+          className="fixed inset-0 z-20 bg-brand-900/50 backdrop-blur-sm lg:hidden transition-opacity w-full h-full border-none cursor-default"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Fermer le menu"
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar Container */}
-      <aside className={`
-        fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-brand-950 text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out border-r border-brand-100/50 dark:border-brand-900/50 flex flex-col shadow-2xl lg:shadow-none
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      <aside
+        className={`
+          fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-brand-950 text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out border-r border-brand-100/50 dark:border-brand-900/50 flex flex-col shadow-2xl lg:shadow-none
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+        aria-label="Menu de navigation"
+      >
         {/* Logo Area */}
         <div className="flex items-center justify-between px-8 py-12">
-          <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setView('dashboard')}>
-            <div className="bg-brand-900 dark:bg-white text-white dark:text-brand-900 p-3 rounded-2xl shadow-xl group-hover:rotate-12 transition-transform duration-500">
+          <button
+            className="flex items-center gap-4 group cursor-pointer border-none bg-transparent p-0 text-left"
+            onClick={() => setView('dashboard')}
+            aria-label="Aller au tableau de bord"
+          >
+            <div className="bg-brand-900 dark:bg-white text-white dark:text-brand-900 p-3 rounded-2xl shadow-xl group-hover:rotate-12 transition-transform duration-500" aria-hidden="true">
               <Briefcase size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-brand-900 dark:text-white tracking-tighter leading-none">MICRO<br/><span className="text-brand-500 dark:text-brand-400">GESTION</span></h1>
+              <p className="text-xl font-black text-brand-900 dark:text-white tracking-tighter leading-none" aria-hidden="true">MICRO<br/><span className="text-brand-500 dark:text-brand-400">GESTION</span></p>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-6 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-          <div className="text-[10px] font-black text-brand-300 dark:text-brand-600 uppercase tracking-[0.25em] mb-6 px-4">Menu Principal</div>
+        <nav className="flex-1 px-6 py-4 space-y-1.5 overflow-y-auto custom-scrollbar" aria-label="Navigation principale">
+          <div className="text-[10px] font-black text-brand-300 dark:text-brand-600 uppercase tracking-[0.25em] mb-6 px-4" aria-hidden="true">Menu Principal</div>
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
+              aria-current={currentView === item.id ? 'page' : undefined}
               className={`
                 w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden
-                ${currentView === item.id 
-                  ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-xl shadow-brand-900/20 dark:shadow-white/5' 
+                ${currentView === item.id
+                  ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-xl shadow-brand-900/20 dark:shadow-white/5'
                   : 'text-brand-500 dark:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-900 dark:hover:text-brand-100'}
               `}
             >
-              <span className={`transition-colors duration-300 ${currentView === item.id ? 'text-white dark:text-brand-900' : 'text-brand-300 dark:text-brand-700 group-hover:text-brand-900 dark:group-hover:text-brand-100'}`}>
+              <span className={`transition-colors duration-300 ${currentView === item.id ? 'text-white dark:text-brand-900' : 'text-brand-300 dark:text-brand-700 group-hover:text-brand-900 dark:group-hover:text-brand-100'}`} aria-hidden="true">
                 {item.icon}
               </span>
               <span className="relative z-10">{item.label}</span>
               {currentView === item.id && (
-                <motion.div 
+                <motion.div
                   layoutId="activeNav"
                   className="absolute inset-0 bg-brand-900 dark:bg-white -z-10"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  aria-hidden="true"
                 />
               )}
             </button>
@@ -89,17 +100,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isMobileMenuOpe
 
         {/* Theme Toggle & Footer */}
         <div className="p-6 mt-auto space-y-4">
-          <button 
+          <button
             onClick={toggleDarkMode}
+            aria-label={isDarkMode ? 'Passer au mode clair' : 'Passer au mode sombre'}
             className="w-full flex items-center justify-between gap-3 px-5 py-4 bg-brand-50 dark:bg-brand-900/30 rounded-2xl transition-all hover:bg-brand-100 dark:hover:bg-brand-900/50 text-brand-600 dark:text-brand-300 border border-brand-100 dark:border-brand-800/50 group"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white dark:bg-brand-800 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+              <div className="p-2 bg-white dark:bg-brand-800 rounded-xl shadow-sm group-hover:scale-110 transition-transform" aria-hidden="true">
                 {isDarkMode ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-brand-600" />}
               </div>
               <span className="text-sm font-bold tracking-tight">{isDarkMode ? 'Mode Clair' : 'Mode Sombre'}</span>
             </div>
-            <div className={`w-10 h-5 rounded-full p-1 transition-colors duration-300 ${isDarkMode ? 'bg-brand-700' : 'bg-brand-200'}`}>
+            <div className={`w-10 h-5 rounded-full p-1 transition-colors duration-300 ${isDarkMode ? 'bg-brand-700' : 'bg-brand-200'}`} aria-hidden="true">
               <div className={`w-3 h-3 bg-white rounded-full transition-transform duration-300 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </button>

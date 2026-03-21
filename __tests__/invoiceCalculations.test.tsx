@@ -5,6 +5,7 @@ import {
   calculateHTFromTTC,
   calculateMicroEntrepreneurCharges,
   calculateFullInvoice,
+  calculateFullInvoiceTotals,
   applyDiscount,
   applyFixedDiscount,
   formatCurrency,
@@ -856,5 +857,121 @@ describe('Intégration - Workflows complets', () => {
     // On récupère le HT
     const recoveredHT = calculateHTFromTTC(ttcOnly, 20);
     expect(recoveredHT).toEqual(originalInvoice.amountHT);
+  });
+});
+
+// ============================================================================
+// TESTS: calculateFullInvoiceTotals
+// ============================================================================
+
+describe('calculateFullInvoiceTotals', () => {
+  const defaultItems = [
+    { description: 'Service A', quantity: 2, unitPrice: 50, vatRate: 20 },
+    { description: 'Service B', quantity: 1, unitPrice: 100, vatRate: 5.5 }
+  ];
+
+  it('calcule correctement les totaux de base sans remise', () => {
+    const result = calculateFullInvoiceTotals({
+      items: defaultItems as any,
+      taxExempt: false,
+      defaultVatRate: 20
+    });
+
+    // 2*50 + 1*100 = 200 HT
+    expect(result.subtotalHT).toBe(200);
+    // (100 * 0.20) + (100 * 0.055) = 20 + 5.5 = 25.50 TVA
+    expect(result.vatAmount).toBe(25.50);
+    expect(result.total).toBe(225.50);
+    expect(result.balanceDue).toBe(225.50);
+  });
+
+  it('applique correctement une remise globale', () => {
+    const result = calculateFullInvoiceTotals({
+      items: defaultItems as any,
+      taxExempt: false,
+      discount: 10, // 10% de remise
+      defaultVatRate: 20
+    });
+
+    // Sous-total HT: 200
+    // Remise: 200 * 0.10 = 20
+    expect(result.discountAmount).toBe(20);
+    // TVA après remise:
+    // Item A (100 HT): (100 - 10) * 0.20 = 18
+    // Item B (100 HT): (100 - 10) * 0.055 = 4.95
+    // Total TVA: 18 + 4.95 = 22.95
+    expect(result.vatAmount).toBe(22.95);
+    // Total TTC: (200 - 20) + 22.95 = 202.95
+    expect(result.total).toBe(202.95);
+  });
+
+  it('gère l exonération de TVA (Auto-entrepreneur base)', () => {
+    const result = calculateFullInvoiceTotals({
+      items: defaultItems as any,
+      taxExempt: true,
+      defaultVatRate: 20
+    });
+
+    expect(result.vatAmount).toBe(0);
+    expect(result.total).toBe(200);
+    expect(result.balanceDue).toBe(200);
+  });
+
+  it('ajoute les frais de port et calcule la TVA dessus au taux par défaut', () => {
+    const result = calculateFullInvoiceTotals({
+      items: [{ description: 'Produit', quantity: 1, unitPrice: 100, vatRate: 20 }] as any,
+      taxExempt: false,
+      shipping: 10,
+      defaultVatRate: 20
+    });
+
+    // Subtotal: 100
+    // Shipping: 10
+    // VAT on Item: 20
+    // VAT on Shipping: 10 * 0.20 = 2
+    // Total VAT: 22
+    expect(result.vatAmount).toBe(22);
+    expect(result.total).toBe(132);
+  });
+
+  it('soustrait l acompte du reste à payer', () => {
+    const result = calculateFullInvoiceTotals({
+      items: [{ description: 'Produit', quantity: 1, unitPrice: 100, vatRate: 20 }] as any,
+      taxExempt: false,
+      deposit: 50,
+      defaultVatRate: 20
+    });
+
+    // Total TTC: 120
+    // Deposit: 50
+    // Balance: 70
+    expect(result.total).toBe(120);
+    expect(result.balanceDue).toBe(70);
+  });
+
+  it('ne permet pas un reste à payer négatif', () => {
+    const result = calculateFullInvoiceTotals({
+      items: [{ description: 'Produit', quantity: 1, unitPrice: 100, vatRate: 20 }] as any,
+      taxExempt: false,
+      deposit: 200,
+      defaultVatRate: 20
+    });
+
+    expect(result.balanceDue).toBe(0);
+  });
+
+  it('gère les cas de précision décimale complexes (arrondis)', () => {
+    const result = calculateFullInvoiceTotals({
+      items: [
+        { description: 'Petit prix', quantity: 1, unitPrice: 0.1234, vatRate: 20 }
+      ] as any,
+      taxExempt: false,
+      defaultVatRate: 20
+    });
+
+    // Subtotal: 0.1234
+    // VAT: 0.1234 * 0.20 = 0.02468
+    // Total TTC: 0.14808 -> 0.15 rounded
+    expect(result.total).toBe(0.15);
   });
 });

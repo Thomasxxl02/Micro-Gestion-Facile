@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Invoice, InvoiceItem, InvoiceStatus, Client, UserProfile, DocumentType, Product } from '../types';
+import { type Invoice, type InvoiceItem, type Client, type UserProfile, type DocumentType, type Product, InvoiceStatus } from '../types';
 import { Plus, Trash2, Wand2, ArrowLeft, FileText, Repeat, FileCheck, ShoppingBag, Receipt, Link as LinkIcon, ArrowRightCircle, Download, Calendar, Search, AlertCircle, CheckSquare, Square, Package, ChevronUp, ChevronDown, X, Eye, Zap, Printer, Mail, Bell, Copy, ThumbsUp, ThumbsDown, ShieldCheck, Calculator, Percent, Truck, Coins, Clock, ExternalLink } from 'lucide-react';
 import { suggestInvoiceDescription, generateInvoiceItemsFromPrompt } from '../services/geminiService';
 
@@ -114,10 +114,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   const filteredAndSortedDocuments = useMemo(() => {
     let docs = invoices.filter(doc => (doc.type || 'invoice') === activeTab);
 
-    if (filters.dateStart) docs = docs.filter(doc => doc.date >= filters.dateStart);
-    if (filters.dateEnd) docs = docs.filter(doc => doc.date <= filters.dateEnd);
-    if (filters.status) docs = docs.filter(doc => doc.status === filters.status);
-    if (filters.clientId) docs = docs.filter(doc => doc.clientId === filters.clientId);
+    if (filters.dateStart) {docs = docs.filter(doc => doc.date >= filters.dateStart);}
+    if (filters.dateEnd) {docs = docs.filter(doc => doc.date <= filters.dateEnd);}
+    if (filters.status) {docs = docs.filter(doc => doc.status === filters.status);}
+    if (filters.clientId) {docs = docs.filter(doc => doc.clientId === filters.clientId);}
 
     return docs.sort((a, b) => {
       let valA: any = '';
@@ -133,8 +133,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
         case 'total': valA = a.total; valB = b.total; break;
       }
 
-      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (valA < valB) {return sortConfig.direction === 'asc' ? -1 : 1;}
+      if (valA > valB) {return sortConfig.direction === 'asc' ? 1 : -1;}
       return 0;
     });
   }, [invoices, activeTab, filters, sortConfig, clients]);
@@ -169,14 +169,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   const toggleSelection = (id: string) => {
     const newSelection = new Set(selectedIds);
-    if (newSelection.has(id)) newSelection.delete(id);
-    else newSelection.add(id);
+    if (newSelection.has(id)) {newSelection.delete(id);}
+    else {newSelection.add(id);}
     setSelectedIds(newSelection);
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === filteredAndSortedDocuments.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filteredAndSortedDocuments.map(d => d.id)));
+    if (selectedIds.size === filteredAndSortedDocuments.length) {setSelectedIds(new Set());}
+    else {setSelectedIds(new Set(filteredAndSortedDocuments.map(d => d.id)));}
   };
 
   const handleBulkStatusChange = (newStatus: string) => {
@@ -184,7 +184,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       const updatedInvoices = invoices.map(doc => {
         if (selectedIds.has(doc.id)) {
           const updated = { ...doc, status: newStatus };
-          if (onSave) onSave(updated);
+          if (onSave) {onSave(updated);}
           return updated;
         }
         return doc;
@@ -204,9 +204,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     ).length + 1;
 
     let prefix = 'FACT';
-    if (type === 'quote') prefix = 'DEVIS';
-    if (type === 'order') prefix = 'COMM';
-    if (type === 'credit_note') prefix = 'AVOIR';
+    if (type === 'quote') {prefix = 'DEVIS';}
+    if (type === 'order') {prefix = 'COMM';}
+    if (type === 'credit_note') {prefix = 'AVOIR';}
 
     return `${prefix}-${currentYear}-${docsThisYear.toString().padStart(3, '0')}`;
   };
@@ -257,7 +257,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   // --- ACTIONS ---
 
   const handleDuplicate = (invoice: Invoice) => {
-    if (!confirm("Dupliquer ce document ?")) return;
+    if (!confirm("Dupliquer ce document ?")) {return;}
 
     // Create new items array with new IDs
     const newItems = invoice.items.map(item => ({ ...item, id: Date.now().toString() + Math.random().toString().slice(2) }));
@@ -321,10 +321,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     });
 
     let filename = 'documents';
-    if (activeTab === 'invoice') filename = 'factures';
-    else if (activeTab === 'quote') filename = 'devis';
-    else if (activeTab === 'order') filename = 'commandes';
-    else if (activeTab === 'credit_note') filename = 'avoirs';
+    if (activeTab === 'invoice') {filename = 'factures';}
+    else if (activeTab === 'quote') {filename = 'devis';}
+    else if (activeTab === 'order') {filename = 'commandes';}
+    else if (activeTab === 'credit_note') {filename = 'avoirs';}
 
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -355,7 +355,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   const addProductItem = (productId: string) => {
     const product = products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {return;}
 
     if (product.type === 'product' && product.stock !== undefined && product.stock <= 0) {
       if (!confirm(`Attention : Le produit "${product.name}" est en rupture de stock. Voulez-vous quand même l'ajouter ?`)) {
@@ -395,7 +395,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       return;
     }
     const client = clients.find(c => c.id === selectedClientId);
-    if (!client) return;
+    if (!client) {return;}
 
     setIsGeneratingDesc(true);
     const suggestion = await suggestInvoiceDescription(client.name, currentDesc || "Service général");
@@ -405,7 +405,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   };
 
   const handleMagicFill = async () => {
-    if (!formState.magicFillPrompt.trim()) return;
+    if (!formState.magicFillPrompt.trim()) {return;}
     setIsMagicFilling(true);
     const items = await generateInvoiceItemsFromPrompt(formState.magicFillPrompt);
     setIsMagicFilling(false);
@@ -458,7 +458,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     };
 
     setInvoices([document, ...invoices]);
-    if (onSave) onSave(document);
+    if (onSave) {onSave(document);}
     setView('list');
     setNewDocData({
       items: [],
@@ -479,7 +479,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   // Convert quote/order to invoice
   const convertToInvoice = (doc: Invoice, isQuote: boolean) => {
     const msg = isQuote ? "Convertir ce devis en facture ?" : "Facturer cette commande ?";
-    if (!confirm(msg)) return;
+    if (!confirm(msg)) {return;}
 
     let updatedInvoices = invoices;
     if (isQuote && doc.status !== InvoiceStatus.ACCEPTED) {
@@ -502,7 +502,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
   };
 
   const createCreditNoteFromInvoice = (invoice: Invoice) => {
-    if (!confirm("Créer un avoir pour cette facture ?")) return;
+    if (!confirm("Créer un avoir pour cette facture ?")) {return;}
 
     setNewDocData({
         items: invoice.items.map(i => ({...i})),
@@ -529,21 +529,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       const updated = { ...inv, [field]: value };
       setInvoices(invoices.map(i => i.id === id ? updated : i));
       onSave?.(updated);
-      if (selectedInvoice?.id === id) setSelectedInvoice(updated);
+      if (selectedInvoice?.id === id) {setSelectedInvoice(updated);}
     }
-    if (field === 'status') setIsCustomStatus(false);
+    if (field === 'status') {setIsCustomStatus(false);}
   };
 
   const deleteDocument = (id: string) => {
      if(confirm("Supprimer ce document définitivement ?")) {
        setInvoices(invoices.filter(inv => inv.id !== id));
-       if (onDelete) onDelete(id);
-       if (selectedInvoice?.id === id) setView('list');
+       if (onDelete) {onDelete(id);}
+       if (selectedInvoice?.id === id) {setView('list');}
      }
   }
 
   const handleTransmitPPF = (invoice: Invoice) => {
-    if (!confirm(`Transmettre la facture ${invoice.number} au Portail Public de Facturation (PPF) au format ${invoice.eInvoiceFormat || 'Factur-X'} ?`)) return;
+    if (!confirm(`Transmettre la facture ${invoice.number} au Portail Public de Facturation (PPF) au format ${invoice.eInvoiceFormat || 'Factur-X'} ?`)) {return;}
 
     // Simulation de transmission
     setTimeout(() => {
@@ -676,7 +676,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
           <div className="flex gap-16 mb-12 border-y border-brand-100 py-8">
              <div>
-                <span className="block text-[10px] font-bold text-brand-400 uppercase tracking-[0.2em] mb-2">Date d'émission</span>
+                <span className="block text-[10px] font-bold text-brand-400 uppercase tracking-[0.2em] mb-2">Date d&apos;émission</span>
                 <span className="font-bold text-brand-900 text-lg font-display">{new Date(invoice.date).toLocaleDateString('fr-FR')}</span>
              </div>
              <div>
@@ -801,8 +801,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     <h4 className="font-bold text-brand-900 mb-3 tracking-[0.2em]">Mentions Légales</h4>
                     <div className="space-y-1.5">
                         {invoice.taxExempt && <p className="font-bold text-brand-600 italic">TVA non applicable, art. 293 B du CGI</p>}
-                        <p>Dispensé d'immatriculation au RCS et au RM.</p>
-                        <p>Pénalités de retard : 3 fois le taux d'intérêt légal.</p>
+                        <p>Dispensé d&apos;immatriculation au RCS et au RM.</p>
+                        <p>Pénalités de retard : 3 fois le taux d&apos;intérêt légal.</p>
                         <p>Indemnité forfaitaire pour frais de recouvrement : 40 €.</p>
                         {userProfile.legalMentions && <p className="mt-4 text-brand-500 italic lowercase first-letter:uppercase">{userProfile.legalMentions}</p>}
                     </div>
@@ -862,12 +862,12 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                     const client = clients.find(c => c.id === clientId);
                                     if (client?.paymentTerms) {
                                         let days = 30;
-                                        if (client.paymentTerms === 'À réception') days = 0;
-                                        else if (client.paymentTerms === '15 jours') days = 15;
-                                        else if (client.paymentTerms === '30 jours') days = 30;
-                                        else if (client.paymentTerms === '30 jours fin de mois') days = 30; // Simplified
-                                        else if (client.paymentTerms === '45 jours') days = 45;
-                                        else if (client.paymentTerms === '60 jours') days = 60;
+                                        if (client.paymentTerms === 'À réception') {days = 0;}
+                                        else if (client.paymentTerms === '15 jours') {days = 15;}
+                                        else if (client.paymentTerms === '30 jours') {days = 30;}
+                                        else if (client.paymentTerms === '30 jours fin de mois') {days = 30;} // Simplified
+                                        else if (client.paymentTerms === '45 jours') {days = 45;}
+                                        else if (client.paymentTerms === '60 jours') {days = 60;}
 
                                         const newDueDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                                         setNewDocData(prev => ({ ...prev, dueDate: newDueDate }));
@@ -889,18 +889,18 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="emission-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'émission</label>
+                                <label htmlFor="emission-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d&apos;émission</label>
                                 <input
                                 id="emission-date"
                                 type="date"
                                 className={`w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 font-medium`}
                                 value={newDocData.date}
                                 onChange={(e) => setNewDocData({...newDocData, date: e.target.value})}
-                                title="Date d'émission du document"
+                                title="Date d&apos;émission du document"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="due-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d'échéance</label>
+                                <label htmlFor="due-date" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Date d&apos;échéance</label>
                                 <input
                                 id="due-date"
                                 type="date"
@@ -1096,13 +1096,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label htmlFor="op-category-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Catégorie d'opération</label>
+                            <label htmlFor="op-category-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Catégorie d&apos;opération</label>
                             <select
                                 id="op-category-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.operationCategory || 'SERVICES'}
                                 onChange={(e) => setNewDocData({...newDocData, operationCategory: e.target.value})}
-                                title="Sélectionner la catégorie d'opération"
+                                title="Sélectionner la catégorie d&apos;opération"
                             >
                                 <option value="BIENS">Livraison de biens</option>
                                 <option value="SERVICES">Prestation de services</option>
@@ -1111,13 +1111,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                             <p className="mt-2 text-[10px] text-brand-400 italic">Obligatoire pour la transmission PPF/PDP en 2026.</p>
                         </div>
                         <div>
-                            <label htmlFor="einvoice-format-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Format d'export cible</label>
+                            <label htmlFor="einvoice-format-select" className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Format d&apos;export cible</label>
                             <select
                                 id="einvoice-format-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.eInvoiceFormat || 'Factur-X'}
                                 onChange={(e) => setNewDocData({...newDocData, eInvoiceFormat: e.target.value})}
-                                title="Sélectionner le format d'export"
+                                title="Sélectionner le format d&apos;export"
                             >
                                 <option value="Factur-X">Factur-X (PDF hybride)</option>
                                 <option value="UBL">UBL (XML standard)</option>
@@ -1845,7 +1845,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                   </div>
                   <div className="p-8 space-y-6">
                       <div className="bg-brand-50 p-4 rounded-2xl border border-brand-100 italic text-sm text-brand-600">
-                          "Exemple : 3 jours de consulting IT à 500€/jour et 2 licences logicielles à 150€ l'unité."
+                          &quot;Exemple : 3 jours de consulting IT à 500€/jour et 2 licences logicielles à 150€ l&apos;unité.&quot;
                       </div>
                       <textarea
                           rows={4}

@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Product } from '../types';
+import type { Product } from '../types';
 import { Plus, Minus, Search, Trash2, Package, Briefcase, X, Edit2, Zap, Download, SortAsc, Filter, Tag, Archive, RotateCcw, Upload, Hash, Ruler, AlertCircle, ArrowRightCircle } from 'lucide-react';
 
 interface ProductManagerProps {
   products: Product[];
-  setProducts: (products: Product[]) => void;
   onSave?: (product: Product) => void;
   onDelete?: (id: string) => void;
 }
 
-type SortOption = 'name' | 'price' | 'type' | 'category';
+type SortOption = 'name' | 'price' | 'type' | 'category' | 'stock';
 
-const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, onSave, onDelete }) => {
+const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDelete }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -62,12 +61,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) return;
+    if (!formData.name) {return;}
 
     if (editingId) {
          const updated = { ...products.find(p => p.id === editingId), ...formData } as Product;
-         setProducts(products.map(p => p.id === editingId ? updated : p));
-         if (onSave) onSave(updated);
+         if (onSave) {onSave(updated);}
     } else {
         const product: Product = {
             id: Date.now().toString(),
@@ -83,8 +81,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
             archived: false,
             createdAt: new Date().toISOString()
         };
-        setProducts([...products, product]);
-        if (onSave) onSave(product);
+        if (onSave) {onSave(product);}
     }
     setIsPanelOpen(false);
   };
@@ -92,8 +89,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Supprimer définitivement cet élément du catalogue ?')) {
-      setProducts(products.filter(p => p.id !== id));
-      if (onDelete) onDelete(id);
+      if (onDelete) {onDelete(id);}
     }
   };
 
@@ -102,8 +98,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
     const product = products.find(p => p.id === id);
     if (product) {
         const updated = { ...product, archived: !product.archived };
-        setProducts(products.map(p => p.id === id ? updated : p));
-        if (onSave) onSave(updated);
+        if (onSave) {onSave(updated);}
     }
   };
 
@@ -112,8 +107,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
     const product = products.find(p => p.id === id);
     if (product) {
         const updated = { ...product, stock: Math.max(0, (product.stock || 0) + delta) };
-        setProducts(products.map(p => p.id === id ? updated : p));
-        if (onSave) onSave(updated);
+        if (onSave) {onSave(updated);}
     }
   };
 
@@ -144,7 +138,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
 
   const importCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -153,7 +147,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
         const newProducts: Product[] = [];
 
         for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
+            if (!lines[i].trim()) {continue;}
             const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replaceAll('"', ''));
 
             if (parts.length >= 2) {
@@ -175,7 +169,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
         }
 
         if (newProducts.length > 0) {
-            setProducts([...products, ...newProducts]);
+            newProducts.forEach(p => onSave?.(p));
             alert(`${newProducts.length} éléments importés avec succès.`);
         }
     };
@@ -216,11 +210,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
 
     return result.sort((a, b) => {
       let comparison;
-      if (sortBy === 'price') comparison = b.price - a.price;
-      else if (sortBy === 'type') comparison = a.type.localeCompare(b.type);
-      else if (sortBy === 'category') comparison = (a.category || '').localeCompare(b.category || '');
-      else if (sortBy === 'stock') comparison = (a.stock || 0) - (b.stock || 0);
-      else comparison = a.name.localeCompare(b.name);
+      if (sortBy === 'price') {comparison = b.price - a.price;}
+      else if (sortBy === 'type') {comparison = a.type.localeCompare(b.type);}
+      else if (sortBy === 'category') {comparison = (a.category || '').localeCompare(b.category || '');}
+      else if (sortBy === 'stock') {comparison = (a.stock || 0) - (b.stock || 0);}
+      else {comparison = a.name.localeCompare(b.name);}
 
       return comparison;
     });
@@ -334,7 +328,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
        <div className={`fixed inset-y-0 right-0 w-full sm:w-112.5 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-brand-100 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col">
             <div className="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
-                <h3 className="text-xl font-bold text-brand-900">{editingId ? 'Modifier l\'élément' : 'Nouvel élément'}</h3>
+                <h3 className="text-xl font-bold text-brand-900">{editingId ? 'Modifier l&apos;élément' : 'Nouvel élément'}</h3>
                 <button onClick={() => setIsPanelOpen(false)} title="Fermer le panneau" className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors">
                     <X size={20} />
                 </button>
@@ -343,7 +337,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
                 <div className="space-y-6">
                     <div>
-                        <label htmlFor="formData-name" className="block text-sm font-semibold text-brand-700 mb-1.5">Nom de l'élément <span className="text-red-500">*</span></label>
+                        <label htmlFor="formData-name" className="block text-sm font-semibold text-brand-700 mb-1.5">Nom de l&apos;élément <span className="text-red-500">*</span></label>
                         <input
                             id="formData-name"
                             type="text"
@@ -452,12 +446,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
                                 />
                             </div>
                             <div>
-                                <label htmlFor="formData-minStock" className="block text-sm font-semibold text-brand-700 mb-1.5">Seuil d'alerte</label>
+                                <label htmlFor="formData-minStock" className="block text-sm font-semibold text-brand-700 mb-1.5">Seuil d&apos;alerte</label>
                                 <input
                                     id="formData-minStock"
                                     type="number"
                                     placeholder="0"
-                                    title="Seuil minimum d'alerte pour le stock"
+                                    title="Seuil minimum d&apos;alerte pour le stock"
                                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                                     value={formData.minStock}
                                     onChange={e => setFormData({...formData, minStock: Number.parseInt(e.target.value) || 0})}
@@ -504,8 +498,6 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, setProducts, 
             aria-label="Fermer le panneau"
             onClick={() => setIsPanelOpen(false)}
             className="fixed inset-0 overlay-button z-30 transition-opacity cursor-pointer border-none p-0"
-        />
-      )}
         />
       )}
 

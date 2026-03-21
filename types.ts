@@ -1,10 +1,11 @@
 
-export type DocumentType = 'invoice' | 'quote' | 'order' | 'credit_note';
+export type DocumentType = 'invoice' | 'quote' | 'order' | 'credit_note' | 'deposit_invoice';
 
 export enum InvoiceStatus {
   DRAFT = 'Brouillon',
   SENT = 'Envoyée',
   PAID = 'Payée',
+  PARTIALLY_PAID = 'Partiellement payée',
   CANCELLED = 'Annulée',
   // Status spécifiques aux devis
   ACCEPTED = 'Accepté',
@@ -35,6 +36,7 @@ export interface Client {
   category?: 'Particulier' | 'Entreprise' | 'Association' | 'Public';
   isPublicEntity?: boolean; // Pour Chorus Pro
   createdAt?: string;
+  isTest?: boolean;
 }
 
 export interface Supplier {
@@ -68,6 +70,7 @@ export interface Product {
   minStock?: number;
   archived?: boolean;
   createdAt?: string;
+  isTest?: boolean;
 }
 
 export interface Expense {
@@ -117,6 +120,8 @@ export interface Invoice {
   transmissionDate?: string;
   operationCategory?: 'BIENS' | 'SERVICES' | 'MIXTE';
   deliveryAddress?: string;
+  isTest?: boolean;
+  subtotal?: number;
 }
 
 export type ActivityType = 'SERVICE_BNC' | 'SERVICE_BIC' | 'SALE' | 'LIBERAL';
@@ -150,6 +155,23 @@ export interface UserProfile {
   isAcreBeneficiary?: boolean;
   vatThresholdAlert?: boolean;
   revenueThresholdAlert?: boolean;
+  isVatExempt?: boolean; // Changé de isTaxExempt pour correspondre à SettingsManager
+  vatExemptionReason?: string; // Raison légale (Art 293 B CGI etc)
+  logoUrl?: string;
+  taxSystem?: string;
+  vatNumber?: string;
+  primaryColor?: string;
+  fontFamily?: string;
+}
+
+export interface LogEntry {
+  id: string;
+  action: string;
+  category: 'AUTH' | 'DATABASE' | 'SERVICES' | 'SYSTEM' | 'DATA';
+  severity: 'INFO' | 'WARNING' | 'ERROR';
+  details: string;
+  timestamp: number;
+  userId?: string;
 }
 
 export interface ChatMessage {

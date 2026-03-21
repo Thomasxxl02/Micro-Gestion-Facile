@@ -5,6 +5,7 @@
  */
 
 import { Decimal } from 'decimal.js';
+import { type UserProfile, type Invoice, type Client, type Supplier, type Product, type Expense, type Email, type EmailTemplate, type CalendarEvent } from '../types';
 
 export interface ExportOptions {
   format: 'json' | 'csv';
@@ -16,15 +17,15 @@ export interface ExportOptions {
 export interface ExportData {
   version: string;
   exportedAt: string;
-  userProfile: any;
-  invoices: any[];
-  clients: any[];
-  suppliers: any[];
-  products: any[];
-  expenses: any[];
-  emails: any[];
-  emailTemplates: any[];
-  calendarEvents: any[];
+  userProfile: UserProfile;
+  invoices: Invoice[];
+  clients: Client[];
+  suppliers: Supplier[];
+  products: Product[];
+  expenses: Expense[];
+  emails: Email[];
+  emailTemplates: EmailTemplate[];
+  calendarEvents: CalendarEvent[];
 }
 
 /**
@@ -56,9 +57,9 @@ export const exportAsJSON = async (data: Partial<ExportData>): Promise<string> =
  * Sanitize Decimal values et autres objets non-sérialisables
  */
 const sanitizeForJSON = (obj: any): any => {
-  if (obj === null || obj === undefined) return obj;
-  if (obj instanceof Decimal) return obj.toString();
-  if (obj instanceof Date) return obj.toISOString();
+  if (obj === null || obj === undefined) {return obj;}
+  if (obj instanceof Decimal) {return obj.toString();}
+  if (obj instanceof Date) {return obj.toISOString();}
 
   if (Array.isArray(obj)) {
     return obj.map(sanitizeForJSON);
@@ -171,10 +172,10 @@ export const generateFilename = (
 export const validateExportSchema = (data: any): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
-  if (!data.version) errors.push('Missing version field');
-  if (!data.exportedAt) errors.push('Missing exportedAt field');
-  if (!Array.isArray(data.invoices)) errors.push('invoices must be array');
-  if (!Array.isArray(data.clients)) errors.push('clients must be array');
+  if (!data.version) {errors.push('Missing version field');}
+  if (!data.exportedAt) {errors.push('Missing exportedAt field');}
+  if (!Array.isArray(data.invoices)) {errors.push('invoices must be array');}
+  if (!Array.isArray(data.clients)) {errors.push('clients must be array');}
 
   // Validate invoice structure sample
   if (data.invoices.length > 0) {

@@ -75,12 +75,28 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar Compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
 .dark ::-webkit-scrollbar-thumb { background: var(--card-border); }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Compatibility Fixes */
+button::-moz-focus-inner {
+  border: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 /* Glassmorphism utility */
 .glass {
@@ -206,6 +222,7 @@ h1, h2, h3, h4 {
 .overlay-button {
   background: rgba(15, 23, 42, 0.2);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* A4 Invoice paper size */

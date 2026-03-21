@@ -26,7 +26,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <div 
@@ -97,7 +97,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   onClose,
   actionLabel = 'OK',
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const typeStyles = {
     success: 'bg-green-50 text-green-600',

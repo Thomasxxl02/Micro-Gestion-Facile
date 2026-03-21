@@ -9,7 +9,7 @@
  * - Support du mode offline-first
  */
 
-import Dexie, { Table } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 import type {
   Invoice,
   InvoiceItem,
@@ -104,17 +104,17 @@ class InvoiceDB extends Dexie {
    */
   async importData(data: Record<string, any>): Promise<void> {
     try {
-      if (data.invoices) await this.invoices.bulkPut(data.invoices);
-      if (data.invoiceItems) await this.invoiceItems.bulkPut(data.invoiceItems);
-      if (data.clients) await this.clients.bulkPut(data.clients);
-      if (data.suppliers) await this.suppliers.bulkPut(data.suppliers);
-      if (data.products) await this.products.bulkPut(data.products);
-      if (data.expenses) await this.expenses.bulkPut(data.expenses);
-      if (data.emails) await this.emails.bulkPut(data.emails);
-      if (data.emailTemplates) await this.emailTemplates.bulkPut(data.emailTemplates);
-      if (data.calendarEvents) await this.calendarEvents.bulkPut(data.calendarEvents);
-      if (data.userProfile) await this.userProfile.bulkPut(data.userProfile);
-      if (data.chatMessages) await this.chatMessages.bulkPut(data.chatMessages);
+      if (data.invoices) {await this.invoices.bulkPut(data.invoices);}
+      if (data.invoiceItems) {await this.invoiceItems.bulkPut(data.invoiceItems);}
+      if (data.clients) {await this.clients.bulkPut(data.clients);}
+      if (data.suppliers) {await this.suppliers.bulkPut(data.suppliers);}
+      if (data.products) {await this.products.bulkPut(data.products);}
+      if (data.expenses) {await this.expenses.bulkPut(data.expenses);}
+      if (data.emails) {await this.emails.bulkPut(data.emails);}
+      if (data.emailTemplates) {await this.emailTemplates.bulkPut(data.emailTemplates);}
+      if (data.calendarEvents) {await this.calendarEvents.bulkPut(data.calendarEvents);}
+      if (data.userProfile) {await this.userProfile.bulkPut(data.userProfile);}
+      if (data.chatMessages) {await this.chatMessages.bulkPut(data.chatMessages);}
     } catch (error) {
       console.error("Erreur lors de l'importation des données:", error);
       throw error;
