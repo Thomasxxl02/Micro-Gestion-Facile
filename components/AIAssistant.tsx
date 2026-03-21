@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ChatMessage, Invoice, Client, UserProfile } from '../types';
 import { generateAssistantResponse, checkInvoiceCompliance, predictCashflowJ30 } from '../services/geminiService';
 import { useAppStore } from '../store/appStore';
-import { Send, Bot, User, Sparkles, MessageSquare, AlertTriangle, TrendingUp, CheckCircle, ShieldInfo, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, MessageSquare, AlertTriangle, TrendingUp, CheckCircle, Shield, Loader2 } from 'lucide-react';
 
 const AIAssistant: React.FC = () => {
     const { invoices, clients, userProfile } = useAppStore();
@@ -142,7 +142,7 @@ const AIAssistant: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                     <div className="p-2 bg-brand-100 text-brand-900 rounded-lg">
-                        <ShieldInfo size={20} />
+                        <Shield size={20} />
                     </div>
                     <h3 className="font-bold text-brand-900">Conformité Légale (Auto-Audit)</h3>
                 </div>
