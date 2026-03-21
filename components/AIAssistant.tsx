@@ -1,29 +1,62 @@
-import React, { useState, useRef, useEffect } from 'react';
-import type { ChatMessage } from '../types';
-import { generateAssistantResponse } from '../services/geminiService';
-import { Send, Bot, User, Sparkles, MessageSquare } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import type { ChatMessage, Invoice, Client, UserProfile } from '../types';
+import { generateAssistantResponse, checkInvoiceCompliance, predictCashflowJ30 } from '../services/geminiService';
+import { useAppStore } from '../store/appStore';
+import { Send, Bot, User, Sparkles, MessageSquare, AlertTriangle, TrendingUp, CheckCircle, ShieldInfo, Loader2 } from 'lucide-react';
 
 const AIAssistant: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'model',
-      content: "Bonjour ! Je suis votre assistant administratif virtuel. Je peux vous aider avec vos questions sur le statut auto-entrepreneur, les déclarations URSSAF, ou la rédaction de courriers. Comment puis-je vous aider aujourd'hui ?",
-      timestamp: Date.now()
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { invoices, clients, userProfile } = useAppStore();
+    const [messages, setMessages] = useState<ChatMessage[]>([
+        {
+            role: 'model',
+            content: "Bonjour ! Je suis votre assistant administratif virtuel. Je peux vous aider avec vos questions sur le statut auto-entrepreneur, les déclarations URSSAF, ou la rédaction de courriers. Comment puis-je vous aider aujourd'hui ?",
+            timestamp: Date.now()
+        }
+    ]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [complianceResults, setComplianceResults] = useState<{ isCompliant: boolean; issues: string[]; suggestions: string[] } | null>(null);
+    const [cashflowPrediction, setCashflowPrediction] = useState<{ predictedBalance: number; confidence: number; analysis: string; riskLevel: string } | null>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
-  const handleSend = async (e?: React.FormEvent) => {
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    // Initial analysis when component mounts
+    useEffect(() => {
+        const performDeepAnalysis = async () => {
+            if (invoices.length === 0) return;
+            setIsAnalyzing(true);
+            try {
+                // Cashflow prediction
+                const prediction = await predictCashflowJ30(invoices, userProfile);
+                setCashflowPrediction(prediction);
+
+                // Compliance check for the last invoice
+                const lastInvoice = [...invoices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+                const client = clients.find(c => c.id === lastInvoice.clientId);
+                if (lastInvoice && client) {
+                    const compliance = await checkInvoiceCompliance(lastInvoice, userProfile, client);
+                    setComplianceResults(compliance);
+                }
+            } catch (err) {
+                console.error("Analysis error:", err);
+            } finally {
+                setIsAnalyzing(false);
+            }
+        };
+
+        performDeepAnalysis();
+    }, []); // Only on mount
+
+    const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim() || isLoading) {return;}
 
@@ -63,6 +96,91 @@ const AIAssistant: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-brand-50/30 scroll-smooth">
+        {/* Insights Analytics Panel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Cashflow Prediction Card */}
+            <div className="bg-white rounded-2xl p-5 border border-brand-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:rotate-12 transition-transform">
+                    <TrendingUp size={64} className="text-brand-900" />
+                </div>
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-brand-100 text-brand-900 rounded-lg">
+                        <TrendingUp size={20} />
+                    </div>
+                    <h3 className="font-bold text-brand-900">Prédiction Trésorerie (30j)</h3>
+                </div>
+                {isAnalyzing ? (
+                    <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
+                        <Loader2 size={16} className="animate-spin" />
+                        Calcul en cours...
+                    </div>
+                ) : cashflowPrediction ? (
+                    <div>
+                        <p className="text-2xl font-black text-brand-900">
+                            {cashflowPrediction.predictedBalance >= 0 ? '+' : ''}{cashflowPrediction.predictedBalance.toLocaleString()}€
+                        </p>
+                        <p className="text-xs text-brand-500 mt-1 mb-3">{cashflowPrediction.analysis}</p>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${
+                                cashflowPrediction.riskLevel === 'low' ? 'bg-green-100 text-green-700' :
+                                cashflowPrediction.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                                Risque {cashflowPrediction.riskLevel === 'low' ? 'Faible' : cashflowPrediction.riskLevel === 'medium' ? 'Modéré' : 'Élevé'}
+                            </span>
+                            <span className="text-[10px] text-brand-400">Fiabilité : {(cashflowPrediction.confidence * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-sm text-brand-400">Aucune donnée de prédiction disponible.</p>
+                )}
+            </div>
+
+            {/* Compliance Alert Card */}
+            <div className="bg-white rounded-2xl p-5 border border-brand-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:rotate-12 transition-transform">
+                    <AlertTriangle size={64} className="text-brand-900" />
+                </div>
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-brand-100 text-brand-900 rounded-lg">
+                        <ShieldInfo size={20} />
+                    </div>
+                    <h3 className="font-bold text-brand-900">Conformité Légale (Auto-Audit)</h3>
+                </div>
+                {isAnalyzing ? (
+                    <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
+                        <Loader2 size={16} className="animate-spin" />
+                        Vérification des factures...
+                    </div>
+                ) : complianceResults ? (
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            {complianceResults.isCompliant ? (
+                                <CheckCircle size={18} className="text-green-500" />
+                            ) : (
+                                <AlertTriangle size={18} className="text-amber-500" />
+                            )}
+                            <span className={`font-bold text-sm ${complianceResults.isCompliant ? 'text-green-600' : 'text-amber-600'}`}>
+                                {complianceResults.isCompliant ? 'Dernière facture conforme' : `${complianceResults.issues.length} points à vérifier`}
+                            </span>
+                        </div>
+                        {complianceResults.issues.length > 0 && (
+                            <ul className="text-[11px] text-brand-600 space-y-1 mb-2 bg-brand-50/50 p-2 rounded-lg">
+                                {complianceResults.issues.slice(0, 2).map((issue, i) => (
+                                    <li key={i} className="flex gap-2">
+                                        <span className="text-brand-300">•</span>
+                                        {issue}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <p className="text-[10px] text-brand-400 italic">Basé sur la dernière facture émise.</p>
+                    </div>
+                ) : (
+                    <p className="text-sm text-brand-400">Pas encore de factures à analyser.</p>
+                )}
+            </div>
+        </div>
+
         {messages.map((msg, idx) => (
           <div
             key={idx}
