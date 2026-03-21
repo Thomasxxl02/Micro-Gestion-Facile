@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Expense, Invoice, InvoiceStatus, Supplier } from '../types';
+import { type Expense, type Invoice, type Supplier, type Client, type UserProfile, InvoiceStatus } from '../types';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, Calendar,
   PieChart as PieChartIcon, Search, Filter, Calculator,
@@ -8,19 +8,32 @@ import {
 import { analyzeReceipt } from '../services/geminiService';
 import {
   BarChart, Bar, PieChart, Pie, Tooltip, ResponsiveContainer,
-  XAxis, YAxis, CartesianGrid
+  XAxis, YAxis, CartesianGrid, Cell
 } from 'recharts';
+
+import { calculateSocialContributions, calculateIncomeTaxPFL } from '../lib/fiscalCalculations';
 
 interface AccountingManagerProps {
   expenses: Expense[];
   setExpenses: (expenses: Expense[]) => void;
   invoices: Invoice[];
   suppliers: Supplier[];
+  userProfile?: UserProfile; // Profil de l'utilisateur pour Factur-X
+  clients?: Client[]; // Liste des clients pour Factur-X
   onSaveExpense?: (expense: Expense) => void;
   onDeleteExpense?: (id: string) => void;
 }
 
-const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpenses, invoices, suppliers, onSaveExpense, onDeleteExpense }) => {
+const AccountingManager: React.FC<AccountingManagerProps> = ({
+  expenses,
+  setExpenses,
+  invoices,
+  suppliers,
+  userProfile,
+  clients = [],
+  onSaveExpense,
+  onDeleteExpense
+}) => {
   const [activeTab, setActiveTab] = useState<'journal' | 'bilan' | 'fiscal'>('journal');
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -33,15 +46,6 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const years = useMemo(() => {
-    const allDates = [
-      ...invoices.map(i => new Date(i.date).getFullYear()),
-      ...expenses.map(e => new Date(e.date).getFullYear())
-    ];
-    const uniqueYears = Array.from(new Set(allDates)).sort((a, b) => b - a);
-    return uniqueYears.length > 0 ? uniqueYears : [new Date().getFullYear()];
-  }, [invoices, expenses]);
-
   const fiscalData = useMemo(() => {
     const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     return months.map((name, idx) => {
@@ -52,8 +56,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
         })
         .reduce((sum, inv) => {
           const type = inv.type || 'invoice';
-          if (type === 'invoice') return sum + inv.total;
-          if (type === 'credit_note') return sum - inv.total;
+          if (type === 'invoice') {return sum + inv.total;}
+          if (type === 'credit_note') {return sum - inv.total;}
           return sum;
         }, 0);
 
@@ -61,8 +65,27 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
     });
   }, [invoices, selectedYear, taxRate]);
 
-  const totalYearlyRevenue = fiscalData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalYearlyTax = fiscalData.reduce((sum, d) => sum + d.tax, 0);
+  const totalYearlyRevenue = useMemo(() => fiscalData.reduce((sum, d) => sum + d.revenue, 0), [fiscalData]);
+  const totalYearlyTax = useMemo(() => fiscalData.reduce((sum, d) => sum + d.tax, 0), [fiscalData]);
+
+  const fiscalSummary = useMemo(() => {
+    if (!userProfile) {return null;}
+    return calculateSocialContributions(totalYearlyRevenue, userProfile);
+  }, [totalYearlyRevenue, userProfile]);
+
+  const yearlyIncomeTax = useMemo(() => {
+    if (!userProfile || !userProfile.activityType) {return 0;}
+    return calculateIncomeTaxPFL(totalYearlyRevenue, userProfile.activityType);
+  }, [totalYearlyRevenue, userProfile]);
+
+  const years = useMemo(() => {
+    const allDates = [
+      ...invoices.map(i => new Date(i.date).getFullYear()),
+      ...expenses.map(e => new Date(e.date).getFullYear())
+    ];
+    const uniqueYears = Array.from(new Set(allDates)).sort((a, b) => b - a);
+    return uniqueYears.length > 0 ? uniqueYears : [new Date().getFullYear()];
+  }, [invoices, expenses]);
 
   // Form State
   const [newExpense, setNewExpense] = useState<Partial<Expense>>({
@@ -77,7 +100,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     setIsAnalyzing(true);
     setShowForm(true);
@@ -95,7 +118,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
             const existingSupplier = suppliers.find(s =>
               s.name.toLowerCase().includes(result.supplierName.toLowerCase())
             );
-            if (existingSupplier) supplierId = existingSupplier.id;
+            if (existingSupplier) {supplierId = existingSupplier.id;}
           }
 
           setNewExpense(prev => ({
@@ -119,7 +142,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
 
   const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newExpense.description || !newExpense.amount) return;
+    if (!newExpense.description || !newExpense.amount) {return;}
 
     if (editingExpense) {
       const updatedExpense = { ...editingExpense, ...newExpense } as Expense;
@@ -129,20 +152,20 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
           : exp
       );
       setExpenses(updatedExpenses);
-      if (onSaveExpense) onSaveExpense(updatedExpense);
+      if (onSaveExpense) {onSaveExpense(updatedExpense);}
     } else {
       const expense: Expense = {
         id: Date.now().toString(),
-        date: newExpense.date!,
-        description: newExpense.description,
-        amount: Number(newExpense.amount),
+        date: newExpense.date ?? new Date().toISOString().split('T')[0],
+        description: newExpense.description || '',
+        amount: Number(newExpense.amount || 0),
         vatAmount: Number(newExpense.vatAmount || 0),
         vatRate: Number(newExpense.vatRate || 0),
-        category: newExpense.category!,
-        supplierId: newExpense.supplierId
+        category: newExpense.category || 'Achats',
+        supplierId: newExpense.supplierId || ''
       };
       setExpenses([expense, ...expenses]);
-      if (onSaveExpense) onSaveExpense(expense);
+      if (onSaveExpense) {onSaveExpense(expense);}
     }
 
     setNewExpense({
@@ -176,12 +199,12 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
     if (confirm('Supprimer cette dépense ?')) {
       setExpenses(expenses.filter(e => e.id !== id));
       setSelectedExpenses(selectedExpenses.filter(sid => sid !== id));
-      if (onDeleteExpense) onDeleteExpense(id);
+      if (onDeleteExpense) {onDeleteExpense(id);}
     }
   };
 
   const handleBulkDelete = () => {
-    if (selectedExpenses.length === 0) return;
+    if (selectedExpenses.length === 0) {return;}
     if (confirm(`Supprimer les ${selectedExpenses.length} dépenses sélectionnées ?`)) {
       setExpenses(expenses.filter(e => !selectedExpenses.includes(e.id)));
       if (onDeleteExpense) {
@@ -208,25 +231,75 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
   };
 
   const exportJournalCSV = () => {
-    const headers = ['Date', 'Description', 'Catégorie', 'Fournisseur', 'Montant TTC'];
-    const rows = filteredExpenses.map(exp => {
-      const supplier = suppliers.find(s => s.id === exp.supplierId)?.name || '-';
-      return [
-        exp.date,
-        `"${exp.description.replaceAll('"', '""')}"`,
-        `"${exp.category}"`,
-        `"${supplier.replaceAll('"', '""')}"`,
-        exp.amount.toFixed(2)
-      ].join(',');
-    });
+    const headers = ['Date', 'Type', 'Description', 'Montant TTC', 'TVA', 'Net HT', 'Catégorie', 'Client/Fournisseur'];
 
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows].join('\n');
+    const rows = [
+      ...filteredExpenses.map(e => [
+        e.date,
+        'DÉPENSE',
+        `"${e.description.replaceAll('"', '""')}"`,
+        e.amount.toFixed(2),
+        (e.vatAmount || 0).toFixed(2),
+        (e.amount - (e.vatAmount || 0)).toFixed(2),
+        `"${e.category}"`,
+        `"${suppliers.find(s => s.id === e.supplierId)?.name.replaceAll('"', '""') || 'N/A'}"`
+      ]),
+      ...invoices.filter(inv => inv.status === InvoiceStatus.PAID).map(inv => [
+        inv.date,
+        'RECETTE',
+        `"Facture ${inv.number}"`,
+        inv.total.toFixed(2),
+        (inv.taxTotal || 0).toFixed(2),
+        inv.subtotal.toFixed(2),
+        '"Prestation"',
+        `"${clients.find(c => c.id === inv.clientId)?.name.replaceAll('"', '""') || 'N/A'}"`
+      ])
+    ].sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+      + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `journal_comptable_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `journal_comptable_${selectedYear}.csv`);
     document.body.appendChild(link);
     link.click();
     link.remove();
+  };
+
+  const handleExportLivreRecettesPFD = async () => {
+    const paidInvoices = invoices
+      .filter(inv => inv.status === InvoiceStatus.PAID && new Date(inv.date).getFullYear() === selectedYear)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const { jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text('LIVRE DES RECETTES', 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || userProfile?.businessName || 'N/A'}`, 14, 30);
+    doc.text(`SIRET: ${userProfile?.siret || 'N/A'}`, 14, 35);
+    doc.text('Document infalsifiable généré le ' + new Date().toLocaleDateString(), 14, 40);
+
+    const tableData = paidInvoices.map(inv => [
+      inv.date,
+      inv.number,
+      clients.find(c => c.id === inv.clientId)?.name || 'Inconnu',
+      inv.total.toFixed(2) + ' €'
+    ]);
+
+    (doc as any).autoTable({
+      startY: 50,
+      head: [['Date', 'N° Facture', 'Client', 'Montant Encaissé (TTC)']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [51, 51, 51] }
+    });
+
+    doc.save(`livre_recettes_${selectedYear}.pdf`);
   };
 
   // --- STATISTICS ---
@@ -235,8 +308,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
       .filter(inv => inv.status === InvoiceStatus.PAID)
       .reduce((sum, inv) => {
         const type = inv.type || 'invoice';
-        if (type === 'invoice') return sum + inv.total;
-        if (type === 'credit_note') return sum - inv.total;
+        if (type === 'invoice') {return sum + inv.total;}
+        if (type === 'credit_note') {return sum - inv.total;}
         return sum;
       }, 0);
   }, [invoices]);
@@ -261,8 +334,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
         const date = new Date(inv.date);
         const monthName = months[date.getMonth()];
         const type = inv.type || 'invoice';
-        if (type === 'invoice') data[monthName].income += inv.total;
-        else if (type === 'credit_note') data[monthName].income -= inv.total;
+        if (type === 'invoice') {data[monthName].income += inv.total;}
+        else if (type === 'credit_note') {data[monthName].income -= inv.total;}
       }
     });
 
@@ -294,8 +367,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
         const month = new Date(inv.date).getMonth();
         const qIdx = Math.floor(month / 3);
         const type = inv.type || 'invoice';
-        if (type === 'invoice') quarters[qIdx].income += inv.total;
-        else if (type === 'credit_note') quarters[qIdx].income -= inv.total;
+        if (type === 'invoice') {quarters[qIdx].income += inv.total;}
+        else if (type === 'credit_note') {quarters[qIdx].income -= inv.total;}
       }
     });
 
@@ -503,7 +576,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                             dataKey="value"
                             >
                             {expensesByCategory.map((entry) => (
-                                <Pie.Cell key={entry.name} fill={COLORS[expensesByCategory.indexOf(entry) % COLORS.length]} />
+                                <Cell key={entry.name} fill={COLORS[expensesByCategory.indexOf(entry) % COLORS.length]} />
                             ))}
                             </Pie>
                             <Tooltip
@@ -598,24 +671,29 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="card-modern p-8 bg-brand-900 text-white">
-              <p className="text-[10px] font-bold text-brand-300 uppercase tracking-widest mb-2">Chiffre d'Affaires Annuel</p>
+              <p className="text-[10px] font-bold text-brand-300 uppercase tracking-widest mb-2">Chiffre d&apos;Affaires Annuel</p>
               <h3 className="text-3xl font-bold font-display">{totalYearlyRevenue.toLocaleString('fr-FR')} €</h3>
-              <p className="text-[10px] text-brand-400 mt-4 italic">Total des factures marquées comme payées.</p>
+              <p className="text-[10px] text-brand-400 mt-4 italic">Total des factures payées.</p>
             </div>
             <div className="card-modern p-8">
-              <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Cotisations Estimées</p>
-              <h3 className="text-3xl font-bold text-brand-900 font-display">{totalYearlyTax.toLocaleString('fr-FR')} €</h3>
+              <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Cotisations Sociales</p>
+              <h3 className="text-3xl font-bold text-brand-900 font-display">{fiscalSummary?.amount.toLocaleString('fr-FR') || totalYearlyTax.toLocaleString('fr-FR')} €</h3>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-brand-400 uppercase">Taux appliqué</span>
-                <span className="text-xs font-bold text-brand-600">{taxRate}%</span>
+                <span className="text-xs font-bold text-brand-600">{fiscalSummary?.rate || taxRate}%</span>
               </div>
+            </div>
+            <div className="card-modern p-8">
+              <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Impôt (PFL Est.)</p>
+              <h3 className="text-3xl font-bold text-brand-900 font-display">{yearlyIncomeTax.toLocaleString('fr-FR')} €</h3>
+              <p className="text-[10px] text-brand-400 mt-4">Prélèvement Libératoire</p>
             </div>
             <div className="card-modern p-8 bg-accent-50 border-accent-100">
               <p className="text-[10px] font-bold text-accent-700 uppercase tracking-widest mb-2">Revenu Net Estimé</p>
-              <h3 className="text-3xl font-bold text-accent-900 font-display">{(totalYearlyRevenue - totalYearlyTax).toLocaleString('fr-FR')} €</h3>
-              <p className="text-[10px] text-accent-600 mt-4 italic">Revenu après cotisations sociales.</p>
+              <h3 className="text-3xl font-bold text-accent-900 font-display">{(totalYearlyRevenue - (fiscalSummary?.amount || totalYearlyTax) - yearlyIncomeTax).toLocaleString('fr-FR')} €</h3>
+              <p className="text-[10px] text-accent-600 mt-4 italic">Après cotisations et impôts.</p>
             </div>
           </div>
 
@@ -715,7 +793,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
                     className="flex-1 sm:flex-none bg-white hover:bg-brand-50 text-brand-600 border border-brand-100 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm"
                 >
                     <FileSpreadsheet size={16} />
-                    Export CSV
+                    Export Journal (CSV)
+                </button>
+                <button
+                    onClick={handleExportLivreRecettesPFD}
+                    className="flex-1 sm:flex-none bg-white hover:bg-brand-50 text-brand-600 border border-brand-100 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm"
+                >
+                    <Calculator size={16} />
+                    Livre des Recettes (PDF)
                 </button>
                 <button
                     onClick={() => {
@@ -775,12 +860,12 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({ expenses, setExpe
               </div>
               <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                 <div>
-                  <label htmlFor="expense-date" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Date de l'achat</label>
+                  <label htmlFor="expense-date" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">Date de l&apos;achat</label>
                   <input
                     id="expense-date"
                     type="date"
                     required
-                    title="Sélectionner la date de l'achat"
+                    title="Sélectionner la date de l&apos;achat"
                     className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-medium text-brand-900"
                     value={newExpense.date}
                     onChange={e => setNewExpense({...newExpense, date: e.target.value})}

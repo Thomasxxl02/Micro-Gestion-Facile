@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '../types';
+import type { ChatMessage } from '../types';
 import { generateAssistantResponse } from '../services/geminiService';
 import { Send, Bot, User, Sparkles, MessageSquare } from 'lucide-react';
 
@@ -25,7 +25,7 @@ const AIAssistant: React.FC = () => {
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading) {return;}
 
     const userMsg: ChatMessage = { role: 'user', content: input, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
@@ -34,9 +34,9 @@ const AIAssistant: React.FC = () => {
 
     // Build context from last few messages
     const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
-    
+
     const responseText = await generateAssistantResponse(userMsg.content, context);
-    
+
     const modelMsg: ChatMessage = { role: 'model', content: responseText, timestamp: Date.now() };
     setMessages(prev => [...prev, modelMsg]);
     setIsLoading(false);
@@ -64,8 +64,8 @@ const AIAssistant: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-brand-50/30 scroll-smooth">
         {messages.map((msg, idx) => (
-          <div 
-            key={idx} 
+          <div
+            key={idx}
             className={`flex items-start gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div className={`
@@ -74,12 +74,12 @@ const AIAssistant: React.FC = () => {
             `}>
               {msg.role === 'user' ? <User size={18} /> : <Bot size={20} />}
             </div>
-            
+
             <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 <div className={`
                 max-w-[85%] px-5 py-3.5 text-sm leading-relaxed whitespace-pre-wrap shadow-sm
-                ${msg.role === 'user' 
-                    ? 'bg-brand-900 text-white rounded-[2rem] rounded-tr-sm' 
+                ${msg.role === 'user'
+                    ? 'bg-brand-900 text-white rounded-[2rem] rounded-tr-sm'
                     : 'bg-white text-brand-800 rounded-[2rem] rounded-tl-sm border border-brand-100'}
                 `}>
                 {msg.content}
@@ -117,7 +117,7 @@ const AIAssistant: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
           />
-          <button 
+          <button
             type="submit"
             disabled={isLoading || !input.trim()}
             className="px-6 py-3.5 bg-brand-900 text-white rounded-2xl hover:bg-brand-800 disabled:opacity-50 disabled:hover:bg-brand-900 transition-all font-bold shadow-md flex items-center gap-2"
@@ -129,7 +129,7 @@ const AIAssistant: React.FC = () => {
         <div className="text-center mt-3">
             <p className="text-[10px] text-brand-400 flex items-center justify-center gap-1.5">
                 <MessageSquare size={10} />
-                L'IA peut commettre des erreurs. Vérifiez toujours les informations légales.
+                L&apos;IA peut commettre des erreurs. Vérifiez toujours les informations légales.
             </p>
         </div>
       </form>

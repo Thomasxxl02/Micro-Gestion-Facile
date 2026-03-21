@@ -15,7 +15,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data })
   const [selectedFormat, setSelectedFormat] = useState<'json' | 'csv'>('json');
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set(['all']));
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   const stats = getExportStats(data);
 
@@ -178,7 +178,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data })
               </div>
               <div className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>RGPD compliant:</strong> Vos données restent confidentielles. Aucune donnée
-                n'est transmise à nos serveurs lors de l'export.
+                n&apos;est transmise à nos serveurs lors de l&apos;export.
               </div>
             </div>
           </div>

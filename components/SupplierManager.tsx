@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { Supplier, Expense } from '../types';
+import type { Supplier, Expense } from '../types';
 import { Plus, Download, Upload, Truck, AlertCircle, Wallet, Archive } from 'lucide-react';
 import EntityModal from './EntityModal';
 import { ContactFields, FinancialFields, SearchFilterFields } from './EntityFormFields';
@@ -38,7 +38,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
   // Form handlers
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!form.formData?.name) return;
+    if (!form.formData?.name) {return;}
 
     if (form.isEditing && form.editingId) {
       const updated = { ...suppliers.find(s => s.id === form.editingId), ...form.formData } as Supplier;
@@ -58,7 +58,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
   };
 
   const handleDelete = async () => {
-    if (!form.editingId) return;
+    if (!form.editingId) {return;}
     setSuppliers(suppliers.filter(s => s.id !== form.editingId));
     onDelete?.(form.editingId);
     form.closePanel();
@@ -96,14 +96,14 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
     const text = await file.text();
     const lines = text.split('\n');
     const newSuppliers: Supplier[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line) continue;
+      if (!line) {continue;}
       const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replaceAll('"', ''));
       if (parts.length >= 1) {
         newSuppliers.push({
@@ -127,7 +127,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
 
     if (newSuppliers.length > 0) {
       setSuppliers([...suppliers, ...newSuppliers]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) {fileInputRef.current.value = '';}
     }
   };
 

@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js';
+import type { InvoiceItem } from '../types';
 
 /**
  * Module de calculs de factures pour micro-entrepreneurs français
@@ -89,12 +90,81 @@ export const VAT_RATES = {
 // CALCULS DE TVA
 // ============================================================================
 
+export interface InvoiceTotalsInput {
+  items: InvoiceItem[];
+  taxExempt: boolean;
+  discount?: number;
+  shipping?: number;
+  deposit?: number;
+  defaultVatRate: number;
+}
+
+export interface InvoiceTotalsResult {
+  subtotalHT: number;
+  discountAmount: number;
+  vatAmount: number;
+  total: number;
+  balanceDue: number;
+}
+
+/**
+ * Calcule les totaux complets d'une facture
+ * Source unique de vérité pour les calculs d'affichage et d'enregistrement
+ */
+export function calculateFullInvoiceTotals(input: InvoiceTotalsInput): InvoiceTotalsResult {
+  const { items, taxExempt, discount = 0, shipping = 0, deposit = 0, defaultVatRate } = input;
+
+  // Initialisation avec Decimal pour la précision financière
+  let subtotalHT = new Decimal(0);
+  let vatAmount = new Decimal(0);
+
+  // 1. Calcul du sous-total HT
+  items.forEach(item => {
+    const itemTotal = new Decimal(item.quantity).times(new Decimal(item.unitPrice));
+    subtotalHT = subtotalHT.plus(itemTotal);
+  });
+
+  // 2. Calcul des remises
+  const discountRate = new Decimal(discount).dividedBy(100);
+  const discountAmount = subtotalHT.times(discountRate);
+  const subtotalAfterDiscount = subtotalHT.minus(discountAmount);
+
+  // 3. Calcul de la TVA
+  if (!taxExempt) {
+    items.forEach(item => {
+      const itemTotal = new Decimal(item.quantity).times(new Decimal(item.unitPrice));
+      const itemDiscount = itemTotal.times(discountRate);
+      const itemAfterDiscount = itemTotal.minus(itemDiscount);
+
+      const rate = new Decimal(item.vatRate ?? defaultVatRate).dividedBy(100);
+      vatAmount = vatAmount.plus(itemAfterDiscount.times(rate));
+    });
+
+    // TVA sur les frais de port (au taux par défaut)
+    if (shipping > 0) {
+      const shippingVat = new Decimal(shipping).times(new Decimal(defaultVatRate).dividedBy(100));
+      vatAmount = vatAmount.plus(shippingVat);
+    }
+  }
+
+  // 4. Totaux finaux
+  const totalTTC = subtotalAfterDiscount.plus(new Decimal(shipping)).plus(vatAmount);
+  const balanceDue = Decimal.max(0, totalTTC.minus(new Decimal(deposit)));
+
+  return {
+    subtotalHT: subtotalHT.toNumber(),
+    discountAmount: discountAmount.toDecimalPlaces(2).toNumber(),
+    vatAmount: vatAmount.toDecimalPlaces(2).toNumber(),
+    total: totalTTC.toDecimalPlaces(2).toNumber(),
+    balanceDue: balanceDue.toDecimalPlaces(2).toNumber(),
+  };
+}
+
 /**
  * Calcule le montant de TVA et le montant TTC
  *
  * @param input - Données d'entrée (montant HT et taux TVA)
  * @returns Résultats détaillés du calcul
- * @throws Si montants négatifs ou taux de TVA invalide
  */
 export function calculateInvoiceTax(input: TaxCalculationInput): InvoiceCalculationResult {
   const amountHT = new Decimal(input.amountHT);

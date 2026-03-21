@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo, useRef } from 'react';
-import { Client, Invoice, InvoiceStatus } from '../types';
+import { type Client, type Invoice, InvoiceStatus } from '../types';
 import { Plus, Download, Upload, Users, TrendingUp, Archive, AlertCircle } from 'lucide-react';
 import EntityModal from './EntityModal';
 import { ContactFields, FinancialFields, SearchFilterFields } from './EntityFormFields';
@@ -14,13 +14,13 @@ import { useEntityForm, useEntityFilters } from '../hooks/useEntity';
 
 interface ClientManagerProps {
   clients: Client[];
-  setClients: (clients: Client[]) => void;
   invoices: Invoice[];
   onSave?: (client: Client) => void;
   onDelete?: (id: string) => void;
+  isLoading?: boolean;
 }
 
-const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invoices, onSave, onDelete }) => {
+const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave, onDelete }) => {
   const form = useEntityForm<Client>();
   const filters = useEntityFilters(clients, { searchField: 'name', hasArchive: true, archiveField: 'archived' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,7 +31,7 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
     const revenue = clientInvoices
       .filter(inv => inv.status === InvoiceStatus.PAID)
       .reduce((sum, inv) => {
-        if (inv.type === 'credit_note') return sum - inv.total;
+        if (inv.type === 'credit_note') {return sum - inv.total;}
         return (inv.type === 'invoice' || !inv.type) ? sum + inv.total : sum;
       }, 0);
     const lastActivity = clientInvoices.length > 0 ? Math.max(...clientInvoices.map(inv => new Date(inv.date).getTime())) : 0;
@@ -43,7 +43,7 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
     const totalRevenue = invoices
       .filter(inv => inv.status === InvoiceStatus.PAID)
       .reduce((sum, inv) => {
-        if (inv.type === 'credit_note') return sum - inv.total;
+        if (inv.type === 'credit_note') {return sum - inv.total;}
         return (inv.type === 'invoice' || !inv.type) ? sum + inv.total : sum;
       }, 0);
     return { count: activeClients.length, totalRevenue, archivedCount: clients.length - activeClients.length };
@@ -56,11 +56,11 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
   // Form handlers
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!form.formData?.name || !form.formData?.email) return;
+    if (!form.formData?.name || !form.formData?.email) {return;}
 
     if (form.isEditing && form.editingId) {
-      const updated = { ...clients.find(c => c.id === form.editingId), ...form.formData } as Client;
-      setClients(clients.map(c => c.id === form.editingId ? updated : c));
+      const original = clients.find(c => c.id === form.editingId);
+      const updated = { ...original, ...form.formData } as Client;
       onSave?.(updated);
     } else {
       const newClient: Client = {
@@ -69,15 +69,13 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
         createdAt: new Date().toISOString(),
         archived: false,
       } as Client;
-      setClients([...clients, newClient]);
       onSave?.(newClient);
     }
     form.closePanel();
   };
 
   const handleDelete = async () => {
-    if (!form.editingId) return;
-    setClients(clients.filter(c => c.id !== form.editingId));
+    if (!form.editingId) {return;}
     onDelete?.(form.editingId);
     form.closePanel();
   };
@@ -86,7 +84,6 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
     const client = clients.find(c => c.id === id);
     if (client) {
       const updated = { ...client, archived: !client.archived };
-      setClients(clients.map(c => c.id === id ? updated : c));
       onSave?.(updated);
     }
   };
@@ -116,14 +113,14 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
 
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
     const text = await file.text();
     const lines = text.split('\n');
     const newClients: Client[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line) continue;
+      if (!line) {continue;}
       const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, ''));
       if (parts.length >= 3) {
         newClients.push({
@@ -146,8 +143,8 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
     }
 
     if (newClients.length > 0) {
-      setClients([...clients, ...newClients]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      newClients.forEach(c => onSave?.(c));
+      if (fileInputRef.current) {fileInputRef.current.value = '';}
     }
   };
 

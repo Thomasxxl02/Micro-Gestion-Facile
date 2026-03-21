@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Email, EmailTemplate, Client, Invoice, UserProfile } from '../types';
+import type { Email, EmailTemplate, Client, Invoice, UserProfile } from '../types';
 import { Mail, Send, History, FileText, Plus, Trash2, Search, Clock, CheckCircle2, AlertCircle, X, Edit2, Copy, Wand2, User, Check, Eye } from 'lucide-react';
 import { draftEmail } from '../services/geminiService';
 
@@ -110,7 +110,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       relatedId: composeData.relatedId
     };
     setEmails([...emails, newEmail]);
-    if (onSaveEmail) onSaveEmail(newEmail);
+    if (onSaveEmail) {onSaveEmail(newEmail);}
     setIsComposeOpen(false);
     setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '' });
     setActiveTab('history');
@@ -121,7 +121,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     if (editingTemplateId) {
       const updatedTemplate = { ...templates.find(t => t.id === editingTemplateId), ...templateFormData } as EmailTemplate;
       setTemplates(templates.map(t => t.id === editingTemplateId ? updatedTemplate : t));
-      if (onSaveTemplate) onSaveTemplate(updatedTemplate);
+      if (onSaveTemplate) {onSaveTemplate(updatedTemplate);}
     } else {
       const newTemplate: EmailTemplate = {
         id: Date.now().toString(),
@@ -131,7 +131,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
         type: templateFormData.type || 'custom'
       };
       setTemplates([...templates, newTemplate]);
-      if (onSaveTemplate) onSaveTemplate(newTemplate);
+      if (onSaveTemplate) {onSaveTemplate(newTemplate);}
     }
     setEditingTemplateId(null);
     setTemplateFormData({ name: '', subject: '', body: '', type: 'custom' });
@@ -169,14 +169,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   const deleteEmail = (id: string) => {
     if (confirm('Supprimer cet email de l\'historique ?')) {
       setEmails(emails.filter(e => e.id !== id));
-      if (onDeleteEmail) onDeleteEmail(id);
+      if (onDeleteEmail) {onDeleteEmail(id);}
     }
   };
 
   const deleteTemplate = (id: string) => {
     if (confirm('Supprimer ce template ?')) {
       setTemplates(templates.filter(t => t.id !== id));
-      if (onDeleteTemplate) onDeleteTemplate(id);
+      if (onDeleteTemplate) {onDeleteTemplate(id);}
     }
   };
 
@@ -407,7 +407,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                     onClick={() => setShowPreview(false)}
                     className="px-6 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
                   >
-                    Retour à l'édition
+                    Retour à l&apos;édition
                   </button>
                 </div>
               </div>
@@ -476,12 +476,12 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Type d'email</label>
+                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-wider mb-2">Type d&apos;email</label>
                     <select
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                       value={composeData.type}
                       onChange={e => setComposeData({...composeData, type: e.target.value as Email['type']})}
-                      title="Sélectionner le type d'email"
+                      title="Sélectionner le type d&apos;email"
                     >
                       <option value="custom">Communication Libre</option>
                       <option value="invoice">Envoi de Facture</option>
@@ -589,7 +589,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 Astuce IA
               </h4>
               <p className="text-xs text-accent-700 leading-relaxed">
-                Utilisez l'aide à la rédaction pour générer des relances polies mais fermes, ou des messages d'accompagnement personnalisés pour vos factures.
+                Utilisez l&apos;aide à la rédaction pour générer des relances polies mais fermes, ou des messages d&apos;accompagnement personnalisés pour vos factures.
               </p>
             </div>
           </div>

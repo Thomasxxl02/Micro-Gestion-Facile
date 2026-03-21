@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { CalendarEvent, Client } from '../types';
+import type { CalendarEvent, Client } from '../types';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -101,7 +101,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, cl
     if (selectedEvent) {
       const updatedEvent = { ...selectedEvent, ...formData } as CalendarEvent;
       setEvents(events.map(ev => ev.id === selectedEvent.id ? updatedEvent : ev));
-      if (onSaveEvent) onSaveEvent(updatedEvent);
+      if (onSaveEvent) {onSaveEvent(updatedEvent);}
     } else {
       const newEvent: CalendarEvent = {
         id: Date.now().toString(),
@@ -115,7 +115,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, cl
         color: formData.color || '#102a43'
       };
       setEvents([...events, newEvent]);
-      if (onSaveEvent) onSaveEvent(newEvent);
+      if (onSaveEvent) {onSaveEvent(newEvent);}
     }
     setIsModalOpen(false);
     setSelectedEvent(null);
@@ -125,7 +125,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, cl
   const deleteEvent = (id: string) => {
     if (confirm('Supprimer cet événement ?')) {
       setEvents(events.filter(ev => ev.id !== id));
-      if (onDeleteEvent) onDeleteEvent(id);
+      if (onDeleteEvent) {onDeleteEvent(id);}
       setIsModalOpen(false);
       setSelectedEvent(null);
     }
@@ -188,8 +188,8 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({ events, setEvents, cl
                 <button onClick={prevMonth} className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors" title="Mois précédent">
                   <ChevronLeft size={20} />
                 </button>
-                <button onClick={goToToday} className="px-3 py-1 text-xs font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Aller à aujourd'hui">
-                  Aujourd'hui
+                <button onClick={goToToday} className="px-3 py-1 text-xs font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Aller à aujourd&apos;hui">
+                  Aujourd&apos;hui
                 </button>
                 <button onClick={nextMonth} className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors" title="Mois suivant">
                   <ChevronRight size={20} />

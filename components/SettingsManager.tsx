@@ -10,11 +10,12 @@ import type { UserProfile, Invoice, Client, Supplier, Product, Expense, InvoiceS
 import {
   Building, Wallet, Globe,
   MapPin, CreditCard, ShieldCheck, Download, Upload,
-  Hash, Palette, Briefcase, Database, Trash2,
-  ShieldAlert, RefreshCw, Zap, Calculator, Mail as MailIcon, Phone as PhoneIcon
+  Hash, Palette, Briefcase, Zap, Mail as MailIcon, Phone as PhoneIcon,
+  Activity, Key
 } from 'lucide-react';
-import { FormField, TextAreaField, SelectField, ToggleSwitch, ColorPicker } from './FormFields';
+import { FormField, TextAreaField, SelectField, ToggleSwitch, ColorPicker, LogoUploader } from './FormFields';
 import { ConfirmDialog, AlertDialog } from './Dialogs';
+import { useAppStore } from '../store/appStore';
 
 interface SettingsManagerProps {
   userProfile: UserProfile;
@@ -44,7 +45,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   setAllData,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'data' | 'preferences'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'data' | 'preferences' | 'security'>('profile');
+  const { activityLogs, addLog } = useAppStore();
 
   // ─── DIALOG STATES ───
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -66,14 +68,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   const handleChange = (field: keyof UserProfile, value: string | number | boolean) => {
     const updatedProfile = { ...userProfile, [field]: value };
     setUserProfile(updatedProfile);
-    if (onSaveProfile) onSaveProfile(updatedProfile);
+    if (onSaveProfile) {onSaveProfile(updatedProfile);}
     showSaveMessage('✓ Profil sauvegardé');
   };
 
   const showSaveMessage = (message: string) => {
     setAlertDialog({ isOpen: true, title: message, description: '', type: 'success' });
     setTimeout(() => {
-      setAlertDialog({ isOpen: false, title: '', description: '', type: 'info' });
+      setAlertDialog((prev) => ({ ...prev, isOpen: false }));
     }, 2000);
   };
 
@@ -87,26 +89,29 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     link.download = `backup_micro_gestion_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    addLog('Export complet des données effectué', 'DATA', 'INFO');
     showSaveMessage('✓ Données exportées avec succès');
   };
 
   const handleImportAll = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     try {
-      const text = await file.text(); // Modern API, replaces FileReader
+      const text = await file.text();
       const data = JSON.parse(text);
 
-      if (data.profile) setUserProfile(data.profile);
-      if (data.invoices) setAllData.setInvoices(data.invoices);
-      if (data.clients) setAllData.setClients(data.clients);
-      if (data.suppliers) setAllData.setSuppliers(data.suppliers);
-      if (data.products) setAllData.setProducts(data.products);
-      if (data.expenses) setAllData.setExpenses(data.expenses);
+      if (data.profile) {setUserProfile(data.profile);}
+      if (data.invoices) {setAllData.setInvoices(data.invoices);}
+      if (data.clients) {setAllData.setClients(data.clients);}
+      if (data.suppliers) {setAllData.setSuppliers(data.suppliers);}
+      if (data.products) {setAllData.setProducts(data.products);}
+      if (data.expenses) {setAllData.setExpenses(data.expenses);}
 
+      addLog('Importation de données externe réussie', 'DATA', 'INFO');
       showSaveMessage('✓ Données importées avec succès');
     } catch {
+      addLog('Échec de l\'importation de données', 'DATA', 'ERROR');
       setAlertDialog({
         isOpen: true,
         title: '⚠️ Erreur d\'importation',
@@ -114,29 +119,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         type: 'error',
       });
     }
-  };
-
-  const handleResetApp = () => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Réinitialiser l\'application ?',
-      description: 'ÊTES-VOUS SÛR ? Cette action supprimera TOUTES vos données (factures, clients, etc.) de manière irréversible.',
-      isDangerous: true,
-      onConfirm: () => {
-        setAllData.setInvoices([]);
-        setAllData.setClients([]);
-        setAllData.setSuppliers([]);
-        setAllData.setProducts([]);
-        setAllData.setExpenses([]);
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
-        setAlertDialog({
-          isOpen: true,
-          title: '✓ Données réinitialisées',
-          description: 'Pour une suppression complète de votre compte, veuillez nous contacter.',
-          type: 'info',
-        });
-      },
-    });
   };
 
   const generateSampleData = () => {
@@ -178,25 +160,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     });
   };
 
-  const activityOptions = [
-    { value: 'SALE', label: 'Vente de marchandises (BIC)' },
-    { value: 'SERVICE_BIC', label: 'Prestations de services (BIC)' },
-    { value: 'SERVICE_BNC', label: 'Prestations de services (BNC)' },
-    { value: 'LIBERAL', label: 'Profession libérale réglementée' },
-  ];
-
-  const eInvoiceFormatOptions = [
-    { value: 'Factur-X', label: 'Factur-X (Recommandé)' },
-    { value: 'UBL', label: 'UBL' },
-    { value: 'CII', label: 'CII' },
-  ];
-
-  const operationCategoryOptions = [
-    { value: 'BIENS', label: 'Livraison de biens' },
-    { value: 'SERVICES', label: 'Prestation de services' },
-    { value: 'MIXTE', label: 'Opération mixte' },
-  ];
-
   return (
     <div className="max-w-7xl mx-auto animate-fade-in pb-12">
       {/* HEADER */}
@@ -207,21 +170,81 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         </div>
 
         {/* TAB BUTTONS */}
-        <div className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar">
-          {['profile', 'billing', 'preferences', 'data'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              aria-selected={activeTab === tab}
-              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-                activeTab === tab
-                  ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                  : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-              }`}
-            >
-              {{ profile: 'Profil', billing: 'Facturation', preferences: 'Préférences', data: 'Données' }[tab]}
-            </button>
-          ))}
+        <div
+          role="tablist"
+          aria-label="Paramètres de l'application"
+          className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar"
+        >
+          <button
+            id="tab-profile"
+            aria-controls="panel-profile"
+            onClick={() => setActiveTab('profile')}
+            role="tab"
+            aria-selected="true"
+            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeTab === 'profile'
+                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+            }`}
+          >
+            Profil
+          </button>
+          <button
+            id="tab-billing"
+            aria-controls="panel-billing"
+            onClick={() => setActiveTab('billing')}
+            role="tab"
+            aria-selected="false"
+            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeTab === 'billing'
+                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+            }`}
+          >
+            Facturation
+          </button>
+          <button
+            id="tab-preferences"
+            aria-controls="panel-preferences"
+            onClick={() => setActiveTab('preferences')}
+            role="tab"
+            aria-selected="false"
+            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeTab === 'preferences'
+                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+            }`}
+          >
+            Style
+          </button>
+          <button
+            id="tab-security"
+            aria-controls="panel-security"
+            onClick={() => setActiveTab('security')}
+            role="tab"
+            aria-selected="false"
+            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeTab === 'security'
+                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+            }`}
+          >
+            Sécurité
+          </button>
+          <button
+            id="tab-data"
+            aria-controls="panel-data"
+            onClick={() => setActiveTab('data')}
+            role="tab"
+            aria-selected="false"
+            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeTab === 'data'
+                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+            }`}
+          >
+            Données
+          </button>
         </div>
       </div>
 
@@ -230,9 +253,29 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         <div className="xl:col-span-2 space-y-8">
           {/* PROFILE TAB */}
           {activeTab === 'profile' && (
-            <div className="space-y-8 animate-slide-up">
+            <div
+              id="panel-profile"
+              role="tabpanel"
+              aria-labelledby="tab-profile"
+              className="space-y-8 animate-slide-up"
+            >
+              {/* Image de marque */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Palette size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Image de marque</h3>
+                </div>
+                <LogoUploader
+                  logoUrl={userProfile.logoUrl}
+                  onChange={(url) => handleChange('logoUrl', url)}
+                  onRemove={() => handleChange('logoUrl', '')}
+                />
+              </div>
+
               {/* Identity Card */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-[2rem] p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
                   <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
                     <Building size={24} />
@@ -268,7 +311,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               </div>
 
               {/* Contact Card */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-[2rem] p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
                   <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
                     <MailIcon size={24} />
@@ -324,38 +367,53 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
           {/* BILLING TAB */}
           {activeTab === 'billing' && (
-            <div className="space-y-8 animate-slide-up">
-              {/* Branding */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-[2rem] p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+            <div
+              id="panel-billing"
+              role="tabpanel"
+              aria-labelledby="tab-billing"
+              className="space-y-8 animate-slide-up"
+            >
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
                   <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-                    <Palette size={24} />
+                    <ShieldCheck size={24} />
                   </div>
-                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Identité Visuelle</h3>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Conformité Fiscale</h3>
                 </div>
-
-                <ColorPicker
-                  label="Couleur de l'entreprise"
-                  value={userProfile.logoColor || '#102a43'}
-                  onChange={(val) => handleChange('logoColor', val)}
-                  presets={['#102a43', '#0f172a', '#1e293b', '#334155', '#059669', '#0891b2', '#4f46e5', '#7c3aed']}
-                />
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SelectField
+                      label="Régime d'imposition"
+                      value={userProfile.taxSystem || 'MICRO-BNC'}
+                      onChange={(val) => handleChange('taxSystem', val)}
+                      options={[
+                        { value: 'MICRO-BNC', label: 'Micro-BNC (Services libéraux)' },
+                        { value: 'MICRO-BIC', label: 'Micro-BIC (Artisanat / Vente)' },
+                        { value: 'LIBERAL', label: 'Profession libérale' },
+                      ]}
+                    />
+                  </div>
+                  <ToggleSwitch
+                    label="Franchise en base de TVA"
+                    description="Active la mention automatique 'TVA non applicable, art. 293 B du CGI' sur vos documents"
+                    checked={userProfile.isVatExempt || false}
+                    onChange={(val) => handleChange('isVatExempt', val)}
+                  />
+                </div>
               </div>
 
-              {/* Financial */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-[2rem] p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
                   <div className="p-2 bg-accent-50 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400 rounded-xl">
                     <Wallet size={24} />
                   </div>
                   <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Bancaire & Légal</h3>
                 </div>
-
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="IBAN"
-                      value={userProfile.bankAccount}
+                      value={userProfile.bankAccount || ''}
                       onChange={(val) => handleChange('bankAccount', val)}
                       placeholder="FR76 ..."
                       icon={CreditCard}
@@ -367,7 +425,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       placeholder="TRPUFRPPXXX"
                     />
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Devise"
@@ -387,136 +444,50 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       onChange={(val) => handleChange('defaultVatRate', Number.parseFloat(val))}
                     />
                   </div>
-
-                  <FormField
-                    label="Numéro de TVA Intracommunautaire"
-                    value={userProfile.tvaNumber || ''}
-                    onChange={(val) => handleChange('tvaNumber', val)}
-                    placeholder="FRXX 123456789"
-                    description="Laissez vide si vous bénéficiez de la franchise en base de TVA."
-                  />
-
-                  {/* URSSAF Settings */}
-                  <div className="pt-8 border-t border-brand-50 dark:border-brand-800">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-                        <Calculator size={20} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-brand-900 dark:text-white uppercase tracking-wider">Régime Micro-Entrepreneur</h4>
-                        <p className="text-[10px] text-brand-400 dark:text-brand-500 font-medium">Configurez vos calculs de cotisations et seuils</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                      <SelectField
-                        label="Type d'activité (URSSAF)"
-                        value={userProfile.activityType || 'SERVICE_BNC'}
-                        onChange={(val) => handleChange('activityType', val)}
-                        options={activityOptions}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <ToggleSwitch
-                        label="Bénéficiaire ACRE"
-                        checked={userProfile.isAcreBeneficiary || false}
-                        onChange={(val) => handleChange('isAcreBeneficiary', val)}
-                        description="Taux réduit de cotisations"
-                      />
-                      <ToggleSwitch
-                        label="Alertes seuil TVA"
-                        checked={userProfile.vatThresholdAlert || true}
-                        onChange={(val) => handleChange('vatThresholdAlert', val)}
-                        description="Notifier à l'approche du seuil"
-                      />
-                      <ToggleSwitch
-                        label="Alertes plafond CA"
-                        checked={userProfile.revenueThresholdAlert || true}
-                        onChange={(val) => handleChange('revenueThresholdAlert', val)}
-                        description="Notifier à l'approche du plafond"
-                      />
-                    </div>
-                  </div>
-
-                  {/* E-Invoicing 2026 */}
-                  <div className="pt-8 border-t border-brand-50 dark:border-brand-800">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-accent-50 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400 rounded-xl">
-                        <Zap size={20} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-brand-900 dark:text-white uppercase tracking-wider">Facturation Électronique 2026</h4>
-                        <p className="text-[10px] text-brand-400 dark:text-brand-500 font-medium">Préparez votre conformité au PPF / PDP</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <SelectField
-                        label="Format d'échange par défaut"
-                        value={userProfile.defaultEInvoiceFormat || 'Factur-X'}
-                        onChange={(val) => handleChange('defaultEInvoiceFormat', val)}
-                        options={eInvoiceFormatOptions}
-                      />
-                      <SelectField
-                        label="Catégorie d'activité"
-                        value={userProfile.defaultOperationCategory || 'SERVICES'}
-                        onChange={(val) => handleChange('defaultOperationCategory', val)}
-                        options={operationCategoryOptions}
-                      />
-                    </div>
-
-                    <div className="mt-6 p-4 bg-accent-50 dark:bg-accent-900/20 rounded-2xl border border-accent-100 dark:border-accent-900/30 flex items-start gap-3">
-                      <ShieldCheck size={18} className="text-accent-600 dark:text-accent-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-[10px] text-accent-700 dark:text-accent-300 leading-relaxed">
-                        Ces paramètres seront appliqués par défaut à vos nouveaux documents. En 2026, la transmission électronique sera obligatoire pour toutes les transactions B2B assujetties à la TVA.
-                      </p>
-                    </div>
-
-                    <div className="mt-8">
-                      <TextAreaField
-                        label="Mentions légales bas de page"
-                        value={userProfile.legalMentions || ''}
-                        onChange={(val) => handleChange('legalMentions', val)}
-                        placeholder="Ex: Dispensé d'immatriculation au registre du commerce et des sociétés..."
-                        icon={ShieldCheck}
-                        rows={3}
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Numbering */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-[2rem] p-8 shadow-sm border border-brand-100 dark:border-brand-800">
-                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
-                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-                    <Hash size={24} />
-                  </div>
-                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Préfixes de Numérotation</h3>
-                </div>
+          {/* PREFERENCES TAB */}
+          {activeTab === 'preferences' && (
+            <div id="panel-preferences" role="tabpanel" className="space-y-8 animate-slide-up">
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <ColorPicker
+                  label="Couleur Primaire"
+                  value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
+                  onChange={(val) => handleChange('primaryColor', val)}
+                />
+              </div>
+            </div>
+          )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                  <FormField
-                    label="Facture"
-                    value={userProfile.invoicePrefix || 'FAC-'}
-                    onChange={(val) => handleChange('invoicePrefix', val)}
-                  />
-                  <FormField
-                    label="Devis"
-                    value={userProfile.quotePrefix || 'DEV-'}
-                    onChange={(val) => handleChange('quotePrefix', val)}
-                  />
-                  <FormField
-                    label="Commande"
-                    value={userProfile.orderPrefix || 'COM-'}
-                    onChange={(val) => handleChange('orderPrefix', val)}
-                  />
-                  <FormField
-                    label="Avoir"
-                    value={userProfile.creditNotePrefix || 'AVO-'}
-                    onChange={(val) => handleChange('creditNotePrefix', val)}
-                  />
+          {/* SECURITY TAB */}
+          {activeTab === 'security' && (
+            <div id="panel-security" role="tabpanel" className="space-y-8 animate-slide-up">
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
+                  {activityLogs.length === 0 ? (
+                    <p className="text-center py-12 text-sm text-brand-400 italic">Aucune activité enregistrée</p>
+                  ) : (
+                    activityLogs.map((log) => {
+                      let CategoryIcon = Activity;
+                      if (log.category === 'AUTH') {CategoryIcon = Key;}
+                      return (
+                        <div key={log.id} className="flex items-start gap-4 p-4 hover:bg-brand-50/50 dark:hover:bg-brand-800/30 rounded-2xl transition-colors">
+                          <div className="p-2 rounded-xl mt-1 bg-brand-50 dark:bg-brand-800">
+                            <CategoryIcon size={14} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-brand-900 dark:text-brand-100">{log.action}</p>
+                            <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-1">
+                              {new Date(log.timestamp).toLocaleString('fr-FR')}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
@@ -524,182 +495,78 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
           {/* DATA TAB */}
           {activeTab === 'data' && (
-            <div className="space-y-8 animate-slide-up">
-              {/* Data Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  { label: 'Factures', value: allData.invoices.length, icon: Hash },
-                  { label: 'Clients', value: allData.clients.length, icon: Briefcase },
-                  { label: 'Produits', value: allData.products.length, icon: Palette },
-                  { label: 'Dépenses', value: allData.expenses.length, icon: Wallet },
-                ].map((stat) => (
-                  <div key={stat.label} className="bg-white dark:bg-brand-900/50 p-6 rounded-[2rem] border border-brand-100 dark:border-brand-800 shadow-sm text-center">
-                    <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest mb-2">{stat.label}</p>
-                    <p className="text-3xl font-bold text-brand-900 dark:text-white font-display">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Backup & Maintenance */}
-              <div className="bg-white dark:bg-brand-900/50 p-8 rounded-[2.5rem] border border-brand-100 dark:border-brand-800 shadow-sm">
-                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
-                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-                    <Database size={24} />
-                  </div>
-                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Sauvegarde & Maintenance</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <button
-                    onClick={handleExportAll}
-                    aria-label="Exporter toutes les données"
-                    className="flex items-center justify-center gap-3 p-5 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl hover:bg-brand-950 dark:hover:bg-brand-100 transition-all font-bold text-sm shadow-xl shadow-brand-900/10"
-                  >
-                    <Download size={20} /> Exporter (.json)
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    aria-label="Importer un fichier"
-                    className="flex items-center justify-center gap-3 p-5 bg-white dark:bg-brand-800 border border-brand-100 dark:border-brand-700 text-brand-700 dark:text-brand-200 rounded-2xl hover:bg-brand-50 dark:hover:bg-brand-700/50 transition-all font-bold text-sm"
-                  >
-                    <Upload size={20} /> Importer (.json)
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".json"
-                    onChange={handleImportAll}
-                    aria-label="Sélectionner un fichier à importer"
-                  />
-                </div>
-
-                <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-900/30 mb-8 flex gap-4">
-                  <ShieldAlert size={20} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-amber-900 dark:text-amber-100 mb-1">Sécurité des données</p>
-                    <p className="text-xs text-amber-700 dark:text-amber-200 leading-relaxed">
-                      Vos données sont stockées localement dans votre navigateur. Elles ne sont jamais envoyées sur un serveur externe.
-                      Pensez à faire des exports réguliers pour éviter toute perte en cas de suppression de l'historique.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t border-brand-50 dark:border-brand-800 pt-8">
-                  <p className="text-sm font-bold text-brand-900 dark:text-white mb-4">Actions avancées</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                      onClick={generateSampleData}
-                      aria-label="Générer des données de test"
-                      className="flex items-center justify-center gap-2 p-4 bg-brand-50 dark:bg-brand-800 text-brand-700 dark:text-brand-200 rounded-xl hover:bg-brand-100 dark:hover:bg-brand-700 transition-all text-xs font-bold"
-                    >
-                      <RefreshCw size={16} /> Test data
-                    </button>
-                    <button
-                      onClick={handleResetApp}
-                      aria-label="Réinitialiser toutes les données"
-                      className="flex items-center justify-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-xs font-bold"
-                    >
-                      <Trash2 size={16} /> Réinitialiser
-                    </button>
-                  </div>
-                </div>
+            <div id="panel-data" role="tabpanel" className="space-y-8 animate-slide-up">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button
+                  onClick={handleExportAll}
+                  className="flex items-center justify-center gap-3 p-5 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold text-sm shadow-xl shadow-brand-900/10"
+                >
+                  <Download size={20} /> Exporter (.json)
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-3 p-5 bg-white dark:bg-brand-800 border border-brand-100 text-brand-700 rounded-2xl font-bold text-sm"
+                >
+                  <Upload size={20} /> Importer (.json)
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept=".json"
+                  onChange={handleImportAll}
+                  aria-label="Sélectionner un fichier de sauvegarde JSON pour l'importation"
+                />
               </div>
             </div>
           )}
         </div>
 
-        {/* RIGHT COLUMN - PREVIEW */}
+        {/* PREVIEW COLUMN */}
         <div className="xl:col-span-1">
           <div className="sticky top-10">
-            <div className="flex items-center justify-between mb-4 px-2">
-              <h4 className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-[0.2em]">Aperçu Facture</h4>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-accent-600 dark:text-accent-400 uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent-500 dark:bg-accent-400 animate-pulse"></span> Live
+            <div className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border border-brand-100 dark:border-brand-800 min-h-125 flex flex-col relative overflow-hidden">
+              <div className="border-b border-brand-100 dark:border-brand-800 pb-8 mb-8">
+                <h2 className="font-bold text-brand-900 dark:text-white text-xl">
+                  {userProfile.companyName || 'Votre Entreprise'}
+                </h2>
+                <div className="mt-4 space-y-1 text-[11px] text-brand-500">
+                  <p>{userProfile.email}</p>
+                  <p>{userProfile.phone}</p>
+                </div>
+              </div>
+              <div className="mt-auto pt-6 text-[9px] text-center text-brand-400">
+                <p className="font-bold uppercase">{userProfile.companyName}</p>
+                <p>{userProfile.address}</p>
+                <p className="mt-2">SIRET: {userProfile.siret}</p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-brand-900/30 p-8 rounded-[2.5rem] shadow-2xl shadow-brand-200/50 dark:shadow-black/30 border border-brand-100 dark:border-brand-800 min-h-[500px] flex flex-col relative overflow-hidden">
-              <div
-                className="absolute top-0 right-0 w-32 h-32 rounded-bl-[5rem] -mr-10 -mt-10 opacity-20"
-                style={{ backgroundColor: userProfile.logoColor || '#102a43' }}
-              />
-
-              {/* Header */}
-              <div className="border-b border-brand-100 dark:border-brand-800 pb-8 mb-8 relative z-10">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl font-bold text-2xl"
-                  style={{ backgroundColor: userProfile.logoColor || '#102a43' }}
-                >
-                  {userProfile.companyName.charAt(0).toUpperCase()}
-                </div>
-                <h2 className="font-bold text-brand-900 dark:text-white text-xl leading-tight mb-1 font-display">
-                  {userProfile.companyName || 'Votre Entreprise'}
-                </h2>
-                {userProfile.professionalTitle && (
-                  <p className="text-xs font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider mb-4">
-                    {userProfile.professionalTitle}
-                  </p>
-                )}
-
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-[11px] text-brand-500 dark:text-brand-400">
-                    <MailIcon size={12} className="text-brand-300 dark:text-brand-600" />
-                    {userProfile.email}
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-brand-500 dark:text-brand-400">
-                    <PhoneIcon size={12} className="text-brand-300 dark:text-brand-600" />
-                    {userProfile.phone}
-                  </div>
-                  {userProfile.website && (
-                    <div className="flex items-center gap-2 text-[11px] font-bold" style={{ color: userProfile.logoColor || '#102a43' }}>
-                      <Globe size={12} /> {userProfile.website}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Content Placeholder */}
-              <div className="space-y-5 opacity-30 mb-auto">
-                <div className="flex justify-between items-end">
-                  <div className="space-y-2">
-                    <div className="h-4 bg-brand-100 dark:bg-brand-800 rounded-full w-32"></div>
-                    <div className="h-3 bg-brand-50 dark:bg-brand-900 rounded-full w-24"></div>
-                  </div>
-                  <div className="h-10 bg-brand-50 dark:bg-brand-900 rounded-xl w-24 border border-brand-100 dark:border-brand-800"></div>
-                </div>
-                <div className="h-32 bg-brand-50 dark:bg-brand-900/50 rounded-3xl w-full border border-brand-100 dark:border-brand-800 border-dashed"></div>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-12 pt-6 border-t border-brand-100 dark:border-brand-800 text-[9px] text-center text-brand-400 dark:text-brand-500 leading-relaxed">
-                <p className="font-bold text-brand-600 dark:text-brand-400 mb-1 uppercase tracking-widest">
-                  {userProfile.companyName}
-                </p>
-                <p className="max-w-[200px] mx-auto">{userProfile.address}</p>
-                <div className="flex items-center justify-center gap-3 mt-2 font-bold text-brand-500 dark:text-brand-400 text-[8px]">
-                  <span>SIRET: {userProfile.siret}</span>
-                  {userProfile.tvaNumber && <span>TVA: {userProfile.tvaNumber}</span>}
-                </div>
-                {!userProfile.tvaNumber && (
-                  <p className="mt-1 italic text-brand-400 dark:text-brand-600">TVA non applicable, art. 293 B du CGI</p>
-                )}
-              </div>
+            <div className="flex flex-col gap-4 mt-8">
+              <button
+                onClick={onSaveProfile ? () => onSaveProfile(userProfile) : undefined}
+                className="btn-primary w-full py-4 rounded-2xl"
+              >
+                Enregistrer
+              </button>
+              <button
+                onClick={generateSampleData}
+                className="w-full p-4 border-2 border-dashed border-brand-200 rounded-2xl text-brand-500 font-bold text-xs"
+              >
+                <Zap size={16} /> Données de Test
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* DIALOGS */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title={confirmDialog.title}
         description={confirmDialog.description}
         isDangerous={confirmDialog.isDangerous}
-        onConfirm={() => {
-          confirmDialog.onConfirm?.();
-        }}
-        onCancel={() => setConfirmDialog({ isOpen: false, title: '', description: '' })}
+        onConfirm={confirmDialog.onConfirm || (() => {})}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
       />
 
       <AlertDialog
@@ -707,7 +574,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         title={alertDialog.title}
         description={alertDialog.description}
         type={alertDialog.type}
-        onClose={() => setAlertDialog({ isOpen: false, title: '', description: '', type: 'info' })}
+        onClose={() => setAlertDialog({ ...alertDialog, isOpen: false })}
       />
     </div>
   );

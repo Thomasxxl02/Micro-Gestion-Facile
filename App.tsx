@@ -10,12 +10,31 @@ import EmailManager from './components/EmailManager';
 import CalendarManager from './components/CalendarManager';
 import SettingsManager from './components/SettingsManager';
 import AIAssistant from './components/AIAssistant';
-import { Menu, LogIn, LogOut, Loader2, Sun, Moon } from 'lucide-react';
-import { auth, db, loginWithGoogle, logout, OperationType, handleFirestoreError } from './firebase';
+import { Menu, LogIn, LogOut, Loader2, Sun, Moon, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot, query, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc
+} from 'firebase/firestore';
+import { auth, db, loginWithGoogle, logout, sendEmailLink, OperationType, handleFirestoreError } from './firebase';
 import { useAppStore } from './store/appStore';
-import type { Invoice, Client, Supplier, Product, Expense, Email, EmailTemplate, CalendarEvent, UserProfile } from './types';
+import { useFirestoreSync } from './hooks/useFirestoreSync';
+import type {
+  Invoice,
+  Client,
+  Supplier,
+  Product,
+  Expense,
+  Email,
+  EmailTemplate,
+  CalendarEvent,
+  UserProfile
+} from './types';
 
 const App: React.FC = () => {
   // ─── ZUSTAND GLOBAL STATE ───
@@ -53,6 +72,25 @@ const App: React.FC = () => {
     setUserProfile,
   } = useAppStore();
 
+  // ─── FIRESTORE SYNC HOOKS ───
+const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = useFirestoreSync<Invoice>({
+    userId: user?.uid || '',
+    collectionName: 'invoices'
+  });
+  const { data: syncedClients, upsert: saveClient, remove: deleteClient, status: clientStatus } = useFirestoreSync<Client>({
+    userId: user?.uid || '',
+    collectionName: 'clients'
+  });
+  const { data: syncedProducts, upsert: saveProduct, remove: deleteProduct, status: productStatus } = useFirestoreSync<Product>({
+    userId: user?.uid || '',
+    collectionName: 'products'
+  });
+
+  // Update Zustand when synced data changes (to keep compatibility with other components)
+  useEffect(() => { setInvoices(syncedInvoices); }, [syncedInvoices, setInvoices]);
+  useEffect(() => { setClients(syncedClients); }, [syncedClients, setClients]);
+  useEffect(() => { setProducts(syncedProducts); }, [syncedProducts, setProducts]);
+
   // ─── AUTH SETUP ───
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -62,60 +100,49 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [setUser, setIsAuthReady]);
 
-  // ─── FIRESTORE SYNC (Update Zustand on data changes) ───
+  // ─── FIRESTORE SYNC (Other data) ───
   useEffect(() => {
-    if (!user) return;
+    if (!user) {return;}
 
-    const qInvoices = query(collection(db, 'invoices'), where('uid', '==', user.uid));
-    const unsubInvoices = onSnapshot(qInvoices, (snapshot) => {
-      setInvoices(snapshot.docs.map(doc => doc.data() as Invoice));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'invoices'));
-
-    const qClients = query(collection(db, 'clients'), where('uid', '==', user.uid));
-    const unsubClients = onSnapshot(qClients, (snapshot) => {
-      setClients(snapshot.docs.map(doc => doc.data() as Client));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'clients'));
-
+    // Remaining syncs that we haven't migrated to hooks yet
     const qSuppliers = query(collection(db, 'suppliers'), where('uid', '==', user.uid));
     const unsubSuppliers = onSnapshot(qSuppliers, (snapshot) => {
       setSuppliers(snapshot.docs.map(doc => doc.data() as Supplier));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'suppliers'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'suppliers'));
 
     const qProducts = query(collection(db, 'products'), where('uid', '==', user.uid));
     const unsubProducts = onSnapshot(qProducts, (snapshot) => {
       setProducts(snapshot.docs.map(doc => doc.data() as Product));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'products'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'products'));
 
     const qExpenses = query(collection(db, 'expenses'), where('uid', '==', user.uid));
     const unsubExpenses = onSnapshot(qExpenses, (snapshot) => {
       setExpenses(snapshot.docs.map(doc => doc.data() as Expense));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'expenses'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'expenses'));
 
     const qEmails = query(collection(db, 'emails'), where('uid', '==', user.uid));
     const unsubEmails = onSnapshot(qEmails, (snapshot) => {
       setEmails(snapshot.docs.map(doc => doc.data() as Email));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'emails'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'emails'));
 
     const qTemplates = query(collection(db, 'emailTemplates'), where('uid', '==', user.uid));
     const unsubTemplates = onSnapshot(qTemplates, (snapshot) => {
       setEmailTemplates(snapshot.docs.map(doc => doc.data() as EmailTemplate));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'emailTemplates'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'emailTemplates'));
 
     const qEvents = query(collection(db, 'calendarEvents'), where('uid', '==', user.uid));
     const unsubEvents = onSnapshot(qEvents, (snapshot) => {
       setCalendarEvents(snapshot.docs.map(doc => doc.data() as CalendarEvent));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'calendarEvents'));
+    }, () => handleFirestoreError(null, OperationType.LIST, 'calendarEvents'));
 
     // Profile sync
     const unsubProfile = onSnapshot(doc(db, 'profiles', user.uid), (docSnap) => {
       if (docSnap.exists()) {
         setUserProfile(docSnap.data() as UserProfile);
       }
-    }, (err) => handleFirestoreError(err, OperationType.GET, `profiles/${user.uid}`));
+    }, () => handleFirestoreError(null, OperationType.GET, `profiles/${user.uid}`));
 
     return () => {
-      unsubInvoices();
-      unsubClients();
       unsubSuppliers();
       unsubProducts();
       unsubExpenses();
@@ -124,11 +151,11 @@ const App: React.FC = () => {
       unsubEvents();
       unsubProfile();
     };
-  }, [user, setInvoices, setClients, setSuppliers, setProducts, setExpenses, setEmails, setEmailTemplates, setCalendarEvents, setUserProfile]);
+  }, [user, setSuppliers, setProducts, setExpenses, setEmails, setEmailTemplates, setCalendarEvents, setUserProfile]);
 
   // ─── FIRESTORE HELPERS ───
-  const saveDoc = async (collectionName: string, data: any) => {
-    if (!user) return;
+  const saveDoc = async (collectionName: string, data: { id: string } & Record<string, unknown>) => {
+    if (!user) { return; }
     try {
       await setDoc(doc(db, collectionName, data.id), { ...data, uid: user.uid });
     } catch (err) {
@@ -137,7 +164,7 @@ const App: React.FC = () => {
   };
 
   const deleteDocFromFirestore = async (collectionName: string, id: string) => {
-    if (!user) return;
+    if (!user) {return;}
     try {
       await deleteDoc(doc(db, collectionName, id));
     } catch (err) {
@@ -148,31 +175,27 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
+        return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} onSaveInvoice={(inv) => saveDoc('invoices', inv)} />;
       case 'invoices':
         return (
           <InvoiceManager
             invoices={invoices}
-            setInvoices={(newInvoices) => {
-              // This is a bit complex because InvoiceManager uses setInvoices for everything
-              // For now, let's just update the state and we'll need to update the component to use saveDoc
-              setInvoices(newInvoices);
-            }}
+            setInvoices={setInvoices}
             clients={clients}
             userProfile={userProfile}
             products={products}
-            onSave={(inv) => saveDoc('invoices', inv)}
-            onDelete={(id) => deleteDocFromFirestore('invoices', id)}
+            onSave={(inv) => saveInvoice(inv)}
+            onDelete={(id) => deleteInvoice(id)}
           />
         );
       case 'clients':
         return (
           <ClientManager
             clients={clients}
-            setClients={setClients}
             invoices={invoices}
-            onSave={(c) => saveDoc('clients', c)}
-            onDelete={(id) => deleteDocFromFirestore('clients', id)}
+            onSave={(c) => saveClient(c)}
+            onDelete={(id) => deleteClient(id)}
+            isLoading={clientStatus === 'LOADING'}
           />
         );
       case 'suppliers':
@@ -189,9 +212,9 @@ const App: React.FC = () => {
         return (
           <ProductManager
             products={products}
-            setProducts={setProducts}
-            onSave={(p) => saveDoc('products', p)}
-            onDelete={(id) => deleteDocFromFirestore('products', id)}
+            onSave={(p) => saveProduct(p)}
+            onDelete={(id) => deleteProduct(id)}
+            isLoading={productStatus === 'LOADING'}
           />
         );
       case 'accounting':
@@ -201,6 +224,8 @@ const App: React.FC = () => {
             setExpenses={setExpenses}
             invoices={invoices}
             suppliers={suppliers}
+            userProfile={userProfile}
+            clients={clients}
             onSaveExpense={(e) => saveDoc('expenses', e)}
             onDeleteExpense={(id) => deleteDocFromFirestore('expenses', id)}
           />
@@ -266,6 +291,10 @@ const App: React.FC = () => {
     }
   };
 
+  const [emailLink, setEmailLinkState] = React.useState('');
+  const [isEmailSent, setIsEmailSent] = React.useState(false);
+  const [isSending, setIsSending] = React.useState(false);
+
   if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-50">
@@ -289,13 +318,77 @@ const App: React.FC = () => {
           <h1 className="text-4xl font-bold text-brand-900 dark:text-white mb-4 tracking-tight">Micro Gestion</h1>
           <p className="text-brand-600 dark:text-brand-300 mb-12 text-lg">Votre allié quotidien pour une gestion simplifiée et intelligente.</p>
 
-          <button
-            onClick={loginWithGoogle}
-            className="w-full py-5 px-8 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl hover:shadow-brand-900/20 dark:hover:shadow-white/10 group"
-          >
-            <LogIn size={24} className="group-hover:translate-x-1 transition-transform" />
-            Se connecter avec Google
-          </button>
+          <div className="space-y-4">
+            <button
+              onClick={loginWithGoogle}
+              className="w-full py-4 px-8 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl hover:shadow-brand-900/20 dark:hover:shadow-white/10 group mb-6"
+            >
+              <LogIn size={24} className="group-hover:translate-x-1 transition-transform" />
+              Se connecter avec Google
+            </button>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-brand-200 dark:border-brand-800"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-brand-50 dark:bg-brand-950 px-4 text-brand-400 font-bold tracking-widest">OU</span>
+              </div>
+            </div>
+
+            {!isEmailSent ? (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!emailLink || isSending) {return;}
+                  setIsSending(true);
+                  try {
+                    await sendEmailLink(emailLink);
+                    setIsEmailSent(true);
+                  } catch {
+                    alert("Erreur lors de l'envoi du lien.");
+                  } finally {
+                    setIsSending(false);
+                  }
+                }}
+                className="space-y-3"
+              >
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400" size={20} />
+                  <input
+                    type="email"
+                    placeholder="votre@email.com"
+                    required
+                    value={emailLink}
+                    onChange={(e) => setEmailLinkState(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white dark:bg-brand-900/50 border border-brand-200 dark:border-brand-800 rounded-2xl focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all dark:text-white"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSending}
+                  className="w-full py-4 bg-brand-50 dark:bg-brand-800 text-brand-900 dark:text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-brand-100 dark:hover:bg-brand-700 transition-all border border-brand-200 dark:border-brand-700 group"
+                >
+                  {isSending ? 'Envoi...' : 'Recevoir un lien magique'}
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </form>
+            ) : (
+              <div className="p-6 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-[2rem] text-center animate-fade-in">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white shadow-lg shadow-green-500/20">
+                  <CheckCircle2 size={24} />
+                </div>
+                <h3 className="text-green-800 dark:text-green-300 font-bold mb-1">Lien envoyé !</h3>
+                <p className="text-sm text-green-700 dark:text-green-400">Consultez vos e-mails pour vous connecter.</p>
+                <button
+                  onClick={() => setIsEmailSent(false)}
+                  className="mt-4 text-xs font-bold text-green-600 uppercase tracking-widest hover:underline"
+                >
+                  Renvoyer ou changer d&apos;e-mail
+                </button>
+              </div>
+            )}
+          </div>
 
           <p className="mt-10 text-xs text-brand-400 dark:text-brand-500 uppercase tracking-widest font-semibold">Sécurisé par Google Auth</p>
         </div>

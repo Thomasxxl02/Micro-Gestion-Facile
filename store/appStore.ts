@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { User } from 'firebase/auth';
-import {
+import type { User } from 'firebase/auth';
+import type {
   ViewState,
   Invoice,
   Client,
@@ -12,6 +12,7 @@ import {
   EmailTemplate,
   CalendarEvent,
   UserProfile,
+  LogEntry,
 } from '../types';
 
 export interface AppStoreState {
@@ -69,8 +70,14 @@ export interface AppStoreState {
   setUserProfile: (profile: UserProfile) => void;
   updateUserProfile: (updater: (profile: UserProfile) => Partial<UserProfile>) => void;
 
+  // Activity Logs
+  activityLogs: LogEntry[];
+  addLog: (action: string, category: LogEntry['category'], severity: LogEntry['severity'], details?: string) => void;
+  clearLogs: () => void;
+
   // Reset
   reset: () => void;
+  clearTestData: () => void;
 }
 
 // Default user profile
@@ -199,6 +206,24 @@ export const useAppStore = create<AppStoreState>()(
             userProfile: { ...state.userProfile, ...updater(state.userProfile) },
           })),
 
+        // Activity Logs
+        activityLogs: [],
+        addLog: (action, category, severity, details) =>
+          set((state) => ({
+            activityLogs: [
+              {
+                id: crypto.randomUUID(),
+                timestamp: Date.now(),
+                action,
+                category,
+                severity,
+                details,
+              },
+              ...state.activityLogs,
+            ].slice(0, 50), // Keep only last 50 logs
+          })),
+        clearLogs: () => set({ activityLogs: [] }),
+
         // Reset
         reset: () =>
           set({
@@ -215,7 +240,15 @@ export const useAppStore = create<AppStoreState>()(
             emailTemplates: defaultEmailTemplates,
             calendarEvents: [],
             userProfile: defaultUserProfile,
+            activityLogs: [],
           }),
+
+        clearTestData: () =>
+          set((state) => ({
+            invoices: state.invoices.filter((i) => !i.isTest),
+            clients: state.clients.filter((c) => !c.isTest),
+            products: state.products.filter((p) => !p.isTest),
+          })),
       }),
       {
         name: 'app-store',
@@ -231,6 +264,7 @@ export const useAppStore = create<AppStoreState>()(
           emailTemplates: state.emailTemplates,
           calendarEvents: state.calendarEvents,
           userProfile: state.userProfile,
+          activityLogs: state.activityLogs,
         }),
       }
     )
