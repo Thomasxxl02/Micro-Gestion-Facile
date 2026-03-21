@@ -81,7 +81,7 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
     userId: user?.uid || '',
     collectionName: 'clients'
   });
-  const { data: syncedProducts, upsert: saveProduct, remove: deleteProduct, status: productStatus } = useFirestoreSync<Product>({
+  const { data: syncedProducts, upsert: saveProduct, remove: deleteProduct, status: _productStatus } = useFirestoreSync<Product>({
     userId: user?.uid || '',
     collectionName: 'products'
   });
@@ -154,7 +154,7 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
   }, [user, setSuppliers, setProducts, setExpenses, setEmails, setEmailTemplates, setCalendarEvents, setUserProfile]);
 
   // ─── FIRESTORE HELPERS ───
-  const saveDoc = async (collectionName: string, data: { id: string } & Record<string, unknown>) => {
+  const saveDoc = async <T extends { id: string }>(collectionName: string, data: T) => {
     if (!user) { return; }
     try {
       await setDoc(doc(db, collectionName, data.id), { ...data, uid: user.uid });
@@ -175,7 +175,7 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} onSaveInvoice={(inv) => saveDoc('invoices', inv)} />;
+        return <Dashboard invoices={invoices} products={products} expenses={expenses} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} onSaveInvoice={(inv) => saveDoc('invoices', inv)} />;
       case 'invoices':
         return (
           <InvoiceManager
@@ -214,7 +214,6 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
             products={products}
             onSave={(p) => saveProduct(p)}
             onDelete={(id) => deleteProduct(id)}
-            isLoading={productStatus === 'LOADING'}
           />
         );
       case 'accounting':
@@ -252,7 +251,6 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
             events={calendarEvents}
             setEvents={setCalendarEvents}
             clients={clients}
-            invoices={invoices}
             onSaveEvent={(e) => saveDoc('calendarEvents', e)}
             onDeleteEvent={(id) => deleteDocFromFirestore('calendarEvents', id)}
           />
@@ -287,7 +285,7 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
       case 'ai_assistant':
         return <AIAssistant />;
       default:
-        return <Dashboard invoices={invoices} products={products} expenses={expenses} emails={emails} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
+        return <Dashboard invoices={invoices} products={products} expenses={expenses} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
     }
   };
 

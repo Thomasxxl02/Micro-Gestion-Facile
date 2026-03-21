@@ -36,7 +36,7 @@ export const useEntityForm = <T extends { id: string }>(initialData?: T) => {
     resetForm();
   }, [resetForm]);
 
-  const updateFormField = useCallback((field: keyof T, value: any) => {
+  const updateFormField = useCallback((field: keyof T, value: T[keyof T]) => {
     setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
   }, []);
 
@@ -58,15 +58,15 @@ export const useEntityForm = <T extends { id: string }>(initialData?: T) => {
  * Hook: Gestion des filtres et recherche
  * Unifie la logique de filtrage pour tous les managers
  */
-interface FilterConfig {
-  searchField?: keyof any; // ex: 'name', 'email'
+interface FilterConfig<T = Record<string, unknown>> {
+  searchField?: keyof T; // ex: 'name', 'email'
   hasArchive?: boolean;
-  archiveField?: keyof any; // ex: 'archived'
+  archiveField?: keyof T; // ex: 'archived'
 }
 
-export const useEntityFilters = <T>(
+export const useEntityFilters = <T extends Record<string, unknown>>(
   entities: T[],
-  config: FilterConfig = {}
+  config: FilterConfig<T> = {}
 ) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showArchived, setShowArchived] = useState(false);
@@ -138,11 +138,11 @@ export const useEntityFilters = <T>(
 export const useEntityStats = <T>(
   entities: T[],
   statFunctions: {
-    [key: string]: (items: T[]) => any;
+    [key: string]: (items: T[]) => unknown;
   }
 ) => {
   return useMemo(() => {
-    const stats: { [key: string]: any } = {};
+    const stats: { [key: string]: unknown } = {};
     Object.entries(statFunctions).forEach(([key, fn]) => {
       stats[key] = fn(entities);
     });

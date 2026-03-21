@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { ChatMessage, Invoice, Client, UserProfile } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import type { ChatMessage } from '../types';
 import { generateAssistantResponse, checkInvoiceCompliance, predictCashflowJ30 } from '../services/geminiService';
 import { useAppStore } from '../store/appStore';
 import { Send, Bot, User, Sparkles, MessageSquare, AlertTriangle, TrendingUp, CheckCircle, Shield, Loader2 } from 'lucide-react';
@@ -32,7 +32,7 @@ const AIAssistant: React.FC = () => {
     // Initial analysis when component mounts
     useEffect(() => {
         const performDeepAnalysis = async () => {
-            if (invoices.length === 0) return;
+            if (invoices.length === 0) {return;}
             setIsAnalyzing(true);
             try {
                 // Cashflow prediction
@@ -54,26 +54,28 @@ const AIAssistant: React.FC = () => {
         };
 
         performDeepAnalysis();
-    }, []); // Only on mount
+    }, [invoices, clients, userProfile]); // Include dependencies for analysis
 
     const handleSend = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() || isLoading) {return;}
+        e?.preventDefault();
+        if (!input.trim() || isLoading) {
+            return;
+        }
 
-    const userMsg: ChatMessage = { role: 'user', content: input, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setIsLoading(true);
+        const userMsg: ChatMessage = { role: 'user', content: input, timestamp: Date.now() };
+        setMessages(prev => [...prev, userMsg]);
+        setInput('');
+        setIsLoading(true);
 
-    // Build context from last few messages
-    const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
+        // Build context from last few messages
+        const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
 
-    const responseText = await generateAssistantResponse(userMsg.content, context);
+        const responseText = await generateAssistantResponse(userMsg.content, context);
 
-    const modelMsg: ChatMessage = { role: 'model', content: responseText, timestamp: Date.now() };
-    setMessages(prev => [...prev, modelMsg]);
-    setIsLoading(false);
-  };
+        const modelMsg: ChatMessage = { role: 'model', content: responseText, timestamp: Date.now() };
+        setMessages(prev => [...prev, modelMsg]);
+        setIsLoading(false);
+    };
 
   return (
     <div className="h-[calc(100vh-6rem)] max-w-5xl mx-auto flex flex-col bg-white rounded-4xl shadow-xl border border-brand-200 overflow-hidden animate-fade-in">

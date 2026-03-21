@@ -112,7 +112,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     setEmails([...emails, newEmail]);
     if (onSaveEmail) {onSaveEmail(newEmail);}
     setIsComposeOpen(false);
-    setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '' });
+    setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '', clientId: '', invoiceId: '' });
     setActiveTab('history');
   };
 
@@ -189,7 +189,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
         </div>
         <button
           onClick={() => {
-            setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '' });
+            setComposeData({ to: '', subject: '', body: '', type: 'custom', relatedId: '', clientId: '', invoiceId: '' });
             setActiveTab('compose');
           }}
           className="bg-brand-900 hover:bg-brand-800 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-brand-900/20 font-medium"

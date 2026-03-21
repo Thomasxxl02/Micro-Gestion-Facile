@@ -249,8 +249,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
         'RECETTE',
         `"Facture ${inv.number}"`,
         inv.total.toFixed(2),
-        (inv.taxTotal || 0).toFixed(2),
-        inv.subtotal.toFixed(2),
+        (inv.vatAmount || 0).toFixed(2),
+        (inv.subtotal || inv.total).toFixed(2),
         '"Prestation"',
         `"${clients.find(c => c.id === inv.clientId)?.name.replaceAll('"', '""') || 'N/A'}"`
       ])
@@ -280,7 +280,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     doc.setFontSize(18);
     doc.text('LIVRE DES RECETTES', 14, 22);
     doc.setFontSize(10);
-    doc.text(`Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || userProfile?.businessName || 'N/A'}`, 14, 30);
+    doc.text(`Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || 'N/A'}`, 14, 30);
     doc.text(`SIRET: ${userProfile?.siret || 'N/A'}`, 14, 35);
     doc.text('Document infalsifiable généré le ' + new Date().toLocaleDateString(), 14, 40);
 
@@ -580,7 +580,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                             ))}
                             </Pie>
                             <Tooltip
-                                formatter={(value: number) => [`${value.toFixed(2)} €`, '']}
+                                formatter={(value: any) => (typeof value === 'number' ? `${value.toFixed(2)} €` : '')}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                             />
                         </PieChart>

@@ -1,10 +1,15 @@
-import { afterEach, vi } from 'vitest';
+import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { server } from './src/mocks/server';
 
-// Nettoyer après chaque test
+// Configurer MSW pour les tests
+beforeAll(() => server.listen());
 afterEach(() => {
+  server.resetHandlers();
   cleanup();
 });
+afterAll(() => server.close());
 
 // Mock des APIs navigateur non disponibles dans jsdom
 Object.defineProperty(globalThis, 'matchMedia', {
@@ -32,3 +37,6 @@ if (!globalThis.crypto) {
     },
   } as any;
 }
+
+// Mock de scrollIntoView pour JSDOM
+window.HTMLElement.prototype.scrollIntoView = vi.fn();

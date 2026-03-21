@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { type CalendarEvent, type Invoice, type Product, type Expense, type UserProfile, InvoiceStatus } from '../types';
+import { type CalendarEvent, type Invoice, type Product, type Expense, type UserProfile, type ViewState, InvoiceStatus } from '../types';
 import { predictRevenue } from '../services/geminiService';
 import {
   calculateSocialContributions,
@@ -41,12 +41,12 @@ interface DashboardProps {
   products: Product[];
   expenses: Expense[];
   events?: CalendarEvent[];
-  onNavigate: (page: string) => void;
+  onNavigate: (page: ViewState) => void;
   userProfile: UserProfile;
   onSaveInvoice?: (invoice: Invoice) => void;
 }
 
-type WidgetId = 'stats' | 'performance' | 'expenses' | 'activity' | 'reminders' | 'stock' | 'prediction';
+type WidgetId = 'stats' | 'performance' | 'expenses' | 'activity' | 'reminders' | 'stock' | 'prediction' | 'stats-revenue' | 'stats-profit' | 'stats-net' | 'stats-micro' | 'stats-vat';
 
 interface SortableWidgetProps {
   id: WidgetId;
@@ -563,7 +563,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, onN
                               fontSize: '11px',
                               fontWeight: '600'
                             }}
-                            formatter={(value: number) => [`${value.toLocaleString('fr-FR')} €`]}
+                            formatter={(value: any) => (typeof value === 'number' ? `${value.toLocaleString('fr-FR')} €` : '')}
                           />
                           <Area type="monotone" dataKey="Recettes" stroke="#0f172a" strokeWidth={3} fillOpacity={1} fill="url(#colorRecettes)" />
                           <Area type="monotone" dataKey="Dépenses" stroke="#f87171" strokeWidth={3} fillOpacity={1} fill="url(#colorDepenses)" />
@@ -597,7 +597,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, products, expenses, onN
                                 ))}
                               </Pie>
                               <Tooltip
-                                formatter={(value: number) => [`${value.toFixed(2)} €`, '']}
+                                formatter={(value: any) => (typeof value === 'number' ? `${value.toFixed(2)} €` : '')}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: 'var(--card-bg)', color: 'var(--text-main)' }}
                               />
                             </PieChart>

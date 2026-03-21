@@ -80,8 +80,8 @@ class InvoiceDB extends Dexie {
    * Exporte toutes les données en JSON
    * Utile pour les backups offline
    */
-  async exportData(): Promise<Record<string, any>> {
-    const exported: Record<string, any> = {};
+  async exportData(): Promise<Record<string, unknown>> {
+    const exported: Record<string, unknown> = {};
 
     exported.invoices = await this.invoices.toArray();
     exported.invoiceItems = await this.invoiceItems.toArray();
@@ -102,7 +102,7 @@ class InvoiceDB extends Dexie {
    * Importe des données depuis un backup JSON
    * @param data - Données exportées précédemment
    */
-  async importData(data: Record<string, any>): Promise<void> {
+  async importData(data: Record<string, unknown>): Promise<void> {
     try {
       if (data.invoices) {await this.invoices.bulkPut(data.invoices);}
       if (data.invoiceItems) {await this.invoiceItems.bulkPut(data.invoiceItems);}

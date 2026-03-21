@@ -46,8 +46,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
       onSave?.(updated);
     } else {
       const newSupplier: Supplier = {
-        id: Date.now().toString(),
         ...form.formData,
+        id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         archived: false,
       } as Supplier;
@@ -254,19 +254,77 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
       <EntityModal
         isOpen={form.isPanelOpen}
         title={form.isEditing ? 'Modifier le fournisseur' : 'Nouveau fournisseur'}
-        formData={form.formData}
+        isEditing={form.isEditing}
         onClose={form.closePanel}
-        onSubmit={handleSubmit}
-        onDelete={form.isEditing ? handleDelete : undefined}
+        onSave={handleSubmit}
+        onDelete={handleDelete}
+        showDeleteButton={form.isEditing}
       >
-        <ContactFields
-          data={form.formData}
-          onChange={(field, value) => form.updateFormField(field as keyof Supplier, value)}
-        />
-        <FinancialFields
-          data={form.formData}
-          onChange={(field, value) => form.updateFormField(field as keyof Supplier, value)}
-        />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <input
+              type="text"
+              required
+              value={form.formData?.name || ''}
+              onChange={(e) => form.updateFormField('name', e.target.value)}
+              placeholder="Nom du fournisseur *"
+              className="w-full p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white font-semibold"
+            />
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 mb-3 uppercase">Coordonnées</h4>
+            <ContactFields
+              name={form.formData?.name || ''}
+              email={form.formData?.email || ''}
+              phone={form.formData?.phone || ''}
+              onNameChange={(v) => form.updateFormField('name', v)}
+              onEmailChange={(v) => form.updateFormField('email', v)}
+              onPhoneChange={(v) => form.updateFormField('phone', v)}
+              contactNameLabel="Fournisseur"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-brand-600 dark:text-brand-300 mb-2 uppercase">Adresse</label>
+            <textarea
+              value={form.formData?.address || ''}
+              onChange={(e) => form.updateFormField('address', e.target.value)}
+              placeholder="Adresse du fournisseur"
+              rows={2}
+              className="w-full p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
+            />
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 mb-3 uppercase">Paiement & Légal</h4>
+            <FinancialFields
+              tvaNumber={form.formData?.tvaNumber || ''}
+              paymentTerms={form.formData?.paymentTerms || '30'}
+              notes={form.formData?.notes || ''}
+              onTvaNumberChange={(v) => form.updateFormField('tvaNumber', v)}
+              onPaymentTermsChange={(v) => form.updateFormField('paymentTerms', v)}
+              onNotesChange={(v) => form.updateFormField('notes', v)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={form.formData?.siret || ''}
+              onChange={(e) => form.updateFormField('siret', e.target.value)}
+              placeholder="SIRET"
+              className="p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
+            />
+            <input
+              type="url"
+              value={form.formData?.website || ''}
+              onChange={(e) => form.updateFormField('website', e.target.value)}
+              placeholder="Site Web"
+              className="p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
+            />
+          </div>
+        </form>
       </EntityModal>
     </div>
   );

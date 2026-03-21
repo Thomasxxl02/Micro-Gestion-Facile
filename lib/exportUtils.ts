@@ -28,6 +28,14 @@ export interface ExportData {
   calendarEvents: CalendarEvent[];
 }
 
+const defaultUserProfile: UserProfile = {
+  companyName: '',
+  siret: '',
+  address: '',
+  email: '',
+  phone: '',
+};
+
 /**
  * Exporter todas les données au format JSON
  * Contient métadonnées + tous les documents
@@ -36,7 +44,7 @@ export const exportAsJSON = async (data: Partial<ExportData>): Promise<string> =
   const exportPayload: ExportData = {
     version: '1.0',
     exportedAt: new Date().toISOString(),
-    userProfile: data.userProfile || {},
+    userProfile: data.userProfile || defaultUserProfile,
     invoices: data.invoices || [],
     clients: data.clients || [],
     suppliers: data.suppliers || [],
@@ -56,10 +64,10 @@ export const exportAsJSON = async (data: Partial<ExportData>): Promise<string> =
 /**
  * Sanitize Decimal values et autres objets non-sérialisables
  */
-const sanitizeForJSON = (obj: any): any => {
-  if (obj === null || obj === undefined) {return obj;}
-  if (obj instanceof Decimal) {return obj.toString();}
-  if (obj instanceof Date) {return obj.toISOString();}
+const sanitizeForJSON = (obj: unknown): unknown => {
+  if (obj === null || obj === undefined) { return obj; }
+  if (obj instanceof Decimal) { return obj.toString(); }
+  if (obj instanceof Date) { return obj.toISOString(); }
 
   if (Array.isArray(obj)) {
     return obj.map(sanitizeForJSON);

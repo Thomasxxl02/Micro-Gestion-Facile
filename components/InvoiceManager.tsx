@@ -21,7 +21,24 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
 
   // Consolidated form state
   const [formState, setFormState] = useState({
-    docData: { items: [], date: new Date().toISOString().split('T')[0], dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], type: 'invoice' as DocumentType, discount: 0, shipping: 0, deposit: 0, taxExempt: userProfile.defaultVatRate === 0, eInvoiceFormat: 'Factur-X', operationCategory: 'SERVICES' },
+    docData: {
+      id: 'temp-' + Date.now(),
+      number: '',
+      clientId: '',
+      items: [] as InvoiceItem[],
+      date: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      type: 'invoice' as DocumentType,
+      discount: 0,
+      shipping: 0,
+      deposit: 0,
+      taxExempt: userProfile.defaultVatRate === 0,
+      eInvoiceFormat: 'Factur-X' as const,
+      operationCategory: 'SERVICES' as const,
+      total: 0,
+      status: 'draft',
+      notes: '',
+    } as Partial<Invoice>,
     clientId: '',
     isGeneratingDesc: false,
     isMagicFillOpen: false,
@@ -120,8 +137,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     if (filters.clientId) {docs = docs.filter(doc => doc.clientId === filters.clientId);}
 
     return docs.sort((a, b) => {
-      let valA: any = '';
-      let valB: any = '';
+      let valA: string | number = '';
+      let valB: string | number = '';
 
       switch (sortConfig.key) {
         case 'number': valA = a.number; valB = b.number; break;
@@ -411,7 +428,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
     setIsMagicFilling(false);
 
     if (items && items.length > 0) {
-      const formattedItems = items.map((item: any) => ({
+      const formattedItems = items.map((item: { description: string; quantity: number; unitPrice: number; unit: string }) => ({
         ...item,
         id: Date.now().toString() + Math.random(),
         vatRate: userProfile.defaultVatRate || 0
@@ -439,10 +456,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       id: Date.now().toString(),
       type: type,
       number: getNextNumber(type),
-      clientId: selectedClientId,
+      clientId: selectedClientId!,
       linkedDocumentId: newDocData.linkedDocumentId,
-      date: newDocData.date,
-      dueDate: newDocData.dueDate,
+      date: newDocData.date || new Date().toISOString().split('T')[0],
+      dueDate: newDocData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       items: newDocData.items as InvoiceItem[],
       status: InvoiceStatus.DRAFT,
       total: formTotals.total, // Total TTC final
@@ -574,7 +591,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       setSelectedClientId('');
       setShowLivePreview(false);
       setView('create');
-  }
+  };
 
   // --- RENDER PAPER COMPONENT ---
   const InvoicePaper = ({ invoice, isPreview }: { invoice: Invoice, isPreview?: boolean }) => {
@@ -1101,7 +1118,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 id="op-category-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.operationCategory || 'SERVICES'}
-                                onChange={(e) => setNewDocData({...newDocData, operationCategory: e.target.value})}
+                                onChange={(e) => setNewDocData({...newDocData, operationCategory: e.target.value as 'BIENS' | 'SERVICES' | 'MIXTE'})}
                                 title="Sélectionner la catégorie d&apos;opération"
                             >
                                 <option value="BIENS">Livraison de biens</option>
@@ -1116,7 +1133,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 id="einvoice-format-select"
                                 className="w-full p-3 bg-brand-50 border border-brand-200 rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-brand-900"
                                 value={newDocData.eInvoiceFormat || 'Factur-X'}
-                                onChange={(e) => setNewDocData({...newDocData, eInvoiceFormat: e.target.value})}
+                                onChange={(e) => setNewDocData({...newDocData, eInvoiceFormat: e.target.value as 'Factur-X' | 'UBL' | 'CII'})}
                                 title="Sélectionner le format d&apos;export"
                             >
                                 <option value="Factur-X">Factur-X (PDF hybride)</option>

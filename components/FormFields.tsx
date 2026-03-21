@@ -11,13 +11,17 @@ interface FormFieldProps {
   description?: string;
   error?: string;
   required?: boolean;
-  type?: 'text' | 'email' | 'number' | 'password' | 'url' | 'tel';
+  type?: 'text' | 'email' | 'number' | 'password' | 'url' | 'tel' | 'search';
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
   icon?: LucideIcon;
   className?: string;
   inputClassName?: string;
+  min?: string | number;
+  max?: string | number;
+  step?: string | number;
+  'aria-label'?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -33,8 +37,23 @@ export const FormField: React.FC<FormFieldProps> = ({
   icon: Icon,
   className = '',
   inputClassName = '',
+  min,
+  max,
+  step,
+  'aria-label': ariaLabel,
 }) => {
   const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  let describedByValue: string | undefined;
+  if (error) {
+    describedByValue = `${fieldId}-error`;
+  } else if (description) {
+    describedByValue = `${fieldId}-description`;
+  }
+
+  const ariaAttrs = {
+    'aria-required': required ? ('true' as const) : ('false' as const),
+    'aria-invalid': error ? ('true' as const) : ('false' as const),
+  };
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -54,15 +73,12 @@ export const FormField: React.FC<FormFieldProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          aria-required={required}
-          aria-invalid={!!error}
-          aria-describedby={
-            error
-              ? `${fieldId}-error`
-              : description
-              ? `${fieldId}-description`
-              : undefined
-          }
+          {...ariaAttrs}
+          aria-label={ariaLabel}
+          aria-describedby={describedByValue}
+          min={min}
+          max={max}
+          step={step}
           className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all ${error ? 'border-red-500 focus:ring-red-500/10' : ''} ${inputClassName}`}
         />
       </div>
@@ -112,6 +128,17 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   className = '',
 }) => {
   const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  let describedByValue: string | undefined;
+  if (error) {
+    describedByValue = `${fieldId}-error`;
+  } else if (description) {
+    describedByValue = `${fieldId}-description`;
+  }
+
+  const ariaAttrs = {
+    'aria-required': required ? ('true' as const) : ('false' as const),
+    'aria-invalid': error ? ('true' as const) : ('false' as const),
+  };
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -129,15 +156,8 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
-          aria-required={required}
-          aria-invalid={!!error}
-          aria-describedby={
-            error
-              ? `${fieldId}-error`
-              : description
-              ? `${fieldId}-description`
-              : undefined
-          }
+          {...ariaAttrs}
+          aria-describedby={describedByValue}
           className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none ${error ? 'border-red-500 focus:ring-red-500/10' : ''}`}
         />
       </div>
@@ -183,6 +203,17 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   className = '',
 }) => {
   const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  let describedByValue: string | undefined;
+  if (error) {
+    describedByValue = `${fieldId}-error`;
+  } else if (description) {
+    describedByValue = `${fieldId}-description`;
+  }
+
+  const ariaAttrs = {
+    'aria-required': required ? ('true' as const) : ('false' as const),
+    'aria-invalid': error ? ('true' as const) : ('false' as const),
+  };
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -196,15 +227,8 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        aria-required={required}
-        aria-invalid={!!error}
-        aria-describedby={
-          error
-            ? `${fieldId}-error`
-            : description
-            ? `${fieldId}-description`
-            : undefined
-        }
+        {...ariaAttrs}
+        aria-describedby={describedByValue}
         className={`w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer appearance-none ${error ? 'border-red-500 focus:ring-red-500/10' : ''}`}
       >
         {options.map((opt) => (
@@ -256,17 +280,31 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         </label>
         {description && <p className="text-[10px] text-brand-400 mt-0.5">{description}</p>}
       </div>
-      <button
-        id={switchId}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={`w-12 h-6 rounded-full relative transition-all focus:outline-none focus:ring-4 focus:ring-brand-900/20 ${checked ? 'bg-brand-900' : 'bg-brand-200'}`}
-      >
-        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${checked ? 'right-1' : 'left-1'}`} />
-      </button>
+      {checked ? (
+        <button
+          id={switchId}
+          type="button"
+          role="switch"
+          aria-checked="true"
+          aria-label={label}
+          onClick={() => onChange(!checked)}
+          className={`w-12 h-6 rounded-full relative transition-all focus:outline-none focus:ring-4 focus:ring-brand-900/20 bg-brand-900`}
+        >
+          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all right-1`} />
+        </button>
+      ) : (
+        <button
+          id={switchId}
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label={label}
+          onClick={() => onChange(!checked)}
+          className={`w-12 h-6 rounded-full relative transition-all focus:outline-none focus:ring-4 focus:ring-brand-900/20 bg-brand-200`}
+        >
+          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all left-1`} />
+        </button>
+      )}
     </div>
   );
 };
@@ -314,15 +352,27 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
       <div className="grid grid-cols-4 gap-3">
         {presets.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => onChange(color)}
-            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${value === color ? 'border-brand-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
-            style={{ backgroundColor: color }}
-            aria-label={`Choisir la couleur ${color}`}
-            aria-pressed={value === color}
-          />
+          value === color ? (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onChange(color)}
+              className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 border-brand-900 scale-110 shadow-md`}
+              style={{ backgroundColor: color }}
+              aria-label={`Choisir la couleur ${color}`}
+              aria-pressed="true"
+            />
+          ) : (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onChange(color)}
+              className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 border-transparent hover:scale-105`}
+              style={{ backgroundColor: color }}
+              aria-label={`Choisir la couleur ${color}`}
+              aria-pressed="false"
+            />
+          )
         ))}
       </div>
     </div>

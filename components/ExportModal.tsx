@@ -36,7 +36,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data })
     } else if (selectedFormat === 'csv' && selectedCollections.size === 1) {
       // Export single collection as CSV
       const collection = Array.from(selectedCollections)[0];
-      const items = data[collection as keyof ExportData] || [];
+      const value = data[collection as keyof ExportData];
+      const items = Array.isArray(value) ? value : [];
       await exportCollectionAsCSV(collection as any, items);
     } else {
       // Export multiple as JSON
