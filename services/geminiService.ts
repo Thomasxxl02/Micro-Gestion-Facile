@@ -5,12 +5,12 @@ const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 export const generateAssistantResponse = async (
-  query: string, 
+  query: string,
   context?: string
 ): Promise<string> => {
   try {
     const model = 'gemini-3-flash-preview';
-    
+
     const systemPrompt = `Tu es un assistant expert pour les auto-entrepreneurs en France.
     Tu connais les règles de l'URSSAF, les seuils de TVA (Franchise en base), les plafonds de Chiffre d'Affaires, et les obligations de facturation.
     Réponds de manière concise, professionnelle et utile.
@@ -35,7 +35,7 @@ export const generateAssistantResponse = async (
 
 export const suggestInvoiceDescription = async (clientName: string, serviceType: string): Promise<string> => {
   try {
-     const prompt = `Génère une description professionnelle courte pour une ligne de facture destinée au client "${clientName}" pour un service de type : "${serviceType}". 
+     const prompt = `Génère une description professionnelle courte pour une ligne de facture destinée au client "${clientName}" pour un service de type : "${serviceType}".
      La description doit être claire et formelle. Ne donne que la description, pas de guillemets.`;
 
      const response = await ai.models.generateContent({
@@ -52,7 +52,7 @@ export const suggestInvoiceDescription = async (clientName: string, serviceType:
 
 export const generateInvoiceItemsFromPrompt = async (prompt: string): Promise<any[]> => {
   try {
-    const systemPrompt = `Tu es un assistant de facturation. 
+    const systemPrompt = `Tu es un assistant de facturation.
     L'utilisateur va te donner une description de ce qu'il veut facturer.
     Tu dois extraire les articles, quantités et prix unitaires probables.
     Réponds UNIQUEMENT avec un tableau JSON d'objets ayant les propriétés : description (string), quantity (number), unitPrice (number), unit (string).
@@ -121,7 +121,7 @@ export const analyzeReceipt = async (base64Image: string, mimeType: string): Pro
     - vatAmount (number, montant de la TVA si présent, sinon 0)
     - vatRate (number, taux de TVA en pourcentage si présent, sinon 0)
     - supplierName (string, nom du fournisseur/magasin)
-    
+
     Réponds UNIQUEMENT avec l'objet JSON.`;
 
     const response = await ai.models.generateContent({
@@ -148,10 +148,10 @@ export const analyzeReceipt = async (base64Image: string, mimeType: string): Pro
 export const predictRevenue = async (history: any[], quotes: any[]): Promise<string> => {
   try {
     const prompt = `En tant qu'expert financier pour micro-entrepreneur, analyse l'historique de chiffre d'affaires (factures payées) et les devis en cours (acceptés ou en attente) pour prédire le chiffre d'affaires du mois prochain.
-    
+
     Historique (Invoices Paid): ${JSON.stringify(history)}
     Devis en cours (Quotes): ${JSON.stringify(quotes)}
-    
+
     Donne une estimation chiffrée et une brève explication de ton raisonnement.
     Réponds de manière concise en français.`;
 
@@ -164,5 +164,98 @@ export const predictRevenue = async (history: any[], quotes: any[]): Promise<str
   } catch (error) {
     console.error("Erreur Gemini (predictRevenue):", error);
     return "Erreur lors de la prédiction.";
+  }
+};
+
+/**
+ * Analyse une facture pour détecter des anomalies ou des manques légaux
+ */
+export const checkInvoiceCompliance = async (
+  invoice: any,
+  userProfile: any,
+  client: any
+): Promise<{
+  isCompliant: boolean;
+  issues: string[];
+  suggestions: string[];
+}> => {
+  try {
+    const prompt = `Analyse la conformité légale de cette facture pour un micro-entrepreneur français (Régime 2026).
+
+    FACTURE: ${JSON.stringify(invoice)}
+    MON ENTREPRISE: ${JSON.stringify(userProfile)}
+    CLIENT: ${JSON.stringify(client)}
+
+    Vérifie spécifiquement:
+    1. Présence du SIRET et de l'adresse (émetteur et client).
+    2. Mentions obligatoires si exonéré de TVA (Art. 293 B du CGI).
+    3. Mentions "EI" ou "Entrepreneur Individuel" à côté du nom.
+    4. Date d'émission et date d'échéance.
+    5. Pénalités de retard et indemnité forfaitaire (40€).
+
+    Réponds UNIQUEMENT avec un objet JSON ayant les propriétés :
+    - isCompliant (boolean)
+    - issues (string array, liste des problèmes trouvés)
+    - suggestions (string array, comment corriger)
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const text = response.text || '{"isCompliant": true, "issues": [], "suggestions": []}';
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Erreur Gemini (checkInvoiceCompliance):", error);
+    return { isCompliant: true, issues: [], suggestions: [] };
+  }
+};
+
+/**
+ * Prédiction de trésorerie à 30 jours basée sur les factures et le comportement passé
+ */
+export const predictCashflowJ30 = async (
+  invoices: any[],
+  userProfile: any
+): Promise<{
+    predictedBalance: number;
+    confidence: number;
+    analysis: string;
+    riskLevel: 'low' | 'medium' | 'high';
+}> => {
+  try {
+    const prompt = `En tant qu'analyste financier, prédis la trésorerie à 30 jours pour ce micro-entrepreneur.
+    Considère :
+    - Les factures impayées et leur date d'échéance.
+    - L'historique des paiements (si les clients paient souvent en retard).
+    - Les charges sociales à prévoir (basé sur le CA encaissé).
+
+    DONNÉES: ${JSON.stringify(invoices)}
+    PROFIL ACTIVITÉ: ${userProfile.activityType || 'SERVICES'}
+
+    Réponds UNIQUEMENT avec un objet JSON :
+    - predictedBalance (number, solde estimé en plus par rapport à aujourd'hui)
+    - confidence (number entre 0 et 1)
+    - analysis (string courte en français expliquant le calcul)
+    - riskLevel (string: 'low', 'medium' ou 'high')
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const text = response.text || '{"predictedBalance": 0, "confidence": 0, "analysis": "N/A", "riskLevel": "low"}';
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Erreur Gemini (predictCashflowJ30):", error);
+    return { predictedBalance: 0, confidence: 0, analysis: "Erreur d'analyse", riskLevel: 'low' };
   }
 };
