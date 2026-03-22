@@ -104,17 +104,17 @@ class InvoiceDB extends Dexie {
    */
   async importData(data: Record<string, unknown>): Promise<void> {
     try {
-      if (data.invoices) {await this.invoices.bulkPut(data.invoices);}
-      if (data.invoiceItems) {await this.invoiceItems.bulkPut(data.invoiceItems);}
-      if (data.clients) {await this.clients.bulkPut(data.clients);}
-      if (data.suppliers) {await this.suppliers.bulkPut(data.suppliers);}
-      if (data.products) {await this.products.bulkPut(data.products);}
-      if (data.expenses) {await this.expenses.bulkPut(data.expenses);}
-      if (data.emails) {await this.emails.bulkPut(data.emails);}
-      if (data.emailTemplates) {await this.emailTemplates.bulkPut(data.emailTemplates);}
-      if (data.calendarEvents) {await this.calendarEvents.bulkPut(data.calendarEvents);}
-      if (data.userProfile) {await this.userProfile.bulkPut(data.userProfile);}
-      if (data.chatMessages) {await this.chatMessages.bulkPut(data.chatMessages);}
+      if (data.invoices) {await this.invoices.bulkPut(data.invoices as Invoice[]);}
+      if (data.invoiceItems) {await this.invoiceItems.bulkPut(data.invoiceItems as InvoiceItem[]);}
+      if (data.clients) {await this.clients.bulkPut(data.clients as Client[]);}
+      if (data.suppliers) {await this.suppliers.bulkPut(data.suppliers as Supplier[]);}
+      if (data.products) {await this.products.bulkPut(data.products as Product[]);}
+      if (data.expenses) {await this.expenses.bulkPut(data.expenses as Expense[]);}
+      if (data.emails) {await this.emails.bulkPut(data.emails as Email[]);}
+      if (data.emailTemplates) {await this.emailTemplates.bulkPut(data.emailTemplates as EmailTemplate[]);}
+      if (data.calendarEvents) {await this.calendarEvents.bulkPut(data.calendarEvents as CalendarEvent[]);}
+      if (data.userProfile) {await this.userProfile.bulkPut(data.userProfile as UserProfile[]);}
+      if (data.chatMessages) {await this.chatMessages.bulkPut(data.chatMessages as ChatMessage[]);}
     } catch (error) {
       console.error("Erreur lors de l'importation des données:", error);
       throw error;
