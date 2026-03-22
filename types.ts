@@ -221,6 +221,7 @@ export interface LogEntry {
 }
 
 export interface ChatMessage {
+  id?: string;
   role: 'user' | 'model';
   content: string;
   timestamp: number;

@@ -84,7 +84,7 @@ describe('AIAssistant Component - Improved Tests', () => {
       await user.click(sendButton);
 
       await waitFor(() => {
-        expect(input.value).toBe('');
+        expect((input as HTMLInputElement).value).toBe('');
       });
     });
 
@@ -236,7 +236,7 @@ describe('AIAssistant Component - Improved Tests', () => {
       const user = userEvent.setup();
       render(<AIAssistant />);
 
-      const input = screen.getByPlaceholderText(/Posez une question/i);
+      const input = screen.getByPlaceholderText(/Posez une question/i) as HTMLInputElement;
       await user.type(input, 'Test{Shift>}{Enter}{/Shift}');
 
       // Shift+Enter ne devrait pas envoyer (pour multi-ligne)
