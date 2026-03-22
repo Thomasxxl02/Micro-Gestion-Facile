@@ -1,0 +1,36 @@
+# Labels configurations
+
+# Frontend
+frontend:
+  - 'src/components/**/*'
+  - 'src/App.tsx'
+  - 'index.html'
+
+# Backend/Firebase
+firebase:
+  - 'config/firestore.rules'
+  - 'src/firebase.ts'
+  - 'config/firebase-blueprint.json'
+
+# Documentation
+documentation:
+  - 'docs/**/*'
+  - '*.md'
+  - '.github/**/*'
+
+# CI/CD
+workflow:
+  - '.github/workflows/**/*'
+  - 'package.json'
+  - 'tsconfig.json'
+
+# Libs & Utils
+logic:
+  - 'src/lib/**/*'
+  - 'src/types.ts'
+
+# Tests
+tests:
+  - 'src/__tests__/**/*'
+  - 'vitest.config.ts'
+  - 'vitest.setup.ts'
