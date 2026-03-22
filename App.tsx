@@ -1,15 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
-import InvoiceManager from './components/InvoiceManager';
-import ClientManager from './components/ClientManager';
-import SupplierManager from './components/SupplierManager';
-import ProductManager from './components/ProductManager';
-import AccountingManager from './components/AccountingManager';
-import EmailManager from './components/EmailManager';
-import CalendarManager from './components/CalendarManager';
-import SettingsManager from './components/SettingsManager';
-import AIAssistant from './components/AIAssistant';
+import LoadingFallback from './components/LoadingFallback';
+
+// Lazy load components for code-splitting
+const InvoiceManager = React.lazy(() => import('./components/InvoiceManager'));
+const ClientManager = React.lazy(() => import('./components/ClientManager'));
+const SupplierManager = React.lazy(() => import('./components/SupplierManager'));
+const ProductManager = React.lazy(() => import('./components/ProductManager'));
+const AccountingManager = React.lazy(() => import('./components/AccountingManager'));
+const EmailManager = React.lazy(() => import('./components/EmailManager'));
+const CalendarManager = React.lazy(() => import('./components/CalendarManager'));
+const SettingsManager = React.lazy(() => import('./components/SettingsManager'));
+const AIAssistant = React.lazy(() => import('./components/AIAssistant'));
+
 import { Menu, LogIn, LogOut, Loader2, Sun, Moon, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -178,112 +182,132 @@ const { data: syncedInvoices, upsert: saveInvoice, remove: deleteInvoice } = use
         return <Dashboard invoices={invoices} products={products} expenses={expenses} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} onSaveInvoice={(inv) => saveDoc('invoices', inv)} />;
       case 'invoices':
         return (
-          <InvoiceManager
-            invoices={invoices}
-            setInvoices={setInvoices}
-            clients={clients}
-            userProfile={userProfile}
-            products={products}
-            onSave={(inv) => saveInvoice(inv)}
-            onDelete={(id) => deleteInvoice(id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <InvoiceManager
+              invoices={invoices}
+              setInvoices={setInvoices}
+              clients={clients}
+              userProfile={userProfile}
+              products={products}
+              onSave={(inv) => saveInvoice(inv)}
+              onDelete={(id) => deleteInvoice(id)}
+            />
+          </Suspense>
         );
       case 'clients':
         return (
-          <ClientManager
-            clients={clients}
-            invoices={invoices}
-            onSave={(c) => saveClient(c)}
-            onDelete={(id) => deleteClient(id)}
-            isLoading={clientStatus === 'LOADING'}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <ClientManager
+              clients={clients}
+              invoices={invoices}
+              onSave={(c) => saveClient(c)}
+              onDelete={(id) => deleteClient(id)}
+              isLoading={clientStatus === 'LOADING'}
+            />
+          </Suspense>
         );
       case 'suppliers':
         return (
-          <SupplierManager
-            suppliers={suppliers}
-            setSuppliers={setSuppliers}
-            expenses={expenses}
-            onSave={(s) => saveDoc('suppliers', s)}
-            onDelete={(id) => deleteDocFromFirestore('suppliers', id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <SupplierManager
+              suppliers={suppliers}
+              setSuppliers={setSuppliers}
+              expenses={expenses}
+              onSave={(s) => saveDoc('suppliers', s)}
+              onDelete={(id) => deleteDocFromFirestore('suppliers', id)}
+            />
+          </Suspense>
         );
       case 'products':
         return (
-          <ProductManager
-            products={products}
-            onSave={(p) => saveProduct(p)}
-            onDelete={(id) => deleteProduct(id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <ProductManager
+              products={products}
+              onSave={(p) => saveProduct(p)}
+              onDelete={(id) => deleteProduct(id)}
+            />
+          </Suspense>
         );
       case 'accounting':
         return (
-          <AccountingManager
-            expenses={expenses}
-            setExpenses={setExpenses}
-            invoices={invoices}
-            suppliers={suppliers}
-            userProfile={userProfile}
-            clients={clients}
-            onSaveExpense={(e) => saveDoc('expenses', e)}
-            onDeleteExpense={(id) => deleteDocFromFirestore('expenses', id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <AccountingManager
+              expenses={expenses}
+              setExpenses={setExpenses}
+              invoices={invoices}
+              suppliers={suppliers}
+              userProfile={userProfile}
+              clients={clients}
+              onSaveExpense={(e) => saveDoc('expenses', e)}
+              onDeleteExpense={(id) => deleteDocFromFirestore('expenses', id)}
+            />
+          </Suspense>
         );
       case 'emails':
         return (
-          <EmailManager
-            emails={emails}
-            setEmails={setEmails}
-            templates={emailTemplates}
-            setTemplates={setEmailTemplates}
-            clients={clients}
-            invoices={invoices}
-            userProfile={userProfile}
-            onSaveEmail={(e) => saveDoc('emails', e)}
-            onDeleteEmail={(id) => deleteDocFromFirestore('emails', id)}
-            onSaveTemplate={(t) => saveDoc('emailTemplates', t)}
-            onDeleteTemplate={(id) => deleteDocFromFirestore('emailTemplates', id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <EmailManager
+              emails={emails}
+              setEmails={setEmails}
+              templates={emailTemplates}
+              setTemplates={setEmailTemplates}
+              clients={clients}
+              invoices={invoices}
+              userProfile={userProfile}
+              onSaveEmail={(e) => saveDoc('emails', e)}
+              onDeleteEmail={(id) => deleteDocFromFirestore('emails', id)}
+              onSaveTemplate={(t) => saveDoc('emailTemplates', t)}
+              onDeleteTemplate={(id) => deleteDocFromFirestore('emailTemplates', id)}
+            />
+          </Suspense>
         );
       case 'calendar':
         return (
-          <CalendarManager
-            events={calendarEvents}
-            setEvents={setCalendarEvents}
-            clients={clients}
-            onSaveEvent={(e) => saveDoc('calendarEvents', e)}
-            onDeleteEvent={(id) => deleteDocFromFirestore('calendarEvents', id)}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <CalendarManager
+              events={calendarEvents}
+              setEvents={setCalendarEvents}
+              clients={clients}
+              onSaveEvent={(e) => saveDoc('calendarEvents', e)}
+              onDeleteEvent={(id) => deleteDocFromFirestore('calendarEvents', id)}
+            />
+          </Suspense>
         );
       case 'settings':
         return (
-          <SettingsManager
-            userProfile={userProfile}
-            setUserProfile={setUserProfile}
-            onSaveProfile={(p) => {
-              if (user) {
-                setDoc(doc(db, 'profiles', user.uid), { ...p, uid: user.uid })
-                  .catch(err => handleFirestoreError(err, OperationType.WRITE, `profiles/${user.uid}`));
-              }
-            }}
-            allData={{
-              invoices,
-              clients,
-              suppliers,
-              products,
-              expenses
-            }}
-            setAllData={{
-              setInvoices,
-              setClients,
-              setSuppliers,
-              setProducts,
-              setExpenses
-            }}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsManager
+              userProfile={userProfile}
+              setUserProfile={setUserProfile}
+              onSaveProfile={(p) => {
+                if (user) {
+                  setDoc(doc(db, 'profiles', user.uid), { ...p, uid: user.uid })
+                    .catch(err => handleFirestoreError(err, OperationType.WRITE, `profiles/${user.uid}`));
+                }
+              }}
+              allData={{
+                invoices,
+                clients,
+                suppliers,
+                products,
+                expenses
+              }}
+              setAllData={{
+                setInvoices,
+                setClients,
+                setSuppliers,
+                setProducts,
+                setExpenses
+              }}
+            />
+          </Suspense>
         );
       case 'ai_assistant':
-        return <AIAssistant />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <AIAssistant />
+          </Suspense>
+        );
       default:
         return <Dashboard invoices={invoices} products={products} expenses={expenses} events={calendarEvents} onNavigate={setCurrentView} userProfile={userProfile} />;
     }

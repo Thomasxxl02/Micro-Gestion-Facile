@@ -77,8 +77,8 @@ h1, h2, h3, h4 {
 
 /* Custom Scrollbar Compatibility */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--card-border) transparent;
+  /* scrollbar-width: thin; */ /* Not supported in Safari < 16 */
+  /* scrollbar-color: var(--card-border) transparent; */ /* Not supported in Safari, Chrome < 121 */
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -93,9 +93,7 @@ button::-moz-focus-inner {
 }
 
 html {
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  /* text-size-adjust should not be set in production - breaks mobile zoom */
 }
 
 /* Glassmorphism utility */
@@ -221,11 +219,16 @@ html {
 /* Overlay button for modals */
 .overlay-button {
   background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 /* A4 Invoice paper size */
 .invoice-a4 {
   max-width: 210mm;
+}
+
+/* Password strength progress bar */
+.password-strength-bar {
+  width: var(--progress-width);
 }

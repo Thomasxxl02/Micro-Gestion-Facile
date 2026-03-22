@@ -1,7 +1,14 @@
+// ⚠️ CRITICAL: Import fake-indexeddb FIRST before anything else uses IndexedDB
+import 'fake-indexeddb/auto';
+
 import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { server } from './src/mocks/server';
+import { setupDexieForTests } from './__tests__/integration/dexieIntegrationSetup';
+
+// Configurer le setup Dexie pour les tests d'intégration IndexedDB
+setupDexieForTests();
 
 // Configurer MSW pour les tests
 beforeAll(() => server.listen());

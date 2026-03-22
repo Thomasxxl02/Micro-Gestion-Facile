@@ -81,7 +81,7 @@ var addSorting = (function() {
             cols.push(col);
             if (col.sortable) {
                 col.defaultDescSort = col.type === 'number';
-                // Create span element safely using DOM API to avoid XSS
+                // Use DOM API safely to avoid XSS vulnerabilities
                 var sorterSpan = document.createElement('span');
                 sorterSpan.className = 'sorter';
                 colNode.appendChild(sorterSpan);

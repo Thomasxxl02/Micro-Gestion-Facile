@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { exportAsJSON, exportAsCSV } from '../../lib/exportUtils';
 import type { ExportData } from '../../lib/exportUtils';
-import Decimal from 'decimal.js';
 
 describe('exportUtils', () => {
   const mockData: Partial<ExportData> = {
@@ -257,6 +256,283 @@ describe('exportUtils', () => {
       expect(parsed.exportedAt).toBeDefined();
       const exportDate = new Date(parsed.exportedAt);
       expect(exportDate instanceof Date).toBe(true);
+    });
+  });
+
+  describe('Format Validation', () => {
+    it('produit un JSON valide et parsable', async () => {
+      const json = await exportAsJSON(mockData);
+
+      expect(() => JSON.parse(json)).not.toThrow();
+    });
+
+    it('utilise l\'encodage UTF-8 correctement', async () => {
+      const dataWithSpecialChars: Partial<ExportData> = {
+        ...mockData,
+        clients: [
+          {
+            ...mockData.clients![0],
+            name: 'Café Français €',
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(dataWithSpecialChars);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.clients[0].name).toBe('Café Français €');
+    });
+
+    it('CSV récupère tous les champs de l\'entité', () => {
+      const csv = exportAsCSV('invoices', mockData.invoices || []);
+      const lines = csv.split('\n');
+      const header = lines[0].split(',');
+
+      // Vérifier que les champs pricipaux sont présents
+      expect(header.length).toBeGreaterThan(3);
+      expect(csv).toContain('id');
+      expect(csv).toContain('number');
+      expect(csv).toContain('date');
+      expect(csv).toContain('total');
+      expect(csv).toContain('status');
+    });
+  });
+
+  describe('Performance', () => {
+    it('exporte 1000 factures rapidement en JSON', async () => {
+      const largeData: Partial<ExportData> = {
+        version: '1.0',
+        userProfile: mockData.userProfile!,
+        invoices: Array.from({ length: 1000 }, (_, i) => ({
+          id: `inv-${i}`,
+          number: `FAC-${String(i).padStart(6, '0')}`,
+          date: '2026-03-21',
+          dueDate: '2026-04-21',
+          clientId: `cli-${i % 100}`,
+          items: [],
+          total: 1000 + i,
+          status: 'paid' as const,
+          type: 'invoice' as const,
+        })),
+        clients: [],
+      };
+
+      const start = performance.now();
+      const json = await exportAsJSON(largeData);
+      const duration = performance.now() - start;
+
+      expect(duration).toBeLessThan(500);
+      const parsed = JSON.parse(json);
+      expect(parsed.invoices).toHaveLength(1000);
+    });
+
+    it('exporte 1000 factures rapidement en CSV', () => {
+      const largeInvoices = Array.from({ length: 1000 }, (_, i) => ({
+        id: `inv-${i}`,
+        number: `FAC-${String(i).padStart(6, '0')}`,
+        date: '2026-03-21',
+        clientId: `cli-${i % 100}`,
+        total: 1000 + i,
+        status: 'paid' as const,
+        type: 'invoice' as const,
+      }));
+
+      const start = performance.now();
+      const csv = exportAsCSV('invoices', largeInvoices);
+      const duration = performance.now() - start;
+
+      expect(duration).toBeLessThan(500);
+      expect(csv.split('\n')).toHaveLength(1001 + 1); // Header + 1000 + empty line
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('gère les montants très élevés sans perte de précision', async () => {
+      const dataWithHighAmounts: Partial<ExportData> = {
+        ...mockData,
+        invoices: [
+          {
+            ...mockData.invoices![0],
+            total: 9999999.99,
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(dataWithHighAmounts);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.invoices[0].total).toBeCloseTo(9999999.99);
+    });
+
+    it('gère les montants très petits avec précision décimale', async () => {
+      const dataWithSmallAmounts: Partial<ExportData> = {
+        ...mockData,
+        invoices: [
+          {
+            ...mockData.invoices![0],
+            total: 0.01,
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(dataWithSmallAmounts);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.invoices[0].total).toBe(0.01);
+    });
+
+    it('gère les valeurs null/undefined gracieux', async () => {
+      const dataWithNulls: Partial<ExportData> = {
+        ...mockData,
+        invoices: [
+          {
+            ...mockData.invoices![0],
+            notes: null as any,
+            description: undefined as any,
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(dataWithNulls);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.invoices[0]).toBeDefined();
+    });
+
+    it('gère les chaînes vides correctement', () => {
+      const csvData = [
+        {
+          id: '1',
+          name: '',
+          description: 'Test',
+        },
+      ];
+
+      const csv = exportAsCSV('items', csvData);
+
+      expect(csv).toBeDefined();
+      expect(csv).toContain('Test');
+    });
+
+    it('gère les caractères de contrôle dans les données', async () => {
+      const dataWithControlChars: Partial<ExportData> = {
+        ...mockData,
+        clients: [
+          {
+            ...mockData.clients![0],
+            name: 'Client\nWith\nNewlines',
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(dataWithControlChars);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.clients[0].name).toContain('Client');
+    });
+
+    it('échappe correctement les guillemets doubles en CSV', () => {
+      const csvData = [
+        {
+          id: '1',
+          description: 'Valeur avec "citation"',
+        },
+      ];
+
+      const csv = exportAsCSV('items', csvData);
+
+      // En CSV, les guillemets doubles sont échappés par doubler
+      expect(csv).toContain('"Valeur avec ""citation"""');
+    });
+
+    it('conserve l\'ordre des lignes en CSV', () => {
+      const csvData = [
+        { id: '3', name: 'Trois' },
+        { id: '1', name: 'Un' },
+        { id: '2', name: 'Deux' },
+      ];
+
+      const csv = exportAsCSV('items', csvData);
+      const lines = csv.split('\n').filter(l => l.trim());
+
+      expect(lines[1]).toContain('3');
+      expect(lines[2]).toContain('1');
+      expect(lines[3]).toContain('2');
+    });
+  });
+
+  describe('Multi-Language Support', () => {
+    it('exporte correctement les données multilingues', async () => {
+      const multilingualData: Partial<ExportData> = {
+        ...mockData,
+        clients: [
+          {
+            ...mockData.clients![0],
+            name: '日本 Client 中文',
+            address: 'Rue François Müller, 99€',
+          },
+        ],
+      };
+
+      const json = await exportAsJSON(multilingualData);
+      const parsed = JSON.parse(json);
+
+      expect(parsed.clients[0].name).toContain('日本');
+      expect(parsed.clients[0].address).toContain('€');
+    });
+
+    it('exporte le CSV avec support multilingue UTF-8', () => {
+      const csvData = [
+        {
+          id: '1',
+          name: '🎯 Client Spécial',
+          email: 'contact@café.fr',
+        },
+      ];
+
+      const csv = exportAsCSV('clients', csvData);
+
+      expect(csv).toContain('Spécial');
+      expect(csv).toContain('café');
+    });
+  });
+
+  describe('File Size & Streaming', () => {
+    it('produit un JSON de taille raisonnable pour 1000 factures', async () => {
+      const bulkData: Partial<ExportData> = {
+        version: '1.0',
+        userProfile: mockData.userProfile!,
+        invoices: Array.from({ length: 1000 }, (_, i) => ({
+          id: `inv-${i}`,
+          number: `FAC-${i}`,
+          date: '2026-03-21',
+          dueDate: '2026-04-21',
+          clientId: 'cli-1',
+          items: [],
+          total: 1000,
+          status: 'paid' as const,
+          type: 'invoice' as const,
+        })),
+        clients: [],
+      };
+
+      const json = await exportAsJSON(bulkData);
+
+      // Pour 1000 factures simples : ~100KB max
+      expect(json.length).toBeLessThan(200000);
+    });
+
+    it('encode correctement en base64 si nécessaire', async () => {
+      const json = await exportAsJSON(mockData);
+
+      // Vérifier que le JSON est valide et parsable
+      expect(() => JSON.parse(json)).not.toThrow();
+
+      // Vous pouvez l'encoder en base64 pour transport
+      const base64 = Buffer.from(json).toString('base64');
+      const decoded = Buffer.from(base64, 'base64').toString('utf-8');
+
+      expect(JSON.parse(decoded)).toBeDefined();
     });
   });
 });
