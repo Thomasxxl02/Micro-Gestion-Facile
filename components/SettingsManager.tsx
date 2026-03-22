@@ -10,12 +10,12 @@ import type { UserProfile, Invoice, Client, Supplier, Product, Expense, InvoiceS
 import {
   Building, Wallet, Globe,
   MapPin, CreditCard, ShieldCheck, Download, Upload,
-  Hash, Palette, Briefcase, Zap, Mail as MailIcon, Phone as PhoneIcon,
-  Activity, Key
+  Hash, Palette, Briefcase, Zap, Mail as MailIcon, Phone as PhoneIcon
 } from 'lucide-react';
 import { FormField, TextAreaField, SelectField, ToggleSwitch, ColorPicker, LogoUploader } from './FormFields';
 import { ConfirmDialog, AlertDialog } from './Dialogs';
 import { useAppStore } from '../store/appStore';
+import SecurityTab from './SecurityTab';
 
 interface SettingsManagerProps {
   userProfile: UserProfile;
@@ -46,7 +46,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'data' | 'preferences' | 'security'>('profile');
-  const { activityLogs, addLog } = useAppStore();
+  const { _activityLogs, addLog } = useAppStore();
 
   // ─── DIALOG STATES ───
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -65,7 +65,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   }>({ isOpen: false, title: '', description: '', type: 'info' });
 
   // ─── HANDLERS ───
-  const handleChange = (field: keyof UserProfile, value: string | number | boolean) => {
+  const handleChange = (field: keyof UserProfile, value: string | number | boolean | Record<string, unknown>) => {
     const updatedProfile = { ...userProfile, [field]: value };
     setUserProfile(updatedProfile);
     if (onSaveProfile) {onSaveProfile(updatedProfile);}
@@ -452,45 +452,172 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           {/* PREFERENCES TAB */}
           {activeTab === 'preferences' && (
             <div id="panel-preferences" role="tabpanel" className="space-y-8 animate-slide-up">
+              {/* Colors Card */}
               <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
-                <ColorPicker
-                  label="Couleur Primaire"
-                  value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
-                  onChange={(val) => handleChange('primaryColor', val)}
-                />
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Palette size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Apparence</h3>
+                </div>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SelectField
+                      label="Thème"
+                      value={userProfile.theme || 'auto'}
+                      onChange={(val) => handleChange('theme', val)}
+                      options={[
+                        { value: 'light', label: '☀️ Clair (Light)' },
+                        { value: 'dark', label: '🌙 Sombre (Dark)' },
+                        { value: 'auto', label: '🔄 Auto (selon système)' },
+                      ]}
+                    />
+                    <div>
+                      <ColorPicker
+                        label="Couleur Primaire"
+                        value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
+                        onChange={(val) => handleChange('primaryColor', val)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Display Card */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Globe size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Affichage</h3>
+                </div>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SelectField
+                      label="Taille de Police"
+                      value={userProfile.fontSize || 'normal'}
+                      onChange={(val) => handleChange('fontSize', val)}
+                      options={[
+                        { value: 'small', label: '🔤 Petite' },
+                        { value: 'normal', label: '🔤 Normale' },
+                        { value: 'large', label: '🔤 Grande' },
+                      ]}
+                    />
+                    <SelectField
+                      label="Densité de l'interface"
+                      value={userProfile.uiDensity || 'normal'}
+                      onChange={(val) => handleChange('uiDensity', val)}
+                      options={[
+                        { value: 'compact', label: '📦 Compacte' },
+                        { value: 'normal', label: '📑 Normale' },
+                        { value: 'spacious', label: '🌬️ Spacieuse' },
+                      ]}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SelectField
+                      label="Format de date"
+                      value={userProfile.dateFormat || 'DD/MM/YYYY'}
+                      onChange={(val) => handleChange('dateFormat', val)}
+                      options={[
+                        { value: 'DD/MM/YYYY', label: '📅 DD/MM/YYYY (Français)' },
+                        { value: 'MM/DD/YYYY', label: '📅 MM/DD/YYYY (International)' },
+                        { value: 'YYYY-MM-DD', label: '📅 YYYY-MM-DD (ISO)' },
+                      ]}
+                    />
+                    <SelectField
+                      label="Format de l'heure"
+                      value={userProfile.timeFormat || '24h'}
+                      onChange={(val) => handleChange('timeFormat', val)}
+                      options={[
+                        { value: '24h', label: '🕐 24h (00:00-23:59)' },
+                        { value: '12h', label: '🕐 12h (12:00 AM-11:59 PM)' },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifications Card */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Zap size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">Notifications</h3>
+                </div>
+                <div className="space-y-6">
+                  <ToggleSwitch
+                    label="Activer les notifications"
+                    description="Notifications dans l'app et push"
+                    checked={userProfile.enableNotifications !== false}
+                    onChange={(val) => handleChange('enableNotifications', val)}
+                  />
+
+                  {userProfile.enableNotifications !== false && (
+                    <div className="pl-4 border-l-2 border-brand-200 dark:border-brand-700 space-y-4">
+                      <ToggleSwitch
+                        label="Rappels d'échéances"
+                        description="Vous alerter avant la date d'exigibilité des factures"
+                        checked={userProfile.notificationTypes?.invoiceReminders !== false}
+                        onChange={(val) => handleChange('notificationTypes', {
+                          ...userProfile.notificationTypes,
+                          invoiceReminders: val,
+                        })}
+                      />
+
+                      <ToggleSwitch
+                        label="Rappels de paiement"
+                        description="Vous notifier des paiements en attente"
+                        checked={userProfile.notificationTypes?.paymentReminders !== false}
+                        onChange={(val) => handleChange('notificationTypes', {
+                          ...userProfile.notificationTypes,
+                          paymentReminders: val,
+                        })}
+                      />
+
+                      <ToggleSwitch
+                        label="Alertes de dépenses"
+                        description="Vous avertir des seuils de dépenses dépassés"
+                        checked={userProfile.notificationTypes?.expenseAlerts !== false}
+                        onChange={(val) => handleChange('notificationTypes', {
+                          ...userProfile.notificationTypes,
+                          expenseAlerts: val,
+                        })}
+                      />
+
+                      <ToggleSwitch
+                        label="Mises à jour système"
+                        description="Informations sur les nouvelles fonctionnalités"
+                        checked={userProfile.notificationTypes?.systemUpdates !== false}
+                        onChange={(val) => handleChange('notificationTypes', {
+                          ...userProfile.notificationTypes,
+                          systemUpdates: val,
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-6 pt-6 border-t border-brand-100 dark:border-brand-800">
+                    <ToggleSwitch
+                      label="Notifications par email"
+                      description="Recevoir un résumé hebdomadaire par email"
+                      checked={userProfile.enableEmailNotifications || false}
+                      onChange={(val) => handleChange('enableEmailNotifications', val)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* SECURITY TAB */}
           {activeTab === 'security' && (
-            <div id="panel-security" role="tabpanel" className="space-y-8 animate-slide-up">
-              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
-                <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
-                  {activityLogs.length === 0 ? (
-                    <p className="text-center py-12 text-sm text-brand-400 italic">Aucune activité enregistrée</p>
-                  ) : (
-                    activityLogs.map((log) => {
-                      let CategoryIcon = Activity;
-                      if (log.category === 'AUTH') {CategoryIcon = Key;}
-                      return (
-                        <div key={log.id} className="flex items-start gap-4 p-4 hover:bg-brand-50/50 dark:hover:bg-brand-800/30 rounded-2xl transition-colors">
-                          <div className="p-2 rounded-xl mt-1 bg-brand-50 dark:bg-brand-800">
-                            <CategoryIcon size={14} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-brand-900 dark:text-brand-100">{log.action}</p>
-                            <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-1">
-                              {new Date(log.timestamp).toLocaleString('fr-FR')}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
+            <SecurityTab
+              userProfile={userProfile}
+              setUserProfile={setUserProfile}
+              onSaveProfile={onSaveProfile}
+            />
           )}
 
           {/* DATA TAB */}

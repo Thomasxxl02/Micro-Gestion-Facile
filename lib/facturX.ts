@@ -7,21 +7,76 @@ import 'jspdf-autotable';
 import type { Invoice, Client, UserProfile } from '../types';
 
 /**
+ * Échappe les caractères XML spéciaux
+ */
+const escapeXML = (str: string | undefined): string => {
+  if (!str) return '';
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+};
+
+/**
+ * Extrait le code postal d'une adresse
+ */
+const extractPostalCode = (address: string | undefined): string => {
+  if (!address) return '75001';
+  // Essaie d'extraire un code postal français (5 chiffres)
+  const match = /\b\d{5}\b/.exec(address);
+  if (match) return match[0];
+
+  // Sinon, inférer de la ville
+  if (address.includes('Lyon')) return '69000';
+  if (address.includes('Marseille')) return '13000';
+  if (address.includes('Paris')) return '75001';
+
+  return '75001'; // Défaut Paris
+};
+
+/**
  * Génère le XML Factur-X au format BASIC
  * Note: En environnement de production, ce XML devrait être validé contre le schéma officiel
  */
 export const generateFacturX_XML = (invoice: Invoice, client: Client, userProfile: UserProfile): string => {
-  const dateStr = invoice.date.replace(/-/g, '');
+  const dateStr = invoice.date.replaceAll('-', '');
+  const dueDateStr = invoice.dueDate?.replaceAll('-', '') ?? '';
+  const dueDateISO = invoice.dueDate || ''; // Garder le format ISO aussi
   const currency = 'EUR';
 
+  // Calcul de la TVA si non fourni
+  const subtotal = invoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  // Calcul TVA pour chaque item selon son taux
+  const calculatedVAT = invoice.items.reduce((sum, item) => {
+    const itemSubtotal = item.quantity * item.unitPrice;
+    return sum + (itemSubtotal * (item.vatRate || 0) / 100);
+  }, 0);
+  // Utiliser la TVA fournie ou calculée
+  const resolveVATAmount = (): number => {
+    if (invoice.vatAmount !== undefined) return invoice.vatAmount;
+    if (calculatedVAT) return calculatedVAT;
+    return invoice.total > subtotal ? invoice.total - subtotal : 0;
+  };
+  const vatAmount = resolveVATAmount();
+
   // Génération des lignes d'articles pour le XML
-  const lineItemsXML = invoice.items.map((item, index) => `
+  const getCategoryCode = (vatRate: number | undefined): string => {
+    if (vatRate === 0) return 'Z'; // Zero-rated
+    if (vatRate) return 'S'; // Standard rate
+    return 'E'; // Exempt
+  };
+
+  const lineItemsXML = invoice.items.map((item, index) => {
+    const categoryCode = getCategoryCode(item.vatRate);
+    return `
     <ram:IncludedSupplyChainTradeLineItem>
       <ram:AssociatedDocumentLineDocument>
         <ram:LineID>${index + 1}</ram:LineID>
       </ram:AssociatedDocumentLineDocument>
       <ram:SpecifiedTradeProduct>
-        <ram:Name>${item.description}</ram:Name>
+        <ram:Name>${escapeXML(item.description)}</ram:Name>
       </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:NetPriceProductTradePrice>
@@ -34,14 +89,19 @@ export const generateFacturX_XML = (invoice: Invoice, client: Client, userProfil
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
-          <ram:CategoryCode>${(item.vatRate || 0) > 0 ? 'S' : 'E'}</ram:CategoryCode>
+          <ram:CategoryCode>${categoryCode}</ram:CategoryCode>
           <ram:RateApplicablePercent>${item.vatRate || 0}</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
           <ram:LineTotalAmount>${(item.quantity * item.unitPrice).toFixed(2)}</ram:LineTotalAmount>
         </ram:SpecifiedTradeSettlementLineMonetarySummation>
       </ram:SpecifiedLineTradeSettlement>
-    </ram:IncludedSupplyChainTradeLineItem>`).join('');
+    </ram:IncludedSupplyChainTradeLineItem>`;
+  }).join('');
+
+  // Extraction des codes postaux
+  const sellerPostalCode = extractPostalCode(userProfile.address);
+  const buyerPostalCode = extractPostalCode(client.address);
 
   // Structure du profil BASIC
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -62,13 +122,25 @@ export const generateFacturX_XML = (invoice: Invoice, client: Client, userProfil
     ${lineItemsXML}
     <ram:ApplicableHeaderTradeAgreement>
       <ram:SellerTradeParty>
-        <ram:Name>${userProfile.companyName || 'Ma Micro-Entreprise'}</ram:Name>
+        <ram:Name>${escapeXML(userProfile.companyName || 'Ma Micro-Entreprise')}</ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:LineOne>${escapeXML(userProfile.address || 'Non spécifiée')}</ram:LineOne>
+          <ram:CityName>${escapeXML(userProfile.address?.split(',')[0] || 'Paris')}</ram:CityName>
+          <ram:PostcodeCode>${sellerPostalCode}</ram:PostcodeCode>
+          <ram:CountryID>FR</ram:CountryID>
+        </ram:PostalTradeAddress>
         <ram:SpecifiedLegalOrganization>
           <ram:ID schemeID="0002">${userProfile.siret || ''}</ram:ID>
         </ram:SpecifiedLegalOrganization>
       </ram:SellerTradeParty>
       <ram:BuyerTradeParty>
-        <ram:Name>${client.name}</ram:Name>
+        <ram:Name>${escapeXML(client.name)}</ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:LineOne>${escapeXML(client.address || 'Non spécifiée')}</ram:LineOne>
+          <ram:CityName>${escapeXML(client.address?.split(',')[0] || 'Paris')}</ram:CityName>
+          <ram:PostcodeCode>${buyerPostalCode}</ram:PostcodeCode>
+          <ram:CountryID>FR</ram:CountryID>
+        </ram:PostalTradeAddress>
         <ram:SpecifiedLegalOrganization>
           <ram:ID schemeID="0002">${client.siret || ''}</ram:ID>
         </ram:SpecifiedLegalOrganization>
@@ -77,11 +149,12 @@ export const generateFacturX_XML = (invoice: Invoice, client: Client, userProfil
     <ram:ApplicableHeaderTradeDelivery/>
     <ram:ApplicableHeaderTradeSettlement>
       <ram:InvoiceCurrencyCode>${currency}</ram:InvoiceCurrencyCode>
+      ${dueDateStr ? `<ram:SpecifiedTradePaymentTerms><ram:Description>${dueDateISO}</ram:Description><ram:DueDateDateTime><udt:DateTimeString format="102">${dueDateStr}</udt:DateTimeString></ram:DueDateDateTime></ram:SpecifiedTradePaymentTerms>` : ''}
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
-        <ram:TaxBasisTotalAmount>${invoice.subtotal || invoice.total - (invoice.vatAmount || 0)}</ram:TaxBasisTotalAmount>
-        <ram:TaxTotalAmount currencyID="${currency}">${invoice.vatAmount || 0}</ram:TaxTotalAmount>
-        <ram:GrandTotalAmount>${invoice.total}</ram:GrandTotalAmount>
-        <ram:DuePayableAmount>${invoice.total}</ram:DuePayableAmount>
+        <ram:TaxBasisTotalAmount>${subtotal.toFixed(2)}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="${currency}">${vatAmount.toFixed(2)}</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>${(subtotal + vatAmount).toFixed(2)}</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>${(subtotal + vatAmount).toFixed(2)}</ram:DuePayableAmount>
       </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
     </ram:ApplicableHeaderTradeSettlement>
   </rsm:SupplyChainTradeTransaction>
@@ -92,12 +165,19 @@ export const generateFacturX_XML = (invoice: Invoice, client: Client, userProfil
  * Génère le PDF/A-3 avec injection du XML Factur-X
  */
 export const generatePDFWithFacturX = async (invoice: Invoice, client: Client, userProfile: UserProfile) => {
-  const doc = new jsPDF() as any; // Cast as any for autoTable support if types conflict
+  const doc = new jsPDF();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const docWithTable = doc as any;
 
   // --- Design du PDF ---
   doc.setFontSize(20);
-  doc.text(invoice.type === 'invoice' ? 'FACTURE' : invoice.type === 'credit_note' ? 'AVOIR' : invoice.type === 'deposit_invoice' ? 'FACTURE D\'ACOMPTE' : 'DOCUMENT', 14, 22);
-  
+  const documentTypeLabel = {
+    'invoice': 'FACTURE',
+    'credit_note': 'AVOIR',
+    'deposit_invoice': 'FACTURE D\'ACOMPTE'
+  }[invoice.type] ?? 'DOCUMENT';
+  doc.text(documentTypeLabel, 14, 22);
+
   doc.setFontSize(10);
   doc.text(`Numéro: ${invoice.number}`, 14, 30);
   doc.text(`Date: ${invoice.date}`, 14, 35);
@@ -122,7 +202,7 @@ export const generatePDFWithFacturX = async (invoice: Invoice, client: Client, u
     `${(item.quantity * item.unitPrice).toFixed(2)} €`
   ]);
 
-  (doc as any).autoTable({
+  docWithTable.autoTable({
     startY: 85,
     head: [['Désignation', 'Qté', 'Prix Unitaire', 'Total HT']],
     body: tableData,
@@ -130,7 +210,7 @@ export const generatePDFWithFacturX = async (invoice: Invoice, client: Client, u
     headStyles: { fillColor: [41, 128, 185] }
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = docWithTable.lastAutoTable.finalY + 10;
   const subtotalHT = invoice.total - (invoice.vatAmount || 0);
   doc.text(`Total HT: ${subtotalHT.toFixed(2)} €`, 140, finalY);
   if (invoice.vatAmount) {doc.text(`TVA: ${invoice.vatAmount.toFixed(2)} €`, 140, finalY + 5);}
@@ -154,11 +234,11 @@ export const generatePDFWithFacturX = async (invoice: Invoice, client: Client, u
 
   // --- Injection Metadonnées Factur-X (ZUGFeRD) ---
   const facturX_XML = generateFacturX_XML(invoice, client, userProfile);
-  
+
   // Dans une vraie implémentation PDF/A-3, on doit utiliser attachFile ou similaire.
   // jsPDF supporte l'ajout de fichiers depuis récemment via des plugins.
   // Pour cette démo, on simule l'injection du descripteur.
-  
+
   try {
     // Note: L'attachement réel XML dans un PDF/A-3 requiert un traitement binaire post-génération
     // ou une extension spécifique de jsPDF. On expose ici le XML pour usage tiers ou preuve de concept.

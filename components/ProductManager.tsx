@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Product } from '../types';
 import { Plus, Minus, Search, Trash2, Package, Briefcase, X, Edit2, Zap, Download, SortAsc, Filter, Tag, Archive, RotateCcw, Upload, Hash, Ruler, AlertCircle, ArrowRightCircle } from 'lucide-react';
+import { validateAmount, type ValidationResult } from '../lib/validators';
 
 interface ProductManagerProps {
   products: Product[];
@@ -18,6 +19,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
   const [showArchived, setShowArchived] = useState(false);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // État pour les erreurs de validation
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
@@ -61,28 +65,66 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) {return;}
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    // Validation du nom
+    if (!formData.name?.trim()) {
+      errors.name = 'Nom obligatoire';
+      isValid = false;
+    }
+
+    // Validation du prix - doit être positif
+    const priceValue = Number(formData.price) || 0;
+    if (priceValue < 0) {
+      errors.price = 'Prix doit être positif ou zéro';
+      isValid = false;
+    }
+    const amountResult = validateAmount(formData.price || 0);
+    if (!amountResult.valid) {
+      errors.price = amountResult.error || 'Prix invalide';
+      isValid = false;
+    }
+
+    // Validation du stock - doit être positif si type='product'
+    if (formData.type === 'product') {
+      const stockValue = Number(formData.stock) || 0;
+      if (stockValue < 0) {
+        errors.stock = 'Stock doit être positif ou zéro';
+        isValid = false;
+      }
+
+      const minStockValue = Number(formData.minStock) || 0;
+      if (minStockValue < 0) {
+        errors.minStock = 'Seuil d\'alerte doit être positif ou zéro';
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    if (!isValid) return;
 
     if (editingId) {
-         const updated = { ...products.find(p => p.id === editingId), ...formData } as Product;
-         if (onSave) {onSave(updated);}
+      const updated = { ...products.find(p => p.id === editingId), ...formData } as Product;
+      if (onSave) {onSave(updated);}
     } else {
-        const product: Product = {
-            id: Date.now().toString(),
-            name: formData.name,
-            description: formData.description || '',
-            price: Number(formData.price) || 0,
-            type: formData.type as 'service' | 'product',
-            category: formData.category,
-            sku: formData.sku,
-            unit: formData.unit,
-            stock: formData.type === 'product' ? Number(formData.stock) || 0 : undefined,
-            minStock: formData.type === 'product' ? Number(formData.minStock) || 0 : undefined,
-            archived: false,
-            createdAt: new Date().toISOString()
-        };
-        if (onSave) {onSave(product);}
+      const product: Product = {
+        id: Date.now().toString(),
+        name: formData.name,
+        description: formData.description || '',
+        price: Number(formData.price) || 0,
+        type: formData.type as 'service' | 'product',
+        category: formData.category,
+        sku: formData.sku,
+        unit: formData.unit,
+        stock: formData.type === 'product' ? Number(formData.stock) || 0 : undefined,
+        minStock: formData.type === 'product' ? Number(formData.minStock) || 0 : undefined,
+        archived: false,
+        createdAt: new Date().toISOString()
+      };
+      if (onSave) {onSave(product);}
     }
+    setValidationErrors({});
     setIsPanelOpen(false);
   };
 
@@ -342,11 +384,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                             id="formData-name"
                             type="text"
                             required
-                            className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
+                            className={"w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " + (validationErrors.name ? "border-red-500" : "border-brand-200")}
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
                             placeholder="Ex: Création site web"
                         />
+                        {validationErrors.name && <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -425,10 +468,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                             step="0.01"
                             placeholder="0.00"
                             title="Prix HT (hors taxe) en euros"
-                            className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
+                            className={"w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " + (validationErrors.price ? "border-red-500" : "border-brand-200")}
                             value={formData.price}
                             onChange={e => setFormData({...formData, price: Number.parseFloat(e.target.value)})}
                         />
+                        {validationErrors.price && <p className="text-xs text-red-600 mt-1">{validationErrors.price}</p>}
                     </div>
 
                     {formData.type === 'product' && (
@@ -440,10 +484,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                                     type="number"
                                     placeholder="0"
                                     title="Quantité en stock actuel"
-                                    className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
+                                    className={"w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " + (validationErrors.stock ? "border-red-500" : "border-brand-200")}
                                     value={formData.stock}
                                     onChange={e => setFormData({...formData, stock: Number.parseInt(e.target.value) || 0})}
                                 />
+                                {validationErrors.stock && <p className="text-xs text-red-600 mt-1">{validationErrors.stock}</p>}
                             </div>
                             <div>
                                 <label htmlFor="formData-minStock" className="block text-sm font-semibold text-brand-700 mb-1.5">Seuil d&apos;alerte</label>
@@ -451,8 +496,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                                     id="formData-minStock"
                                     type="number"
                                     placeholder="0"
-                                    title="Seuil minimum d&apos;alerte pour le stock"
-                                    className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
+                                    title="Seuil minimum d'alerte pour le stock"
+                                    className={"w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " + (validationErrors.minStock ? "border-red-500" : "border-brand-200")}
                                     value={formData.minStock}
                                     onChange={e => setFormData({...formData, minStock: Number.parseInt(e.target.value) || 0})}
                                 />

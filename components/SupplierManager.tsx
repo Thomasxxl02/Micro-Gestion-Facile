@@ -1,9 +1,10 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { Supplier, Expense } from '../types';
 import { Plus, Download, Upload, Truck, AlertCircle, Wallet, Archive } from 'lucide-react';
 import EntityModal from './EntityModal';
 import { ContactFields, FinancialFields, SearchFilterFields } from './EntityFormFields';
 import { useEntityForm, useEntityFilters } from '../hooks/useEntity';
+import { validateSIRET, validateIBAN, validateVATNumber, validateEmail, validateFrenchPhone, type ValidationResult } from '../lib/validators';
 
 interface SupplierManagerProps {
   suppliers: Supplier[];
@@ -17,6 +18,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
   const form = useEntityForm<Supplier>();
   const filters = useEntityFilters(suppliers, { searchField: 'name', hasArchive: true, archiveField: 'archived' });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // State pour les erreurs de validation
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Stats: spending by supplier
   const getSupplierStats = (supplierId: string) => {
@@ -36,9 +40,72 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
   }, [filters.filteredEntities]);
 
   // Form handlers
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    // Validations obligatoires
+    if (!form.formData?.name?.trim()) {
+      errors.name = 'Nom obligatoire';
+      isValid = false;
+    }
+
+    // Validations optionnelles si le champ est rempli
+    if (form.formData?.siret?.trim()) {
+      const siretResult = validateSIRET(form.formData.siret);
+      if (!siretResult.valid) {
+        errors.siret = siretResult.error || 'SIRET invalide';
+        isValid = false;
+      }
+    }
+
+    if (form.formData?.tvaNumber?.trim()) {
+      const vatResult = validateVATNumber(form.formData.tvaNumber);
+      if (!vatResult.valid) {
+        errors.tvaNumber = vatResult.error || 'Numéro TVA invalide';
+        isValid = false;
+      }
+    }
+
+    // Champ IBAN (optionnel mais doit être valide s'il est rempli)
+    // Note: IBAN est un champ additionnel, à ajouter au formulaire
+    if (form.formData?.bankAccount?.trim?.()) {
+      const ibanResult = validateIBAN(form.formData.bankAccount as string);
+      if (!ibanResult.valid) {
+        errors.bankAccount = ibanResult.error || 'IBAN invalide';
+        isValid = false;
+      }
+    }
+
+    // Email optionnel
+    if (form.formData?.email?.trim()) {
+      const emailResult = validateEmail(form.formData.email);
+      if (!emailResult.valid) {
+        errors.email = emailResult.error || 'Email invalide';
+        isValid = false;
+      }
+    }
+
+    // Téléphone optionnel
+    if (form.formData?.phone?.trim()) {
+      const phoneResult = validateFrenchPhone(form.formData.phone);
+      if (!phoneResult.valid) {
+        errors.phone = phoneResult.error || 'Téléphone invalide';
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!form.formData?.name) {return;}
+
+    // Valider avant de soumettre
+    if (!validateForm()) {
+      return;
+    }
 
     if (form.isEditing && form.editingId) {
       const updated = { ...suppliers.find(s => s.id === form.editingId), ...form.formData } as Supplier;
@@ -54,6 +121,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
       setSuppliers([...suppliers, newSupplier]);
       onSave?.(newSupplier);
     }
+    setValidationErrors({});
     form.closePanel();
   };
 
@@ -268,21 +336,44 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
               value={form.formData?.name || ''}
               onChange={(e) => form.updateFormField('name', e.target.value)}
               placeholder="Nom du fournisseur *"
-              className="w-full p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white font-semibold"
+              className={"w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white font-semibold " + (validationErrors.name ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
             />
+            {validationErrors.name && <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>}
           </div>
 
           <div>
             <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 mb-3 uppercase">Coordonnées</h4>
-            <ContactFields
-              name={form.formData?.name || ''}
-              email={form.formData?.email || ''}
-              phone={form.formData?.phone || ''}
-              onNameChange={(v) => form.updateFormField('name', v)}
-              onEmailChange={(v) => form.updateFormField('email', v)}
-              onPhoneChange={(v) => form.updateFormField('phone', v)}
-              contactNameLabel="Fournisseur"
-            />
+            <div className="space-y-3">
+              <div>
+                <input
+                  type="text"
+                  value={form.formData?.contactName || ''}
+                  onChange={(e) => form.updateFormField('contactName', e.target.value)}
+                  placeholder="Personne Contact"
+                  className="w-full p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
+                />
+              </div>
+              <div>
+                <input
+                  type="email"
+                  value={form.formData?.email || ''}
+                  onChange={(e) => form.updateFormField('email', e.target.value)}
+                  placeholder="Email"
+                  className={"w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white " + (validationErrors.email ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
+                />
+                {validationErrors.email && <p className="text-xs text-red-600 mt-1">{validationErrors.email}</p>}
+              </div>
+              <div>
+                <input
+                  type="tel"
+                  value={form.formData?.phone || ''}
+                  onChange={(e) => form.updateFormField('phone', e.target.value)}
+                  placeholder="Téléphone"
+                  className={"w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white " + (validationErrors.phone ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
+                />
+                {validationErrors.phone && <p className="text-xs text-red-600 mt-1">{validationErrors.phone}</p>}
+              </div>
+            </div>
           </div>
 
           <div>
@@ -298,24 +389,50 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
 
           <div>
             <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 mb-3 uppercase">Paiement & Légal</h4>
-            <FinancialFields
-              tvaNumber={form.formData?.tvaNumber || ''}
-              paymentTerms={form.formData?.paymentTerms || '30'}
-              notes={form.formData?.notes || ''}
-              onTvaNumberChange={(v) => form.updateFormField('tvaNumber', v)}
-              onPaymentTermsChange={(v) => form.updateFormField('paymentTerms', v)}
-              onNotesChange={(v) => form.updateFormField('notes', v)}
-            />
+            <div className="space-y-3">
+              <div>
+                <input
+                  type="text"
+                  value={form.formData?.tvaNumber || ''}
+                  onChange={(e) => form.updateFormField('tvaNumber', e.target.value)}
+                  placeholder="Numéro TVA (ex: FR12345678901)"
+                  className={"w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white text-sm " + (validationErrors.tvaNumber ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
+                />
+                {validationErrors.tvaNumber && <p className="text-xs text-red-600 mt-1">{validationErrors.tvaNumber}</p>}
+              </div>
+              <div>
+                <input
+                  type="text"
+                  value={form.formData?.bankAccount || ''}
+                  onChange={(e) => form.updateFormField('bankAccount', e.target.value)}
+                  placeholder="IBAN (ex: FR14...)"
+                  className={"w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white text-sm " + (validationErrors.bankAccount ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
+                />
+                {validationErrors.bankAccount && <p className="text-xs text-red-600 mt-1">{validationErrors.bankAccount}</p>}
+              </div>
+              <div>
+                <input
+                  type="number"
+                  value={form.formData?.paymentTerms || '30'}
+                  onChange={(e) => form.updateFormField('paymentTerms', e.target.value)}
+                  placeholder="Délai paiement (jours)"
+                  className="w-full p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              value={form.formData?.siret || ''}
-              onChange={(e) => form.updateFormField('siret', e.target.value)}
-              placeholder="SIRET"
-              className="p-3 border border-brand-200 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white text-sm"
-            />
+            <div>
+              <input
+                type="text"
+                value={form.formData?.siret || ''}
+                onChange={(e) => form.updateFormField('siret', e.target.value)}
+                placeholder="SIRET"
+                className={"p-3 border rounded-lg dark:bg-slate-700 dark:text-white text-sm w-full " + (validationErrors.siret ? "border-red-500" : "border-brand-200 dark:border-slate-600")}
+              />
+              {validationErrors.siret && <p className="text-xs text-red-600 mt-1">{validationErrors.siret}</p>}
+            </div>
             <input
               type="url"
               value={form.formData?.website || ''}

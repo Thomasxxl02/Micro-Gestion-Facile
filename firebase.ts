@@ -1,8 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
@@ -31,7 +31,8 @@ async function testConnection() {
   }
 }
 
-testConnection();
+// Test connection asynchronously without top-level await
+testConnection().catch(console.error);
 
 // Auth helpers
 export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
@@ -44,14 +45,14 @@ export const sendEmailLink = async (email: string) => {
   const actionCodeSettings = {
     // L'URL de redirection après clic dans l'e-mail
     // En production, utilisez votre domaine final
-    url: window.location.origin + '/login-callback', 
+    url: globalThis.location.origin + '/login-callback',
     handleCodeInApp: true,
   };
 
   try {
     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
     // Sauvegarder l'e-mail localement pour compléter la connexion au retour
-    window.localStorage.setItem('emailForSignIn', email);
+    globalThis.localStorage.setItem('emailForSignIn', email);
     return { success: true };
   } catch (error) {
     console.error("Erreur d'envoi du lien e-mail :", error);
@@ -63,18 +64,18 @@ export const sendEmailLink = async (email: string) => {
  * Finalise la connexion après clic sur le lien reçu par e-mail
  */
 export const completeEmailLinkSignIn = async () => {
-  if (isSignInWithEmailLink(auth, window.location.href)) {
-    let email = window.localStorage.getItem('emailForSignIn');
-    
+  if (isSignInWithEmailLink(auth, globalThis.location.href)) {
+    let email = globalThis.localStorage.getItem('emailForSignIn');
+
     if (!email) {
       // Si l'utilisateur a ouvert le lien sur un autre appareil/navigateur
-      email = window.prompt('Veuillez fournir votre e-mail pour confirmation :');
+      email = globalThis.prompt('Veuillez fournir votre e-mail pour confirmation :');
     }
 
     if (email) {
       try {
-        const result = await signInWithEmailLink(auth, email, window.location.href);
-        window.localStorage.removeItem('emailForSignIn');
+        const result = await signInWithEmailLink(auth, email, globalThis.location.href);
+        globalThis.localStorage.removeItem('emailForSignIn');
         return result;
       } catch (error) {
         console.error("Erreur de finalisation de connexion :", error);

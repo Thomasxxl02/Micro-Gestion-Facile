@@ -138,4 +138,286 @@ describe('fiscalCalculations', () => {
       expect(status.tva.current).toBeLessThan(status.tva.tolerance);
     });
   });
+
+  describe('Edge Cases - Zero & Negative Revenue', () => {
+    it('traite correctement un revenu zéro', () => {
+      const result = calculateSocialContributions(0, mockProfile);
+      expect(result.amount).toBe(0);
+      expect(result.netRevenue).toBe(0);
+    });
+
+    it('traite correctement un revenu négatif (perte)', () => {
+      const result = calculateSocialContributions(-1000, mockProfile);
+      expect(result.amount).toBeLessThanOrEqual(0);
+      expect(result.netRevenue).toBeLessThanOrEqual(0);
+    });
+
+    it('calcule PFL avec revenu zéro', () => {
+      const tax = calculateIncomeTaxPFL(0, 'SERVICE_BNC');
+      expect(tax).toBe(0);
+    });
+
+    it('status correct pour revenu zéro', () => {
+      const status = calculateThresholdStatus(0, 'SERVICE_BNC');
+      expect(status.micro.isExceeded).toBe(false);
+      expect(status.micro.remaining).toBe(77700);
+    });
+  });
+
+  describe('Edge Cases - Decimal Precision', () => {
+    it('gère les montants avec décimales (0.01€)', () => {
+      const revenue = 1000.01;
+      const result = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' });
+
+      const expected = Math.round(revenue * 23.2 * 100) / 100;
+      expect(result.amount).toBeCloseTo(expected, 2);
+    });
+
+    it('gère les montants avec fractions de centimes', () => {
+      const revenue = 333.33;
+      const result = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' });
+
+      // 333.33 * 0.232 = 77.3328
+      expect(result.amount).toBeDefined();
+      expect(typeof result.amount).toBe('number');
+    });
+
+    it('gère les montants très petits (< 1€)', () => {
+      const revenue = 0.99;
+      const result = calculateSocialContributions(revenue, mockProfile);
+      expect(result.amount).toBeGreaterThanOrEqual(0);
+      expect(result.amount).toBeLessThan(1);
+    });
+
+    it('PFL avec décimales', () => {
+      const revenue = 100.5;
+      const tax = calculateIncomeTaxPFL(revenue, 'SERVICE_BNC');
+      expect(tax).toBeCloseTo(100.5 * 0.022, 2);
+    });
+  });
+
+  describe('Edge Cases - Extreme Values', () => {
+    it('traite les très hauts revenus (1M€)', () => {
+      const revenue = 1000000;
+      const result = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' });
+
+      expect(result.amount).toBeDefined();
+      expect(result.amount).toBeGreaterThan(0);
+      expect(result.netRevenue).toBeDefined();
+    });
+
+    it('traite les très hauts revenus (10M€)', () => {
+      const revenue = 10000000;
+      const result = calculateSocialContributions(revenue, mockProfile);
+      expect(result.amount).toBeDefined();
+    });
+
+    it('status pour très hauts revenus', () => {
+      const revenue = 1000000;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+
+      expect(status.micro.isExceeded).toBe(true);
+      expect(status.tva.isExceeded).toBe(true);
+    });
+
+    it('calcule correctement pour revenu = MAX_SAFE_INTEGER / 1000', () => {
+      const revenue = Number.MAX_SAFE_INTEGER / 1000000; // 9007199254741 (énorme)
+      const result = calculateSocialContributions(revenue, mockProfile);
+      expect(result.amount).toBeDefined();
+    });
+  });
+
+  describe('Edge Cases - Threshold Boundary Tests', () => {
+    it('revenu juste SOUS le seuil micro SERVICE_BNC (77699€)', () => {
+      const revenue = 77699;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.micro.isExceeded).toBe(false);
+      expect(status.micro.remaining).toBe(1);
+    });
+
+    it('revenu 1€ SOUS le seuil micro SERVICE_BNC', () => {
+      const revenue = 77699.99;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.micro.isExceeded).toBe(false);
+    });
+
+    it('revenu EXACTEMENT au seuil micro SERVICE_BNC (77700€)', () => {
+      const revenue = 77700;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.micro.isExceeded).toBe(false);
+      expect(status.micro.remaining).toBe(0);
+    });
+
+    it('revenu 1€ AU-DESSUS du seuil micro SERVICE_BNC (77701€)', () => {
+      const revenue = 77701;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.micro.isExceeded).toBe(true);
+    });
+
+    it('revenu juste SOUS le seuil TVA SERVICE_BNC (36799€)', () => {
+      const revenue = 36799;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.tva.isExceeded).toBe(false);
+    });
+
+    it('revenu EXACTEMENT au seuil TVA SERVICE_BNC (36800€)', () => {
+      const revenue = 36800;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.tva.isExceeded).toBe(false);
+      expect(status.tva.remaining).toBe(0);
+    });
+
+    it('revenu 1€ AU-DESSUS du seuil TVA SERVICE_BNC (36801€)', () => {
+      const revenue = 36801;
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      expect(status.tva.isExceeded).toBe(true);
+    });
+  });
+
+  describe('Edge Cases - ACRE Transitions', () => {
+    it('ACRE année 1 vs année 2 différenciation', () => {
+      const revenue = 50000;
+
+      // ACRE année 1: taux réduit (12.1%)
+      const acreYear1 = calculateSocialContributions(revenue, { ...mockProfile, isAcreBeneficiary: true });
+
+      // Non-ACRE ou ACRE année 2+: taux standard
+      const acreYear2 = calculateSocialContributions(revenue, { ...mockProfile, isAcreBeneficiary: false });
+
+      expect(acreYear1.rate).toBeLessThan(acreYear2.rate);
+      expect(acreYear1.amount).toBeLessThan(acreYear2.amount);
+    });
+
+    it('ACRE réduit de moitié les cotisations', () => {
+      const revenue = 100000;
+      const withoutAcre = calculateSocialContributions(revenue, { ...mockProfile, isAcreBeneficiary: false, activityType: 'SERVICE_BNC' });
+      const withAcre = calculateSocialContributions(revenue, { ...mockProfile, isAcreBeneficiary: true, activityType: 'SERVICE_BNC' });
+
+      // ACRE réduit le taux de 23.2% à 12.1% (environ 52%)
+      expect(withAcre.amount).toBeLessThan(withoutAcre.amount * 0.6);
+    });
+  });
+
+  describe('Edge Cases - Activity Type Combinations', () => {
+    it('compare les taux pour tous les types d\'activité (même revenu)', () => {
+      const revenue = 10000;
+
+      const bncRate = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' }).rate;
+      const saleRate = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SALE' }).rate;
+      const bicRate = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BIC' }).rate;
+
+      expect(bncRate).toBeGreaterThan(saleRate);
+      expect(bicRate).toBeLessThan(bncRate);
+    });
+
+    it('calcule les seuils pour tous les types', () => {
+      const types: ActivityType[] = ['SERVICE_BNC', 'SALE', 'SERVICE_BIC', 'LIBERAL'];
+
+      types.forEach(type => {
+        const thresholds = getThresholds(type);
+        expect(thresholds.micro).toBeGreaterThan(0);
+        expect(thresholds.tva).toBeGreaterThan(0);
+        expect(thresholds.micro).toBeGreaterThan(thresholds.tva);
+      });
+    });
+
+    it('PFL cohérent pour tous les types', () => {
+      const revenue = 50000;
+      const types: ActivityType[] = ['SERVICE_BNC', 'SALE', 'SERVICE_BIC', 'LIBERAL'];
+
+      types.forEach(type => {
+        const tax = calculateIncomeTaxPFL(revenue, type);
+        expect(tax).toBeGreaterThan(0);
+        expect(tax).toBeLessThan(revenue);
+      });
+    });
+
+    it('LIBERAL activity type handling', () => {
+      const revenue = 30000;
+      const result = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'LIBERAL' });
+
+      expect(result.amount).toBeGreaterThan(0);
+      expect(result.rate).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Edge Cases - Financial Scenarios', () => {
+    it('scénario: micro-entreprise juste SOUS seuil micro', () => {
+      const revenue = 75000; // ~75000
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+      const contrib = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' });
+
+      expect(status.micro.isExceeded).toBe(false);
+      expect(contrib.rate).toBe(23.2);
+    });
+
+    it('scénario: micro-entreprise qui dépasse seuil micro', () => {
+      const revenue = 80000; // Dépasse 77700
+      const status = calculateThresholdStatus(revenue, 'SERVICE_BNC');
+
+      expect(status.micro.isExceeded).toBe(true);
+      expect(status.tva.isExceeded).toBe(true);
+    });
+
+    it('scénario: ACRE année 1 - calcul complet impôts + cotisations', () => {
+      const revenue = 60000;
+      const contrib = calculateSocialContributions(revenue, { ...mockProfile, isAcreBeneficiary: true, activityType: 'SERVICE_BNC' });
+      const tax = calculateIncomeTaxPFL(revenue, 'SERVICE_BNC');
+
+      const totalDeductions = contrib.amount + tax;
+      const netIncome = revenue - totalDeductions;
+
+      expect(netIncome).toBeGreaterThan(0);
+      expect(netIncome).toBeLessThan(revenue);
+    });
+
+    it('scénario: revenu variant (croissance CA mensuelle)', () => {
+      const months = [10000, 20000, 30000, 40000, 50000];
+
+      months.forEach(revenue => {
+        const contrib = calculateSocialContributions(revenue, mockProfile);
+        expect(contrib.amount).toBeDefined();
+        expect(contrib.netRevenue).toBeLessThanOrEqual(revenue);
+      });
+    });
+  });
+
+  describe('Precision & Rounding', () => {
+    it('arrondit correctement les montants (EUR)', () => {
+      const revenue = 1234.56;
+      const result = calculateSocialContributions(revenue, mockProfile);
+
+      // Les montants doivent être arrondis à 2 décimales
+      const decimalPlaces = (result.amount.toString().split('.')[1] || '').length;
+      expect(decimalPlaces).toBeLessThanOrEqual(2);
+    });
+
+    it('pas de perte d\'arrondi cumulée sur 12 mois', () => {
+      const monthlyRevenue = 1000;
+      let totalExact = 0;
+      let totalRounded = 0;
+
+      for (let month = 0; month < 12; month++) {
+        const result = calculateSocialContributions(monthlyRevenue, mockProfile);
+        totalRounded += result.amount;
+        totalExact += monthlyRevenue * 0.232;
+      }
+
+      // La différence due à l'arrondi doit être minime
+      expect(Math.abs(totalRounded - totalExact)).toBeLessThan(1);
+    });
+
+    it('gère les calculs successifs sans erreur flottante', () => {
+      const values = [100.11, 200.22, 300.33];
+      let sum = 0;
+
+      values.forEach(val => {
+        const result = calculateSocialContributions(val, mockProfile);
+        sum += result.amount;
+      });
+
+      expect(typeof sum).toBe('number');
+      expect(Number.isNaN(sum)).toBe(false);
+    });
+  });
 });

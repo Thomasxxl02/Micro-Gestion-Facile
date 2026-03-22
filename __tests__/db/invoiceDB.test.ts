@@ -285,6 +285,289 @@ describe('InvoiceDB - Dexie Database', () => {
   });
 
   // ============================================================================
+  // SUPPLIERS TABLE
+  // ============================================================================
+
+  describe('suppliers table', () => {
+    const mockSupplier = {
+      id: 'sup-1',
+      name: 'Fournisseur SARL',
+      email: 'contact@supplier.fr',
+      phone: '0102030405',
+      address: '789 Rue de Marseille',
+      siret: '55555555555555',
+      archived: false,
+    };
+
+    it('crée un fournisseur', async () => {
+      await db.suppliers.add(mockSupplier);
+      const supplier = await db.suppliers.get('sup-1');
+      expect(supplier?.name).toBe('Fournisseur SARL');
+    });
+
+    it('filtre les fournisseurs actifs', async () => {
+      await db.suppliers.add(mockSupplier);
+      await db.suppliers.add({ ...mockSupplier, id: 'sup-2', archived: true });
+      const all = await db.suppliers.toArray();
+      const active = all.filter(s => s.archived === false);
+      expect(active).toHaveLength(1);
+    });
+
+    it('met à jour un fournisseur', async () => {
+      await db.suppliers.add(mockSupplier);
+      await db.suppliers.update('sup-1', { email: 'newemail@supplier.fr' });
+      const updated = await db.suppliers.get('sup-1');
+      expect(updated?.email).toBe('newemail@supplier.fr');
+    });
+
+    it('supprime un fournisseur', async () => {
+      await db.suppliers.add(mockSupplier);
+      await db.suppliers.delete('sup-1');
+      const deleted = await db.suppliers.get('sup-1');
+      expect(deleted).toBeUndefined();
+    });
+  });
+
+  // ============================================================================
+  // PRODUCTS TABLE
+  // ============================================================================
+
+  describe('products table', () => {
+    const mockProduct = {
+      id: 'prod-1',
+      name: 'Produit A',
+      category: 'Services',
+      archived: false,
+    };
+
+    it('crée un produit', async () => {
+      await db.products.add(mockProduct);
+      const product = await db.products.get('prod-1');
+      expect(product?.name).toBe('Produit A');
+    });
+
+    it('filtre par catégorie', async () => {
+      await db.products.add(mockProduct);
+      await db.products.add({ ...mockProduct, id: 'prod-2', category: 'Matériel' });
+      const services = await db.products.where('category').equals('Services').toArray();
+      expect(services).toHaveLength(1);
+    });
+
+    it('liste les produits actifs', async () => {
+      await db.products.add(mockProduct);
+      await db.products.add({ ...mockProduct, id: 'prod-2', archived: true });
+      const active = (await db.products.toArray()).filter(p => !p.archived);
+      expect(active).toHaveLength(1);
+    });
+  });
+
+  // ============================================================================
+  // EXPENSES TABLE
+  // ============================================================================
+
+  describe('expenses table', () => {
+    const mockExpense = {
+      id: 'exp-1',
+      supplierId: 'sup-1',
+      date: '2026-03-21',
+      category: 'Fournitures',
+      amount: 150,
+      description: 'Achat fournitures',
+    };
+
+    beforeEach(async () => {
+      await db.suppliers.add({
+        id: 'sup-1',
+        name: 'Fournisseur',
+        email: 'test@supplier.fr',
+        phone: '',
+        address: '',
+        siret: '',
+        archived: false,
+      });
+    });
+
+    it('crée une dépense', async () => {
+      await db.expenses.add(mockExpense);
+      const expense = await db.expenses.get('exp-1');
+      expect(expense?.amount).toBe(150);
+    });
+
+    it('filtre par fournisseur', async () => {
+      await db.expenses.add(mockExpense);
+      await db.expenses.add({ ...mockExpense, id: 'exp-2', supplierId: 'sup-2' });
+      const supplier1 = await db.expenses.where('supplierId').equals('sup-1').toArray();
+      expect(supplier1).toHaveLength(1);
+    });
+
+    it('filtre par catégorie', async () => {
+      await db.expenses.add(mockExpense);
+      await db.expenses.add({ ...mockExpense, id: 'exp-2', category: 'Déplacements' });
+      const supplies = await db.expenses.where('category').equals('Fournitures').toArray();
+      expect(supplies).toHaveLength(1);
+    });
+  });
+
+  // ============================================================================
+  // EXPORT DATA
+  // ============================================================================
+
+  describe('exportData method', () => {
+    it('exporte toutes les tables en JSON', async () => {
+      await db.invoices.add({
+        id: 'inv-1',
+        number: 'FAC-001',
+        date: '2026-03-21',
+        dueDate: '2026-04-21',
+        clientId: 'cli-1',
+        items: [],
+        total: 1000,
+        status: 'draft',
+        type: 'invoice',
+      });
+
+      await db.clients.add({
+        id: 'cli-1',
+        name: 'Client Test',
+        email: 'test@test.fr',
+        phone: '',
+        address: '',
+        siret: '',
+        archived: false,
+      });
+
+      const exported = await db.exportData();
+
+      expect(exported.invoices).toBeDefined();
+      expect(exported.clients).toBeDefined();
+      expect(Array.isArray(exported.invoices)).toBe(true);
+      expect(Array.isArray(exported.clients)).toBe(true);
+      expect((exported.invoices as any[]).length).toBe(1);
+      expect((exported.clients as any[]).length).toBe(1);
+    });
+
+    it('exporte des données vides si la base est vide', async () => {
+      const exported = await db.exportData();
+
+      expect(Array.isArray(exported.invoices)).toBe(true);
+      expect((exported.invoices as any[]).length).toBe(0);
+    });
+
+    it('exporte correctement Decimal.js amounts', async () => {
+      await db.invoices.add({
+        id: 'inv-decimal',
+        number: 'FAC-DEC',
+        date: '2026-03-21',
+        dueDate: '2026-04-21',
+        clientId: 'cli-1',
+        items: [],
+        total: 1234.56,
+        status: 'draft',
+        type: 'invoice',
+      });
+
+      const exported = await db.exportData();
+      const invoice = (exported.invoices as any[])[0];
+
+      expect(invoice.total).toBe(1234.56);
+    });
+  });
+
+  // ============================================================================
+  // CALENDAR EVENTS
+  // ============================================================================
+
+  describe('calendarEvents table', () => {
+    const mockEvent = {
+      id: 'evt-1',
+      clientId: 'cli-1',
+      invoiceId: 'inv-1',
+      start: '2026-04-01T10:00:00Z',
+      type: 'follow_up',
+      title: 'Suivi client',
+      description: 'Appel de suivi',
+    };
+
+    it('crée un événement calendrier', async () => {
+      await db.calendarEvents.add(mockEvent);
+      const event = await db.calendarEvents.get('evt-1');
+      expect(event?.title).toBe('Suivi client');
+    });
+
+    it('filtre par client', async () => {
+      await db.calendarEvents.add(mockEvent);
+      await db.calendarEvents.add({ ...mockEvent, id: 'evt-2', clientId: 'cli-2' });
+      const client1Events = await db.calendarEvents.where('clientId').equals('cli-1').toArray();
+      expect(client1Events).toHaveLength(1);
+    });
+
+    it('filtre par facture', async () => {
+      await db.calendarEvents.add(mockEvent);
+      await db.calendarEvents.add({ ...mockEvent, id: 'evt-2', invoiceId: 'inv-2' });
+      const inv1Events = await db.calendarEvents.where('invoiceId').equals('inv-1').toArray();
+      expect(inv1Events).toHaveLength(1);
+    });
+  });
+
+  // ============================================================================
+  // EMAIL TEMPLATES
+  // ============================================================================
+
+  describe('emailTemplates table', () => {
+    const mockTemplate = {
+      id: 'tpl-1',
+      type: 'invoice_reminder',
+      name: 'Rappel facture',
+      subject: 'Facture en attente',
+      body: 'Nous vous rappelons...',
+    };
+
+    it('crée un template email', async () => {
+      await db.emailTemplates.add(mockTemplate);
+      const template = await db.emailTemplates.get('tpl-1');
+      expect(template?.name).toBe('Rappel facture');
+    });
+
+    it('récupère templates par type', async () => {
+      await db.emailTemplates.add(mockTemplate);
+      await db.emailTemplates.add({
+        ...mockTemplate,
+        id: 'tpl-2',
+        type: 'invoice_sent',
+      });
+      const reminders = await db.emailTemplates.where('type').equals('invoice_reminder').toArray();
+      expect(reminders).toHaveLength(1);
+    });
+  });
+
+  // ============================================================================
+  // CHAT MESSAGES
+  // ============================================================================
+
+  describe('chatMessages table', () => {
+    const mockMessage = {
+      id: 'msg-1',
+      timestamp: Date.now(),
+      role: 'user',
+      content: 'Bonjour',
+    };
+
+    it('crée un message chat', async () => {
+      await db.chatMessages.add(mockMessage);
+      const msg = await db.chatMessages.get('msg-1');
+      expect(msg?.content).toBe('Bonjour');
+    });
+
+    it('liste messages par timestamp', async () => {
+      const now = Date.now();
+      await db.chatMessages.add({ ...mockMessage, timestamp: now - 1000 });
+      await db.chatMessages.add({ ...mockMessage, id: 'msg-2', timestamp: now });
+      const messages = await db.chatMessages.where('timestamp').above(now - 2000).toArray();
+      expect(messages.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  // ============================================================================
   // CLEAR & RESET
   // ============================================================================
 
