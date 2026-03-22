@@ -1,10 +1,10 @@
-## 🧪 Guide des Tests d'Intégration - Flux Client
+# 🧪 Guide des Tests d'Intégration - Flux Client
 
 Ce document explique comment exécuter et étendre les tests d'intégration pour le flux complet de gestion des clients.
 
-### 📁 Structure des Tests
+## 📁 Structure des Tests
 
-```
+```text
 __tests__/
 ├── integration/
 │   ├── clientFlowIntegration.test.ts    # Suite principale des tests d'intégration
@@ -14,104 +14,125 @@ __tests__/
     └── useEntity.test.ts                 # Tests unitaires des hooks
 ```
 
-### 🎯 Objectifs des Tests d'Intégration
+## 🎯 Objectifs des Tests d'Intégration
 
 Les tests d'intégration `clientFlowIntegration.test.ts` testent **l'interaction complète** entre:
 
 | Couche | Rôle |
-|--------|------|
+| --- | --- |
 | **useEntityForm Hook** | Gestion du formulaire (créer, éditer, mettre à jour les champs) |
 | **appStore (Zustand)** | État global en mémoire des clients |
 | **IndexedDB (Dexie)** | Persistance des données côté client |
 | **useEntityFilters Hook** | Filtrage, recherche et tri des listes |
 
-### 📋 Scénarios Testés
+## 📋 Scénarios Testés
 
-#### 1️⃣ **Create → Store → Persist**
-```
+### 1️⃣ Create → Store → Persist
+
+```text
 Créer formulaire → Remplir les champs → Sauvegarder en mémoire → Persister en DB → Vérifier
 ```
+
 - ✅ Création simple d'un client
 - ✅ Création de plusieurs clients
 - ✅ Vérification de la persistance en IndexedDB
 
-#### 2️⃣ **Edit → Update → Sync**
-```
+### 2️⃣ Edit → Update → Sync
+
+```text
 Éditer formulaire → Modifier les champs → Mettre à jour en mémoire → Synchroniser en DB → Vérifier
 ```
+
 - ✅ Modification de champs
 - ✅ Synchronisation bidirectionnelle (store ↔ IndexedDB)
 - ✅ État d'édition cohérent
 
-#### 3️⃣ **List → Filter → Display**
-```
+### 3️⃣ List → Filter → Display
+
+```text
 Charger clients en mémoire → Appliquer filtres → Vérifier résultats
 ```
+
 - ✅ Lister tous les clients (actifs + archivés)
 - ✅ Filtrer par statut d'archivage
 - ✅ Rechercher par nom
 - ✅ Trier par colonne
 - ✅ Combiner filtres + recherche + tri
 
-#### 4️⃣ **Archive → Filter Sync**
-```
+### 4️⃣ Archive → Filter Sync
+
+```text
 Archiver client → Mettre à jour filtres → Vérifier masquage/affichage
 ```
+
 - ✅ Archivage change le statut
 - ✅ Filtres s'appliquent correctement
 - ✅ Affichage des archivés sur demande
 
-#### 5️⃣ **Persistence Verification**
-```
+### 5️⃣ Persistence Verification
+
+```text
 Sauvegarder en DB → Réinitialiser store → Charger depuis DB → Vérifier intégrité
 ```
+
 - ✅ Les données persistent après réinitialisation
 - ✅ Gestion de charges importantes (100+ clients)
 
-#### 6️⃣ **Concurrent Operations**
-```
+### 6️⃣ Concurrent Operations
+
+```text
 Éditer client 1 → Éditer client 2 → Synchroniser les deux → Vérifier intégrité
 ```
+
 - ✅ Éditions simultanées sans conflit
 
-### 🚀 Comment Exécuter les Tests
+## 🚀 Comment Exécuter les Tests
 
-#### Exécuter tous les tests d'intégration
+### Exécuter tous les tests d'intégration
+
 ```bash
 npm run test -- __tests__/integration/
 ```
 
-#### Exécuter un scénario spécifique
+### Exécuter un scénario spécifique
+
 ```bash
 npm run test -- __tests__/integration/clientFlowIntegration.test.ts -t "Create → Store → Persist"
 ```
 
-#### Exécuter avec couverture
+### Exécuter avec couverture
+
 ```bash
 npm run test:coverage -- __tests__/integration/
 ```
 
-#### Mode watch (développement)
+### Mode watch (développement)
+
 ```bash
 npm run test -- __tests__/integration/clientFlowIntegration.test.ts --watch
 ```
 
-#### Mode debug
+### Mode debug
+
 ```bash
 node --inspect-brk node_modules/vitest/vitest.mjs run __tests__/integration/clientFlowIntegration.test.ts
 ```
 
-### 🔧 Configuration Requise
+## 🔧 Configuration Requise
 
-#### 1️⃣ `vitest.setup.ts`
+### 1️⃣ vitest.setup.ts
+
 Doit inclure le setup Dexie:
+
 ```typescript
 import { setupDexieForTests } from './__tests__/integration/dexieIntegrationSetup';
 setupDexieForTests();
 ```
 
-#### 2️⃣ `vite.config.ts` ou `vitest.config.ts`
+### 2️⃣ vite.config.ts ou vitest.config.ts
+
 Doit utiliser `jsdom` comme environnement de test (supporte IndexedDB):
+
 ```typescript
 export default defineConfig({
   test: {
@@ -121,12 +142,14 @@ export default defineConfig({
 });
 ```
 
-#### 3️⃣ Types TypeScript
+### 3️⃣ Types TypeScript
+
 S'assurer que les types `Client`, `Invoice`, etc. sont disponibles depuis `types.ts`.
 
-### 🛠️ Ajuster les Tests pour Votre Contexte
+## 🛠️ Ajuster les Tests pour Votre Contexte
 
-#### Modifier les données de test (fixtures)
+### Modifier les données de test (fixtures)
+
 Dans `clientFlowIntegration.test.ts`, au début du fichier:
 
 ```typescript
@@ -138,7 +161,8 @@ const mockNewClient: Omit<Client, 'id'> = {
 };
 ```
 
-#### Ajouter un nouveau scénario
+### Ajouter un nouveau scénario
+
 ```typescript
 describe('Scenario 7: Mon Nouveau Scénario', () => {
   it('fait quelque chose de spécifique', async () => {
@@ -159,12 +183,12 @@ describe('Scenario 7: Mon Nouveau Scénario', () => {
 });
 ```
 
-### 🧰 Helpers Disponibles
+## 🧰 Helpers Disponibles
 
 Tous les helpers sont définis dans `clientFlowIntegration.test.ts`:
 
 | Helper | Signature | Rôle |
-|--------|-----------|------|
+| --- | --- | --- |
 | `createClientWithId` | `(data: Omit<Client, 'id'>, id?: string) => Client` | Crée un client avec ID |
 | `saveClientToDb` | `(client: Client) => Promise<void>` | Persiste en IndexedDB |
 | `getClientFromDb` | `(id: string) => Promise<Client \| undefined>` | Récupère depuis IndexedDB |
@@ -172,12 +196,13 @@ Tous les helpers sont définis dans `clientFlowIntegration.test.ts`:
 | `resetDatabase` | `() => Promise<void>` | Réinitialise IndexedDB |
 
 Utility supplémentaires (dans `dexieIntegrationSetup.ts`):
+
 - `setupDexieForTests()` - Initialise Dexie
 - `clearDatabase(db)` - Vide toutes les tables
 - `isTableEmpty(db, tableName)` - Vérifie si une table est vide
 - `exportTableData(db, tableName)` - Exporte les données (debug)
 
-### 📊 Métriques et Couverture
+## 📊 Métriques et Couverture
 
 Après exécution, vérifier:
 
@@ -190,30 +215,36 @@ npm run test:coverage -- __tests__/integration/
 # invoiceDB.ts        : 70%+ (DB context)
 ```
 
-### 🐛 Troubleshooting
+## 🐛 Troubleshooting
 
-#### ❌ `ReferenceError: indexedDB is not defined`
+### ❌ ReferenceError: indexedDB is not defined
+
 **Solution:** Vérifier que `vitest.config.ts` utilise `environment: 'jsdom'`
 
-#### ❌ `Database "MicroGestionFacile" is not available`
+### ❌ Database "MicroGestionFacile" is not available
+
 **Solution:** Ajouter un timeout dans `waitForDatabase()`:
+
 ```typescript
 // Dans les tests
 await waitForDatabase(db, 10000); // 10 secondes
 ```
 
-#### ❌ `Dexie.connections` vide après les tests
+### ❌ Dexie.connections vide après les tests
+
 **Solution:** Le cleanup de `dexieIntegrationSetup.ts` fonctionne mal. Vérifier que `setupDexieForTests()` est appelé dans `vitest.setup.ts`
 
-#### ❌ Les données persistant d'un test à l'autre
+### ❌ Les données persistant d'un test à l'autre
+
 **Solution:** Vérifier que `resetDatabase()` est appelé dans le `beforeEach`:
+
 ```typescript
 beforeEach(async () => {
   await resetDatabase(); // ← Obligatoire
 });
 ```
 
-### 📈 Étapes Suivantes
+## 📈 Étapes Suivantes
 
 1. **Ajouter des tests pour d'autres entities:**
    - `invoiceFlowIntegration.test.ts` (crée facture → calcule totaux → persiste)
@@ -232,7 +263,7 @@ beforeEach(async () => {
    - Utiliser Playwright ou Cypress
    - Tester le flux complet à travers l'interface utilisateur
 
-### 📚 Ressources Connexes
+## 📚 Ressources Connexes
 
 - [TEST_COVERAGE_ANALYSIS_2026-03-21.md](../../TEST_COVERAGE_ANALYSIS_2026-03-21.md) - Analyse détaillée de la couverture
 - [TEST_IMPLEMENTATION_TEMPLATES.md](../../TEST_IMPLEMENTATION_TEMPLATES.md) - Templates de code
