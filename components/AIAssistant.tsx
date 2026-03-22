@@ -8,6 +8,7 @@ const AIAssistant: React.FC = () => {
     const { invoices, clients, userProfile } = useAppStore();
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
+            id: 'msg-0',
             role: 'model',
             content: "Bonjour ! Je suis votre assistant administratif virtuel. Je peux vous aider avec vos questions sur le statut auto-entrepreneur, les déclarations URSSAF, ou la rédaction de courriers. Comment puis-je vous aider aujourd'hui ?",
             timestamp: Date.now()
@@ -16,6 +17,7 @@ const AIAssistant: React.FC = () => {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [messageIdCounter, setMessageIdCounter] = useState(1);
     const [complianceResults, setComplianceResults] = useState<{ isCompliant: boolean; issues: string[]; suggestions: string[] } | null>(null);
     const [cashflowPrediction, setCashflowPrediction] = useState<{ predictedBalance: number; confidence: number; analysis: string; riskLevel: string } | null>(null);
 
@@ -23,6 +25,27 @@ const AIAssistant: React.FC = () => {
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    // Helper functions to reduce complexity
+    const getRiskLevelColor = (riskLevel: string): string => {
+        if (riskLevel === 'low') {
+            return 'bg-green-100 text-green-700';
+        }
+        if (riskLevel === 'medium') {
+            return 'bg-amber-100 text-amber-700';
+        }
+        return 'bg-red-100 text-red-700';
+    };
+
+    const getRiskLevelLabel = (riskLevel: string): string => {
+        if (riskLevel === 'low') {
+            return 'Faible';
+        }
+        if (riskLevel === 'medium') {
+            return 'Modéré';
+        }
+        return 'Élevé';
     };
 
     useEffect(() => {
@@ -56,25 +79,94 @@ const AIAssistant: React.FC = () => {
         performDeepAnalysis();
     }, [invoices, clients, userProfile]); // Include dependencies for analysis
 
-    const handleSend = async (e?: React.FormEvent) => {
+    const handleSend = async (e?: React.SyntheticEvent<HTMLFormElement>) => {
         e?.preventDefault();
         if (!input.trim() || isLoading) {
             return;
         }
 
-        const userMsg: ChatMessage = { role: 'user', content: input, timestamp: Date.now() };
+        const userMsg: ChatMessage = { id: `msg-${messageIdCounter}`, role: 'user', content: input, timestamp: Date.now() };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setIsLoading(true);
+        setMessageIdCounter(prev => prev + 1);
 
         // Build context from last few messages
         const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
 
         const responseText = await generateAssistantResponse(userMsg.content, context);
 
-        const modelMsg: ChatMessage = { role: 'model', content: responseText, timestamp: Date.now() };
+        const modelMsg: ChatMessage = { id: `msg-${messageIdCounter + 1}`, role: 'model', content: responseText, timestamp: Date.now() };
         setMessages(prev => [...prev, modelMsg]);
         setIsLoading(false);
+        setMessageIdCounter(prev => prev + 2);
+    };
+
+    const renderCashflowCard = () => {
+        if (isAnalyzing) {
+            return (
+                <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
+                    <Loader2 size={16} className="animate-spin" />
+                    Calcul en cours...
+                </div>
+            );
+        }
+        if (cashflowPrediction) {
+            return (
+                <div>
+                    <p className="text-2xl font-black text-brand-900">
+                        {cashflowPrediction.predictedBalance >= 0 ? '+' : ''}{cashflowPrediction.predictedBalance.toLocaleString()}€
+                    </p>
+                    <p className="text-xs text-brand-500 mt-1 mb-3">{cashflowPrediction.analysis}</p>
+                    <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${getRiskLevelColor(cashflowPrediction.riskLevel)}`}>
+                            Risque {getRiskLevelLabel(cashflowPrediction.riskLevel)}
+                        </span>
+                        <span className="text-[10px] text-brand-400">Fiabilité : {(cashflowPrediction.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                </div>
+            );
+        }
+        return <p className="text-sm text-brand-400">Aucune donnée de prédiction disponible.</p>;
+    };
+
+    const renderComplianceCard = () => {
+        if (isAnalyzing) {
+            return (
+                <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
+                    <Loader2 size={16} className="animate-spin" />
+                    Vérification des factures...
+                </div>
+            );
+        }
+        if (complianceResults) {
+            return (
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        {complianceResults.isCompliant ? (
+                            <CheckCircle size={18} className="text-green-500" />
+                        ) : (
+                            <AlertTriangle size={18} className="text-amber-500" />
+                        )}
+                        <span className={`font-bold text-sm ${complianceResults.isCompliant ? 'text-green-600' : 'text-amber-600'}`}>
+                            {complianceResults.isCompliant ? 'Dernière facture conforme' : `${complianceResults.issues.length} points à vérifier`}
+                        </span>
+                    </div>
+                    {complianceResults.issues.length > 0 && (
+                        <ul className="text-[11px] text-brand-600 space-y-1 mb-2 bg-brand-50/50 p-2 rounded-lg">
+                            {complianceResults.issues.slice(0, 2).map((issue) => (
+                                <li key={issue.substring(0, 20)} className="flex gap-2">
+                                    <span className="text-brand-300">•</span>
+                                    {issue}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    <p className="text-[10px] text-brand-400 italic">Basé sur la dernière facture émise.</p>
+                </div>
+            );
+        }
+        return <p className="text-sm text-brand-400">Pas encore de factures à analyser.</p>;
     };
 
   return (
@@ -111,30 +203,7 @@ const AIAssistant: React.FC = () => {
                     </div>
                     <h3 className="font-bold text-brand-900">Prédiction Trésorerie (30j)</h3>
                 </div>
-                {isAnalyzing ? (
-                    <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
-                        <Loader2 size={16} className="animate-spin" />
-                        Calcul en cours...
-                    </div>
-                ) : cashflowPrediction ? (
-                    <div>
-                        <p className="text-2xl font-black text-brand-900">
-                            {cashflowPrediction.predictedBalance >= 0 ? '+' : ''}{cashflowPrediction.predictedBalance.toLocaleString()}€
-                        </p>
-                        <p className="text-xs text-brand-500 mt-1 mb-3">{cashflowPrediction.analysis}</p>
-                        <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${
-                                cashflowPrediction.riskLevel === 'low' ? 'bg-green-100 text-green-700' :
-                                cashflowPrediction.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                            }`}>
-                                Risque {cashflowPrediction.riskLevel === 'low' ? 'Faible' : cashflowPrediction.riskLevel === 'medium' ? 'Modéré' : 'Élevé'}
-                            </span>
-                            <span className="text-[10px] text-brand-400">Fiabilité : {(cashflowPrediction.confidence * 100).toFixed(0)}%</span>
-                        </div>
-                    </div>
-                ) : (
-                    <p className="text-sm text-brand-400">Aucune donnée de prédiction disponible.</p>
-                )}
+                {renderCashflowCard()}
             </div>
 
             {/* Compliance Alert Card */}
@@ -148,44 +217,13 @@ const AIAssistant: React.FC = () => {
                     </div>
                     <h3 className="font-bold text-brand-900">Conformité Légale (Auto-Audit)</h3>
                 </div>
-                {isAnalyzing ? (
-                    <div className="flex items-center gap-2 text-brand-400 text-sm py-4 animate-pulse">
-                        <Loader2 size={16} className="animate-spin" />
-                        Vérification des factures...
-                    </div>
-                ) : complianceResults ? (
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            {complianceResults.isCompliant ? (
-                                <CheckCircle size={18} className="text-green-500" />
-                            ) : (
-                                <AlertTriangle size={18} className="text-amber-500" />
-                            )}
-                            <span className={`font-bold text-sm ${complianceResults.isCompliant ? 'text-green-600' : 'text-amber-600'}`}>
-                                {complianceResults.isCompliant ? 'Dernière facture conforme' : `${complianceResults.issues.length} points à vérifier`}
-                            </span>
-                        </div>
-                        {complianceResults.issues.length > 0 && (
-                            <ul className="text-[11px] text-brand-600 space-y-1 mb-2 bg-brand-50/50 p-2 rounded-lg">
-                                {complianceResults.issues.slice(0, 2).map((issue, i) => (
-                                    <li key={i} className="flex gap-2">
-                                        <span className="text-brand-300">•</span>
-                                        {issue}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                        <p className="text-[10px] text-brand-400 italic">Basé sur la dernière facture émise.</p>
-                    </div>
-                ) : (
-                    <p className="text-sm text-brand-400">Pas encore de factures à analyser.</p>
-                )}
+                {renderComplianceCard()}
             </div>
         </div>
 
-        {messages.map((msg, idx) => (
+        {messages.map((msg) => (
           <div
-            key={idx}
+            key={msg.id || `msg-${msg.timestamp}`}
             className={`flex items-start gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div className={`
