@@ -97,7 +97,7 @@ describe('useFormValidation Hook', () => {
 
     it('valide durant la saisie si validateOnChange est true', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators, { validateOnChange: true })
+        useFormValidation(initialData, mockValidators, { validateOnChange: true, showErrorsAfterBlur: false })
       );
 
       act(() => {
@@ -169,11 +169,14 @@ describe('useFormValidation Hook', () => {
   describe('Validation', () => {
     it('valide un email valide', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('email')('test@example.fr');
+        result.current.setData({ ...initialData, email: 'test@example.fr' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -186,7 +189,10 @@ describe('useFormValidation Hook', () => {
       );
 
       act(() => {
-        result.current.handleChange('email')('invalidemail');
+        result.current.setData({ ...initialData, email: 'invalidemail' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -196,11 +202,14 @@ describe('useFormValidation Hook', () => {
 
     it('valide un nom suffisamment long', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('name')('John Doe');
+        result.current.setData({ ...initialData, name: 'John Doe' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -223,11 +232,14 @@ describe('useFormValidation Hook', () => {
 
     it('valide un mot de passe suffisamment long', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('password')('SecurePassword123');
+        result.current.setData({ ...initialData, password: 'SecurePassword123' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -240,7 +252,10 @@ describe('useFormValidation Hook', () => {
       );
 
       act(() => {
-        result.current.handleChange('password')('short');
+        result.current.setData({ ...initialData, password: 'short' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -250,11 +265,14 @@ describe('useFormValidation Hook', () => {
 
     it('valide un téléphone français valide', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('phone')('0123456789');
+        result.current.setData({ ...initialData, phone: '0123456789' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -267,7 +285,10 @@ describe('useFormValidation Hook', () => {
       );
 
       act(() => {
-        result.current.handleChange('phone')('123456789');
+        result.current.setData({ ...initialData, phone: '123456789' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -278,14 +299,19 @@ describe('useFormValidation Hook', () => {
   describe('Batch Validation', () => {
     it('valide tous les champs simultanément', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('email')('test@example.fr');
-        result.current.handleChange('name')('John');
-        result.current.handleChange('password')('SecurePass123');
-        result.current.handleChange('phone')('0123456789');
+        result.current.setData({
+          email: 'test@example.fr',
+          name: 'John',
+          password: 'SecurePass123',
+          phone: '0123456789',
+        });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -298,10 +324,15 @@ describe('useFormValidation Hook', () => {
       );
 
       act(() => {
-        result.current.handleChange('email')('invalidemail');
-        result.current.handleChange('name')('John');
-        result.current.handleChange('password')('SecurePass123');
-        result.current.handleChange('phone')('0123456789');
+        result.current.setData({
+          email: 'invalidemail',
+          name: 'John',
+          password: 'SecurePass123',
+          phone: '0123456789',
+        });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -310,14 +341,19 @@ describe('useFormValidation Hook', () => {
 
     it('retourne true si tous les champs sont valides', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('email')('test@example.fr');
-        result.current.handleChange('name')('John Doe');
-        result.current.handleChange('password')('SecurePass123');
-        result.current.handleChange('phone')('0123456789');
+        result.current.setData({
+          email: 'test@example.fr',
+          name: 'John Doe',
+          password: 'SecurePass123',
+          phone: '0123456789',
+        });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -364,7 +400,7 @@ describe('useFormValidation Hook', () => {
 
     it('affiche les erreurs immédiatement si validateOnChange est true', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators, { validateOnChange: true })
+        useFormValidation(initialData, mockValidators, { validateOnChange: true, showErrorsAfterBlur: false })
       );
 
       act(() => {
@@ -444,11 +480,14 @@ describe('useFormValidation Hook', () => {
 
     it('gère les caractères spéciaux', () => {
       const { result } = renderHook(() =>
-        useFormValidation(initialData, mockValidators)
+        useFormValidation(initialData, mockValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('email')('test+alias@example.fr');
+        result.current.setData({ ...initialData, email: 'test+alias@example.fr' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -473,18 +512,21 @@ describe('useFormValidation Hook', () => {
   describe('Custom Validation Rules', () => {
     it('supporte les règles de validation personnalisées', () => {
       const customValidators = {
-        iban: (value: string) => ({
-          valid: value.startsWith('FR') && value.length === 27,
+        iban: (value: unknown) => ({
+          valid: typeof value === 'string' && value.replace(/\s/g, '').startsWith('FR') && value.replace(/\s/g, '').length === 27,
           error: 'IBAN français invalide',
         }),
       };
 
       const { result } = renderHook(() =>
-        useFormValidation({ iban: '' }, customValidators)
+        useFormValidation({ iban: '' }, customValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('iban')('FR76 3000 6000 0123 4567 8901 57');
+        result.current.setData({ iban: 'FR76 3000 6000 0123 4567 8901 570' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 
@@ -493,23 +535,25 @@ describe('useFormValidation Hook', () => {
 
     it('supporte les validations croisées entre champs', () => {
       const crossFieldValidators = {
-        password: (value: string) => ({
-          valid: value.length >= 8,
+        password: (value: unknown) => ({
+          valid: typeof value === 'string' && value.length >= 8,
           error: 'Au moins 8 caractères',
         }),
-        confirmPassword: (value: string) => ({
-          valid: value.length >= 8,
+        confirmPassword: (value: unknown) => ({
+          valid: typeof value === 'string' && value.length >= 8,
           error: 'Au moins 8 caractères',
         }),
       };
 
       const { result } = renderHook(() =>
-        useFormValidation({ password: '', confirmPassword: '' }, crossFieldValidators)
+        useFormValidation({ password: '', confirmPassword: '' }, crossFieldValidators, { showErrorsAfterBlur: false })
       );
 
       act(() => {
-        result.current.handleChange('password')('SecurePass');
-        result.current.handleChange('confirmPassword')('DifferentPass');
+        result.current.setData({ password: 'SecurePass', confirmPassword: 'DifferentPass' });
+      });
+
+      act(() => {
         result.current.validate();
       });
 

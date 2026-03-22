@@ -291,28 +291,33 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ suppliers, setSupplie
           processedSuppliers.map(supplier => {
             const stats = getSupplierStats(supplier.id);
             return (
-              <button
+              <div
                 key={supplier.id}
-                onClick={() => form.openEdit(supplier)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md cursor-pointer transition-all flex justify-between items-center w-full text-left"
+                className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
               >
-                <div className="flex-1">
-                  <h4 className="font-semibold text-brand-900 dark:text-white">{supplier.name}</h4>
-                  <p className="text-sm text-brand-500 dark:text-brand-400">{supplier.category || '—'} • {supplier.email}</p>
-                  <p className="text-xs text-brand-400 dark:text-brand-500 mt-1">
-                    Total dépensé: <span className="font-bold">{stats.totalSpent.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
-                  </p>
-                </div>
+                <button
+                  onClick={() => form.openEdit(supplier)}
+                  className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  title="Cliquez pour modifier le fournisseur"
+                >
+                  <div>
+                    <h4 className="font-semibold text-brand-900 dark:text-white">{supplier.name}</h4>
+                    <p className="text-sm text-brand-500 dark:text-brand-400">{supplier.category || '—'} • {supplier.email}</p>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-1">
+                      Total dépensé: <span className="font-bold">{stats.totalSpent.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                    </p>
+                  </div>
+                </button>
                 <div className="flex gap-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); toggleArchive(supplier.id); }}
+                    onClick={() => toggleArchive(supplier.id)}
                     title={supplier.archived ? "Restaurer le fournisseur" : "Archiver le fournisseur"}
-                    className={`p-2 rounded-lg transition-colors ${supplier.archived ? 'bg-amber-50 text-amber-600' : 'hover:bg-brand-50 text-brand-400'}`}
+                    className={`p-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${supplier.archived ? 'bg-amber-50 text-amber-600' : 'hover:bg-brand-50 text-brand-400'}`}
                   >
                     <Archive size={18} />
                   </button>
                 </div>
-              </button>
+              </div>
             );
           })
         )}

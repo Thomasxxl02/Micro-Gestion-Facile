@@ -77,10 +77,10 @@ export const useEntityFilters = <T extends Record<string, unknown>>(
     let result = [...entities];
 
     // Filtre archivés
-    if (config.hasArchive && config.archiveField) {
+    if (config.hasArchive && config.archiveField && !showArchived) {
       result = result.filter((item) => {
         const isArchived = item[config.archiveField as keyof T];
-        return showArchived ? isArchived : !isArchived;
+        return !isArchived;
       });
     }
 

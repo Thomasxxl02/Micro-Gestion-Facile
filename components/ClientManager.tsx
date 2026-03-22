@@ -293,28 +293,32 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
             return (
               <div
                 key={client.id}
-                onClick={() => form.openEdit(client)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md cursor-pointer transition-all"
+                className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <button
+                  onClick={() => form.openEdit(client)}
+                  className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  title="Cliquez pour modifier le client"
+                >
+                  <div>
                     <h4 className="font-semibold text-brand-900 dark:text-white">{client.name}</h4>
                     <div className="flex gap-4 mt-1 text-xs text-brand-600 dark:text-brand-300">
                       {client.email && <span>{client.email}</span>}
                       {client.phone && <span>{client.phone}</span>}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-accent-600 dark:text-accent-400">
-                      {stats.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                    </div>
-                    <div className="text-xs text-brand-500 dark:text-brand-400">{stats.count} facture(s)</div>
+                </button>
+                <div className="text-right mr-4">
+                  <div className="font-semibold text-accent-600 dark:text-accent-400">
+                    {stats.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
                   </div>
+                  <div className="text-xs text-brand-500 dark:text-brand-400">{stats.count} facture(s)</div>
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); toggleArchive(client.id); }}
-                    className="text-xs px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300"
+                    onClick={() => toggleArchive(client.id)}
+                    className="text-xs px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 transition-colors"
+                    title={client.archived ? "Restaurer le client" : "Archiver le client"}
                   >
                     {client.archived ? 'Restaurer' : 'Archiver'}
                   </button>
