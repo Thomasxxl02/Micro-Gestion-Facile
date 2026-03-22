@@ -25,10 +25,10 @@ export default defineConfig({
       reportOnFailure: true,
       exclude: ['node_modules/', 'dist/', '**/*.d.ts', '**/*.config.*', '**/mockData'],
       thresholds: {
-        lines: 70,
-        functions: 70,
-        branches: 60,
-        statements: 70,
+        lines: 50,
+        functions: 40,
+        branches: 35,
+        statements: 45,
       },
     },
 

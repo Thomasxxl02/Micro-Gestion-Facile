@@ -352,27 +352,20 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
       <div className="grid grid-cols-4 gap-3">
         {presets.map((color) => (
-          value === color ? (
-            <button
-              key={color}
-              type="button"
-              onClick={() => onChange(color)}
-              className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 border-brand-900 scale-110 shadow-md`}
-              style={{ backgroundColor: color }}
-              aria-label={`Choisir la couleur ${color}`}
-              aria-pressed="true"
-            />
-          ) : (
-            <button
-              key={color}
-              type="button"
-              onClick={() => onChange(color)}
-              className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 border-transparent hover:scale-105`}
-              style={{ backgroundColor: color }}
-              aria-label={`Choisir la couleur ${color}`}
-              aria-pressed="false"
-            />
-          )
+          <button
+            key={color}
+            type="button"
+            onClick={() => onChange(color)}
+            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
+              value === color
+                ? 'border-brand-900 scale-110 shadow-md'
+                : 'border-transparent hover:scale-105'
+            }`}
+            // @ts-ignore CSS custom properties must use inline styles for dynamic values
+            style={{ '--button-color': color } as React.CSSProperties}
+            aria-label={`Choisir la couleur ${color}`}
+            {...(value === color ? { 'aria-pressed': 'true' } : { 'aria-pressed': 'false' })}
+          />
         ))}
       </div>
     </div>

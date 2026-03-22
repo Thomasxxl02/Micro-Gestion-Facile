@@ -91,15 +91,29 @@ const AIAssistant: React.FC = () => {
         setIsLoading(true);
         setMessageIdCounter(prev => prev + 1);
 
-        // Build context from last few messages
-        const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
+        try {
+            // Build context from last few messages
+            const context = messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n');
 
-        const responseText = await generateAssistantResponse(userMsg.content, context);
+            const responseText = await generateAssistantResponse(userMsg.content, context);
 
-        const modelMsg: ChatMessage = { id: `msg-${messageIdCounter + 1}`, role: 'model', content: responseText, timestamp: Date.now() };
-        setMessages(prev => [...prev, modelMsg]);
-        setIsLoading(false);
-        setMessageIdCounter(prev => prev + 2);
+            const modelMsg: ChatMessage = { id: `msg-${messageIdCounter + 1}`, role: 'model', content: responseText, timestamp: Date.now() };
+            setMessages(prev => [...prev, modelMsg]);
+            setMessageIdCounter(prev => prev + 2);
+        } catch (error) {
+            console.error("Error generating response:", error);
+            // Add an error message to the chat
+            const errorMsg: ChatMessage = {
+                id: `msg-${messageIdCounter + 1}`,
+                role: 'model',
+                content: "Désolé, je n'ai pas pu traiter votre requête. Veuillez réessayer.",
+                timestamp: Date.now()
+            };
+            setMessages(prev => [...prev, errorMsg]);
+            setMessageIdCounter(prev => prev + 2);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const renderCashflowCard = () => {

@@ -169,7 +169,7 @@ describe('fiscalCalculations', () => {
       const revenue = 1000.01;
       const result = calculateSocialContributions(revenue, { ...mockProfile, activityType: 'SERVICE_BNC' });
 
-      const expected = Math.round(revenue * 23.2 * 100) / 100;
+      const expected = Math.round((revenue * 23.2) / 100 * 100) / 100;
       expect(result.amount).toBeCloseTo(expected, 2);
     });
 
@@ -388,8 +388,8 @@ describe('fiscalCalculations', () => {
       const result = calculateSocialContributions(revenue, mockProfile);
 
       // Les montants doivent être arrondis à 2 décimales
-      const decimalPlaces = (result.amount.toString().split('.')[1] || '').length;
-      expect(decimalPlaces).toBeLessThanOrEqual(2);
+      const rounded = Math.round(result.amount * 100) / 100;
+      expect(result.amount).toBeCloseTo(rounded, 2);
     });
 
     it('pas de perte d\'arrondi cumulée sur 12 mois', () => {

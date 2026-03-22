@@ -603,4 +603,94 @@ describe('InvoiceDB - Dexie Database', () => {
       expect(await db.clients.count()).toBe(0);
     });
   });
+
+  // ============================================================================
+  // ERROR HANDLING & EDGE CASES
+  // ============================================================================
+
+  describe('error handling & edge cases', () => {
+    it('gère l\'import avec données partielles', async () => {
+      const partialData = {
+        invoices: [
+          {
+            id: 'inv-1',
+            number: 'FAC-001',
+            date: '2026-03-21',
+            clientId: 'cli-1',
+            items: [],
+            total: 1000,
+            status: 'draft',
+            type: 'invoice',
+          },
+        ],
+      };
+
+      await db.importData(partialData);
+      const invoices = await db.invoices.toArray();
+      expect(invoices).toHaveLength(1);
+    });
+
+    it('exporte toutes les tables avec données complètes', async () => {
+      await db.invoices.add({
+        id: 'inv-1',
+        number: 'FAC-001',
+        date: '2026-03-21',
+        clientId: 'cli-1',
+        items: [],
+        total: 1000,
+        status: 'draft',
+        type: 'invoice',
+      });
+
+      const exported = await db.exportData();
+      expect(exported).toBeDefined();
+      expect(exported.invoices).toHaveLength(1);
+    });
+
+    it('gère les mises à jour sur des ID inexistants', async () => {
+      const result = await db.invoices.update('nonexistent-id', { status: 'paid' });
+      expect(result).toBeDefined();
+    });
+
+    it('gère les requêtes sur des tables vides', async () => {
+      const empty = await db.invoices.toArray();
+      expect(empty).toHaveLength(0);
+
+      const emptyFiltered = await db.invoices.where('status').equals('draft').toArray();
+      expect(emptyFiltered).toHaveLength(0);
+    });
+
+    it('calcule les stats correctement', async () => {
+      await db.invoices.add({
+        id: 'inv-1',
+        number: 'FAC-001',
+        date: '2026-03-21',
+        clientId: 'cli-1',
+        items: [],
+        total: 1000,
+        status: 'draft',
+        type: 'invoice',
+      });
+
+      const stats = await db.getStatistics();
+      expect(stats.invoices).toBe(1);
+    });
+
+    it('accepte les champs partiels dans les entités', async () => {
+      const minimalInvoice: any = {
+        id: 'inv-min',
+        number: 'FAC-MIN',
+        date: '2026-03-21',
+        clientId: 'cli-1',
+        items: [],
+        total: 100,
+        status: 'draft',
+        type: 'invoice',
+      };
+
+      await db.invoices.add(minimalInvoice);
+      const retrieved = await db.invoices.get('inv-min');
+      expect(retrieved).toBeDefined();
+    });
+  });
 });

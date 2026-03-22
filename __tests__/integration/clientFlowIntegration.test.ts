@@ -103,11 +103,14 @@ describe('Client Flow Integration', () => {
 
       // Étape 3 : Sauvegarder en mémoire (Zustand store)
       act(() => {
-        store.setClients([...store.clients, newClient]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([...currentStore.clients, newClient]);
       });
 
-      expect(store.clients).toHaveLength(1);
-      expect(store.clients[0]).toEqual(newClient);
+      // Vérifier en récupérant l'état actuel du store
+      const storeAfterAdd = useAppStore.getState();
+      expect(storeAfterAdd.clients).toHaveLength(1);
+      expect(storeAfterAdd.clients[0]).toEqual(newClient);
 
       // Étape 4 : Fermer le formulaire
       act(() => {
@@ -119,36 +122,38 @@ describe('Client Flow Integration', () => {
     });
 
     it('crée plusieurs clients et les stocke tous en mémoire', () => {
-      const store = useAppStore.getState();
       const client1 = createClientWithId(mockNewClient, 'cl-1');
       const client2 = createClientWithId(mockClient2, 'cl-2');
       const client3 = createClientWithId(mockClient3, 'cl-3');
 
       // Sauvegarder en mémoire
       act(() => {
-        store.setClients([client1, client2, client3]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([client1, client2, client3]);
       });
 
       // Vérifier dans le store
-      expect(store.clients).toHaveLength(3);
-      expect(store.clients[0]).toEqual(client1);
-      expect(store.clients[1]).toEqual(client2);
-      expect(store.clients[2]).toEqual(client3);
+      const storeAfterAdd = useAppStore.getState();
+      expect(storeAfterAdd.clients).toHaveLength(3);
+      expect(storeAfterAdd.clients[0]).toEqual(client1);
+      expect(storeAfterAdd.clients[1]).toEqual(client2);
+      expect(storeAfterAdd.clients[2]).toEqual(client3);
     });
   });
 
   describe('Scenario 2: Edit → Update → Sync', () => {
     it('édite un client existant et synchronise les changements', () => {
-      const store = useAppStore.getState();
       const client = createClientWithId(mockNewClient, 'cl-1');
 
       // Préparation : initialiser avec un client existant
       act(() => {
-        store.setClients([client]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([client]);
       });
 
       // Vérifier que le client est bien en mémoire
-      expect(store.clients).toHaveLength(1);
+      let storeAfterInit = useAppStore.getState();
+      expect(storeAfterInit.clients).toHaveLength(1);
 
       // Étape 1 : Ouvrir le formulaire d'édition
       const { result: formResult } = renderHook(() => useEntityForm(client));
@@ -175,13 +180,15 @@ describe('Client Flow Integration', () => {
       // Étape 3 : Mettre à jour en mémoire
       const updatedClient = formResult.current.formData as Client;
       act(() => {
-        store.updateClients((clients) =>
+        const currentStore = useAppStore.getState();
+        currentStore.updateClients((clients) =>
           clients.map((c) => (c.id === updatedClient.id ? updatedClient : c))
         );
       });
 
-      expect(store.clients[0].name).toBe(updatedName);
-      expect(store.clients[0].email).toBe(updatedEmail);
+      const storeAfterUpdate = useAppStore.getState();
+      expect(storeAfterUpdate.clients[0].name).toBe(updatedName);
+      expect(storeAfterUpdate.clients[0].email).toBe(updatedEmail);
 
       // Étape 4 : Fermer le formulaire
       act(() => {
@@ -230,12 +237,19 @@ describe('Client Flow Integration', () => {
         })
       );
 
+      // Initialement affiche 2 clients (non-archivés)
+      expect(filterResult.current.filteredEntities).toHaveLength(2);
+
       act(() => {
         filterResult.current.setShowArchived(true);
       });
 
-      expect(filterResult.current.filteredEntities).toHaveLength(1);
-      expect(filterResult.current.filteredEntities[0].archived).toBe(true);
+      // Quand showArchived est true, affiche TOUS les clients (3 clients)
+      expect(filterResult.current.filteredEntities).toHaveLength(3);
+
+      // Vérifier qu'il y a au moins un client archivé
+      const archivedClients = filterResult.current.filteredEntities.filter(c => c.archived);
+      expect(archivedClients.length).toBeGreaterThan(0);
     });
 
     it('cherche un client par nom', () => {
@@ -303,17 +317,18 @@ describe('Client Flow Integration', () => {
 
   describe('Scenario 4: Archive → Filter Sync', () => {
     it('archive un client et vérifie que les filtres le masquent', () => {
-      const store = useAppStore.getState();
       const client = createClientWithId(mockNewClient, 'cl-1');
 
       // Initialiser
       act(() => {
-        store.setClients([client]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([client]);
       });
 
       // Vérifier que le client est visible au départ
+      const storeAfterInit = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(storeAfterInit.clients, {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -324,12 +339,14 @@ describe('Client Flow Integration', () => {
       // Archiver le client
       const archivedClient = { ...client, archived: true };
       act(() => {
-        store.setClients([archivedClient]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([archivedClient]);
       });
 
       // Vérifier qu'il est masqué maintenant
+      const storeAfterArchive = useAppStore.getState();
       const { result: filterResult2 } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(storeAfterArchive.clients, {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -351,16 +368,18 @@ describe('Client Flow Integration', () => {
       const client = createClientWithId(mockNewClient, 'cl-1');
 
       // Sauvegarder en store
-      const store = useAppStore.getState();
       act(() => {
-        store.setClients([client]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([client]);
       });
 
-      expect(store.clients).toHaveLength(1);
-      expect(store.clients[0]).toEqual(client);
+      // Vérifier en récupérant l'état actuel du store
+      const storeAfterAdd = useAppStore.getState();
+      expect(storeAfterAdd.clients).toHaveLength(1);
+      expect(storeAfterAdd.clients[0]).toEqual(client);
 
       // Récupérer depuis le store sans réinitialiser
-      expect(store.clients[0].name).toBe('Acme Corporation');
+      expect(storeAfterAdd.clients[0].name).toBe('Acme Corporation');
     });
 
     it('gère une charge de données importante en mémoire', () => {
@@ -381,25 +400,26 @@ describe('Client Flow Integration', () => {
       }
 
       // Sauvegarder tous les clients en mémoire
-      const store = useAppStore.getState();
       act(() => {
-        store.setClients(clients);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients(clients);
       });
 
       // Vérifier
-      expect(store.clients).toHaveLength(numberOfClients);
+      const storeAfterAdd = useAppStore.getState();
+      expect(storeAfterAdd.clients).toHaveLength(numberOfClients);
     });
   });
 
   describe('Scenario 6: Concurrent Operations', () => {
     it('gère l\'édition simultanée de plusieurs clients', () => {
-      const store = useAppStore.getState();
       const client1 = createClientWithId(mockNewClient, 'cl-1');
       const client2 = createClientWithId(mockClient2, 'cl-2');
 
       // Initialiser
       act(() => {
-        store.setClients([client1, client2]);
+        const currentStore = useAppStore.getState();
+        currentStore.setClients([client1, client2]);
       });
 
       // Éditer client1 et client2 "simultanément"
@@ -407,7 +427,8 @@ describe('Client Flow Integration', () => {
       const updated2 = { ...client2, email: 'new@techstart.fr' };
 
       act(() => {
-        store.updateClients((clients) =>
+        const currentStore = useAppStore.getState();
+        currentStore.updateClients((clients) =>
           clients.map((c) =>
             c.id === client1.id ? updated1 : c.id === client2.id ? updated2 : c
           )
@@ -415,8 +436,9 @@ describe('Client Flow Integration', () => {
       });
 
       // Vérifier
-      expect(store.clients[0].name).toBe('Updated Acme');
-      expect(store.clients[1].email).toBe('new@techstart.fr');
+      const storeAfterUpdate = useAppStore.getState();
+      expect(storeAfterUpdate.clients[0].name).toBe('Updated Acme');
+      expect(storeAfterUpdate.clients[1].email).toBe('new@techstart.fr');
     });
   });
 });

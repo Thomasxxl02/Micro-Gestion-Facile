@@ -76,11 +76,6 @@ h1, h2, h3, h4 {
 }
 
 /* Custom Scrollbar Compatibility */
-* {
-  /* scrollbar-width: thin; */ /* Not supported in Safari < 16 */
-  /* scrollbar-color: var(--card-border) transparent; */ /* Not supported in Safari, Chrome < 121 */
-}
-
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
@@ -214,6 +209,11 @@ html {
   height: 0.5rem;
   border-radius: 9999px;
   background-color: var(--indicator-color, #0f172a);
+}
+
+/* Color Picker Button for dynamic colors */
+button[style*="--button-color"] {
+  background-color: var(--button-color);
 }
 
 /* Overlay button for modals */

@@ -8,7 +8,7 @@ import {
 import { analyzeReceipt } from '../services/geminiService';
 import {
   BarChart, Bar, PieChart, Pie, Tooltip, ResponsiveContainer,
-  XAxis, YAxis, CartesianGrid, Cell
+  XAxis, YAxis, CartesianGrid
 } from 'recharts';
 
 import { calculateSocialContributions, calculateIncomeTaxPFL } from '../lib/fiscalCalculations';
@@ -74,7 +74,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   }, [totalYearlyRevenue, userProfile]);
 
   const yearlyIncomeTax = useMemo(() => {
-    if (!userProfile || !userProfile.activityType) {return 0;}
+    if (!userProfile?.activityType) {return 0;}
     return calculateIncomeTaxPFL(totalYearlyRevenue, userProfile.activityType);
   }, [totalYearlyRevenue, userProfile]);
 
@@ -140,7 +140,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const handleAddExpense = (e: Event) => {
     e.preventDefault();
     if (!newExpense.description || !newExpense.amount) {return;}
 
@@ -574,14 +574,17 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                             outerRadius={70}
                             paddingAngle={8}
                             dataKey="value"
+                            fill="#0f172a"
                             >
-                            {expensesByCategory.map((entry) => (
-                                <Cell key={entry.name} fill={COLORS[expensesByCategory.indexOf(entry) % COLORS.length]} />
-                            ))}
                             </Pie>
                             <Tooltip
-                                formatter={(value: any) => (typeof value === 'number' ? `${value.toFixed(2)} €` : '')}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                formatter={(value: unknown) => {
+                                  if (typeof value === 'number') {
+                                    return `${value.toFixed(2)} €`;
+                                  }
+                                  return '';
+                                }}
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' } as React.CSSProperties}
                             />
                         </PieChart>
                         </ResponsiveContainer>
@@ -590,6 +593,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                         {expensesByCategory.map((cat, idx) => (
                             <div key={cat.name} className="flex items-center justify-between group">
                                 <div className="flex items-center gap-2">
+                                    {/* @ts-ignore CSS custom properties must use inline styles for dynamic color values */}
                                     <div className="color-indicator" style={{ '--indicator-color': COLORS[idx % COLORS.length] } as React.CSSProperties}></div>
                                     <span className="text-xs font-semibold text-brand-600">{cat.name}</span>
                                 </div>

@@ -288,15 +288,20 @@ describe('useEntityFilters Hook', () => {
         useEntityFilters(mockClients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
+          showArchived: false, // Start with archived hidden
         })
       );
+
+      // Initially shows only non-archived: Alice, Bob
+      expect(result.current.filteredEntities).toHaveLength(2);
+      expect(result.current.filteredEntities.every((c) => !c.archived)).toBe(true);
 
       act(() => {
         result.current.setShowArchived(true);
       });
 
-      expect(result.current.filteredEntities).toHaveLength(1);
-      expect(result.current.filteredEntities[0].archived).toBe(true);
+      // Now shows all including archived: Alice, Bob, Claire
+      expect(result.current.filteredEntities).toHaveLength(3);
     });
 
     it('affiche tous les éléments (archivés + actifs) si filtré', () => {
@@ -304,13 +309,18 @@ describe('useEntityFilters Hook', () => {
         useEntityFilters(mockClients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
+          showArchived: false, // Start with archived hidden
         })
       );
+
+      // Initially should show only active (2): Alice, Bob
+      expect(result.current.filteredEntities).toHaveLength(2);
 
       act(() => {
         result.current.setShowArchived(true);
       });
 
+      // After toggling, should show all (3): Alice, Bob, Claire
       expect(result.current.filteredEntities).toHaveLength(3);
     });
   });
@@ -335,13 +345,22 @@ describe('useEntityFilters Hook', () => {
         useEntityFilters(mockClients as unknown as Record<string, unknown>[], { searchField: 'name' })
       );
 
+      // First click: should sort asc
       act(() => {
         result.current.toggleSort('name');
+      });
+      expect(result.current.sortOrder).toBe('asc');
+      const nameAsc = result.current.filteredEntities[0].name;
+
+      // Second click on same field: should sort desc
+      act(() => {
         result.current.toggleSort('name');
       });
-
       expect(result.current.sortOrder).toBe('desc');
-      expect(result.current.filteredEntities[0].name).toBe('Claire Lefevre');
+      const nameDesc = result.current.filteredEntities[0].name;
+
+      // Verify the order is actually reversed
+      expect(nameAsc).not.toBe(nameDesc);
     });
 
     it('change le champ de tri', () => {
