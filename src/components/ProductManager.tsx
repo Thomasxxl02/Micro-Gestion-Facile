@@ -84,8 +84,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     setIsPanelOpen(true);
   };
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     const errors: Record<string, string> = {};
     let isValid = true;
 
@@ -135,7 +134,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     } else {
       const product: Product = {
         id: Date.now().toString(),
-        name: formData.name,
+        name: formData.name || '',
         description: formData.description || '',
         price: Number(formData.price) || 0,
         type: formData.type as 'service' | 'product',
