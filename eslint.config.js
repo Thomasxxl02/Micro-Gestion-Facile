@@ -15,9 +15,11 @@ export default [
       '**/coverage/**',
       '**/.git/**',
       '**/__tests__/**',
+      '**/*.example.tsx',
+      '**/*.example.ts',
       '*.config.js',
-      '*.config.ts'
-    ]
+      '*.config.ts',
+    ],
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -28,23 +30,23 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
-        ...globals.es2021
+        ...globals.es2021,
       },
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
-        }
-      }
+          jsx: true,
+        },
+      },
     },
     plugins: {
-      'react': reactPlugin,
+      react: reactPlugin,
       'react-hooks': reactHooks,
-      '@typescript-eslint': typescript
+      '@typescript-eslint': typescript,
     },
     settings: {
       react: {
-        version: 'detect'
-      }
+        version: 'detect',
+      },
     },
     rules: {
       ...js.configs.recommended.rules,
@@ -67,28 +69,54 @@ export default [
         'warn',
         {
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_'
-        }
+          varsIgnorePattern: '^_',
+        },
       ],
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/consistent-type-imports': [
         'warn',
-        { prefer: 'type-imports', fixStyle: 'separate-type-imports' }
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
       ],
 
       // Best Practices
       'no-console': [
         'warn',
         {
-          allow: ['warn', 'error', 'info']
-        }
+          allow: ['warn', 'error', 'info'],
+        },
       ],
       'prefer-const': 'error',
       'no-var': 'error',
-      'eqeqeq': ['error', 'always', { null: 'ignore' }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-debugger': 'error',
       'no-duplicate-imports': 'error',
-      'curly': ['error', 'all']
-    }
-  }
+      curly: ['error', 'all'],
+    },
+  },
+  // Example and demo files - permissive rules
+  {
+    files: ['**/*.example.{ts,tsx}', '**/*.demo.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parser: tsParser,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    plugins: {
+      react: reactPlugin,
+      '@typescript-eslint': typescript,
+    },
+    rules: {
+      'react/style-prop-object': 'off',
+      'react/no-unescaped-entities': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'react/jsx-no-useless-fragment': 'off',
+      'jsx-a11y/anchor-is-valid': 'off',
+      'jsx-a11y/no-static-element-interactions': 'off',
+      'no-console': 'off',
+    },
+  },
 ];

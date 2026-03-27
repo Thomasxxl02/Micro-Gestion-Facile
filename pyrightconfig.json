@@ -5,5 +5,27 @@
   "reportOptionalOperand": "warning",
   "reportGeneralTypeIssues": "warning",
   "reportIncompatibleMethodOverride": "warning",
-  "reportInvalidTypeForm": "warning"
+  "reportInvalidTypeForm": "warning",
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/__tests__/**/*.example.tsx",
+    "**/*.example.ts",
+    "**/*.example.tsx",
+    ".github/**",
+    ".vscode/**",
+    "coverage/**",
+    "docs/**",
+    "config/**"
+  ],
+  "ignore": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "src/__tests__/GitHubAuth.example.tsx",
+    ".github/**",
+    ".vscode/**",
+    "coverage/**"
+  ]
 }
