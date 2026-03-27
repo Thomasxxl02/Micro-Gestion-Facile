@@ -25,7 +25,6 @@ import {
   AlertCircle,
   CheckSquare,
   Square,
-  Package,
   ChevronUp,
   ChevronDown,
   X,
@@ -44,7 +43,6 @@ import {
   Coins,
   Clock,
   ExternalLink,
-  User,
 } from 'lucide-react';
 import {
   suggestInvoiceDescription,
@@ -129,7 +127,6 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
     data: newDocData,
     setData: setDocData,
     errors,
-    validateField,
     validate: isFormValid,
   } = useFormValidation<Partial<Invoice>>(initialDocData, InvoiceSchema);
 
@@ -156,7 +153,6 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   const setSelectedClientId = (id: string) => {
     updateForm({ clientId: id });
     setNewDocData({ clientId: id });
-    validateField('clientId', id);
   };
   const setIsGeneratingDesc = (val: boolean) => updateForm({ isGeneratingDesc: val });
   const setIsMagicFillOpen = (val: boolean) => updateForm({ isMagicFillOpen: val });
@@ -1234,10 +1230,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                       }
                     }}
                     placeholder="Rechercher un client..."
-                    icon={<User size={18} />}
                     label="Client"
                     disabled={!!newDocData.linkedDocumentId}
-                    error={errors.clientId}
+                    error={typeof errors.clientId === 'string' ? errors.clientId : errors.clientId?.error || ''}
                   />
                   {selectedClient && (
                     <div className="mt-4 p-4 bg-brand-50 rounded-xl border border-brand-100 text-sm">
@@ -1260,9 +1255,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     type="date"
                     className="w-full"
                     value={newDocData.date || ''}
-                    onChange={(e) => setNewDocData({ ...newDocData, date: e.target.value })}
-                    onBlur={() => validateField('date', newDocData.date)}
-                    error={errors.date}
+                    onChange={(value) => setNewDocData({ ...newDocData, date: value })}
                   />
                   <FormFieldValidated
                     id="due-date"
@@ -1270,9 +1263,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     type="date"
                     className="w-full"
                     value={newDocData.dueDate || ''}
-                    onChange={(e) => setNewDocData({ ...newDocData, dueDate: e.target.value })}
-                    onBlur={() => validateField('dueDate', newDocData.dueDate)}
-                    error={errors.dueDate}
+                    onChange={(value) => setNewDocData({ ...newDocData, dueDate: value })}
                   />
                 </div>
               </div>
@@ -1436,7 +1427,6 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         }
                       }}
                       placeholder="Chercher un produit..."
-                      icon={<Package size={18} />}
                       label="Catalogue"
                     />
                   </div>
@@ -1778,8 +1768,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               ) : (
                 <select
                   value={selectedInvoice.status}
-                  onChange={(e) => updateInvoiceField(selectedInvoice.id, 'status', e.target.value)}
-                  className={`text-sm font-bold rounded-lg py-1 px-2 cursor-pointer outline-none bg-transparent ${getStatusColorClass(selectedInvoice.status)}`}
+                  onChange={(e) => updateInvoiceField(selectedInvoice.id, 'status', e.target.value as InvoiceStatus | 'CUSTOM_INPUT')}
+                  className={`text-sm font-bold rounded-lg py-1 px-2 cursor-pointer outline-none bg-transparent ${getStatusColorClass(selectedInvoice.status as InvoiceStatus)}`}
                   title="Changer le statut"
                 >
                   {availableStatuses.map((s) => (
@@ -2423,7 +2413,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     </td>
                     <td className="px-6 py-5 text-center">
                       <span
-                        className={`inline-flex px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${getStatusBadgeClass(doc.status)}`}
+                        className={`inline-flex px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${getStatusBadgeClass(doc.status as InvoiceStatus)}`}
                       >
                         {doc.status}
                       </span>
