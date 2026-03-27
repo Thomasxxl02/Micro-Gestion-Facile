@@ -52,6 +52,7 @@
 ## 🔐 Fonctionnalités Implémentées
 
 ### 1️⃣ Authentification 2FA (TOTP)
+
 - ✅ Génération de secrets RFC 6238
 - ✅ Génération de codes QR pour Google/MS/Authy/LastPass
 - ✅ Validation de codes TOTP (±30 secondes)
@@ -59,6 +60,7 @@
 - ✅ Stockage chiffré du secret TOTP
 
 ### 2️⃣ Gestion des API Keys
+
 - ✅ Création de clés pour Gemini, Firebase, Custom
 - ✅ Hash SHA-256 (jamais clé en clair)
 - ✅ Preview sûre (ex: `sk_live_abc...`)
@@ -66,12 +68,14 @@
 - ✅ Révocation immédiate des clés
 
 ### 3️⃣ Reset Password
+
 - ✅ Changement de mot de passe avec validation
 - ✅ Indicateur de force (barre colorée)
 - ✅ Feedback intelligent sur la sécurité
 - ✅ Confirmation requise avant changement
 
 ### 4️⃣ Sessions Actives
+
 - ✅ Listes des appareils connectés
 - ✅ Détection automatique du device name
 - ✅ Déconnexion à distance par session
@@ -79,12 +83,14 @@
 - ✅ IP address et timestamp pour chaque session
 
 ### 5️⃣ Login History
+
 - ✅ Historique des 50 dernières connexions
 - ✅ Statut (succès/échec)
 - ✅ Device, IP, timestamp
 - ✅ Affichage des 10 dernières entrées
 
 ### 6️⃣ Chiffrement des Données Sensibles
+
 - ✅ AES-256-GCM (standard militaire)
 - ✅ PBKDF2 avec 100,000 itérations
 - ✅ Dérivation de clé sécurisée
@@ -96,6 +102,7 @@
 ## 🏗️ Architecture Technique
 
 ### Sécurité par Défaut
+
 ```typescript
 // Clés API jamais en clair
 const keyHash = await crypto.subtle.digest('SHA-256', ...);
@@ -108,12 +115,14 @@ await crypto.subtle.deriveKey({ name: 'PBKDF2', iterations: 100000, ... });
 ```
 
 ### Isolation des Données
+
 - Tokens 2FA: Durée de vie 15 minutes max
 - Sessions: Stockées en localStorage avec révocation possible
 - API Keys: Hash SHA-256 uniquement stocké
 - Données sensibles: Chiffrées optionnellement avec AES-256
 
 ### Aucune Dépendance Externe pour la Crypto
+
 - ✅ Utilise l'API Web subtleCrypto (navigateur natif)
 - ✅ Zéro dépendance npm pour les opérations cryptographiques
 - ✅ Supportée par tous les navigateurs modernes
@@ -153,6 +162,7 @@ interface SecurityAPIKey {
 ## 🎯 Points de Contrôle d'Utilisation
 
 ### Dans l'application:
+
 1. **Onglet Paramètres** → Cliquer sur **Sécurité**
 2. Naviguer entre les 5 sous-onglets:
    - 🔐 **Authentification 2FA**
@@ -162,6 +172,7 @@ interface SecurityAPIKey {
    - 🔒 **Chiffrement des données**
 
 ### Stockage des données:
+
 ```
 localStorage:
 ├── mgs_sessions (Array<Session>)
@@ -181,28 +192,32 @@ userProfile.securitySettings:
 ## ✅ Validation & Tests
 
 ### Compilation TypeScript
+
 - ✅ Pas d'erreurs dans SecurityTab.tsx
 - ✅ Pas d'erreurs dans types.ts
 - ✅ Types complètement typés (zéro `any`)
 
 ### Compatibilité Navigateur
-| Feature | Safari | Chrome | Firefox | Edge |
-|---------|--------|--------|---------|------|
-| SubtleCrypto | ✅ 11+ | ✅ 37+ | ✅ 34+ | ✅ 79+ |
-| localStorage | ✅ | ✅ | ✅ | ✅ |
-| crypto.getRandomValues | ✅ | ✅ | ✅ | ✅ |
+
+| Feature                | Safari | Chrome | Firefox | Edge   |
+| ---------------------- | ------ | ------ | ------- | ------ |
+| SubtleCrypto           | ✅ 11+ | ✅ 37+ | ✅ 34+  | ✅ 79+ |
+| localStorage           | ✅     | ✅     | ✅      | ✅     |
+| crypto.getRandomValues | ✅     | ✅     | ✅      | ✅     |
 
 ---
 
 ## 📚 Documentation
 
 ### Fichiers de référence:
+
 - **`docs/SECURITY_GUIDE.md`** - Guide utilisateur complet
 - **`services/securityService.ts`** - Commentaires détaillés du code
 - **`components/SecurityTab.tsx`** - Exemples d'utilisation
 - **`CHANGELOG.md`** - Notes de version
 
 ### Pour les développeurs:
+
 ```typescript
 // Exemple: Générer un secret TOTP
 const secret = TOTPService.generateSecret();
@@ -212,17 +227,10 @@ const qrCodeUrl = TOTPService.generateQRCodeUrl(email, secret);
 const isValid = TOTPService.validateCode(secret, '123456');
 
 // Exemple: Chiffrer des données
-const encrypted = await DataEncryptionService.encryptData(
-  'FR76 3000 4000 0510 0130',
-  'password'
-);
+const encrypted = await DataEncryptionService.encryptData('FR76 3000 4000 0510 0130', 'password');
 
 // Exemple: Créer une clé API
-const apiKey = await APIKeyService.createAPIKey(
-  'Gemini Production',
-  'GEMINI',
-  'sk_live_...'
-);
+const apiKey = await APIKeyService.createAPIKey('Gemini Production', 'GEMINI', 'sk_live_...');
 ```
 
 ---
@@ -272,6 +280,7 @@ const apiKey = await APIKeyService.createAPIKey(
 ## 🎓 Apprentissage Utilisateur
 
 Conseiller à Thomas de consulter:
+
 1. **D'abord**: `docs/SECURITY_GUIDE.md` (guide complet en français)
 2. **Puis**: Activer 2FA dans l'app (section "Authentification 2FA")
 3. **Ensuite**: Ajouter ses clés API (section "Gestion des API Keys")
@@ -282,11 +291,13 @@ Conseiller à Thomas de consulter:
 ## 📞 Support & Maintenance
 
 **Fichiers de contact**:
+
 - Questions sécurité: voir `SECURITY.md`
 - Bug d'API Keys: voir `API_KEY_REVOCATION_GUIDE.md`
 - Incident sécurité: voir `SECURITY_INCIDENT_REMEDIATION.md`
 
 **Logs d'activité**:
+
 - Tous les logi sont enregistrés via `useAppStore().addLog()`
 - Catégorie: `'AUTH'` pour les événements sécurité
 - Sévérité: `'INFO' | 'WARNING' | 'ERROR'`
