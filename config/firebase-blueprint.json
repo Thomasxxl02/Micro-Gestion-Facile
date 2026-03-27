@@ -1,0 +1,195 @@
+{
+  "entities": {
+    "Client": {
+      "title": "Client",
+      "description": "Un client de la micro-entreprise",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "address": { "type": "string" },
+        "siret": { "type": "string" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" },
+        "archived": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string", "description": "ID de l'utilisateur propriétaire" }
+      },
+      "required": ["id", "name", "email", "uid"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Un fournisseur de la micro-entreprise",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "siret": { "type": "string" },
+        "address": { "type": "string" },
+        "category": { "type": "string" },
+        "notes": { "type": "string" },
+        "archived": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "uid"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Un produit ou service proposé",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "type": { "type": "string", "enum": ["service", "product"] },
+        "category": { "type": "string" },
+        "sku": { "type": "string" },
+        "unit": { "type": "string" },
+        "stock": { "type": "number" },
+        "archived": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "type", "uid"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Une dépense ou achat professionnel",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "supplierId": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "date", "description", "amount", "category", "uid"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Une facture, devis ou avoir",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["invoice", "quote", "order", "credit_note"] },
+        "number": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "dueDate": { "type": "string", "format": "date" },
+        "clientId": { "type": "string" },
+        "status": { "type": "string" },
+        "total": { "type": "number" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "type", "number", "date", "clientId", "status", "total", "uid"]
+    },
+    "Email": {
+      "title": "Email",
+      "description": "Historique des emails envoyés",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "to": { "type": "string" },
+        "subject": { "type": "string" },
+        "body": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "type": { "type": "string" },
+        "relatedId": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "to", "subject", "body", "sentAt", "uid"]
+    },
+    "EmailTemplate": {
+      "title": "EmailTemplate",
+      "description": "Modèles d'emails",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "subject": { "type": "string" },
+        "body": { "type": "string" },
+        "type": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "name", "subject", "body", "uid"]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "Événement dans l'agenda",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "type": { "type": "string" },
+        "clientId": { "type": "string" },
+        "invoiceId": { "type": "string" },
+        "color": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["id", "title", "start", "end", "uid"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profil de la micro-entreprise",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "professionalTitle": { "type": "string" },
+        "siret": { "type": "string" },
+        "siren": { "type": "string" },
+        "address": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "website": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "bankAccount": { "type": "string" },
+        "bic": { "type": "string" },
+        "tvaNumber": { "type": "string" },
+        "legalMentions": { "type": "string" },
+        "currency": { "type": "string" },
+        "invoicePrefix": { "type": "string" },
+        "quotePrefix": { "type": "string" },
+        "orderPrefix": { "type": "string" },
+        "creditNotePrefix": { "type": "string" },
+        "defaultVatRate": { "type": "number" },
+        "logoColor": { "type": "string" },
+        "activityType": {
+          "type": "string",
+          "enum": ["SERVICE_BNC", "SERVICE_BIC", "SALE", "LIBERAL"]
+        },
+        "isAcreBeneficiary": { "type": "boolean" },
+        "vatThresholdAlert": { "type": "boolean" },
+        "revenueThresholdAlert": { "type": "boolean" },
+        "uid": { "type": "string" }
+      },
+      "required": ["companyName", "siret", "email", "uid"]
+    }
+  },
+  "firestore": {
+    "/clients/{clientId}": { "schema": "Client", "description": "Clients de l'utilisateur" },
+    "/suppliers/{supplierId}": {
+      "schema": "Supplier",
+      "description": "Fournisseurs de l'utilisateur"
+    },
+    "/products/{productId}": { "schema": "Product", "description": "Catalogue produits/services" },
+    "/expenses/{expenseId}": { "schema": "Expense", "description": "Dépenses professionnelles" },
+    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Factures et devis" },
+    "/emails/{emailId}": { "schema": "Email", "description": "Historique des emails" },
+    "/emailTemplates/{templateId}": {
+      "schema": "EmailTemplate",
+      "description": "Modèles d'emails"
+    },
+    "/calendarEvents/{eventId}": { "schema": "CalendarEvent", "description": "Événements agenda" },
+    "/profiles/{userId}": { "schema": "UserProfile", "description": "Profil utilisateur" }
+  }
+}
