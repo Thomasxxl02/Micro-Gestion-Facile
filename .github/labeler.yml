@@ -1,36 +1,96 @@
-# Labels configurations
+# 🏷️ GitHub Labeler Configuration
 
-# Frontend
-frontend:
+# Components & UI
+components:
   - 'src/components/**/*'
   - 'src/App.tsx'
   - 'index.html'
 
-# Backend/Firebase
-firebase:
-  - 'config/firestore.rules'
+# Managers (Core Domain Logic)
+managers:
+  - 'src/components/*Manager.tsx'
+  - 'src/components/Invoice*.tsx'
+
+# Database & Persistence
+database:
+  - 'src/db/**/*'
+
+# Services & APIs
+services:
+  - 'src/services/**/*'
   - 'src/firebase.ts'
-  - 'config/firebase-blueprint.json'
 
-# Documentation
-documentation:
-  - 'docs/**/*'
-  - '*.md'
-  - '.github/**/*'
+# Hooks & Utilities
+hooks:
+  - 'src/hooks/**/*'
 
-# CI/CD
-workflow:
-  - '.github/workflows/**/*'
-  - 'package.json'
-  - 'tsconfig.json'
+# Libraries & Calculations
+fiscal-logic:
+  - 'src/lib/fiscalCalculations.ts'
+  - 'src/lib/invoiceCalculations.ts'
 
-# Libs & Utils
-logic:
+exports:
+  - 'src/lib/exportUtils.ts'
+  - 'src/lib/facturX.ts'
+
+utilities:
   - 'src/lib/**/*'
   - 'src/types.ts'
 
 # Tests
 tests:
-  - 'src/__tests__/**/*'
+  - '__tests__/**/*'
+  - '*.test.ts'
+  - '*.test.tsx'
+
+# Configuration
+config:
+  - 'config/**/*'
+  - 'tsconfig.json'
+  - 'vite.config.ts'
   - 'vitest.config.ts'
-  - 'vitest.setup.ts'
+
+# CI/CD & Automation
+workflow:
+  - '.github/workflows/**/*'
+  - '.github/**/*.md'
+  - '.husky/**/*'
+
+# Package Management
+dependencies:
+  - 'package.json'
+  - 'package-lock.json'
+
+# Documentation
+documentation:
+  - 'docs/**/*'
+  - '*.md'
+  - 'README.md'
+  - 'CONTRIBUTING.md'
+
+# Security
+security:
+  - 'SECURITY.md'
+  - '.github/CODEOWNERS'
+
+# Area Labels
+area-accounting:
+  - 'src/components/AccountingManager.tsx'
+  - 'src/lib/fiscalCalculations.ts'
+
+area-invoices:
+  - 'src/components/*Invoice*.tsx'
+  - 'src/lib/invoiceCalculations.ts'
+
+area-exports:
+  - 'src/lib/facturX.ts'
+  - 'src/lib/exportUtils.ts'
+
+area-offline:
+  - 'src/hooks/useFirestoreSync.ts'
+  - 'src/db/**/*'
+
+area-security:
+  - 'SECURITY.md'
+  - 'src/firebase.ts'
+  - 'src/services/*'

@@ -1,53 +1,80 @@
 ## 📋 Description
 
-Corrigez et complétez les détails de votre PR :
+Décrire les changements et contexte. Pourquoi cette PR est nécessaire ?
 
-- **Type de changement** : Bug fix / Nouvelle fonctionnalité / Refactoring / Documentation
-- **Issue(s) liée(s)** : Fixes #(issue_number)
-- **Branche source** : feature/ma-feature
-- **Branche cible** : main ou develop
+**Type de changement** :
+- [ ] 🐛 Bug fix (non-breaking)
+- [ ] ✨ New feature (non-breaking)
+- [ ] 🔄 Refactoring (non-breaking)
+- [ ] 📚 Documentation
+- [ ] 💥 Breaking change
+- [ ] ⚡ Performance improvement
+- [ ] 🔐 Security fix
 
-## 🎯 Objective
+## 🎯 Contexte métier
 
-Courte description de ce que cette PR accomplit.
+- Issue liée: Fixes #(issue_number) ou Relates to #(issue_number)
+- Impact sur la fiscalité: [ ] Oui [ ] Non
+- Impact sur les calculs: [ ] Oui [ ] Non
+- Affecte les exports Factur-X: [ ] Oui [ ] Non
 
-## 📝 Changements
+## 📝 Changements principaux
 
-Listez les changements principaux :
-
-- Change 1
-- Change 2
-- Change 3
-
-## 🔗 Issues liées
-
-Closes #(issue_number)
-Relates to #(issue_number)
+- Point 1
+- Point 2
+- Point 3
 
 ## 🧪 Tests
 
-Décrivez comment tester cette PR :
+Comment tester cette PR ?
 
 ```bash
 npm install
 npm run dev
-# Allez à http://localhost:5173
-# Testez la feature XYZ
+# Accédez à http://localhost:5173
+# Testez: ...
 ```
 
-## 🔒 Sécurité
+**Couverture de tests ajoutée**: % →  %
+
+## 🔒 Checklist Sécurité
 
 - [ ] Pas de secrets ou clés API exposées
-- [ ] Pas de console.log() de debug
+- [ ] Pas de console.log() ou code de debug
 - [ ] Validation des entrées utilisateur
 - [ ] Gestion d'erreurs appropriée
+- [ ] RGPD compliant si données utilisateur
+- [ ] Pas de XSS vulnerabilities
+- [ ] Pas de CSRF issues
 
-## ✅ Checklist avant de soumettre
+## 💰 Checklist Fiscalité
+
+Si changements de calculs :
+
+- [ ] Formule documentée avec référence légale
+- [ ] Tests unitaires inclus
+- [ ] Decimal.js utilisé (pas de flottants natifs)
+- [ ] Arrondi selon règles comptables françaises
+- [ ] Testé avec valeurs réalistes URSSAF
+- [ ] Conformité 2026
+
+## ✅ Checklist avant soumission
 
 - [ ] Mon code suit le style du projet
-- [ ] J'ai commenté mon code (surtout les parties complexes)
-- [ ] J'ai mis à jour la documentation pertinente
+- [ ] TypeScript compilation sans erreurs (`npm run lint`)
+- [ ] Tests passent localement (`npm run test`)
+- [ ] Pas de console.log() en production
+- [ ] Documentation mise à jour si nécessaire
+- [ ] CHANGELOG.md mis à jour
 - [ ] Pas de breaking changes (ou clairement documentés)
+- [ ] Code comments sur les parties complexes
+- [ ] Accessibility checks (a11y)
+
+## 🔍 Code Review
+
+- **Reviewers**: @Thomasxxl02 (ou codeowners auto-assignés)
+- **Priorité**: Normal [ ] Haute [ ] Critique [ ]
+
 - [ ] J'ai testé localement (npm run dev + npm run lint)
 - [ ] Pas de console.log() laissé traîner
 - [ ] TypeScript strict (npm run lint passe)
