@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import CalendarManager from '../../components/CalendarManager';
 import type { CalendarEvent, Client } from '../../types';
@@ -43,6 +43,7 @@ describe('CalendarManager Component', () => {
       id: 'evt-1',
       clientId: 'cli-1',
       start: '2026-03-21T10:00:00Z',
+      end: '2026-03-21T11:00:00Z',
       title: 'Réunion client',
       description: 'Discussion de contrat',
       type: 'meeting',
@@ -51,9 +52,10 @@ describe('CalendarManager Component', () => {
       id: 'evt-2',
       clientId: 'cli-2',
       start: '2026-03-22T14:00:00Z',
+      end: '2026-03-22T15:00:00Z',
       title: 'Appel de suivi',
       description: 'Suivi du projet',
-      type: 'call',
+      type: 'task',
     },
   ];
 
@@ -116,8 +118,9 @@ describe('CalendarManager Component', () => {
           clientId: 'cli-1',
           invoiceId: 'inv-1',
           start: '2026-04-01T09:00:00Z',
+          end: '2026-04-01T10:00:00Z',
           title: 'Facturation',
-          type: 'billing',
+          type: 'deadline',
         },
       ];
 
@@ -206,6 +209,7 @@ describe('CalendarManager Component', () => {
           id: 'evt-1',
           clientId: 'cli-1',
           start: '2026-03-21T10:00:00Z',
+          end: '2026-03-21T11:00:00Z',
           title: 'Réunion',
           type: 'meeting',
         },
@@ -225,8 +229,9 @@ describe('CalendarManager Component', () => {
           clientId: 'cli-1',
           invoiceId: 'inv-1',
           start: '2026-03-21T10:00:00Z',
+          end: '2026-03-21T11:00:00Z',
           title: 'Suivi facture',
-          type: 'follow_up',
+          type: 'task',
         },
       ];
 
@@ -243,6 +248,7 @@ describe('CalendarManager Component', () => {
           id: 'evt-1',
           clientId: 'cli-1',
           start: '2026-03-01T10:00:00Z',
+          end: '2026-03-01T11:00:00Z',
           title: 'Début mois',
           type: 'meeting',
         },
@@ -250,8 +256,9 @@ describe('CalendarManager Component', () => {
           id: 'evt-2',
           clientId: 'cli-1',
           start: '2026-03-31T14:00:00Z',
+          end: '2026-03-31T15:00:00Z',
           title: 'Fin mois',
-          type: 'call',
+          type: 'task',
         },
       ];
 

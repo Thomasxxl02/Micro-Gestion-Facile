@@ -61,7 +61,6 @@ describe('AccountingManager Component', () => {
       amount: 150,
       category: 'supplies',
       description: 'Fournitures de bureau',
-      invoiceNumber: 'FAC-SUPP-001',
     },
     {
       id: 'exp-2',
@@ -70,7 +69,6 @@ describe('AccountingManager Component', () => {
       amount: 300,
       category: 'services',
       description: 'Service comptable',
-      invoiceNumber: 'FAC-SUPP-002',
     },
   ];
 
@@ -79,6 +77,7 @@ describe('AccountingManager Component', () => {
       id: 'inv-1',
       number: 'FAC-001',
       date: '2026-01-01',
+      dueDate: '2026-02-01',
       clientId: 'cli-1',
       items: [],
       total: 1000,
