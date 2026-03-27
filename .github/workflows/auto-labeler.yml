@@ -1,0 +1,120 @@
+name: Automated Labeling 🏷️
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issues:
+    types: [opened, edited]
+
+jobs:
+  # Auto-label PRs based on files changed
+  labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Apply labels based on changed files
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml
+
+  # Auto-label based on PR title/description
+  auto-label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: 🔍 Analyze PR content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const pr = context.payload.pull_request || context.payload.issue;
+
+            if (!pr) return;
+
+            const title = pr.title.toLowerCase();
+            const body = pr.body?.toLowerCase() || '';
+            const labels = [];
+
+            // Feature detection
+            if (title.includes('feat:') || title.includes('feature') || body.includes('new feature')) {
+              labels.push('feature');
+            }
+
+            // Bug detection
+            if (title.includes('fix:') || title.includes('bug') || body.includes('bug report')) {
+              labels.push('bug');
+            }
+
+            // Documentation
+            if (title.includes('docs:') || title.includes('documentation')) {
+              labels.push('documentation');
+            }
+
+            // Refactoring
+            if (title.includes('refactor:') || title.includes('refactor')) {
+              labels.push('refactor');
+            }
+
+            // Security
+            if (title.includes('security') || title.includes('sec:')) {
+              labels.push('security');
+            }
+
+            // Performance
+            if (title.includes('perf:') || title.includes('performance')) {
+              labels.push('performance');
+            }
+
+            // Add labels
+            if (labels.length > 0) {
+              github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: number,
+                labels
+              });
+            }
+
+  # Priority assignment based on keywords
+  priority-assign:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request != null
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: 🔴 Assign priority
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const pr = context.payload.pull_request;
+            const title = pr.title.toLowerCase();
+            const body = pr.body?.toLowerCase() || '';
+
+            let priority = 'medium';
+
+            if (title.includes('critical') || title.includes('urgent') || body.includes('hotfix')) {
+              priority = 'priority: critical';
+            } else if (title.includes('high') || body.includes('high priority')) {
+              priority = 'priority: high';
+            } else if (title.includes('low')) {
+              priority = 'priority: low';
+            }
+
+            github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: number,
+              labels: [priority]
+            });

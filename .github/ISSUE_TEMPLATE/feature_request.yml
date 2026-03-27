@@ -1,0 +1,64 @@
+---
+name: Feature Request 🚀
+description: Propose a new feature or enhancement
+labels: [enhancement, feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de proposer une nouvelle feature ! Donnez-nous quelques détails.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Description
+      description: Décrivez la feature que vous aimeriez voir implémentée
+      placeholder: "Quelle feature proposez-vous ?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: 🎯 Cas d'usage
+      description: Quel problème cela résout-il ? Comment sera-t-il utilisé ?
+      placeholder: |
+        En tant que [utilisateur], je veux [action] pour [bénéfice]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 💡 Solution proposée
+      description: Décrivez comment vous imaginez que cette feature fonctionnerait
+      placeholder: "Comment devrait-elle fonctionner ?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternatives considérées
+      description: Y a-t-il d'autres manières de résoudre ce problème ?
+      placeholder: "Quelles autres solutions ont été envisagées ?"
+
+  - type: checkboxes
+    id: considerations
+    attributes:
+      label: 📚 Considérations
+      options:
+        - label: Impact sur la fiscalité française ?
+        - label: Affecte la performance ?
+        - label: Nécessite des dépendances supplémentaires ?
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: ✅ Critères d'acceptation
+      options:
+        - label: La feature s'aligne avec la vision du projet
+        - label: Documentation claire de l'utilisation
+        - label: Tests couvrant les cas critiques
+        - label: Pas de breaking changes (ou bien documentés)
+        - label: Compatible avec la fiscalité et les calculs français
