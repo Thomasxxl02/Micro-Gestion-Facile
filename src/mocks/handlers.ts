@@ -16,30 +16,37 @@ const mockItem = {
   amount: 1500,
   vatAmount: 0,
   vatRate: 0,
-  supplierName: 'Fournisseur'
+  supplierName: 'Fournisseur',
 };
 
-const mockAssistantResponse = "Bonjour ! Je suis votre assistant de gestion. Comment puis-je vous aider aujourd'hui ?";
+const mockAssistantResponse =
+  "Bonjour ! Je suis votre assistant de gestion. Comment puis-je vous aider aujourd'hui ?";
 
 export const handlers = [
   // On intercepte TOUTES les requêtes JSON de Gemini
   // Utilisation d'un regex simple plutôt que path-to-regexp pour éviter les erreurs de parsing d'URL complexes
-  http.post(/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/.*:generateContent$/, async ({ request }) => {
-    const body = await request.json() as any;
-    const isJsonRequest = body?.generationConfig?.responseMimeType === 'application/json';
+  http.post(
+    /^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/.*:generateContent$/,
+    async ({ request }) => {
+      const body = (await request.json()) as {
+        generationConfig?: { responseMimeType?: string };
+        [key: string]: unknown;
+      };
+      const isJsonRequest = body?.generationConfig?.responseMimeType === 'application/json';
 
-    return HttpResponse.json({
-      candidates: [
-        {
-          content: {
-            parts: [
-              {
-                text: isJsonRequest ? JSON.stringify([mockItem]) : mockAssistantResponse
-              }
-            ]
-          }
-        }
-      ],
-    });
-  }),
+      return HttpResponse.json({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: isJsonRequest ? JSON.stringify([mockItem]) : mockAssistantResponse,
+                },
+              ],
+            },
+          },
+        ],
+      });
+    }
+  ),
 ];
