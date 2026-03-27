@@ -49,6 +49,25 @@ vi.mock('../../components/EntityFormFields', () => ({
       />
     </div>
   ),
+  AddressFields: ({ address, postalCode, city, onAddressChange, onPostalCodeChange, onCityChange }: any) => (
+    <div data-testid="address-fields">
+      <input
+        placeholder="Adresse"
+        value={address || ''}
+        onChange={(e) => onAddressChange?.(e.target.value)}
+      />
+      <input
+        placeholder="Le code postal"
+        value={postalCode || ''}
+        onChange={(e) => onPostalCodeChange?.(e.target.value)}
+      />
+      <input
+        placeholder="Ville"
+        value={city || ''}
+        onChange={(e) => onCityChange?.(e.target.value)}
+      />
+    </div>
+  ),
   FinancialFields: ({ formData, onChange }: any) => (
     <div data-testid="financial-fields">
       <input
