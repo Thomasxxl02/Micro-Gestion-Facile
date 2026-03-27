@@ -84,72 +84,73 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     setIsPanelOpen(true);
   };
 
-  const handleSubmit = () => {
+  // --- VALIDATION HELPERS ---
+  const validateProductData = (): Record<string, string> => {
     const errors: Record<string, string> = {};
-    let isValid = true;
 
-    // Validation du nom
     if (!formData.name?.trim()) {
       errors.name = 'Nom obligatoire';
-      isValid = false;
     }
 
-    // Validation du prix - doit être positif
     const priceValue = Number(formData.price) || 0;
     if (priceValue < 0) {
       errors.price = 'Prix doit être positif ou zéro';
-      isValid = false;
-    }
-    const amountResult = validateAmount(formData.price || 0);
-    if (!amountResult.valid) {
-      errors.price = amountResult.error || 'Prix invalide';
-      isValid = false;
+    } else {
+      const amountResult = validateAmount(formData.price || 0);
+      if (!amountResult.valid) {
+        errors.price = amountResult.error || 'Prix invalide';
+      }
     }
 
-    // Validation du stock - doit être positif si type='product'
     if (formData.type === 'product') {
       const stockValue = Number(formData.stock) || 0;
       if (stockValue < 0) {
         errors.stock = 'Stock doit être positif ou zéro';
-        isValid = false;
       }
-
       const minStockValue = Number(formData.minStock) || 0;
       if (minStockValue < 0) {
         errors.minStock = "Seuil d'alerte doit être positif ou zéro";
-        isValid = false;
       }
     }
 
+    return errors;
+  };
+
+  const createProductFromForm = (): Product => {
+    const isService = formData.type === 'service';
+    return {
+      id: Date.now().toString(),
+      name: formData.name || '',
+      description: formData.description || '',
+      price: Number(formData.price) || 0,
+      type: (formData.type as 'service' | 'product') || 'product',
+      category: formData.category,
+      sku: formData.sku,
+      unit: formData.unit,
+      stock: !isService ? Number(formData.stock) || 0 : undefined,
+      minStock: !isService ? Number(formData.minStock) || 0 : undefined,
+      archived: false,
+      createdAt: new Date().toISOString(),
+    };
+  };
+
+  const handleSubmit = () => {
+    const errors = validateProductData();
     setValidationErrors(errors);
-    if (!isValid) {
+
+    if (Object.keys(errors).length > 0) {
       return;
     }
 
     if (editingId) {
-      const updated = { ...products.find((p) => p.id === editingId), ...formData } as Product;
-      if (onSave) {
-        onSave(updated);
+      const baseProduct = products.find((p) => p.id === editingId);
+      if (baseProduct && onSave) {
+        onSave({ ...baseProduct, ...formData } as Product);
       }
-    } else {
-      const product: Product = {
-        id: Date.now().toString(),
-        name: formData.name || '',
-        description: formData.description || '',
-        price: Number(formData.price) || 0,
-        type: formData.type as 'service' | 'product',
-        category: formData.category,
-        sku: formData.sku,
-        unit: formData.unit,
-        stock: formData.type === 'product' ? Number(formData.stock) || 0 : undefined,
-        minStock: formData.type === 'product' ? Number(formData.minStock) || 0 : undefined,
-        archived: false,
-        createdAt: new Date().toISOString(),
-      };
-      if (onSave) {
-        onSave(product);
-      }
+    } else if (onSave) {
+      onSave(createProductFromForm());
     }
+
     setValidationErrors({});
     setIsPanelOpen(false);
   };
@@ -223,6 +224,26 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     link.remove();
   };
 
+  const parseCSVLine = (line: string): string[] =>
+    line
+      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      .map((p) => p.trim().replaceAll('"', ''));
+
+  const createProductFromCSVLine = (parts: string[], lineIndex: number): Product => ({
+    id: (Date.now() + lineIndex).toString(),
+    sku: parts[0] || '',
+    name: parts[1],
+    type: parts[2]?.toLowerCase().includes('prest') ? 'service' : 'product',
+    category: parts[3] || '',
+    price: Number.parseFloat(parts[4]) || 0,
+    unit: parts[5] || 'unité',
+    stock: parts[6] ? Number.parseInt(parts[6]) : undefined,
+    minStock: parts[7] ? Number.parseInt(parts[7]) : undefined,
+    description: parts[8] || '',
+    archived: parts[9]?.toLowerCase().includes('arch') ?? false,
+    createdAt: new Date().toISOString(),
+  });
+
   const importCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -234,28 +255,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     const newProducts: Product[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) {
-        continue;
-      }
-      const parts = lines[i]
-        .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-        .map((p) => p.trim().replaceAll('"', ''));
+      const line = lines[i].trim();
+      if (!line) continue;
 
+      const parts = parseCSVLine(line);
       if (parts.length >= 2) {
-        newProducts.push({
-          id: (Date.now() + i).toString(),
-          sku: parts[0] || '',
-          name: parts[1],
-          type: parts[2]?.toLowerCase().includes('prest') ? 'service' : 'product',
-          category: parts[3] || '',
-          price: Number.parseFloat(parts[4]) || 0,
-          unit: parts[5] || 'unité',
-          stock: parts[6] ? Number.parseInt(parts[6]) : undefined,
-          minStock: parts[7] ? Number.parseInt(parts[7]) : undefined,
-          description: parts[8] || '',
-          archived: parts[9]?.toLowerCase().includes('arch') ?? false,
-          createdAt: new Date().toISOString(),
-        });
+        newProducts.push(createProductFromCSVLine(parts, i));
       }
     }
 
