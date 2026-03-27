@@ -42,7 +42,7 @@ vi.mock('../../components/EntityModal', () => ({
 }));
 
 vi.mock('../../components/EntityFormFields', () => ({
-  ContactFields: ({ formData, onChange }: any) => (
+  ContactFields: ({ formData = {}, onChange = () => {} }: any) => (
     <div data-testid="contact-fields">
       <input
         placeholder="Nom / Société *"
