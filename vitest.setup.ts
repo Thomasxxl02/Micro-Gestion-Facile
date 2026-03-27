@@ -5,7 +5,7 @@ import { afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { server } from './src/mocks/server';
-import { setupDexieForTests } from './__tests__/integration/dexieIntegrationSetup';
+import { setupDexieForTests } from './src/__tests__/integration/dexieIntegrationSetup';
 
 // Configurer le setup Dexie pour les tests d'intégration IndexedDB
 setupDexieForTests();
@@ -42,8 +42,8 @@ if (!globalThis.crypto) {
       }
       return arr;
     },
-  } as any;
+  } as Crypto;
 }
 
 // Mock de scrollIntoView pour JSDOM
-window.HTMLElement.prototype.scrollIntoView = vi.fn();
+globalThis.HTMLElement.prototype.scrollIntoView = vi.fn();

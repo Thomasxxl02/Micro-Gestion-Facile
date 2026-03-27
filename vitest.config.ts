@@ -6,19 +6,19 @@ import path from 'path';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
-    // Utiliser le navigateur virtuel jsdom pour simuler le DOM
+    // Use virtual browser jsdom to simulate the DOM
     environment: 'jsdom',
 
-    // Configuration des fichiers de test
-    globals: true, // Utiliser les APIs globales (describe, it, expect, etc.)
+    // Configure test files
+    globals: true, // Use global APIs (describe, it, expect, etc.)
 
-    // Inclure les fichiers de test
+    // Include test files
     include: ['**/*.{test,spec}.{ts,tsx}'],
 
-    // Exclure les dossiers
+    // Exclude folders
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
 
-    // Configuration de la couverture de code
+    // Code coverage configuration
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -32,7 +32,7 @@ export default defineConfig({
       },
     },
 
-    // Setupfiles pour la configuration globale
+    // Setup files for global configuration
     setupFiles: ['./vitest.setup.ts'],
   },
   resolve: {
