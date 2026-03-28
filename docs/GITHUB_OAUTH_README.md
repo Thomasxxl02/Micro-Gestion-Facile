@@ -19,7 +19,7 @@ Une **authentification GitHub OAuth complète, sécurisée et prête pour produc
 ✅ **Mobile-friendly** - Responsive design  
 ✅ **Sécurité renforcée** - HTTPS, scopes minimaux, tokens signés  
 ✅ **Tests unitaires** - Couverture complète  
-✅ **Documentation exhaustive** - 600+ lignes  
+✅ **Documentation exhaustive** - 600+ lignes
 
 ---
 
@@ -43,7 +43,7 @@ import { GitHubLoginButton } from '@/components/GitHubLoginButton';
 
 1. Lire [Fichiers créés](#-fichiers-créés)
 2. Parcourir [src/services/authService.ts](../src/services/authService.ts)
-3. Explorer [src/__tests__/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
+3. Explorer [src/**tests**/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
 
 ### Pour déployer en production (30 minutes)
 
@@ -57,22 +57,26 @@ import { GitHubLoginButton } from '@/components/GitHubLoginButton';
 ## 📂 Fichiers créés
 
 ### Services
+
 - **[src/services/authService.ts](../src/services/authService.ts)** (221 lignes)
   - Classe `GitHubAuthService` - Logique d'authentification
   - Interface `UserProfile` - Schéma utilisateur Firestore
   - Classe `AuthErrorHandler` - Utilitaires d'erreur
 
 ### Hooks
+
 - **[src/hooks/useGitHubAuth.ts](../src/hooks/useGitHubAuth.ts)** (170 lignes)
   - Hook `useGitHubAuth()` - Complèt avec profil Firestore
   - Hook `useSimpleGitHubAuth()` - Versio allégée
 
 ### Composants
+
 - **[src/components/GitHubLoginButton.tsx](../src/components/GitHubLoginButton.tsx)** (215 lignes)
   - Composant `GitHubLoginButton` - Bouton login réutilisable
   - Composant `GitHubLoginBlock` - Bloc login/logout adaptatif
 
 ### Styles
+
 - **[src/components/LoginComponents.module.css](../src/components/LoginComponents.module.css)** (400+ lignes)
   - Thème GitHub dark mode
   - Responsive design (mobile, tablet, desktop)
@@ -80,21 +84,24 @@ import { GitHubLoginButton } from '@/components/GitHubLoginButton';
   - Support dark mode et contraste élevé
 
 ### Tests
-- **[src/__tests__/GitHubAuth.test.tsx](../src/__tests__/GitHubAuth.test.tsx)**
+
+- **[src/**tests**/GitHubAuth.test.tsx](../src/**tests**/GitHubAuth.test.tsx)**
   - 20+ cas de test unitaires
   - Tests composants, services, erreurs, a11y
 
-- **[src/__tests__/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)**
+- **[src/**tests**/GitHubAuth.example.tsx](../src/**tests**/GitHubAuth.example.tsx)**
   - 5 exemples d'intégration
   - Complexité croissante
 
 ### Documentation
+
 - **[GITHUB_OAUTH_QUICKSTART.md](./GITHUB_OAUTH_QUICKSTART.md)** - Démarrage en 5 min
 - **[GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md)** - Guide complet (340 lignes)
 - **[GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md)** - Checklist configuration
 - **[GITHUB_OAUTH_IMPLEMENTATION_SUMMARY.md](./GITHUB_OAUTH_IMPLEMENTATION_SUMMARY.md)** - Résumé des améliorations
 
 ### Fichiers modifiés
+
 - **[src/firebase.ts](../src/firebase.ts)** - Ajouté GitHub Provider
 
 ---
@@ -102,21 +109,27 @@ import { GitHubLoginButton } from '@/components/GitHubLoginButton';
 ## 🎓 Guide de navigation
 
 ### Je veux juste un bouton login
+
 → [GITHUB_OAUTH_QUICKSTART.md](./GITHUB_OAUTH_QUICKSTART.md) (5 min)
 
 ### Je veux comprendre comment ça marche
+
 → [src/services/authService.ts](../src/services/authService.ts) + [GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md)
 
 ### Je veux voir des exemples
-→ [src/__tests__/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
+
+→ [src/**tests**/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
 
 ### Je veux configurer en production
+
 → [GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md)
 
 ### J'ai une erreur
+
 → [GITHUB_OAUTH_SETUP.md → Dépannage](./GITHUB_OAUTH_SETUP.md#dépannage)
 
 ### Je veux valider la sécurité
+
 → [GITHUB_OAUTH_SETUP.md → Sécurité](./GITHUB_OAUTH_SETUP.md#sécurité-et-bonnes-pratiques)
 
 ---
@@ -209,6 +222,7 @@ Data Flow:
 ## 🔐 Sécurité (résumé)
 
 ### ✅ Garantis par Firebase
+
 - OAuth 2.0 standard
 - Tokens signés (1h expiry)
 - Refresh token automatique
@@ -216,12 +230,14 @@ Data Flow:
 - State parameter validation
 
 ### ✅ Implémentés par nous
+
 - Scopes minimalistes (`user:email`, `read:user`)
 - Nettoyage localStorage après logout
 - Firestore rules restrictives
 - Reauthentification pour opérations sensibles
 
 ### ✅ À votre charge
+
 - Ne pas commiter `.env.local`
 - Configurer Authorization callback URL correct
 - Mettre à jour Privacy Policy
@@ -234,11 +250,13 @@ Data Flow:
 ## 🧪 Tests
 
 ### Unitaires
+
 ```bash
 npm run test -- src/__tests__/GitHubAuth.test.tsx
 ```
 
 ### Manuels
+
 Voir [GITHUB_OAUTH_CHECKLIST.md → Tests Locaux](./GITHUB_OAUTH_CHECKLIST.md#-tests-locaux)
 
 ---
@@ -246,18 +264,21 @@ Voir [GITHUB_OAUTH_CHECKLIST.md → Tests Locaux](./GITHUB_OAUTH_CHECKLIST.md#-t
 ## 🚀 Déploiement
 
 ### Firebase Hosting
+
 ```bash
 npm run build
 firebase deploy --only hosting
 ```
 
 ### Variables production en Firebase
+
 ```
 Authorization callback URL:
 https://YOUR-PROJECT.firebaseapp.com/__/auth/handler
 ```
 
 ### Vérifications avant production
+
 - [ ] Tests passent: `npm run test`
 - [ ] Build réussit: `npm run build`
 - [ ] SonarQube OK: `npm run sonarqube`
@@ -267,12 +288,12 @@ https://YOUR-PROJECT.firebaseapp.com/__/auth/handler
 
 ## 📚 Documentation complète
 
-| Document | Contenu | Durée |
-|----------|---------|-------|
-| [GITHUB_OAUTH_QUICKSTART.md](./GITHUB_OAUTH_QUICKSTART.md) | Démarrage rapide | 5 min |
-| [GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md) | Configuration détaillée | 30 min |
-| [GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md) | Étapes à cocher | 60 min |
-| [GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx) | 5 exemples | 15 min |
+| Document                                                          | Contenu                 | Durée  |
+| ----------------------------------------------------------------- | ----------------------- | ------ |
+| [GITHUB_OAUTH_QUICKSTART.md](./GITHUB_OAUTH_QUICKSTART.md)        | Démarrage rapide        | 5 min  |
+| [GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md)                  | Configuration détaillée | 30 min |
+| [GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md)          | Étapes à cocher         | 60 min |
+| [GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx) | 5 exemples              | 15 min |
 
 ---
 
@@ -294,14 +315,14 @@ A: 2 seulement: `user:email` et `read:user` - Plus est dangereux!
 
 ## 📊 État du projet
 
-| Aspect | État |
-|--------|------|
-| Fonctionnalité | ✅ Complète |
-| Tests | ✅ 20+ cas |
-| Documentation | ✅ 600+ lignes |
-| Sécurité | ✅ OAuth 2.0 |
-| Accessibilité | ✅ WCAG 2.1 AA |
-| Production-ready | ✅ OUI |
+| Aspect           | État           |
+| ---------------- | -------------- |
+| Fonctionnalité   | ✅ Complète    |
+| Tests            | ✅ 20+ cas     |
+| Documentation    | ✅ 600+ lignes |
+| Sécurité         | ✅ OAuth 2.0   |
+| Accessibilité    | ✅ WCAG 2.1 AA |
+| Production-ready | ✅ OUI         |
 
 ---
 
@@ -321,13 +342,16 @@ A: 2 seulement: `user:email` et `read:user` - Plus est dangereux!
 ## 📞 Support
 
 ### Problèmes courants
+
 → [GITHUB_OAUTH_SETUP.md → Dépannage](./GITHUB_OAUTH_SETUP.md#dépannage)
 
 ### Questions techniques
+
 → [GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md)
 
 ### Exemples d'intégration
-→ [src/__tests__/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
+
+→ [src/**tests**/GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx)
 
 ---
 

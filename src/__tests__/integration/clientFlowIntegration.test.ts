@@ -13,9 +13,9 @@
  * 4. Archiver un client → vérifier les filtres
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useEntityForm, useEntityFilters } from '../../hooks/useEntity';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { useEntityFilters, useEntityForm } from '../../hooks/useEntity';
 import { useAppStore } from '../../store/appStore';
 import type { Client } from '../../types';
 
@@ -215,7 +215,7 @@ describe('Client Flow Integration', () => {
     it('liste tous les clients actifs (exclut les archivés)', () => {
       const store = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(store.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -229,7 +229,7 @@ describe('Client Flow Integration', () => {
     it('affiche les clients archivés quand demandé', () => {
       const store = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(store.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -253,7 +253,7 @@ describe('Client Flow Integration', () => {
     it('cherche un client par nom', () => {
       const store = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(store.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
           searchField: 'name',
@@ -271,7 +271,7 @@ describe('Client Flow Integration', () => {
     it('trie les clients par nom', () => {
       const store = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(store.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -291,7 +291,7 @@ describe('Client Flow Integration', () => {
     it('combine recherche, archivage et tri', () => {
       const store = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(store.clients, {
+        useEntityFilters(store.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
           searchField: 'name',
@@ -322,7 +322,7 @@ describe('Client Flow Integration', () => {
       // Vérifier que le client est visible au départ
       const storeAfterInit = useAppStore.getState();
       const { result: filterResult } = renderHook(() =>
-        useEntityFilters(storeAfterInit.clients, {
+        useEntityFilters(storeAfterInit.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
         })
@@ -340,7 +340,7 @@ describe('Client Flow Integration', () => {
       // Vérifier qu'il est masqué maintenant
       const storeAfterArchive = useAppStore.getState();
       const { result: filterResult2 } = renderHook(() =>
-        useEntityFilters(storeAfterArchive.clients, {
+        useEntityFilters(storeAfterArchive.clients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
         })

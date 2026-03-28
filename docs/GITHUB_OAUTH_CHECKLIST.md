@@ -208,11 +208,13 @@ https://YOUR-PROJECT.firebaseapp.com/__/auth/handler
 - [ ] Mettez à jour Privacy Policy pour inclure:
 
 ```markdown
-  ## Authentification GitHub
-  Nous utilisons GitHub OAuth pour authentifier les utilisateurs.
-  - Nous ne stockons PAS vos données GitHub (repos, issues)
-  - Vous pouvez révoquer l'accès depuis GitHub Settings
-  ```
+## Authentification GitHub
+
+Nous utilisons GitHub OAuth pour authentifier les utilisateurs.
+
+- Nous ne stockons PAS vos données GitHub (repos, issues)
+- Vous pouvez révoquer l'accès depuis GitHub Settings
+```
 
 - [ ] Mettez à jour Terms of Service si needed
 

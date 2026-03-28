@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import type { InvoiceItem } from '../types';
+import type { Invoice, InvoiceItem } from '../types';
 
 /**
  * Module de calculs de factures pour micro-entrepreneurs français
@@ -382,4 +382,124 @@ export function isWithinMicroThreshold(
   const threshold = businessType === 'SALES' ? MICRO_THRESHOLDS.SALES : MICRO_THRESHOLDS.SERVICES;
 
   return revenueDecimal.lessThanOrEqualTo(threshold);
+}
+
+// ============================================================================
+// CALCULS PAR ARTICLE (ITEMS)
+// ============================================================================
+
+export interface ItemCalculationResult {
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+  discountAmount: number;
+  subtotalAfterDiscount: number;
+  vatRate: number;
+  vatAmount: number;
+  total: number;
+}
+
+/**
+ * Calcule le montant TVA et le total TTC pour un article
+ *
+ * @param item - Article avec quantité, prix, taux TVA
+ * @param discountPercent - Remise globale à appliquer (optionnel)
+ * @returns Détails du calcul pour cet article
+ */
+export function calculateItemVAT(
+  item: {
+    unitPrice: number;
+    quantity: number;
+    vatRate: number;
+  },
+  discountPercent: number = 0
+): ItemCalculationResult {
+  const unitPrice = new Decimal(item.unitPrice);
+  const quantity = new Decimal(item.quantity);
+  const vatRate = new Decimal(item.vatRate);
+
+  // Sous-total HT
+  const subtotal = unitPrice.times(quantity).toDecimalPlaces(2);
+
+  // Appliquer la remise (si fournie)
+  const discountRate = new Decimal(discountPercent).dividedBy(100);
+  const discountAmount = subtotal.times(discountRate).toDecimalPlaces(2);
+  const subtotalAfterDiscount = subtotal.minus(discountAmount).toDecimalPlaces(2);
+
+  // TVA
+  const vatAmount = subtotalAfterDiscount.times(vatRate.dividedBy(100)).toDecimalPlaces(2);
+
+  // Total TTC
+  const total = subtotalAfterDiscount.plus(vatAmount).toDecimalPlaces(2);
+
+  return {
+    unitPrice: unitPrice.toNumber(),
+    quantity: quantity.toNumber(),
+    subtotal: subtotal.toNumber(),
+    discountAmount: discountAmount.toNumber(),
+    subtotalAfterDiscount: subtotalAfterDiscount.toNumber(),
+    vatRate: item.vatRate,
+    vatAmount: vatAmount.toNumber(),
+    total: total.toNumber(),
+  };
+}
+
+// ============================================================================
+// FORMATAGE POUR EXPORT/PDF
+// ============================================================================
+
+
+export interface FormattedInvoiceForPDF {
+  number: string;
+  date: string;
+  dueDate: string;
+  total: string;
+  vatAmount: string;
+  balanceDue: string;
+  items: Array<{
+    description: string;
+    quantity: string;
+    unitPrice: string;
+    total: string;
+  }>;
+}
+
+/**
+ * Formate une facture pour l'export PDF
+ * Convertit tous les montants en chaînes formatées en euros
+ *
+ * @param invoice - Facture à formater
+ * @param totals - Totaux calculés (option alternative à recalcul)
+ * @returns Facture formatée pour le PDF
+ */
+export function formatInvoiceForPDF(
+  invoice: Invoice,
+  totals?: InvoiceTotalsResult
+): FormattedInvoiceForPDF {
+  // Recalculer les totaux si non fournis
+  const calculatedTotals =
+    totals ||
+    calculateFullInvoiceTotals({
+      items: invoice.items,
+      taxExempt: invoice.taxExempt || false,
+      discount: invoice.discount || 0,
+      shipping: invoice.shipping || 0,
+      deposit: invoice.deposit || 0,
+      defaultVatRate: 20, // Default VAT rate (passed via userProfile context)
+    });
+
+  return {
+    number: invoice.number,
+    date: new Date(invoice.date).toLocaleDateString('fr-FR'),
+    dueDate: new Date(invoice.dueDate).toLocaleDateString('fr-FR'),
+    total: formatCurrency(calculatedTotals.total),
+    vatAmount: formatCurrency(calculatedTotals.vatAmount),
+    balanceDue: formatCurrency(calculatedTotals.balanceDue),
+    items: invoice.items.map((item) => ({
+      description: item.description,
+      quantity: `${item.quantity} ${item.unit || ''}`.trim(),
+      unitPrice: formatCurrency(item.unitPrice),
+      total: formatCurrency(item.quantity * item.unitPrice),
+    })),
+  };
 }

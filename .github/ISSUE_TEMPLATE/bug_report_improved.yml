@@ -35,7 +35,7 @@ body:
     attributes:
       label: 🎯 Comportement attendu
       description: Que devrait-il se passer au lieu du bug ?
-      placeholder: "Décrivez le comportement attendu"
+      placeholder: 'Décrivez le comportement attendu'
     validations:
       required: true
 
@@ -102,8 +102,8 @@ body:
     attributes:
       label: 🔄 Reproductible
       options:
-        - "Yes"
-        - "No"
+        - 'Yes'
+        - 'No'
         - Unknown
     validations:
       required: true

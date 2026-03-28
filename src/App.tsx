@@ -1,7 +1,9 @@
-import React, { useEffect, Suspense } from 'react';
-import Sidebar from './components/Sidebar';
+import React, { Suspense, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
+import EmailSuccessBanner from './components/EmailSuccessBanner';
+import ErrorBanner from './components/ErrorBanner';
 import LoadingFallback from './components/LoadingFallback';
+import Sidebar from './components/Sidebar';
 
 // Lazy load components for code-splitting
 const InvoiceManager = React.lazy(() => import('./components/InvoiceManager'));
@@ -14,39 +16,42 @@ const CalendarManager = React.lazy(() => import('./components/CalendarManager'))
 const SettingsManager = React.lazy(() => import('./components/SettingsManager'));
 const AIAssistant = React.lazy(() => import('./components/AIAssistant'));
 
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import {
-  Menu,
-  LogIn,
-  LogOut,
-  Loader2,
-  Sun,
-  Moon,
-  Mail,
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
+  Loader2,
+  LogIn,
+  LogOut,
+  Mail,
+  Menu,
+  Moon,
+  Sun,
 } from 'lucide-react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { GitHubLoginButton } from './components/GitHubLoginButton';
 import {
+  OperationType,
   auth,
   db,
+  handleFirestoreError,
   loginWithGoogle,
   logout,
   sendEmailLink,
-  OperationType,
-  handleFirestoreError,
 } from './firebase';
-import { useAppStore } from './store/appStore';
+import { useEmailValidation } from './hooks/useEmailValidation';
 import { useFirestoreSync } from './hooks/useFirestoreSync';
+import { useAppStore } from './store/appStore';
 import type {
-  Invoice,
+  CalendarEvent,
   Client,
-  Supplier,
-  Product,
-  Expense,
   Email,
   EmailTemplate,
-  CalendarEvent,
+  Expense,
+  Invoice,
+  Product,
+  Supplier,
   UserProfile,
 } from './types';
 
@@ -99,7 +104,7 @@ const App: React.FC = () => {
     data: syncedClients,
     upsert: saveClient,
     remove: deleteClient,
-    status: clientStatus,
+    status: _clientStatus,
   } = useFirestoreSync<Client>({
     userId: user?.uid || '',
     collectionName: 'clients',
@@ -285,7 +290,6 @@ const App: React.FC = () => {
               invoices={invoices}
               onSave={(c) => saveClient(c)}
               onDelete={(id) => deleteClient(id)}
-              isLoading={clientStatus === 'LOADING'}
             />
           </Suspense>
         );
@@ -406,9 +410,29 @@ const App: React.FC = () => {
     }
   };
 
-  const [emailLink, setEmailLinkState] = React.useState('');
+  const {
+    email: emailLink,
+    setEmail: setEmailLink,
+    isValid: isEmailValid,
+    error: emailValidationError,
+    warning: emailValidationWarning,
+  } = useEmailValidation();
   const [isEmailSent, setIsEmailSent] = React.useState(false);
-  const [isSending, setIsSending] = React.useState(false);
+  const [loadingService, setLoadingService] = React.useState<'google' | 'github' | 'email' | null>(
+    null
+  );
+  const [loginError, setLoginError] = React.useState<string | null>(null);
+
+  const handleGoogleLogin = async () => {
+    setLoadingService('google');
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : 'Erreur connexion Google');
+    } finally {
+      setLoadingService(null);
+    }
+  };
 
   if (!isAuthReady) {
     return (
@@ -438,13 +462,62 @@ const App: React.FC = () => {
           </p>
 
           <div className="space-y-4">
+            {/* Erreur Banner - Remplace l'ancien div simple */}
+            <ErrorBanner
+              error={loginError}
+              type="auth"
+              onDismiss={() => setLoginError(null)}
+              showDismiss={true}
+            />
+
+            {/* Google Login Button - Responsive 44px min */}
             <button
-              onClick={loginWithGoogle}
-              className="w-full py-4 px-8 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl hover:shadow-brand-900/20 dark:hover:shadow-white/10 group mb-6"
+              onClick={handleGoogleLogin}
+              disabled={loadingService !== null}
+              className={`
+                w-full
+                min-h-[44px] sm:min-h-[50px]
+                py-3 sm:py-4
+                px-4 sm:px-8
+                bg-brand-900 dark:bg-white
+                text-white dark:text-brand-900
+                rounded-2xl
+                font-bold
+                flex items-center justify-center gap-3 sm:gap-4
+                hover:scale-100 sm:hover:scale-[1.02]
+                active:scale-95
+                transition-all
+                shadow-xl
+                hover:shadow-brand-900/20 dark:hover:shadow-white/10
+                group
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+                disabled:scale-100
+              `}
             >
-              <LogIn size={24} className="group-hover:translate-x-1 transition-transform" />
-              Se connecter avec Google
+              {loadingService === 'google' ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />
+              )}
+              <span className="hidden sm:inline">Se connecter avec Google</span>
+              <span className="sm:hidden">Google</span>
             </button>
+
+            {/* GitHub Login Button - More responsive */}
+            <div className="[&>button]:w-full [&>button]:min-h-[44px] sm:[&>button]:min-h-[50px] [&>button]:py-3 sm:[&>button]:py-4">
+              <GitHubLoginButton
+                onSuccess={() => {
+                  // Auto-redirect to dashboard via useGitHubAuth / onAuthStateChanged
+                }}
+                onError={(err) => {
+                  console.error('GitHub login error:', err);
+                  setLoginError(err.message);
+                }}
+                label="Se connecter avec GitHub"
+                showText={true}
+              />
+            </div>
 
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
@@ -461,24 +534,32 @@ const App: React.FC = () => {
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  if (!emailLink || isSending) {
+                  if (!emailLink || loadingService !== null || !isEmailValid) {
                     return;
                   }
-                  setIsSending(true);
+                  setLoadingService('email');
                   try {
                     await sendEmailLink(emailLink);
                     setIsEmailSent(true);
                   } catch {
-                    alert("Erreur lors de l'envoi du lien.");
+                    setLoginError("Erreur lors de l'envoi du lien.");
                   } finally {
-                    setIsSending(false);
+                    setLoadingService(null);
                   }
                 }}
-                className="space-y-3"
+                className="space-y-3 text-left"
               >
                 <div className="relative">
                   <Mail
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400"
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+                      emailValidationError
+                        ? 'text-red-500'
+                        : emailValidationWarning
+                          ? 'text-yellow-500'
+                          : isEmailValid
+                            ? 'text-green-500'
+                            : 'text-brand-400'
+                    }`}
                     size={20}
                   />
                   <input
@@ -486,38 +567,95 @@ const App: React.FC = () => {
                     placeholder="votre@email.com"
                     required
                     value={emailLink}
-                    onChange={(e) => setEmailLinkState(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white dark:bg-brand-900/50 border border-brand-200 dark:border-brand-800 rounded-2xl focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all dark:text-white"
+                    onChange={(e) => setEmailLink(e.target.value)}
+                    disabled={loadingService !== null}
+                    className={`w-full pl-12 pr-4 py-4 bg-white dark:bg-brand-900/50 border rounded-2xl focus:ring-4 outline-none transition-all dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                      emailValidationError
+                        ? 'border-red-500 focus:ring-red-500/10'
+                        : emailValidationWarning
+                          ? 'border-yellow-500 focus:ring-yellow-500/10'
+                          : isEmailValid
+                            ? 'border-green-500 focus:ring-green-500/10'
+                            : 'border-brand-200 dark:border-brand-800 focus:ring-brand-500/10 focus:border-brand-500'
+                    }`}
                   />
                 </div>
+
+                {/* Real-time feedback */}
+                {emailValidationError && (
+                  <p className="text-xs text-red-600 dark:text-red-400 px-2 flex items-center gap-1 animate-fade-in">
+                    <AlertCircle size={12} /> {emailValidationError}
+                  </p>
+                )}
+                {emailValidationWarning && (
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 px-2 flex items-center gap-1 animate-fade-in">
+                    <AlertCircle size={12} /> {emailValidationWarning}
+                  </p>
+                )}
+                {isEmailValid && !emailValidationWarning && (
+                  <p className="text-xs text-green-600 dark:text-green-400 px-2 flex items-center gap-1 animate-fade-in">
+                    <CheckCircle2 size={12} /> Email valide ✓
+                  </p>
+                )}
+
                 <button
                   type="submit"
-                  disabled={isSending}
-                  className="w-full py-4 bg-brand-50 dark:bg-brand-800 text-brand-900 dark:text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-brand-100 dark:hover:bg-brand-700 transition-all border border-brand-200 dark:border-brand-700 group"
+                  disabled={loadingService !== null || !isEmailValid}
+                  className={`
+                    w-full
+                    min-h-[44px]
+                    py-3 sm:py-4
+                    px-4 sm:px-6
+                    bg-brand-50 dark:bg-brand-800
+                    text-brand-900 dark:text-white
+                    rounded-2xl
+                    font-bold
+                    flex items-center justify-center gap-2 sm:gap-3
+                    hover:bg-brand-100 dark:hover:bg-brand-700
+                    transition-all
+                    border border-brand-200 dark:border-brand-700
+                    group
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                    active:scale-95
+                  `}
                 >
-                  {isSending ? 'Envoi...' : 'Recevoir un lien magique'}
-                  <ArrowRight
-                    size={18}
-                    className="group-hover:translate-x-1 transition-transform"
-                  />
+                  {loadingService === 'email' ? (
+                    <>
+                      <Loader2 size={16} className="sm:size-[18px] animate-spin" />
+                      <span className="hidden sm:inline">Envoi...</span>
+                      <span className="sm:hidden">Envoi...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">Recevoir un lien magique</span>
+                      <span className="sm:hidden">Lien magique</span>
+                      <ArrowRight size={16} className="sm:size-[18px] group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </form>
             ) : (
-              <div className="p-6 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-[2rem] text-center animate-fade-in">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white shadow-lg shadow-green-500/20">
-                  <CheckCircle2 size={24} />
-                </div>
-                <h3 className="text-green-800 dark:text-green-300 font-bold mb-1">Lien envoyé !</h3>
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  Consultez vos e-mails pour vous connecter.
-                </p>
-                <button
-                  onClick={() => setIsEmailSent(false)}
-                  className="mt-4 text-xs font-bold text-green-600 uppercase tracking-widest hover:underline"
-                >
-                  Renvoyer ou changer d&apos;e-mail
-                </button>
-              </div>
+              <EmailSuccessBanner
+                email={emailLink}
+                onResend={async () => {
+                  setLoadingService('email');
+                  try {
+                    await sendEmailLink(emailLink);
+                  } catch (error) {
+                    setLoginError(
+                      error instanceof Error ? error.message : 'Erreur lors du renvoi du lien'
+                    );
+                  } finally {
+                    setLoadingService(null);
+                  }
+                }}
+                onEdit={() => {
+                  setIsEmailSent(false);
+                  setEmailLink('');
+                }}
+                isResending={loadingService === 'email'}
+              />
             )}
           </div>
 

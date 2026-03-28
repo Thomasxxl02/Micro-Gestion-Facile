@@ -7,19 +7,25 @@
  */
 
 import {
-  Auth,
-  User,
-  UserCredential,
   GithubAuthProvider,
+  multiFactor,
+  reauthenticateWithPopup,
+  sendPasswordResetEmail,
   signInWithPopup,
   signOut,
-  updateProfile,
-  AuthError,
-  MultiFactor,
-  sendPasswordResetEmail,
-  reauthenticateWithPopup,
+  type Auth,
+  type AuthError,
+  type User,
+  type UserCredential,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Firestore, updateDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  type Firestore,
+} from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -115,7 +121,7 @@ export class GitHubAuthService {
         displayName: user.displayName,
         photoURL: user.photoURL,
         provider: 'github',
-        githubUsername: user.displayName?.split('/')[1] || user.displayName,
+        githubUsername: user.displayName?.split('/')[1] || (user.displayName ?? undefined),
         lastLoginAt: new Date(),
         isVerified: user.emailVerified,
       };
@@ -160,13 +166,10 @@ export class GitHubAuthService {
   /**
    * Met à jour les informations du profil utilisateur
    */
-  async updateUserProfile(
-    userId: string,
-    updates: Partial<UserProfile>
-  ): Promise<void> {
+  async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
     try {
       const userRef = doc(this.db, 'users', userId);
-      const { uid, createdAt, ...updatableFields } = updates;
+      const { uid: _uid, createdAt: _createdAt, ...updatableFields } = updates;
 
       await updateDoc(userRef, {
         ...updatableFields,
@@ -218,33 +221,23 @@ export class GitHubAuthService {
     const firebaseError = error as AuthError;
 
     const errorMessages: Record<string, string> = {
-      'auth/cancelled-popup-request':
-        'Popup fermée. Veuillez réessayer.',
-      'auth/popup-blocked':
-        'Les popups sont bloquées. Veuillez les autoriser.',
-      'auth/popup-closed-by-user':
-        'Connexion annulée par l\'utilisateur.',
+      'auth/cancelled-popup-request': 'Popup fermée. Veuillez réessayer.',
+      'auth/popup-blocked': 'Les popups sont bloquées. Veuillez les autoriser.',
+      'auth/popup-closed-by-user': "Connexion annulée par l'utilisateur.",
       'auth/account-exists-with-different-credential':
         'Un compte existe déjà avec cet email, utilisant un autre provider.',
-      'auth/credential-already-in-use':
-        'Ces identifiants sont déjà associés à un compte.',
-      'auth/user-disabled':
-        'Ce compte a été désactivé.',
-      'auth/user-not-found':
-        'Utilisateur non trouvé.',
-      'auth/wrong-password':
-        'Mot de passe incorrect.',
-      'auth/too-many-requests':
-        'Trop de tentatives. Veuillez réessayer plus tard.',
-      'auth/network-request-failed':
-        'Erreur réseau. Vérifiez votre connexion internet.',
-      'auth/operation-not-allowed':
-        'Cette méthode d\'authentification n\'est pas activée.',
+      'auth/credential-already-in-use': 'Ces identifiants sont déjà associés à un compte.',
+      'auth/user-disabled': 'Ce compte a été désactivé.',
+      'auth/user-not-found': 'Utilisateur non trouvé.',
+      'auth/wrong-password': 'Mot de passe incorrect.',
+      'auth/too-many-requests': 'Trop de tentatives. Veuillez réessayer plus tard.',
+      'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion internet.',
+      'auth/operation-not-allowed': "Cette méthode d'authentification n'est pas activée.",
     };
 
     const userMessage =
       errorMessages[firebaseError.code] ||
-      'Erreur d\'authentification: ' + (firebaseError.message || 'Inconnue');
+      "Erreur d'authentification: " + (firebaseError.message || 'Inconnue');
 
     const customError = new Error(userMessage);
     customError.cause = firebaseError;
@@ -255,12 +248,7 @@ export class GitHubAuthService {
    * Nettoie les données sensibles du localStorage
    */
   private clearSensitiveData(): void {
-    const sensitiveKeys = [
-      'emailForSignIn',
-      'tempAuthToken',
-      'mfaToken',
-      'sessionToken',
-    ];
+    const sensitiveKeys = ['emailForSignIn', 'tempAuthToken', 'mfaToken', 'sessionToken'];
 
     sensitiveKeys.forEach((key) => {
       localStorage.removeItem(key);
@@ -271,13 +259,9 @@ export class GitHubAuthService {
    * Vérifie si 2FA est configuré pour cet utilisateur
    */
   async check2FAEnabled(user: User): Promise<boolean> {
-    if (!user.multiFactor) return false;
-
     try {
-      const enrolledFactors = await (
-        user.multiFactor as unknown as MultiFactor
-      ).getEnrolledFactors();
-      return enrolledFactors.length > 0;
+      const mfaUser = multiFactor(user);
+      return mfaUser.enrolledFactors.length > 0;
     } catch {
       return false;
     }
@@ -292,9 +276,15 @@ export class GitHubAuthService {
     }
 
     const provider = user.providerData[0].providerId;
-    if (provider.includes('github')) return 'github';
-    if (provider.includes('google')) return 'google';
-    if (provider.includes('email')) return 'email';
+    if (provider.includes('github')) {
+      return 'github';
+    }
+    if (provider.includes('google')) {
+      return 'google';
+    }
+    if (provider.includes('email')) {
+      return 'email';
+    }
     return 'unknown';
   }
 }
@@ -304,13 +294,17 @@ export class GitHubAuthService {
  */
 export class AuthErrorHandler {
   static isNetworkError(error: unknown): boolean {
-    if (!(error instanceof Error)) return false;
+    if (!(error instanceof Error)) {
+      return false;
+    }
     const firebaseError = error as AuthError;
     return firebaseError.code === 'auth/network-request-failed';
   }
 
   static isAccountConflictError(error: unknown): boolean {
-    if (!(error instanceof Error)) return false;
+    if (!(error instanceof Error)) {
+      return false;
+    }
     const firebaseError = error as AuthError;
     return [
       'auth/account-exists-with-different-credential',
@@ -320,12 +314,12 @@ export class AuthErrorHandler {
   }
 
   static isPermanentError(error: unknown): boolean {
-    if (!(error instanceof Error)) return false;
+    if (!(error instanceof Error)) {
+      return false;
+    }
     const firebaseError = error as AuthError;
-    return [
-      'auth/operation-not-allowed',
-      'auth/user-disabled',
-      'auth/invalid-api-key',
-    ].includes(firebaseError.code);
+    return ['auth/operation-not-allowed', 'auth/user-disabled', 'auth/invalid-api-key'].includes(
+      firebaseError.code
+    );
   }
 }

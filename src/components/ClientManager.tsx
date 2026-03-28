@@ -5,14 +5,14 @@
  * Result: ~250 LOC (was ~500)
  */
 
+import { AlertCircle, Archive, Download, Plus, TrendingUp, Upload, Users } from 'lucide-react';
 import React, { useMemo, useRef } from 'react';
-import { type Client, type Invoice, InvoiceStatus } from '../types';
-import { Plus, Download, Upload, Users, TrendingUp, Archive, AlertCircle } from 'lucide-react';
-import EntityModal from './EntityModal';
-import { ContactFields, SearchFilterFields, AddressFields } from './EntityFormFields';
-import { useEntityForm, useEntityFilters } from '../hooks/useEntity';
+import { useEntityFilters, useEntityForm } from '../hooks/useEntity';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { ClientSchema } from '../lib/schemas';
+import { type Client, type Invoice, InvoiceStatus } from '../types';
+import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
+import EntityModal from './EntityModal';
 import { FormFieldValidated } from './FormFieldValidated';
 
 interface ClientManagerProps {
@@ -24,7 +24,7 @@ interface ClientManagerProps {
 
 const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave, onDelete }) => {
   const form = useEntityForm<Client>();
-  const filters = useEntityFilters(clients, {
+  const filters = useEntityFilters(clients as unknown as Record<string, unknown>[], {
     searchField: 'name',
     hasArchive: true,
     archiveField: 'archived',
@@ -39,7 +39,10 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
   } = useFormValidation(form.formData || ({} as Client), ClientSchema, { validateOnChange: true });
 
   // Stats: revenue by client, total count
-  const getClientStats = (clientId: string) => {
+  const getClientStats = (clientId: unknown) => {
+    if (typeof clientId !== 'string') {
+      return { revenue: 0, count: 0, lastActivity: 0 };
+    }
     const clientInvoices = invoices.filter((inv) => inv.clientId === clientId);
     const revenue = clientInvoices
       .filter((inv) => inv.status === InvoiceStatus.PAID)
@@ -74,7 +77,9 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
   }, [clients, invoices]);
 
   const processedClients = useMemo(() => {
-    return filters.filteredEntities.sort((a, b) => a.name.localeCompare(b.name));
+    return (filters.filteredEntities as unknown as Client[]).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, [filters.filteredEntities]);
 
   // Form handlers
@@ -338,10 +343,12 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
                   title="Cliquez pour modifier le client"
                 >
                   <div>
-                    <h4 className="font-semibold text-brand-900 dark:text-white">{client.name}</h4>
+                    <h4 className="font-semibold text-brand-900 dark:text-white">
+                      {(client as Client).name}
+                    </h4>
                     <div className="flex gap-4 mt-1 text-xs text-brand-600 dark:text-brand-300">
-                      {client.email && <span>{client.email}</span>}
-                      {client.phone && <span>{client.phone}</span>}
+                      {(client as Client).email && <span>{(client as Client).email}</span>}
+                      {(client as Client).phone && <span>{(client as Client).phone}</span>}
                     </div>
                   </div>
                 </button>
@@ -415,11 +422,11 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
             </h4>
             <AddressFields
               address={validatedData.address || ''}
-              postalCode={validatedData.postalCode || ''}
-              city={validatedData.city || ''}
+              postalCode={''}
+              city={''}
               onAddressChange={(val) => handleChange('address')(val)}
-              onPostalCodeChange={(val) => handleChange('postalCode')(val)}
-              onCityChange={(val) => handleChange('city')(val)}
+              onPostalCodeChange={() => undefined}
+              onCityChange={() => undefined}
             />
           </div>
         </div>

@@ -10,8 +10,8 @@
  * EN PREMIER, avant ce fichier et avant Dexie!
  */
 
-import { beforeEach, afterEach, vi } from 'vitest';
 import Dexie from 'dexie';
+import { afterEach, beforeEach } from 'vitest';
 
 declare global {
   namespace NodeJS {
@@ -36,18 +36,18 @@ export function setupDexieForTests() {
     // Fermer et supprimer tous les DBs de Dexie en fin de test
     // Cela nettoie l'état pour le test suivant
     try {
-      // Récupérer toutes les connexions ouvertes
-      const existingConnections = Dexie.connections || [];
+      // Utiliser indexedDB.databases() pour récupérer les bases de données actives
+      const databases = (await (indexedDB as any).databases?.()) ?? [];
 
-      if (existingConnections && existingConnections.length > 0) {
-        for (const db of existingConnections) {
-          if (db && typeof db.delete === 'function') {
-            try {
-              await db.delete();
-            } catch (e) {
-              // Ignorer les erreurs (la DB peut déjà être fermée)
-            }
-          }
+      for (const dbName of databases.map((d: any) => d.name)) {
+        try {
+          const req = indexedDB.deleteDatabase(dbName);
+          await new Promise((resolve, reject) => {
+            req.onsuccess = resolve;
+            req.onerror = reject;
+          });
+        } catch (e) {
+          // Ignorer les erreurs (la DB peut déjà être fermée)
         }
       }
     } catch (e) {

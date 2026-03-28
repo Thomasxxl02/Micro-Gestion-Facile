@@ -5,42 +5,42 @@
  * ✅ Anti-patterns corrigés (window.confirm → ConfirmDialog, parseFloat → Number.parseFloat)
  */
 
-import React, { useRef, useState } from 'react';
-import type {
-  UserProfile,
-  Invoice,
-  Client,
-  Supplier,
-  Product,
-  Expense,
-  InvoiceStatus,
-} from '../types';
 import {
-  Building,
-  Wallet,
-  Globe,
-  MapPin,
-  CreditCard,
-  ShieldCheck,
-  Download,
-  Upload,
-  Hash,
-  Palette,
   Briefcase,
-  Zap,
+  Building,
+  CreditCard,
+  Download,
+  Globe,
+  Hash,
   Mail as MailIcon,
+  MapPin,
+  Palette,
   Phone as PhoneIcon,
+  ShieldCheck,
+  Upload,
+  Wallet,
+  Zap,
 } from 'lucide-react';
-import {
-  FormField,
-  TextAreaField,
-  SelectField,
-  ToggleSwitch,
-  ColorPicker,
-  LogoUploader,
-} from './FormFields';
-import { ConfirmDialog, AlertDialog } from './Dialogs';
+import React, { useRef, useState } from 'react';
 import { useAppStore } from '../store/appStore';
+import type {
+  Client,
+  Expense,
+  Invoice,
+  InvoiceStatus,
+  Product,
+  Supplier,
+  UserProfile,
+} from '../types';
+import { AlertDialog, ConfirmDialog } from './Dialogs';
+import {
+  ColorPicker,
+  FormField,
+  LogoUploader,
+  SelectField,
+  TextAreaField,
+  ToggleSwitch,
+} from './FormFields';
 import SecurityTab from './SecurityTab';
 
 interface SettingsManagerProps {
@@ -74,7 +74,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   const [activeTab, setActiveTab] = useState<
     'profile' | 'billing' | 'data' | 'preferences' | 'security'
   >('profile');
-  const { _activityLogs, addLog } = useAppStore();
+  const { addLog } = useAppStore();
 
   // ─── DIALOG STATES ───
   const [confirmDialog, setConfirmDialog] = useState<{

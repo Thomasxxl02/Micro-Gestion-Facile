@@ -1,60 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
 import {
-  type CalendarEvent,
-  type Invoice,
-  type Product,
-  type Expense,
-  type UserProfile,
-  type ViewState,
-  InvoiceStatus,
-} from '../types';
-import { predictRevenue } from '../services/geminiService';
-import {
-  calculateSocialContributions,
-  calculateThresholdStatus,
-  getThresholds,
-} from '../lib/fiscalCalculations';
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
-import {
-  Euro,
-  TrendingUp,
-  AlertCircle,
-  ArrowUpRight,
-  ArrowRight,
-  Wallet,
-  CheckCircle2,
-  Package,
-  Calculator,
-  TrendingDown,
-  Users,
-  ArrowDownRight,
-  FileText,
-  ShoppingCart,
-  Mail,
-  Sparkles,
-  Loader2,
-  GripVertical,
-  Zap,
-} from 'lucide-react';
-import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
+  useDroppable,
   useSensor,
   useSensors,
-  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -62,10 +13,61 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { LucideIcon } from 'lucide-react';
+// eslint-disable-next-line no-duplicate-imports
+import {
+  AlertCircle,
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Calculator,
+  CheckCircle2,
+  Euro,
+  FileText,
+  GripVertical,
+  Loader2,
+  Mail,
+  Package,
+  ShoppingCart,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+  Zap,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
+  calculateSocialContributions,
+  calculateThresholdStatus,
+  getThresholds,
+} from '../lib/fiscalCalculations';
+import { predictRevenue } from '../services/geminiService';
+import {
+  InvoiceStatus,
+  type CalendarEvent,
+  type Expense,
+  type Invoice,
+  type Product,
+  type UserProfile,
+  type ViewState,
+} from '../types';
 
 interface DashboardProps {
   invoices: Invoice[];
@@ -128,7 +130,7 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
 
 // Droppable Action Component
 const DroppableAction: React.FC<{
-  action: { id: string; icon?: React.ComponentType; label?: string };
+  action: { id: string; icon?: LucideIcon; label?: string; onClick?: () => void; color?: string };
 }> = ({ action }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: action.id,
@@ -138,9 +140,9 @@ const DroppableAction: React.FC<{
     <button
       ref={setNodeRef}
       onClick={action.onClick}
-      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? 'scale-110 bg-[#3ebd93]!' : 'scale-100'}`}
+      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color || 'bg-brand-700'} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? 'scale-110 bg-[#3ebd93]!' : 'scale-100'}`}
     >
-      <action.icon size={16} />
+      {action.icon && React.createElement(action.icon, { className: 'w-4 h-4', strokeWidth: 2 })}
       {action.label}
       {isOver && action.id === 'quick-action-invoice' && (
         <span className="absolute -bottom-6 left-0 right-0 text-center text-[8px] text-accent-600 font-bold whitespace-nowrap">
@@ -194,7 +196,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [, setActiveId] = useState<string | null>(null); // eslint-disable-line
+  const [, setActiveId] = useState<string | null>(null);
   const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
     const saved = localStorage.getItem('dashboard_widgets');
     return saved
@@ -416,8 +418,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       ...invoices.map((inv) => ({ ...inv, activityType: 'invoice' as const })),
       ...expenses.map((exp) => ({ ...exp, activityType: 'expense' as const })),
     ];
-    return combined
-      .toSorted((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...combined]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 8);
   }, [invoices, expenses]);
 
@@ -874,74 +876,81 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                       <div className="flex-1 overflow-auto -mx-2 px-2 custom-scrollbar">
                         <div className="space-y-2">
-                          {recentActivity.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center justify-between p-4 hover:bg-brand-50 dark:hover:bg-brand-800/50 rounded-2xl transition-all cursor-pointer border border-transparent group"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div
-                                  className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
+                          {recentActivity.map(
+                            (
+                              item: Invoice | (Expense & { activityType: 'invoice' | 'expense' })
+                            ) => (
+                              <div
+                                key={item.id}
+                                className="flex items-center justify-between p-4 hover:bg-brand-50 dark:hover:bg-brand-800/50 rounded-2xl transition-all cursor-pointer border border-transparent group"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div
+                                    className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
                                 ${
-                                  item.activityType === 'invoice'
-                                    ? (item as Invoice).status === InvoiceStatus.PAID
+                                  'activityType' in item && item.activityType === 'invoice'
+                                    ? (item as unknown as Invoice).status === InvoiceStatus.PAID
                                       ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400'
-                                      : (item as Invoice).status === InvoiceStatus.SENT
+                                      : (item as unknown as Invoice).status === InvoiceStatus.SENT
                                         ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
                                         : 'bg-brand-50 dark:bg-brand-800/50 text-brand-500'
                                     : 'bg-red-50 dark:bg-red-900/20 text-red-500'
                                 }`}
-                                >
-                                  {item.activityType === 'invoice' ? (
-                                    <FileText size={18} />
-                                  ) : (
-                                    <ShoppingCart size={18} />
-                                  )}
+                                  >
+                                    {'activityType' in item && item.activityType === 'invoice' ? (
+                                      <FileText className="w-[18px] h-[18px]" />
+                                    ) : (
+                                      <ShoppingCart className="w-[18px] h-[18px]" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
+                                      {'activityType' in item && item.activityType === 'invoice'
+                                        ? (item as unknown as Invoice).number
+                                        : 'activityType' in item && item.activityType === 'expense'
+                                          ? (item as Expense).description
+                                          : (item as Invoice).number}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
+                                      {new Date(item.date).toLocaleDateString()}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
-                                    {item.activityType === 'invoice'
-                                      ? (item as Invoice).number
-                                      : (item as Expense).description}
+                                <div className="text-right">
+                                  <p
+                                    className={`text-sm font-bold ${('activityType' in item && item.activityType === 'expense') || (item as unknown as Invoice).type === 'credit_note' ? 'text-red-500' : 'text-brand-900 dark:text-brand-50'}`}
+                                  >
+                                    {('activityType' in item && item.activityType === 'expense') ||
+                                    (item as unknown as Invoice).type === 'credit_note'
+                                      ? '-'
+                                      : ''}
+                                    {('total' in item
+                                      ? item.total
+                                      : (item as unknown as Expense).amount
+                                    )?.toLocaleString('fr-FR')}{' '}
+                                    €
                                   </p>
-                                  <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
-                                    {new Date(item.date).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p
-                                  className={`text-sm font-bold ${item.activityType === 'expense' || (item as Invoice).type === 'credit_note' ? 'text-red-500' : 'text-brand-900 dark:text-brand-50'}`}
-                                >
-                                  {item.activityType === 'expense' ||
-                                  (item as Invoice).type === 'credit_note'
-                                    ? '-'
-                                    : ''}
-                                  {('total' in item
-                                    ? item.total
-                                    : (item as Expense).amount
-                                  )?.toLocaleString('fr-FR')}{' '}
-                                  €
-                                </p>
-                                <span
-                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
+                                  <span
+                                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
                                    ${
-                                     item.activityType === 'invoice'
-                                       ? (item as Invoice).status === InvoiceStatus.PAID
+                                     'activityType' in item && item.activityType === 'invoice'
+                                       ? (item as unknown as Invoice).status === InvoiceStatus.PAID
                                          ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400'
-                                         : (item as Invoice).status === InvoiceStatus.SENT
+                                         : (item as unknown as Invoice).status ===
+                                             InvoiceStatus.SENT
                                            ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
                                            : 'bg-brand-50 dark:bg-brand-800/50 text-brand-600'
                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700'
                                    }`}
-                                >
-                                  {item.activityType === 'invoice'
-                                    ? (item as Invoice).status
-                                    : 'Dépense'}
-                                </span>
+                                  >
+                                    {'activityType' in item && item.activityType === 'invoice'
+                                      ? (item as unknown as Invoice).status
+                                      : 'Dépense'}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          )}
                         </div>
                       </div>
                     </div>

@@ -3,24 +3,25 @@
  * Couvre tous les cas: valides, invalides, edge cases
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { ValidationResult } from '../../lib/validators';
 import {
-  validateSIRET,
-  validateSIREN,
-  validateIBAN,
+  areAllValid,
+  isValid,
+  validateAddress,
+  validateAmount,
+  validateBatch,
+  validateDate,
   validateEmail,
-  validateFrenchPostalCode,
   validateFrenchPhone,
+  validateFrenchPostalCode,
+  validateIBAN,
+  validateName,
+  validateRequired,
+  validateSIREN,
+  validateSIRET,
   validateVATNumber,
   validateWebsite,
-  validateName,
-  validateAmount,
-  validateDate,
-  validateRequired,
-  validateAddress,
-  validateBatch,
-  isValid,
-  areAllValid,
 } from '../../lib/validators';
 
 describe('Validators - SIRET', () => {
@@ -467,7 +468,7 @@ describe('Validators - Batch validation', () => {
       amount: '100.50',
     };
 
-    const rules = {
+    const rules: Record<string, (value: any) => ValidationResult> = {
       name: validateName,
       email: validateEmail,
       amount: validateAmount,
@@ -487,7 +488,7 @@ describe('Validators - Batch validation', () => {
       amount: '-100',
     };
 
-    const rules = {
+    const rules: Record<string, (value: any) => ValidationResult> = {
       name: validateName,
       email: validateEmail,
       amount: validateAmount,

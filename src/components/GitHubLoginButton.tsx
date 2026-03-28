@@ -60,14 +60,10 @@ export function GitHubLoginButton({
       // Réinitialiser le compteur de retry en cas de succès
       setRetryCount(0);
     } catch (err) {
-      const error =
-        err instanceof Error ? err : new Error('Erreur connexion');
+      const error = err instanceof Error ? err : new Error('Erreur connexion');
 
       // Retry automatique pour les erreurs réseau (max 3 tentatives)
-      if (
-        error.message.includes('réseau') &&
-        retryCount < 3
-      ) {
+      if (error.message.includes('réseau') && retryCount < 3) {
         setRetryCount((prev) => prev + 1);
         // Attendre avant retry (backoff exponentiel)
         setTimeout(handleClick, Math.pow(2, retryCount) * 1000);
@@ -96,9 +92,7 @@ export function GitHubLoginButton({
         onClick={handleClick}
         disabled={isLoading}
         aria-label={showText ? displayText : 'Se connecter avec GitHub'}
-        className={`${styles.githubLoginButton} ${
-          isLoading ? styles.loading : ''
-        }`}
+        className={`${styles.githubLoginButton} ${isLoading ? styles.loading : ''}`}
         title={showText ? '' : label}
       >
         {/* GitHub Icon SVG */}
@@ -118,20 +112,12 @@ export function GitHubLoginButton({
 
       {/* Message d'erreur */}
       {localError && (
-        <div
-          className={styles.errorMessage}
-          role="alert"
-          aria-live="polite"
-        >
+        <div className={styles.errorMessage} role="alert" aria-live="polite">
           <span className={styles.errorIcon}>⚠️</span>
           <div className={styles.errorContent}>
             <p className={styles.errorTitle}>Erreur de connexion</p>
             <p className={styles.errorText}>{localError}</p>
-            {retryCount < 3 && (
-              <p className={styles.errorHint}>
-                Nouvelle tentative en cours...
-              </p>
-            )}
+            {retryCount < 3 && <p className={styles.errorHint}>Nouvelle tentative en cours...</p>}
           </div>
           <button
             onClick={() => setLocalError(null)}
@@ -167,11 +153,7 @@ export function GitHubLoginBlock() {
       <div className={styles.userBlock}>
         <div className={styles.userInfo}>
           {user.photoURL && (
-            <img
-              src={user.photoURL}
-              alt={user.displayName || 'Profil'}
-              className={styles.avatar}
-            />
+            <img src={user.photoURL} alt={user.displayName || 'Profil'} className={styles.avatar} />
           )}
           <div className={styles.userDetails}>
             <h3>{user.displayName}</h3>

@@ -1,23 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
-import type { ChatMessage } from '../types';
 import {
-  generateAssistantResponse,
+  AlertTriangle,
+  Bot,
+  CheckCircle,
+  Loader2,
+  MessageSquare,
+  Send,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  User,
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
   checkInvoiceCompliance,
+  generateAssistantResponse,
   predictCashflowJ30,
 } from '../services/geminiService';
 import { useAppStore } from '../store/appStore';
-import {
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  MessageSquare,
-  AlertTriangle,
-  TrendingUp,
-  CheckCircle,
-  Shield,
-  Loader2,
-} from 'lucide-react';
+import type { ChatMessage } from '../types';
 
 const AIAssistant: React.FC = () => {
   const { invoices, clients, userProfile } = useAppStore();
@@ -86,7 +86,10 @@ const AIAssistant: React.FC = () => {
       setIsAnalyzing(true);
       try {
         // Cashflow prediction
-        const prediction = await predictCashflowJ30(invoices, userProfile);
+        const prediction = await predictCashflowJ30(
+          invoices,
+          userProfile as unknown as Record<string, unknown>
+        );
         setCashflowPrediction(prediction);
 
         // Compliance check for the last invoice
@@ -95,7 +98,11 @@ const AIAssistant: React.FC = () => {
         )[0];
         const client = clients.find((c) => c.id === lastInvoice.clientId);
         if (lastInvoice && client) {
-          const compliance = await checkInvoiceCompliance(lastInvoice, userProfile, client);
+          const compliance = await checkInvoiceCompliance(
+            lastInvoice,
+            userProfile as unknown as Record<string, unknown>,
+            client as unknown as Record<string, unknown>
+          );
           setComplianceResults(compliance);
         }
       } catch (err) {

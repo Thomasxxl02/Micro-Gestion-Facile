@@ -1,21 +1,25 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import type { ViewState } from '../types';
 import {
-  LayoutDashboard,
-  FileText,
-  Users,
-  Settings,
   Briefcase,
-  Package,
-  Truck,
   Calculator,
-  Sparkles,
-  Mail,
   Calendar,
-  Sun,
+  FileText,
+  LayoutDashboard,
+  Mail,
   Moon,
+  Package,
+  Settings,
+  Sparkles,
+  Sun,
+  Truck,
+  Users,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import React from 'react';
+import { useFirestoreSync } from '../hooks/useFirestoreSync';
+import { useAppStore } from '../store/appStore';
+import type { ViewState } from '../types';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -34,6 +38,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   isDarkMode,
   toggleDarkMode,
 }) => {
+  const { user } = useAppStore();
+
+  // Utilise le hook de sync pour obtenir l'état de connexion réel de Firestore
+  const { isOffline } = useFirestoreSync({
+    userId: user?.uid,
+    collectionName: 'profiles',
+  });
+
   const menuItems: { id: ViewState; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard size={18} /> },
     { id: 'invoices', label: 'Devis & Factures', icon: <FileText size={18} /> },
@@ -183,9 +195,19 @@ const Sidebar: React.FC<SidebarProps> = ({
                 Espace Pro
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 truncate uppercase tracking-widest">
-                  Connecté
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${isOffline ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`}
+                ></span>
+                <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 truncate uppercase tracking-widest flex items-center gap-1">
+                  {isOffline ? (
+                    <>
+                      <WifiOff size={10} /> Hors Ligne
+                    </>
+                  ) : (
+                    <>
+                      <Wifi size={10} /> Connecté
+                    </>
+                  )}
                 </p>
               </div>
             </div>

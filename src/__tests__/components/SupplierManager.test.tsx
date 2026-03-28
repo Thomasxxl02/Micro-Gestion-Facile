@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import SupplierManager from '../../components/SupplierManager';
-import React from 'react';
-import type { Supplier, Expense } from '../../types';
+import type { Expense, Supplier } from '../../types';
 
 // Mock Lucide icons
 vi.mock('lucide-react', () => ({
@@ -17,6 +16,7 @@ vi.mock('lucide-react', () => ({
   Search: () => <span>SearchIcon</span>,
   X: () => <span>XIcon</span>,
   Check: () => <span>CheckIcon</span>,
+  CheckCircle2: () => <span>CheckCircle2Icon</span>,
   Edit2: () => <span>Edit2Icon</span>,
   Trash2: () => <span>Trash2Icon</span>,
   Eye: () => <span>EyeIcon</span>,
@@ -49,7 +49,14 @@ vi.mock('../../components/EntityFormFields', () => ({
       />
     </div>
   ),
-  AddressFields: ({ address, postalCode, city, onAddressChange, onPostalCodeChange, onCityChange }: any) => (
+  AddressFields: ({
+    address,
+    postalCode,
+    city,
+    onAddressChange,
+    onPostalCodeChange,
+    onCityChange,
+  }: any) => (
     <div data-testid="address-fields">
       <input
         placeholder="Adresse"
@@ -291,7 +298,7 @@ describe('SupplierManager Component', () => {
         />
       );
 
-      const addButton = screen.queryByText('PlusIcon');
+      const addButton = screen.queryByRole('button', { name: /Plus/i }) as HTMLElement;
       await user.click(addButton);
 
       expect(screen.getByTestId('entity-modal')).toBeInTheDocument();

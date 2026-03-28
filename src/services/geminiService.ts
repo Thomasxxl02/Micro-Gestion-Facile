@@ -242,7 +242,8 @@ export const predictCashflowJ30 = async (
   riskLevel: 'low' | 'medium' | 'high';
 }> => {
   try {
-    const activityType: string = userProfile.activityType || 'SERVICES';
+    const activityType: string =
+      ((userProfile as Record<string, unknown>).activityType as string) || 'SERVICES';
     const prompt = `En tant qu'analyste financier, prédis la trésorerie à 30 jours pour ce micro-entrepreneur.
     Considère :
     - Les factures impayées et leur date d'échéance.

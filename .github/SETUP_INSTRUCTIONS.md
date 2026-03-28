@@ -10,6 +10,7 @@
 Votre projet a reçu une suite complète d'améliorations GitHub qui vont **automatiser**, **sécuriser**, et **standardiser** votre workflow de développement.
 
 ### Ce qui a été fait (15+ fichiers)
+
 ✅ 7 workflows automatisés  
 ✅ 5 templates d'issues améliorés  
 ✅ 4 guides complets  
@@ -21,40 +22,44 @@ Votre projet a reçu une suite complète d'améliorations GitHub qui vont **auto
 ## 🚀 Fonctionnalités Principales
 
 ### ✨ Automations
-| Fonction | Profit |
-|----------|--------|
-| **Auto-labeling** | Triage automatique PR/issues (30s par PR économisé) |
-| **Auto-deployment** | Staging/production automatiques (1h sauvé) |
-| **Auto-releases** | Release notes générées (30min sauvé) |
-| **Auto-security** | Scan dépendances quotidien (prévention vulnérabilités) |
-| **Auto-quality** | ESLint + Prettier appliqués (qualité garantie) |
+
+| Fonction            | Profit                                                 |
+| ------------------- | ------------------------------------------------------ |
+| **Auto-labeling**   | Triage automatique PR/issues (30s par PR économisé)    |
+| **Auto-deployment** | Staging/production automatiques (1h sauvé)             |
+| **Auto-releases**   | Release notes générées (30min sauvé)                   |
+| **Auto-security**   | Scan dépendances quotidien (prévention vulnérabilités) |
+| **Auto-quality**    | ESLint + Prettier appliqués (qualité garantie)         |
 
 ### 🔒 Sécurité
-| Problématique | Solution |
-|-----------|----------|
-| Vulnérabilités deps | npm audit + Snyk daily scanning |
-| Licenses incompatibles | Fossa compliance checking |
-| Code issues | CodeQL static analysis |
-| Secrets exposés | Secret scanning + validation |
-| Données utilisateur | Fiscal/RGPD templates |
+
+| Problématique          | Solution                        |
+| ---------------------- | ------------------------------- |
+| Vulnérabilités deps    | npm audit + Snyk daily scanning |
+| Licenses incompatibles | Fossa compliance checking       |
+| Code issues            | CodeQL static analysis          |
+| Secrets exposés        | Secret scanning + validation    |
+| Données utilisateur    | Fiscal/RGPD templates           |
 
 ### 📈 Qualité de Code
-| Métrique | Enforcement |
-|----------|-------------|
-| Types | TypeScript strict checking ✅ |
-| Linting | ESLint + Prettier | 
-| Tests | Coverage tracking (70%+ target) |
-| a11y | Accessibility checks |
-| Performance | Bundle size monitoring |
+
+| Métrique    | Enforcement                     |
+| ----------- | ------------------------------- |
+| Types       | TypeScript strict checking ✅   |
+| Linting     | ESLint + Prettier               |
+| Tests       | Coverage tracking (70%+ target) |
+| a11y        | Accessibility checks            |
+| Performance | Bundle size monitoring          |
 
 ### 👥 Developer Experience
-| Aspect | Amélioration |
-|--------|-------------|
-| Issues | 5 templates clairs (avec security) |
-| PRs | Enhanced template + security/fiscal checklists |
-| Workflows | Guide exhaustif + troubleshooting |
-| Branches | Guide de protection complèt |
-| Support | Documentation claire et exemples |
+
+| Aspect    | Amélioration                                   |
+| --------- | ---------------------------------------------- |
+| Issues    | 5 templates clairs (avec security)             |
+| PRs       | Enhanced template + security/fiscal checklists |
+| Workflows | Guide exhaustif + troubleshooting              |
+| Branches  | Guide de protection complèt                    |
+| Support   | Documentation claire et exemples               |
 
 ---
 
@@ -125,6 +130,7 @@ SLACK_WEBHOOK_PROD      # Optional: prod notifications
 **Via GitHub**: Settings → Branches → Add rule
 
 **Pour `main`** (strict):
+
 ```
 ✅ Require 1 PR approval
 ✅ Require review from code owners
@@ -135,6 +141,7 @@ SLACK_WEBHOOK_PROD      # Optional: prod notifications
 ```
 
 **Pour `develop`** (modéré):
+
 ```
 ✅ Require 1 PR approval
 ✅ Require status checks: build, security-scan
@@ -142,6 +149,7 @@ SLACK_WEBHOOK_PROD      # Optional: prod notifications
 ```
 
 **Pour `feature/*`** (souple):
+
 ```
 ✅ Require status checks: build
 ```
@@ -184,29 +192,29 @@ echo "# Test" >> README.md
 
 ### Before & After
 
-| Avant | Après |
-|-------|-------|
-| Manual PR labeling | Auto-labeled en <1s |
+| Avant                           | Après                                 |
+| ------------------------------- | ------------------------------------- |
+| Manual PR labeling              | Auto-labeled en <1s                   |
 | Developer guessing about checks | Clear requirements + auto-enforcement |
-| Manual deployment scripts | Auto-deploy staging/prod |
-| No security scanning | Daily npm audit + Snyk |
-| Inconsistent PR formats | Template-based consistency |
-| No accessibility checking | a11y checks included |
-| Manual release notes | Auto-generated from CHANGELOG |
-| Code quality inconsistent | ESLint + Prettier enforced |
+| Manual deployment scripts       | Auto-deploy staging/prod              |
+| No security scanning            | Daily npm audit + Snyk                |
+| Inconsistent PR formats         | Template-based consistency            |
+| No accessibility checking       | a11y checks included                  |
+| Manual release notes            | Auto-generated from CHANGELOG         |
+| Code quality inconsistent       | ESLint + Prettier enforced            |
 
 ---
 
 ## 📈 Bénéfices Quantifiés
 
-| Métrique | Estimation |
-|----------|-----------|
-| **Time saved per PR** | ~15 minutes (no manual labeling, auto-deploy) |
-| **Security issues caught** | 80% increase (1x per year → 2-3 per month) |
-| **Code quality improvement** | 40% (enforced standards) |
-| **Merge conflicts** | 30% decrease (standardized branch strategy) |
-| **Onboarding time** | 50% decrease (clear guides) |
-| **Human errors** | 70% decrease (automation) |
+| Métrique                     | Estimation                                    |
+| ---------------------------- | --------------------------------------------- |
+| **Time saved per PR**        | ~15 minutes (no manual labeling, auto-deploy) |
+| **Security issues caught**   | 80% increase (1x per year → 2-3 per month)    |
+| **Code quality improvement** | 40% (enforced standards)                      |
+| **Merge conflicts**          | 30% decrease (standardized branch strategy)   |
+| **Onboarding time**          | 50% decrease (clear guides)                   |
+| **Human errors**             | 70% decrease (automation)                     |
 
 ---
 
@@ -253,16 +261,19 @@ echo "# Test" >> README.md
 ## 🚀 Recommandations
 
 ### Court terme (cette semaine)
+
 1. ✅ Setup secrets + branch protection
 2. ✅ Test avec une PR
 3. ✅ Lire les guides
 
 ### Moyen terme (ce mois)
+
 1. Ajuster les seuils de qualité si nécessaire
 2. Configuration Slack webhooks (optionnel)
 3. Former l'équipe aux templates
 
 ### Long terme (ce trimestre)
+
 1. Monitor les métriques de sécurité
 2. Optimiser les workflows si nécessaire
 3. Review de la stratégie de branchement
@@ -272,15 +283,19 @@ echo "# Test" >> README.md
 ## 📞 Support
 
 ### Problèmes avec un workflow?
+
 → Vérifier les logs dans GitHub Actions
 
 ### Questions sur le processus?
+
 → Lire **WORKFLOW_GUIDE.md**
 
 ### Besoin de modifier la config?
+
 → Éditer les fichiers `.github/workflows/`
 
 ### Problèmes de branches?
+
 → Consulter **BRANCH_PROTECTION_GUIDE.md**
 
 ---
@@ -288,6 +303,7 @@ echo "# Test" >> README.md
 ## 🎉 Conclusion
 
 Votre configuration GitHub est maintenant :
+
 - ✅ **Complète** - 7 workflows + 5 templates + 4 guides
 - ✅ **Robuste** - Multi-level checking + security
 - ✅ **Automatisée** - Moins de travail manuel

@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../../db/invoiceDB';
-import type { Invoice, InvoiceItem, Client } from '../../types';
+import type {
+  CalendarEvent,
+  ChatMessage,
+  Client,
+  EmailTemplate,
+  Invoice,
+  InvoiceItem,
+  Product,
+} from '../../types';
 
 describe('InvoiceDB - Dexie Database', () => {
   beforeEach(async () => {
@@ -333,9 +341,12 @@ describe('InvoiceDB - Dexie Database', () => {
   // ============================================================================
 
   describe('products table', () => {
-    const mockProduct = {
+    const mockProduct: Product = {
       id: 'prod-1',
       name: 'Produit A',
+      description: 'Description du produit A',
+      price: 100,
+      type: 'product',
       category: 'Services',
       archived: false,
     };
@@ -478,12 +489,13 @@ describe('InvoiceDB - Dexie Database', () => {
   // ============================================================================
 
   describe('calendarEvents table', () => {
-    const mockEvent = {
+    const mockEvent: CalendarEvent = {
       id: 'evt-1',
       clientId: 'cli-1',
       invoiceId: 'inv-1',
       start: '2026-04-01T10:00:00Z',
-      type: 'follow_up',
+      end: '2026-04-01T11:00:00Z',
+      type: 'task',
       title: 'Suivi client',
       description: 'Appel de suivi',
     };
@@ -514,9 +526,9 @@ describe('InvoiceDB - Dexie Database', () => {
   // ============================================================================
 
   describe('emailTemplates table', () => {
-    const mockTemplate = {
+    const mockTemplate: EmailTemplate = {
       id: 'tpl-1',
-      type: 'invoice_reminder',
+      type: 'reminder',
       name: 'Rappel facture',
       subject: 'Facture en attente',
       body: 'Nous vous rappelons...',
@@ -533,9 +545,9 @@ describe('InvoiceDB - Dexie Database', () => {
       await db.emailTemplates.add({
         ...mockTemplate,
         id: 'tpl-2',
-        type: 'invoice_sent',
+        type: 'invoice',
       });
-      const reminders = await db.emailTemplates.where('type').equals('invoice_reminder').toArray();
+      const reminders = await db.emailTemplates.where('type').equals('reminder').toArray();
       expect(reminders).toHaveLength(1);
     });
   });
@@ -545,7 +557,7 @@ describe('InvoiceDB - Dexie Database', () => {
   // ============================================================================
 
   describe('chatMessages table', () => {
-    const mockMessage = {
+    const mockMessage: ChatMessage = {
       id: 'msg-1',
       timestamp: Date.now(),
       role: 'user',
@@ -619,6 +631,7 @@ describe('InvoiceDB - Dexie Database', () => {
             id: 'inv-1',
             number: 'FAC-001',
             date: '2026-03-21',
+            dueDate: '2026-04-21',
             clientId: 'cli-1',
             items: [],
             total: 1000,
@@ -638,6 +651,7 @@ describe('InvoiceDB - Dexie Database', () => {
         id: 'inv-1',
         number: 'FAC-001',
         date: '2026-03-21',
+        dueDate: '2026-04-21',
         clientId: 'cli-1',
         items: [],
         total: 1000,
@@ -668,6 +682,7 @@ describe('InvoiceDB - Dexie Database', () => {
         id: 'inv-1',
         number: 'FAC-001',
         date: '2026-03-21',
+        dueDate: '2026-04-21',
         clientId: 'cli-1',
         items: [],
         total: 1000,

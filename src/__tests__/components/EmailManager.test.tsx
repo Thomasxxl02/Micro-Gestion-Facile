@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import EmailManager from '../../components/EmailManager';
-import type { Email, EmailTemplate, Client, Invoice, UserProfile } from '../../types';
+import type { Client, Email, EmailTemplate, Invoice, UserProfile } from '../../types';
 
 // Mock icons
 vi.mock('lucide-react', () => ({
@@ -50,6 +50,7 @@ describe('EmailManager Component', () => {
       id: 'inv-1',
       number: 'FAC-001',
       date: '2026-01-01',
+      dueDate: '2026-02-01',
       clientId: 'cli-1',
       items: [],
       total: 1000,
@@ -71,11 +72,10 @@ describe('EmailManager Component', () => {
   const mockEmails: Email[] = [
     {
       id: 'email-1',
-      from: 'contact@test.fr',
       to: 'clienta@test.fr',
       subject: 'Rappel de facture',
       body: 'Bonjour, veuillez payer votre facture',
-      type: 'invoice_reminder',
+      type: 'reminder',
       status: 'sent',
       sentAt: '2026-01-15T10:00:00Z',
     },
@@ -84,7 +84,7 @@ describe('EmailManager Component', () => {
   const mockTemplates: EmailTemplate[] = [
     {
       id: 'tpl-1',
-      type: 'invoice_reminder',
+      type: 'reminder',
       name: 'Rappel facture',
       subject: 'Facture en attente de paiement',
       body: 'Rappel: votre facture est en attente de paiement',
@@ -309,11 +309,10 @@ describe('EmailManager Component', () => {
         ...mockEmails,
         {
           id: 'email-2',
-          from: 'contact@test.fr',
           to: 'clienta@test.fr',
           subject: 'Merci pour votre paiement',
           body: 'Merci beaucoup',
-          type: 'payment_confirmation',
+          type: 'custom',
           status: 'sent',
           sentAt: '2026-01-20T10:00:00Z',
         },

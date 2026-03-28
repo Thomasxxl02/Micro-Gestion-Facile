@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  generateAssistantResponse,
-  suggestInvoiceDescription,
-  generateInvoiceItemsFromPrompt,
-  draftEmail,
   analyzeReceipt,
-  predictRevenue,
   checkInvoiceCompliance,
+  draftEmail,
+  generateAssistantResponse,
+  generateInvoiceItemsFromPrompt,
   predictCashflowJ30,
+  predictRevenue,
+  suggestInvoiceDescription,
 } from '../services/geminiService';
+import type { Invoice } from '../types';
 
 describe('geminiService - Improved & Robust Tests', () => {
   beforeEach(() => {
@@ -161,9 +162,29 @@ describe('geminiService - Improved & Robust Tests', () => {
 
   describe('predictRevenue', () => {
     it("donne une prédiction de chiffre d'affaires depuis des historiques", async () => {
-      const mockInvoices = [
-        { id: '1', total: 1000, date: '2026-01-01' },
-        { id: '2', total: 1500, date: '2026-02-01' },
+      const mockInvoices: Invoice[] = [
+        {
+          id: '1',
+          type: 'invoice',
+          number: 'FAC-001',
+          date: '2026-01-01',
+          dueDate: '2026-02-01',
+          clientId: 'cli-1',
+          items: [],
+          total: 1000,
+          status: 'paid',
+        },
+        {
+          id: '2',
+          type: 'invoice',
+          number: 'FAC-002',
+          date: '2026-02-01',
+          dueDate: '2026-03-01',
+          clientId: 'cli-1',
+          items: [],
+          total: 1500,
+          status: 'paid',
+        },
       ];
 
       const prediction = await predictRevenue(mockInvoices, []);
@@ -180,9 +201,31 @@ describe('geminiService - Improved & Robust Tests', () => {
 
   describe('checkInvoiceCompliance', () => {
     it("vérifie la conformité d'une facture", async () => {
-      const invoice = { id: '1', number: 'FAC-001', items: [], total: 0 };
-      const userProfile = { activityType: 'SERVICE_BNC', siret: '12345678901234' };
-      const client = { id: 'cli-1', name: 'Client Test' };
+      const invoice: Invoice = {
+        id: '1',
+        type: 'invoice',
+        number: 'FAC-001',
+        date: '2026-03-21',
+        dueDate: '2026-04-21',
+        clientId: 'cli-1',
+        items: [],
+        status: 'draft',
+        total: 0,
+      };
+      const userProfile = {
+        activityType: 'SERVICE_BNC',
+        siret: '12345678901234',
+        companyName: 'Test',
+        address: 'Paris',
+        email: 'test@test.fr',
+        phone: '0102030405',
+      };
+      const client = {
+        id: 'cli-1',
+        name: 'Client Test',
+        email: 'client@test.fr',
+        address: 'Paris',
+      };
 
       const complianceRaw = await checkInvoiceCompliance(invoice, userProfile, client);
       const compliance = Array.isArray(complianceRaw) ? complianceRaw[0] : complianceRaw;
@@ -193,8 +236,27 @@ describe('geminiService - Improved & Robust Tests', () => {
     });
 
     it('identifie les problèmes de conformité potentiels', async () => {
-      const invoice = { id: '1', number: '', items: [], total: 0 };
-      const complianceRaw = await checkInvoiceCompliance(invoice, {}, {});
+      const invoice: Invoice = {
+        id: '1',
+        type: 'invoice',
+        number: '',
+        date: '2026-03-21',
+        dueDate: '2026-04-21',
+        clientId: 'cli-1',
+        items: [],
+        status: 'draft',
+        total: 0,
+      };
+      const userProfile = {
+        companyName: 'Test',
+        address: 'Paris',
+        email: 'test@test.fr',
+        phone: '0102030405',
+        siret: '12345678901234',
+        activityType: 'SERVICE_BNC',
+      };
+      const client = { id: 'cli-1', name: 'Client', email: 'test@test.fr', address: 'Paris' };
+      const complianceRaw = await checkInvoiceCompliance(invoice, userProfile, client);
       const compliance = Array.isArray(complianceRaw) ? complianceRaw[0] : complianceRaw;
 
       expect(compliance).toHaveProperty('issues');
@@ -204,9 +266,29 @@ describe('geminiService - Improved & Robust Tests', () => {
 
   describe('predictCashflowJ30', () => {
     it('prédit la trésorerie à 30 jours', async () => {
-      const mockInvoices = [
-        { id: '1', total: 2000, status: 'paid', date: '2026-01-01' },
-        { id: '2', total: 1500, status: 'draft', date: '2026-03-01' },
+      const mockInvoices: Invoice[] = [
+        {
+          id: '1',
+          type: 'invoice',
+          number: 'FAC-001',
+          date: '2026-01-01',
+          dueDate: '2026-02-01',
+          clientId: 'cli-1',
+          items: [],
+          total: 2000,
+          status: 'paid',
+        },
+        {
+          id: '2',
+          type: 'invoice',
+          number: 'FAC-002',
+          date: '2026-03-01',
+          dueDate: '2026-04-01',
+          clientId: 'cli-1',
+          items: [],
+          total: 1500,
+          status: 'draft',
+        },
       ];
 
       const userProfile = {
@@ -222,7 +304,9 @@ describe('geminiService - Improved & Robust Tests', () => {
     });
 
     it('gère des données vides', async () => {
-      const cashflowRaw = await predictCashflowJ30([], { activityType: 'SERVICE_BNC' });
+      const cashflowRaw = await predictCashflowJ30([] as Invoice[], {
+        activityType: 'SERVICE_BNC',
+      });
       const cashflow = Array.isArray(cashflowRaw) ? cashflowRaw[0] : cashflowRaw;
 
       expect(cashflow.predictedBalance).toBeDefined();

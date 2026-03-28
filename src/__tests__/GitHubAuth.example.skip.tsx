@@ -33,8 +33,7 @@ export function LoginPageExample() {
       />
 
       <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666' }}>
-        Nous n'accédons qu'à votre profil public GitHub. Vos données personnelles
-        restent protégées.
+        Nous n'accédons qu'à votre profil public GitHub. Vos données personnelles restent protégées.
       </p>
     </div>
   );
@@ -44,8 +43,7 @@ export function LoginPageExample() {
  * Exemple 2: Dashboard avec authentification sécurisée
  */
 function Dashboard() {
-  const { user, profile, isLoading, error, logout, refreshProfile } =
-    useGitHubAuth();
+  const { user, profile, isLoading, error, logout, refreshProfile } = useGitHubAuth();
 
   if (isLoading) {
     return <div style={{ padding: '2rem' }}>Chargement...</div>;
@@ -81,9 +79,7 @@ function Dashboard() {
             />
           )}
           <div>
-            <p style={{ margin: 0, fontWeight: 'bold' }}>
-              {user.displayName}
-            </p>
+            <p style={{ margin: 0, fontWeight: 'bold' }}>{user.displayName}</p>
             <p style={{ margin: '0.25rem 0 0' }}>{user.email}</p>
           </div>
           <button
@@ -236,9 +232,7 @@ export function ProtectedFormExample() {
   }
 
   return (
-    <form
-      style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '4px' }}
-    >
+    <form style={{ padding: '2rem', backgroundColor: 'white', borderRadius: '4px' }}>
       <h2>Créer une facture</h2>
       <p>
         Connecté en tant que: <strong>{user?.displayName}</strong>
@@ -279,16 +273,8 @@ export function ProtectedFormExample() {
  * Exemple 5: Gestion avancée avec erreurs et retry
  */
 export function AdvancedGitHubIntegration() {
-  const {
-    user,
-    profile,
-    isLoading,
-    error,
-    isAuthenticated,
-    loginWithGitHub,
-    logout,
-    clearError,
-  } = useGitHubAuth();
+  const { user, profile, isLoading, error, isAuthenticated, loginWithGitHub, logout, clearError } =
+    useGitHubAuth();
 
   if (!isAuthenticated) {
     return (

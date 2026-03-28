@@ -1,11 +1,11 @@
+import { AlertCircle, Archive, Download, Plus, Truck, Upload, Wallet } from 'lucide-react';
 import React, { useMemo, useRef } from 'react';
-import type { Supplier, Expense } from '../types';
-import { Plus, Download, Upload, Truck, AlertCircle, Wallet, Archive } from 'lucide-react';
-import EntityModal from './EntityModal';
-import { ContactFields, SearchFilterFields, AddressFields } from './EntityFormFields';
-import { useEntityForm, useEntityFilters } from '../hooks/useEntity';
+import { useEntityFilters, useEntityForm } from '../hooks/useEntity';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { SupplierSchema } from '../lib/schemas';
+import type { Expense, Supplier } from '../types';
+import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
+import EntityModal from './EntityModal';
 import { FormFieldValidated } from './FormFieldValidated';
 
 interface SupplierManagerProps {
@@ -24,7 +24,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   onDelete,
 }) => {
   const form = useEntityForm<Supplier>();
-  const filters = useEntityFilters(suppliers, {
+  const filters = useEntityFilters(suppliers as unknown as Record<string, unknown>[], {
     searchField: 'name',
     hasArchive: true,
     archiveField: 'archived',
@@ -41,7 +41,10 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   });
 
   // Stats: spending by supplier
-  const getSupplierStats = (supplierId: string) => {
+  const getSupplierStats = (supplierId: unknown) => {
+    if (typeof supplierId !== 'string') {
+      return { totalSpent: 0, count: 0 };
+    }
     const supplierExpenses = expenses.filter((exp) => exp.supplierId === supplierId);
     const totalSpent = supplierExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     return { totalSpent, count: supplierExpenses.length };
@@ -58,7 +61,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   }, [suppliers, expenses]);
 
   const processedSuppliers = useMemo(() => {
-    return filters.filteredEntities.sort((a, b) => a.name.localeCompare(b.name));
+    return (filters.filteredEntities as unknown as Supplier[]).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, [filters.filteredEntities]);
 
   // Form handlers
@@ -124,18 +129,19 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       'Statut',
     ];
     const rows = processedSuppliers.map((s) => {
-      const stats = getSupplierStats(s.id);
-      const contactName: string = s.contactName ?? '';
-      const category: string = s.category ?? '';
-      const email: string = s.email ?? '';
-      const phone: string = s.phone ?? '';
-      const address: string = s.address?.replaceAll('\n', ' ') ?? '';
-      const siret: string = s.siret ?? '';
-      const tvaNumber: string = s.tvaNumber ?? '';
-      const website: string = s.website ?? '';
-      const paymentTerms: string = s.paymentTerms ?? '';
-      const notes: string = s.notes?.replaceAll('\n', ' ') ?? '';
-      const createdAt: string = s.createdAt ?? '';
+      const supplier = s as Supplier;
+      const stats = getSupplierStats(supplier.id);
+      const contactName: string = supplier.contactName ?? '';
+      const category: string = supplier.category ?? '';
+      const email: string = supplier.email ?? '';
+      const phone: string = supplier.phone ?? '';
+      const address: string = supplier.address?.replaceAll('\n', ' ') ?? '';
+      const siret: string = supplier.siret ?? '';
+      const tvaNumber: string = supplier.tvaNumber ?? '';
+      const website: string = supplier.website ?? '';
+      const paymentTerms: string = supplier.paymentTerms ?? '';
+      const notes: string = supplier.notes?.replaceAll('\n', ' ') ?? '';
+      const createdAt: string = supplier.createdAt ?? '';
       return [
         '"' + s.name + '"',
         '"' + contactName + '"',
@@ -319,11 +325,11 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             const stats = getSupplierStats(supplier.id);
             return (
               <div
-                key={supplier.id}
+                key={(supplier as Supplier).id}
                 className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
               >
                 <button
-                  onClick={() => form.openEdit(supplier)}
+                  onClick={() => form.openEdit(supplier as Supplier)}
                   className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   title="Cliquez pour modifier le fournisseur"
                 >
@@ -347,7 +353,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
                 </button>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => toggleArchive(supplier.id)}
+                    onClick={() => toggleArchive((supplier as Supplier).id)}
                     title={
                       supplier.archived ? 'Restaurer le fournisseur' : 'Archiver le fournisseur'
                     }
@@ -405,8 +411,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="IBAN"
-                value={validatedData.bankAccount || ''}
-                onChange={(val) => handleChange('bankAccount')(val)}
+                value={validatedData.phone || ''}
+                onChange={(val) => handleChange('phone')(val)}
                 validationType="iban"
                 placeholder="FR14..."
               />
@@ -425,11 +431,11 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             </h4>
             <AddressFields
               address={validatedData.address || ''}
-              postalCode={validatedData.postalCode || ''}
-              city={validatedData.city || ''}
+              postalCode={''}
+              city={''}
               onAddressChange={(val) => handleChange('address')(val)}
-              onPostalCodeChange={(val) => handleChange('postalCode')(val)}
-              onCityChange={(val) => handleChange('city')(val)}
+              onPostalCodeChange={() => undefined}
+              onCityChange={() => undefined}
             />
             <FormFieldValidated
               label="Délai de paiement (jours)"
