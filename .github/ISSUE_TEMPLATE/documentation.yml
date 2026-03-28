@@ -36,7 +36,7 @@ body:
     attributes:
       label: 🔍 Problème identifié
       description: Décrivez le problème ou ce qui manque dans la documentation
-      placeholder: "La documentation ne couvre pas..."
+      placeholder: 'La documentation ne couvre pas...'
     validations:
       required: true
 
@@ -45,14 +45,14 @@ body:
     attributes:
       label: 🔗 Lien vers la documentation
       description: Lien vers la page/fichier en question
-      placeholder: "https://github.com/...docs/ARCHITECTURE.md"
+      placeholder: 'https://github.com/...docs/ARCHITECTURE.md'
 
   - type: textarea
     id: suggestion
     attributes:
       label: 💡 Suggestion
       description: Quelle amélioration proposez-vous ?
-      placeholder: "Je pense que nous devrions ajouter..."
+      placeholder: 'Je pense que nous devrions ajouter...'
     validations:
       required: true
 
@@ -61,4 +61,4 @@ body:
     attributes:
       label: 📝 Exemple
       description: Fournissez un exemple de ce que vous aimeriez voir (code, explications, etc.)
-      placeholder: "Exemple ou draft de la documentation améliorée"
+      placeholder: 'Exemple ou draft de la documentation améliorée'

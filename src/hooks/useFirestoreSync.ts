@@ -1,65 +1,83 @@
-import { useState, useEffect, useCallback } from 'react';
 import {
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
-  setDoc,
-  deleteDoc,
   query,
+  serverTimestamp,
+  setDoc,
   where,
-  enableIndexedDbPersistence,
   type FirestoreError,
 } from 'firebase/firestore';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { db } from '../firebase';
 
-// Tentative d'activation de la persistance hors ligne
-try {
-  enableIndexedDbPersistence(db).catch(() => {
-    // Plusieurs onglets ouverts ou indisponible
-  });
-} catch {
-  // Déjà activé ou erreur critique
-}
+// NOTE: La persistance (enableIndexedDbPersistence) est désormais gérée globalement
+// dans src/firebase.ts via initializeFirestore pour le support multi-onglets natif.
 
 export type SyncStatus = 'LOADING' | 'SUCCESS' | 'ERROR' | 'OFFLINE';
 
 interface UseFirestoreSyncOptions {
-  userId: string;
+  userId: string | undefined;
   collectionName: string;
 }
 
 /**
- * Hook de synchronisation Firestore avec gestion du mode hors ligne et des conflits
+ * Hook de synchronisation Firestore 🚀 v2.0
+ *
+ * Améliorations :
+ * - Gestion propre du cycle de vie du userId (évite les fuites de mémoire)
+ * - Support natif multi-onglets (via config globale firebase.ts)
+ * - Datestamp automatique via serverTimestamp
+ * - Typage renforcé avec options optionnelles
  */
 export function useFirestoreSync<T extends { id: string }>(options: UseFirestoreSyncOptions) {
   const { userId, collectionName } = options;
   const [data, setData] = useState<T[]>([]);
   const [status, setStatus] = useState<SyncStatus>('LOADING');
   const [error, setError] = useState<FirestoreError | null>(null);
+  const [fromCache, setFromCache] = useState(false);
 
   // Synchronisation en temps réel (Temps réel + Persistance)
   useEffect(() => {
+    // Ne pas tenter la synchro si pas d'utilisateur authentifié
     if (!userId) {
+      setData([]);
+      setStatus('OFFLINE');
       return;
     }
 
     setStatus('LOADING');
+    setError(null);
+
     const q = query(collection(db, collectionName), where('userId', '==', userId));
 
     const unsubscribe = onSnapshot(
       q,
+      { includeMetadataChanges: true }, // Important pour détecter le passage hors-ligne/en-ligne
       (snapshot) => {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as unknown as T);
+        const items = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            }) as unknown as T
+        );
+
         setData(items);
         setStatus('SUCCESS');
+        setFromCache(snapshot.metadata.fromCache);
 
-        // Notification métadonnées (si provenant du cache)
         if (snapshot.metadata.fromCache) {
-          console.info(`Données ${collectionName} chargées du cache (Mode Hors Ligne)`);
+          console.debug(`[Sync] ${collectionName} chargé du cache (Hors Ligne)`);
+        }
+
+        if (snapshot.metadata.hasPendingWrites) {
+          console.debug(`[Sync] ${collectionName}: Modifications locales en attente d'envoi...`);
         }
       },
       (err) => {
-        console.error(`Erreur de synchro ${collectionName}:`, err);
+        console.error(`[Sync] Erreur ${collectionName}:`, err);
         setError(err);
         setStatus('ERROR');
       }
@@ -71,16 +89,27 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
   // Ajouter / Mettre à jour (Optimiste par défaut avec Firestore)
   const upsert = useCallback(
     async (item: T) => {
+      if (!userId) {
+        throw new Error('Connexion requise pour sauvegarder');
+      }
+
       try {
         const docRef = doc(db, collectionName, item.id);
-        // Ajout du userId pour la sécurité
-        const dataToSave = { ...item, userId };
 
-        // La mise à jour est immédiate localement grâce au SDK Firestore
+        // Enrichir les données avec métadonnées techniques
+        const dataToSave = {
+          ...item,
+          userId,
+          updatedAt: serverTimestamp(),
+          // Ne pas écraser createdAt si présent
+          createdAt: (item as any).createdAt || serverTimestamp(),
+        };
+
+        // Firestore gère l'optimisme (mise à jour locale immédiate)
         await setDoc(docRef, dataToSave, { merge: true });
         return { success: true };
       } catch (err) {
-        console.error(`Erreur d'écriture ${collectionName}:`, err);
+        console.error(`[Sync] Erreur d'écriture ${collectionName}:`, err);
         return { success: false, error: err };
       }
     },
@@ -94,11 +123,20 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
         await deleteDoc(doc(db, collectionName, id));
         return { success: true };
       } catch (err) {
-        console.error(`Erreur de suppression ${collectionName}:`, err);
+        console.error(`[Sync] Erreur de suppression ${collectionName}:`, err);
         return { success: false, error: err };
       }
     },
     [collectionName]
+  );
+
+  // Memoization de l'état de connexion pour éviter des re-renders inutiles
+  const connectionState = useMemo(
+    () => ({
+      isOffline: fromCache || !navigator.onLine,
+      isSyncing: status === 'LOADING',
+    }),
+    [fromCache, status]
   );
 
   return {
@@ -107,6 +145,6 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
     error,
     upsert,
     remove,
-    isOffline: status === 'SUCCESS' && !navigator.onLine,
+    ...connectionState,
   };
 }

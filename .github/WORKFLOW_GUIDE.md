@@ -202,17 +202,21 @@ Allez sur GitHub et créez une Pull Request.
 
 ```markdown
 ## Description
+
 Brève description de ce que cette PR fait.
 
 ## Type de changement
+
 - [x] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 
 ## Linked Issue(s)
+
 Fixes #123
 
 ## Checklist
+
 - [x] Code follows project style
 - [x] I've tested the changes
 - [x] Tests added/updated
@@ -244,22 +248,22 @@ Une fois approuvée et tous les checks verts :
 
 ## 🏷️ Labels utilisés
 
-| Label | Couleur | Usage |
-| --- | --- | --- |
-| `bug` | 🔴 | Bug report |
-| `feature` | 🟢 | New feature |
-| `enhancement` | 🔵 | Enhancement |
-| `documentation` | 📚 | Docs |
-| `security` | 🔒 | Security issue |
-| `refactor` | 🟡 | Refactoring |
-| `performance` | ⚡ | Performance |
-| `priority: critical` | 🔴 | Urgent |
-| `priority: high` | 🟠 | Important |
-| `priority: medium` | 🟡 | Normal |
-| `priority: low` | 🟢 | Low priority |
-| `good first issue` | 💜 | Good for newcomers |
-| `help wanted` | 🤝 | Need help |
-| `needs-triage` | ⚪ | Needs review |
+| Label                | Couleur | Usage              |
+| -------------------- | ------- | ------------------ |
+| `bug`                | 🔴      | Bug report         |
+| `feature`            | 🟢      | New feature        |
+| `enhancement`        | 🔵      | Enhancement        |
+| `documentation`      | 📚      | Docs               |
+| `security`           | 🔒      | Security issue     |
+| `refactor`           | 🟡      | Refactoring        |
+| `performance`        | ⚡      | Performance        |
+| `priority: critical` | 🔴      | Urgent             |
+| `priority: high`     | 🟠      | Important          |
+| `priority: medium`   | 🟡      | Normal             |
+| `priority: low`      | 🟢      | Low priority       |
+| `good first issue`   | 💜      | Good for newcomers |
+| `help wanted`        | 🤝      | Need help          |
+| `needs-triage`       | ⚪      | Needs review       |
 
 ---
 

@@ -13,7 +13,7 @@ body:
     attributes:
       label: 📝 Description
       description: Décrivez la feature que vous aimeriez voir implémentée
-      placeholder: "Quelle feature proposez-vous ?"
+      placeholder: 'Quelle feature proposez-vous ?'
     validations:
       required: true
 
@@ -32,7 +32,7 @@ body:
     attributes:
       label: 💡 Solution proposée
       description: Décrivez comment vous imaginez que cette feature fonctionnerait
-      placeholder: "Comment devrait-elle fonctionner ?"
+      placeholder: 'Comment devrait-elle fonctionner ?'
     validations:
       required: true
 
@@ -41,7 +41,7 @@ body:
     attributes:
       label: 🔄 Alternatives considérées
       description: Y a-t-il d'autres manières de résoudre ce problème ?
-      placeholder: "Quelles autres solutions ont été envisagées ?"
+      placeholder: 'Quelles autres solutions ont été envisagées ?'
 
   - type: checkboxes
     id: considerations

@@ -87,7 +87,10 @@ const Combobox: React.FC<ComboboxProps> = ({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {label && (
-        <label htmlFor={inputId} className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1.5 ml-1">
+        <label
+          htmlFor={inputId}
+          className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1.5 ml-1"
+        >
           {label}
         </label>
       )}
@@ -130,7 +133,12 @@ const Combobox: React.FC<ComboboxProps> = ({
             type="button"
             tabIndex={-1}
             disabled={disabled}
-            onClick={() => { if (!disabled) { setIsOpen(!isOpen); inputRef.current?.focus(); } }}
+            onClick={() => {
+              if (!disabled) {
+                setIsOpen(!isOpen);
+                inputRef.current?.focus();
+              }
+            }}
             className="p-1 text-brand-400 focus:outline-none"
             aria-label="Ouvrir/fermer les options"
           >

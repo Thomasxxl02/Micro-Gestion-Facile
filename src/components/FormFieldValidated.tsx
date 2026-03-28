@@ -22,22 +22,22 @@
  * ```
  */
 
-import React, { useState, useEffect } from 'react';
-import { type LucideIcon, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, type LucideIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import {
-  validateSIRET,
-  validateSIREN,
-  validateIBAN,
-  validateEmail,
-  validateFrenchPostalCode,
-  validateFrenchPhone,
-  validateVATNumber,
-  validateWebsite,
-  validateName,
+  validateAddress,
   validateAmount,
   validateDate,
+  validateEmail,
+  validateFrenchPhone,
+  validateFrenchPostalCode,
+  validateIBAN,
+  validateName,
   validateRequired,
-  validateAddress,
+  validateSIREN,
+  validateSIRET,
+  validateVATNumber,
+  validateWebsite,
   type ValidationResult,
 } from '../lib/validators';
 
@@ -131,8 +131,8 @@ interface FormFieldValidatedProps {
   min?: string | number;
   max?: string | number;
   step?: string | number;
-  validateOnChange?: boolean;
-  validateOnBlur?: boolean;
+  _validateOnChange?: boolean;
+  _validateOnBlur?: boolean;
   showValidationIcon?: boolean;
   'aria-label'?: string;
   autoComplete?: string;
@@ -263,7 +263,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             aria-label={ariaLabel}
             aria-describedby={describedByValue}
             maxLength={maxLength}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(error && error.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(error && error.valid && value))} ${inputClassName}`}
           />
         ) : (
           <input

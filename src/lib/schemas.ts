@@ -3,39 +3,37 @@
  * Permet de réutiliser les mêmes règles dans les hooks useFormValidation
  */
 
-import type { Client, Supplier, Invoice, Expense, Product } from '../types';
+import type { Client, Expense, Invoice, Product, Supplier } from '../types';
 import {
-  validateEmail,
-  validateFrenchPhone,
-  validateSIRET,
-  validateName,
   validateAddress,
-  validateFrenchPostalCode,
-  validateVATNumber,
-  validateWebsite,
   validateAmount,
   validateDate,
+  validateEmail,
+  validateFrenchPhone,
+  validateName,
   validateRequired,
-  validateIBAN,
+  validateSIRET,
+  validateVATNumber,
+  validateWebsite,
   type ValidationResult,
 } from './validators';
 
 export type ValidationSchema<T> = {
-  [K in keyof T]?: (value: unknown) => ValidationResult;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]?: (value: any) => ValidationResult;
 };
 
 /**
  * Schéma pour les Clients
  */
 export const ClientSchema: ValidationSchema<Client> = {
-  name: validateName,
-  email: validateEmail,
-  phone: (val: string) => (val ? validateFrenchPhone(val) : { valid: true }),
-  siret: (val: string) => (val ? validateSIRET(val) : { valid: true }),
-  tvaNumber: (val: string) => (val ? validateVATNumber(val) : { valid: true }),
-  address: (val: string) => (val ? validateAddress(val) : { valid: true }),
-  postalCode: (val: string) => (val ? validateFrenchPostalCode(val) : { valid: true }),
-  website: (val: string) => (val ? validateWebsite(val) : { valid: true }),
+  name: (value) => validateName(value as string),
+  email: (value) => validateEmail(value as string),
+  phone: (val) => (val ? validateFrenchPhone(val as string) : { valid: true }),
+  siret: (val) => (val ? validateSIRET(val as string) : { valid: true }),
+  tvaNumber: (val) => (val ? validateVATNumber(val as string) : { valid: true }),
+  address: (val) => (val ? validateAddress(val as string) : { valid: true }),
+  website: (val) => (val ? validateWebsite(val as string) : { valid: true }),
 };
 
 /**
@@ -47,7 +45,6 @@ export const SupplierSchema: ValidationSchema<Supplier> = {
   phone: (val: string) => (val ? validateFrenchPhone(val) : { valid: true }),
   siret: (val: string) => (val ? validateSIRET(val) : { valid: true }),
   tvaNumber: (val: string) => (val ? validateVATNumber(val) : { valid: true }),
-  bankAccount: (val: string) => (val ? validateIBAN(val) : { valid: true }),
 };
 
 /**

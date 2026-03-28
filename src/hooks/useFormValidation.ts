@@ -3,13 +3,13 @@
  * Supporte validation en temps réel, validation au blur, batch validation
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
-  validateBatch,
   areAllValid,
   isValid,
-  type ValidationResult,
+  validateBatch,
   type BatchValidationRules,
+  type ValidationResult,
 } from '../lib/validators';
 
 interface UseFormValidationOptions {
@@ -33,7 +33,7 @@ interface UseFormValidationOptions {
  * );
  * ```
  */
-export function useFormValidation<T extends Record<string, unknown>>(
+export function useFormValidation<T extends object = object>(
   initialData: T,
   rules: BatchValidationRules,
   options: UseFormValidationOptions = {}
@@ -52,7 +52,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
         return null;
       }
 
-      const result = rule(value);
+      const result = rule(value as string | number);
       setErrors((prev) => ({
         ...prev,
         [fieldName]: result,
@@ -96,7 +96,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
   // Valider tous les champs
   const validate = useCallback((): boolean => {
     const results = validateBatch(
-      data,
+      data as Record<string, unknown>,
       rules as Record<string, (value: unknown) => ValidationResult>
     );
     setErrors(results);
@@ -131,7 +131,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
   const isFormValid = useMemo(() => areAllValid(displayErrors), [displayErrors]);
 
   return {
-    data,
+    data: data as T,
     setData,
     errors: displayErrors,
     touched,

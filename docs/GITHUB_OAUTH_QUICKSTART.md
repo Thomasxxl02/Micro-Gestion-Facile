@@ -53,18 +53,19 @@ npm run dev
 
 ## 📂 Fichiers pour comprendre
 
-| Fichier | Utilisation | Lignes |
-|---------|-----------|--------|
-| [src/services/authService.ts](../src/services/authService.ts) | Logique d'authentification | 221 |
-| [src/hooks/useGitHubAuth.ts](../src/hooks/useGitHubAuth.ts) | Hook pour composants | 170 |
-| [src/components/GitHubLoginButton.tsx](../src/components/GitHubLoginButton.tsx) | Composant login | 215 |
-| [docs/GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md) | Documentation complète | 340 |
+| Fichier                                                                         | Utilisation                | Lignes |
+| ------------------------------------------------------------------------------- | -------------------------- | ------ |
+| [src/services/authService.ts](../src/services/authService.ts)                   | Logique d'authentification | 221    |
+| [src/hooks/useGitHubAuth.ts](../src/hooks/useGitHubAuth.ts)                     | Hook pour composants       | 170    |
+| [src/components/GitHubLoginButton.tsx](../src/components/GitHubLoginButton.tsx) | Composant login            | 215    |
+| [docs/GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md)                           | Documentation complète     | 340    |
 
 ---
 
 ## 💡 Cas d'usage les plus courants
 
 ### 1. Juste un bouton login
+
 ```typescript
 import { GitHubLoginButton } from '@/components/GitHubLoginButton';
 
@@ -72,6 +73,7 @@ import { GitHubLoginButton } from '@/components/GitHubLoginButton';
 ```
 
 ### 2. Accéder aux infos utilisateur
+
 ```typescript
 import { useGitHubAuth } from '@/hooks/useGitHubAuth';
 
@@ -81,6 +83,7 @@ return isAuthenticated ? <h1>Hello {user?.displayName}</h1> : <Login />;
 ```
 
 ### 3. Bloc login/logout automatique
+
 ```typescript
 import { GitHubLoginBlock } from '@/components/GitHubLoginButton';
 
@@ -88,6 +91,7 @@ import { GitHubLoginBlock } from '@/components/GitHubLoginButton';
 ```
 
 ### 4. Gestion avancée avec erreurs
+
 ```typescript
 const { user, error, loginWithGitHub, logout } = useGitHubAuth();
 
@@ -123,10 +127,12 @@ Development: http://localhost:5173/__/auth/handler
 ```
 
 ✅ **Scopes autorisés (seulement):**
+
 - `user:email` ✅
 - `read:user` ✅
 
 ❌ **Scopes interdits:**
+
 - `repo` ❌
 - `admin` ❌
 - Autres ❌
@@ -135,18 +141,19 @@ Development: http://localhost:5173/__/auth/handler
 
 ## 🐛 Erreurs courantes
 
-| Erreur | Solution |
-|--------|----------|
+| Erreur                  | Solution                                            |
+| ----------------------- | --------------------------------------------------- |
 | "redirect_uri_mismatch" | Vérifiez URL callback exacte dans GitHub + Firebase |
-| "Popup blocked" | Autorisez popups dans navigateur |
-| "Network error" | Vérifiez Internet + Firebase status |
-| "Unauthorized" | Vérifiez GitHub OAuth App est créée |
+| "Popup blocked"         | Autorisez popups dans navigateur                    |
+| "Network error"         | Vérifiez Internet + Firebase status                 |
+| "Unauthorized"          | Vérifiez GitHub OAuth App est créée                 |
 
 ---
 
 ## 📖 Documentation complète
 
 Pour plus de détails:
+
 - [GITHUB_OAUTH_SETUP.md](./GITHUB_OAUTH_SETUP.md) - Configuration complète
 - [GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md) - Checklist étape par étape
 - [GitHubAuth.example.tsx](../src/__tests__/GitHubAuth.example.tsx) - 5 exemples

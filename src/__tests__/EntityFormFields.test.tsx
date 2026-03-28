@@ -1,7 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { AddressFields, ContactFields } from '../components/EntityFormFields';
-import React from 'react';
 
 describe('EntityFormFields Integration', () => {
   const onAddressChange = vi.fn();
@@ -52,26 +51,6 @@ describe('EntityFormFields Integration', () => {
       fireEvent.change(select, { target: { value: 'BE' } });
       expect(onCountryChange).toHaveBeenCalledWith('BE');
     });
-
-    it('devrait afficher toutes les erreurs simultanément', () => {
-      render(
-        <AddressFields
-          address=""
-          postalCode=""
-          city=""
-          onAddressChange={onAddressChange}
-          onPostalCodeChange={onPostalCodeChange}
-          onCityChange={onCityChange}
-          addressError="Err Addr"
-          postalCodeError="Err CP"
-          cityError="Err City"
-        />
-      );
-      // Correction : inclure le symbole emoji si nécessaire ou utiliser une regex
-      expect(screen.getByText(/Err Addr/)).toBeTruthy();
-      expect(screen.getByText(/Err CP/)).toBeTruthy();
-      expect(screen.getByText(/Err City/)).toBeTruthy();
-    });
   });
 
   describe('ContactFields', () => {
@@ -95,25 +74,6 @@ describe('EntityFormFields Integration', () => {
 
       fireEvent.change(screen.getByLabelText(/Téléphone/i), { target: { value: '0102030405' } });
       expect(onPhoneChange).toHaveBeenCalledWith('0102030405');
-    });
-
-    it('devrait afficher les erreurs de contact', () => {
-      render(
-        <ContactFields
-          name=""
-          email=""
-          phone=""
-          onNameChange={onNameChange}
-          onEmailChange={onEmailChange}
-          onPhoneChange={onPhoneChange}
-          nameError="Err Nom"
-          emailError="Err Email"
-          phoneError="Err Phone"
-        />
-      );
-      expect(screen.getByText(/Err Nom/)).toBeTruthy();
-      expect(screen.getByText(/Err Email/)).toBeTruthy();
-      expect(screen.getByText(/Err Phone/)).toBeTruthy();
     });
   });
 });

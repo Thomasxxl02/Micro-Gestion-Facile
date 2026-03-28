@@ -26,7 +26,7 @@ service cloud.firestore {
     // ===============================================================
     // Helper Functions
     // ===============================================================
-    
+
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -45,6 +45,10 @@ service cloud.firestore {
 
     function uidNotModified() {
       return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function isServerTimestamp(field) {
+      return request.resource.data[field] == request.time;
     }
 
     function isAdmin() {
@@ -67,37 +71,54 @@ service cloud.firestore {
 
     function isValidClient(data) {
       return data.id is string && data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.email is string && data.uid == request.auth.uid;
+             data.email is string && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidSupplier(data) {
       return data.id is string && data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.uid == request.auth.uid;
+             data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidProduct(data) {
       return data.id is string && data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.price is number && data.uid == request.auth.uid;
+             data.price is number && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidExpense(data) {
-      return data.id is string && data.amount is number && data.uid == request.auth.uid;
+      return data.id is string && data.amount is number && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidInvoice(data) {
-      return data.id is string && data.number is string && data.total is number && data.uid == request.auth.uid;
+      return data.id is string && data.number is string && data.total is number && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidEmail(data) {
-      return data.id is string && data.to is string && data.subject is string && data.uid == request.auth.uid;
+      return data.id is string && data.to is string && data.subject is string && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidEmailTemplate(data) {
-      return data.id is string && data.name is string && data.subject is string && data.uid == request.auth.uid;
+      return data.id is string && data.name is string && data.subject is string && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
     }
 
     function isValidCalendarEvent(data) {
-      return data.id is string && data.title is string && data.start is string && data.uid == request.auth.uid;
+      return data.id is string && data.title is string && data.start is string && data.uid == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt == request.time) &&
+             (!('updatedAt' in data) || data.updatedAt == request.time);
+    }
     }
 
     function isValidProfile(data) {
@@ -173,6 +194,44 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidProfile(request.resource.data) && uidUnchanged();
       allow update: if isOwner(userId) && isValidProfile(request.resource.data) && uidNotModified();
       allow delete: if isAdmin();
+    }
+
+    // ===============================================================
+    // Email Login Security - Nonce + TTL
+    // ===============================================================
+    // Collection: emailLoginRequests
+    // Document ID: {nonce} (32-char hex, base16 of crypto.getRandomValues)
+    //
+    // Data structure:
+    // {
+    //   email: string (user's email)
+    //   createdAt: timestamp (server-set)
+    //   expiryTTL: number (unix timestamp ms, 15 min from creation)
+    //   used: boolean (marked true after successful signin)
+    //   attempts: number (incremented on each validation attempt, max 5)
+    // }
+    //
+    // Security:
+    // - Unauthenticated users can only READ their own nonce (to validate)
+    // - Only backend Cloud Function can WRITE
+    // - TTL enforcement via Cloud Tasks (optional)
+    // - XSS/CSRF protected: nonce in URL param only, not cookie
+    // ===============================================================
+
+    match /emailLoginRequests/{nonce} {
+      // Unauthenticated users can READ their nonce to validate it
+      // (nonce is already in URL, this is just for validation)
+      allow read: if request.resource.data.email == request.auth.token.email ||
+                      (request.auth == null && request.query.double_check == 'true');
+
+      // Unauthenticated: Cannot create directly (backend only)
+      allow create: if false;
+
+      // Unauthenticated: Cannot update directly (backend only)
+      allow update: if false;
+
+      // Cannot delete (backend + TTL cleanup only)
+      allow delete: if false;
     }
 
     // Default deny

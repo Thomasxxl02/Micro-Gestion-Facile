@@ -1,9 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import InvoiceManager from '../../components/InvoiceManager';
-import React from 'react';
-import type { Invoice, Client, UserProfile, Product } from '../../types';
+import type { Client, Invoice, Product, UserProfile } from '../../types';
 
 // Mock Lucide icons - import many as the component uses a lot
 vi.mock('lucide-react', () => ({
@@ -22,6 +21,7 @@ vi.mock('lucide-react', () => ({
   Calendar: () => <span>CalendarIcon</span>,
   Search: () => <span>SearchIcon</span>,
   AlertCircle: () => <span>AlertCircleIcon</span>,
+  CheckCircle2: () => <span>CheckCircle2Icon</span>,
   CheckSquare: () => <span>CheckSquareIcon</span>,
   Square: () => <span>SquareIcon</span>,
   Package: () => <span>PackageIcon</span>,

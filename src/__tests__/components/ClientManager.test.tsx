@@ -68,7 +68,14 @@ vi.mock('../../components/EntityFormFields', () => ({
       />
     </div>
   ),
-  AddressFields: ({ address, postalCode, city, onAddressChange, onPostalCodeChange, onCityChange }: any) => (
+  AddressFields: ({
+    address,
+    postalCode,
+    city,
+    onAddressChange,
+    onPostalCodeChange,
+    onCityChange,
+  }: any) => (
     <div data-testid="address-fields">
       <input
         placeholder="Adresse"

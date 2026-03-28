@@ -300,14 +300,10 @@ export const mergeImportData = (
     case 'merge':
     default: {
       // Deduplicate by ID, imported takes precedence
-      const invoiceMap = new Map<string, Invoice>(
-        (existing.invoices || []).map((i) => [i.id, i])
-      );
+      const invoiceMap = new Map<string, Invoice>((existing.invoices || []).map((i) => [i.id, i]));
       (imported.invoices || []).forEach((i) => invoiceMap.set(i.id, i));
 
-      const clientMap = new Map<string, Client>(
-        (existing.clients || []).map((c) => [c.id, c])
-      );
+      const clientMap = new Map<string, Client>((existing.clients || []).map((c) => [c.id, c]));
       (imported.clients || []).forEach((c) => clientMap.set(c.id, c));
 
       return {

@@ -1,9 +1,8 @@
 ---
 name: Discussion Générale 💬
 about: Discuter, poser des questions ou partager des idées
-title: "[DISCUSS] "
-labels: ["discussion"]
-
+title: '[DISCUSS] '
+labels: ['discussion']
 ---
 
 ## 📌 Sujet

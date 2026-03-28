@@ -225,9 +225,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
   };
 
   const parseCSVLine = (line: string): string[] =>
-    line
-      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-      .map((p) => p.trim().replaceAll('"', ''));
+    line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((p) => p.trim().replaceAll('"', ''));
 
   const createProductFromCSVLine = (parts: string[], lineIndex: number): Product => ({
     id: (Date.now() + lineIndex).toString(),
@@ -256,7 +254,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line) continue;
+      if (!line) {
+        continue;
+      }
 
       const parts = parseCSVLine(line);
       if (parts.length >= 2) {

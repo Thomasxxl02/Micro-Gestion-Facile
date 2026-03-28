@@ -3,6 +3,7 @@
 Décrire les changements et contexte. Pourquoi cette PR est nécessaire ?
 
 **Type de changement** :
+
 - [ ] 🐛 Bug fix (non-breaking)
 - [ ] ✨ New feature (non-breaking)
 - [ ] 🔄 Refactoring (non-breaking)
@@ -35,7 +36,7 @@ npm run dev
 # Testez: ...
 ```
 
-**Couverture de tests ajoutée**: % →  %
+**Couverture de tests ajoutée**: % → %
 
 ## 🔒 Checklist Sécurité
 

@@ -80,13 +80,7 @@ describe('GitHub OAuth Authentication', () => {
         user: mockUser,
       } as any);
 
-      render(
-        <GitHubLoginButton
-          onSuccess={onSuccess}
-          label="Login"
-          showText={true}
-        />
-      );
+      render(<GitHubLoginButton onSuccess={onSuccess} label="Login" showText={true} />);
 
       const button = screen.getByRole('button');
 
@@ -95,7 +89,7 @@ describe('GitHub OAuth Authentication', () => {
       expect(button).toBeInTheDocument();
     });
 
-    it('devrait afficher un message d\'erreur en cas d\'échec', async () => {
+    it("devrait afficher un message d'erreur en cas d'échec", async () => {
       const buttonElement = render(<GitHubLoginButton showText={true} />);
       expect(buttonElement).toBeDefined();
     });
@@ -160,7 +154,7 @@ describe('GitHub OAuth Authentication', () => {
     });
   });
 
-  describe('Cycle de vie d\'authentification', () => {
+  describe("Cycle de vie d'authentification", () => {
     it('utilisateur non connecté initialement', () => {
       // Le hook useGitHubAuth commencerait par isLoading = true
       // puis mettrait à jour après la vérification d'authentification
@@ -215,7 +209,7 @@ describe('GitHub OAuth Authentication', () => {
       expect(button).toHaveFocus || button.focus();
     });
 
-    it('devrait afficher les messages d\'erreur avec aria-live', () => {
+    it("devrait afficher les messages d'erreur avec aria-live", () => {
       render(<GitHubLoginButton />);
 
       // Les messages d'erreur doivent avoir aria-live="polite"

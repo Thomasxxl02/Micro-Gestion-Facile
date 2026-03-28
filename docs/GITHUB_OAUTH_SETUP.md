@@ -26,12 +26,12 @@
 
 2. **Remplissez le formulaire**
 
-   | Champ | Valeur | Notes |
-   |-------|--------|-------|
-   | **Application name** | `Micro-Gestion-Facile` | Nom affiché aux utilisateurs |
-   | **Homepage URL** | `https://micro-gestion-facile.com` | URL de votre PWA |
+   | Champ                          | Valeur                                                 | Notes                                |
+   | ------------------------------ | ------------------------------------------------------ | ------------------------------------ |
+   | **Application name**           | `Micro-Gestion-Facile`                                 | Nom affiché aux utilisateurs         |
+   | **Homepage URL**               | `https://micro-gestion-facile.com`                     | URL de votre PWA                     |
    | **Authorization callback URL** | `https://YOUR_PROJECT.firebaseapp.com/__/auth/handler` | **Important!** Voir section Firebase |
-   | **Webhook URL** | (Optionnel) | Pour intégrations futures |
+   | **Webhook URL**                | (Optionnel)                                            | Pour intégrations futures            |
 
 3. **Récupérez les identifiants**
    - Copiez **Client ID**
@@ -85,6 +85,7 @@ VITE_GITHUB_CLIENT_ID=your_client_id_here
 ```
 
 **Avertissement de sécurité** ⚠️
+
 - N'incluez JAMAIS `Client Secret` côté client
 - `Client Secret` ne doit être utilisé que côté serveur
 - Firebase gère automatiquement cette sécurité
@@ -190,17 +191,20 @@ function Header() {
 ### 🔐 Authentification Sécurisée
 
 #### Scopes requis
+
 ```typescript
-githubProvider.addScope('user:email');  // Email public/privé
-githubProvider.addScope('read:user');   // Profil public
+githubProvider.addScope('user:email'); // Email public/privé
+githubProvider.addScope('read:user'); // Profil public
 ```
 
 **Ne demandez jamais :**
+
 - ❌ `repo` - Accès aux repositories
 - ❌ `admin:*` - Accès administrateur
 - ❌ `delete_repo` - Suppression de repos
 
 #### Gestion du Secret Client
+
 ```typescript
 // ❌ MAUVAIS - Ne jamais côté client
 const SECRET = 'gh_pat_...'; // En clair dans le code
@@ -248,9 +252,9 @@ service cloud.firestore {
     // Utilisateurs ne peuvent lire/écrire que leur propre profil
     match /users/{userId} {
       allow read: if request.auth.uid == userId;
-      allow write: if request.auth.uid == userId && 
+      allow write: if request.auth.uid == userId &&
                       request.auth.provider == 'github';
-      
+
       // Audit trail (lecture seule)
       match /loginHistory/{doc=**} {
         allow read: if request.auth.uid == userId;
@@ -269,12 +273,15 @@ service cloud.firestore {
 ### 🚫 Protection contre les attaques courantes
 
 #### CSRF (Cross-Site Request Forgery)
+
 ✅ **Firebase gère automatiquement via OAuth 2.0** - State parameter validé
 
 #### Réinjection de session
+
 ✅ **Firebase gère automatiquement** - Tokens signés et expirables (1 heure)
 
 #### Capture d'écran de secrets
+
 ⚠️ **À votre charge** - Utilisez `.env.local` (non commité)
 
 ---
@@ -285,6 +292,7 @@ service cloud.firestore {
 
 **Symptôme:** Erreur lors de la tentative de connexion
 **Solution:**
+
 ```
 1. Vérifiez que GitHub OAuth App est activée
 2. Vérifiez l'Authorization callback URL:
@@ -297,6 +305,7 @@ service cloud.firestore {
 
 **Symptôme:** "The redirect_uri parameter does not match..."
 **Solution:**
+
 ```
 1. Ouvrez GitHub Settings → Developer settings → OAuth Apps
 2. Éditez l'app "Micro-Gestion-Facile"
@@ -309,6 +318,7 @@ service cloud.firestore {
 
 **Symptôme:** "Failed to call signInWithPopup"
 **Solution:**
+
 ```typescript
 // L'erreur apparaît si:
 // - Popup blocker active
@@ -325,6 +335,7 @@ setTimeout(() => loginWithGitHub(), 1000);
 
 **Symptôme:** Network request failed (surtout offline)
 **Solution:**
+
 - L'app retry automatiquement 3 fois (exponential backoff)
 - Vérifiez votre connexion Internet
 - Vérifiez que Firebase est accessible
@@ -336,6 +347,7 @@ setTimeout(() => loginWithGitHub(), 1000);
 ### 📊 Données collectées par GitHub OAuth
 
 Lorsqu'un utilisateur se connecte, GitHub partage **via Firebase** :
+
 - ✅ Email (public et privé selon préférences)
 - ✅ Nom d'affichage
 - ✅ Photo de profil
@@ -391,6 +403,7 @@ Mettez à jour votre privacy policy pour inclure :
 ## Authentification via GitHub
 
 Nous utilisons GitHub OAuth pour authentifier les utilisateurs.
+
 - Nous ne stockons PAS vos données GitHub (repos, issues, etc.)
 - Vous pouvez déconnecter l'app depuis vos paramètres GitHub
 - Vos données privées ne sont jamais partagées
@@ -414,6 +427,7 @@ VITE_GITHUB_CLIENT_ID=...
 ```
 
 **Fichiers à ne jamais commiter :**
+
 ```
 .env.local          # Variables sensibles locales
 .env.*.local        # Variantes locales

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useEntityForm, useEntityFilters, useEntityStats } from '../../hooks/useEntity';
+import { act, renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { useEntityFilters, useEntityForm, useEntityStats } from '../../hooks/useEntity';
 import type { Client, Invoice } from '../../types';
 
 describe('useEntityForm Hook', () => {
@@ -296,13 +296,12 @@ describe('useEntityFilters Hook', () => {
         useEntityFilters(mockClients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
-          showArchived: false, // Start with archived hidden
         })
       );
 
       // Initially shows only non-archived: Alice, Bob
       expect(result.current.filteredEntities).toHaveLength(2);
-      expect(result.current.filteredEntities.every((c) => !c.archived)).toBe(true);
+      expect(result.current.filteredEntities.every((c: any) => !c.archived)).toBe(true);
 
       act(() => {
         result.current.setShowArchived(true);
@@ -317,7 +316,6 @@ describe('useEntityFilters Hook', () => {
         useEntityFilters(mockClients as unknown as Record<string, unknown>[], {
           hasArchive: true,
           archiveField: 'archived',
-          showArchived: false, // Start with archived hidden
         })
       );
 

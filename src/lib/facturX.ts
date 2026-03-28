@@ -4,7 +4,12 @@
  */
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import type { Invoice, Client, UserProfile } from '../types';
+import type { Client, Invoice, UserProfile } from '../types';
+
+// Interface pour jsPDF avec propriété facturX custom
+interface jsPDFWithFacturX extends jsPDF {
+  facturX?: string;
+}
 
 /**
  * Échappe les caractères XML spéciaux
@@ -201,13 +206,14 @@ export const generatePDFWithFacturX = async (
 
   // --- Design du PDF ---
   doc.setFontSize(20);
-  const documentTypeLabel =
-    {
-      invoice: 'FACTURE',
-      credit_note: 'AVOIR',
-      deposit_invoice: "FACTURE D'ACOMPTE",
-    }[invoice.type] ?? 'DOCUMENT';
-  doc.text(documentTypeLabel, 14, 22);
+  const documentTypeLabel: Record<string, string> = {
+    invoice: 'FACTURE',
+    credit_note: 'AVOIR',
+    deposit_invoice: "FACTURE D'ACOMPTE",
+    quote: 'DEVIS',
+    order: 'COMMANDE',
+  };
+  doc.text(documentTypeLabel[invoice.type as string] ?? 'DOCUMENT', 14, 22);
 
   doc.setFontSize(10);
   doc.text(`Numéro: ${invoice.number}`, 14, 30);
@@ -249,26 +255,27 @@ export const generatePDFWithFacturX = async (
   if (invoice.vatAmount) {
     doc.text(`TVA: ${invoice.vatAmount.toFixed(2)} €`, 140, finalY + 5);
   }
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`TOTAL TTC: ${invoice.total.toFixed(2)} €`, 140, finalY + 12);
 
   // Mentions obligatoires micro-entrepreneur (TVA non applicable)
   if (!invoice.vatAmount || invoice.vatAmount === 0) {
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('TVA non applicable, art. 293 B du CGI', 14, finalY + 25);
   }
+
+  // --- Injection Metadonnées Factur-X (ZUGFeRD) ---
+  const facturX_XML = generateFacturX_XML(invoice, client, userProfile);
 
   // --- Signature Numérique (Simulation SHA-256) ---
   const pdfString = doc.output();
   const signatureHash = await simulateDigitalSignature(pdfString);
+  (doc as jsPDFWithFacturX).facturX = facturX_XML;
   doc.setFontSize(7);
   doc.setTextColor(150);
   doc.text(`Empreinte numérique (SHA-256) : ${signatureHash}`, 14, 285);
   doc.text(`Signé numériquement le : ${new Date().toLocaleString('fr-FR')}`, 14, 289);
-
-  // --- Injection Metadonnées Factur-X (ZUGFeRD) ---
-  const facturX_XML = generateFacturX_XML(invoice, client, userProfile);
 
   // Dans une vraie implémentation PDF/A-3, on doit utiliser attachFile ou similaire.
   // jsPDF supporte l'ajout de fichiers depuis récemment via des plugins.
@@ -277,7 +284,7 @@ export const generatePDFWithFacturX = async (
   try {
     // Note: L'attachement réel XML dans un PDF/A-3 requiert un traitement binaire post-génération
     // ou une extension spécifique de jsPDF. On expose ici le XML pour usage tiers ou preuve de concept.
-    doc.facturX = facturX_XML;
+    (doc as jsPDFWithFacturX).facturX = facturX_XML;
   } catch (e) {
     console.error('Erreur injection Factur-X:', e);
   }

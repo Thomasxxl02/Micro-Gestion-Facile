@@ -12,7 +12,7 @@ body:
     attributes:
       label: Description
       description: Expliquez ce qui doit être mis à jour ou ajouté.
-      placeholder: ex: La documentation de l'export Factur-X n'est plus à jour...
+      placeholder: "ex: La documentation de l'export Factur-X n'est plus à jour..."
     validations:
       required: true
   - type: textarea

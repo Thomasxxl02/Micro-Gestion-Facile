@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { exportAsJSON, exportAsCSV } from '../../lib/exportUtils';
+import { describe, expect, it } from 'vitest';
 import type { ExportData } from '../../lib/exportUtils';
+import { exportAsCSV, exportAsJSON } from '../../lib/exportUtils';
 
 describe('exportUtils', () => {
   const mockData: Partial<ExportData> = {
@@ -390,7 +390,6 @@ describe('exportUtils', () => {
           {
             ...mockData.invoices![0],
             notes: null as any,
-            description: undefined as any,
           },
         ],
       };
