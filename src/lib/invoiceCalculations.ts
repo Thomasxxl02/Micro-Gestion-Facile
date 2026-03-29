@@ -448,7 +448,6 @@ export function calculateItemVAT(
 // FORMATAGE POUR EXPORT/PDF
 // ============================================================================
 
-
 export interface FormattedInvoiceForPDF {
   number: string;
   date: string;

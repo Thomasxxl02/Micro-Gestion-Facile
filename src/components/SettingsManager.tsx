@@ -246,9 +246,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 dark:text-white font-display tracking-tight">
+          <h1 className="text-3xl font-bold text-brand-900 dark:text-white font-display tracking-tight">
             Paramètres
-          </h2>
+          </h1>
           <p className="text-brand-500 dark:text-brand-400 mt-1">
             Gérez votre profil, votre image de marque et vos données.
           </p>

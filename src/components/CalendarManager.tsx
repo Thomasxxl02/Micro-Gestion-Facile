@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from 'react';
-import type { CalendarEvent, Client } from '../types';
 import {
+  AlertCircle,
   Calendar as CalendarIcon,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Plus,
   Clock,
-  X,
+  Plus,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
+  X,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import type { CalendarEvent, Client } from '../types';
 
 interface CalendarManagerProps {
   events: CalendarEvent[];
@@ -187,9 +187,9 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 tracking-tight font-display">
+          <h1 className="text-3xl font-bold text-brand-900 tracking-tight font-display">
             Agenda & Planning
-          </h2>
+          </h1>
           <p className="text-brand-500 mt-1 text-sm">
             Gérez vos rendez-vous, échéances et tâches importantes.
           </p>
@@ -227,24 +227,23 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
               <div className="flex bg-white rounded-xl border border-brand-100 p-1 shadow-sm">
                 <button
                   onClick={prevMonth}
+                  aria-label="Mois précédent"
                   className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors"
-                  title="Mois précédent"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={20} aria-hidden="true" />
                 </button>
                 <button
                   onClick={goToToday}
                   className="px-3 py-1 text-xs font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                  title="Aller à aujourd'hui"
                 >
                   Aujourd&apos;hui
                 </button>
                 <button
                   onClick={nextMonth}
+                  aria-label="Mois suivant"
                   className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors"
-                  title="Mois suivant"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={20} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -297,10 +296,10 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                         });
                         setIsModalOpen(true);
                       }}
+                      aria-label="Ajouter un \u00e9v\u00e9nement"
                       className="opacity-0 group-hover:opacity-100 p-1 text-brand-400 hover:text-brand-900 transition-all"
-                      title="Ajouter un événement"
                     >
-                      <Plus size={14} />
+                      <Plus size={14} aria-hidden="true" />
                     </button>
                   </div>
 
@@ -415,10 +414,10 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
+                aria-label="Fermer le formulaire"
                 className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors"
-                title="Fermer"
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 

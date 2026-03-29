@@ -1,45 +1,45 @@
-import React, { useState, useMemo } from 'react';
 import {
+  Calculator,
+  Calendar,
+  Camera,
+  DollarSign,
+  FileSpreadsheet,
+  Filter,
+  Loader2,
+  PieChart as PieChartIcon,
+  Plus,
+  Search,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { ExpenseSchema } from '../lib/schemas';
+import { analyzeReceipt } from '../services/geminiService';
+import {
+  type Client,
   type Expense,
   type Invoice,
   type Supplier,
-  type Client,
   type UserProfile,
   InvoiceStatus,
 } from '../types';
-import {
-  Plus,
-  Trash2,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  PieChart as PieChartIcon,
-  Search,
-  Filter,
-  Calculator,
-  FileSpreadsheet,
-  Camera,
-  Loader2,
-} from 'lucide-react';
-import { analyzeReceipt } from '../services/geminiService';
 import Combobox from './Combobox';
 import { FormFieldValidated } from './FormFieldValidated';
-import { useFormValidation } from '../hooks/useFormValidation';
-import { ExpenseSchema } from '../lib/schemas';
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Tooltip,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from 'recharts';
 
-import { calculateSocialContributions, calculateIncomeTaxPFL } from '../lib/fiscalCalculations';
+import { calculateIncomeTaxPFL, calculateSocialContributions } from '../lib/fiscalCalculations';
 
 interface AccountingManagerProps {
   expenses: Expense[];
@@ -556,9 +556,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 font-display tracking-tight">
+          <h1 className="text-3xl font-bold text-brand-900 font-display tracking-tight">
             Comptabilité
-          </h2>
+          </h1>
           <p className="text-brand-500 mt-1">Suivi de trésorerie et pilotage financier.</p>
         </div>
         <div className="flex bg-brand-100/50 p-1 rounded-2xl border border-brand-100">

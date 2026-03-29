@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51% </span>
+                <span class="strong">52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>51/100</span>
+                <span class='fraction'>52/100</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.88% </span>
+                <span class="strong">40.74% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>21/54</span>
+                <span class='fraction'>22/54</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">51.08% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>46/92</span>
+                <span class='fraction'>47/92</span>
             </div>
         
             
@@ -647,8 +647,7 @@
 <a name='L582'></a><a href='#L582'>582</a>
 <a name='L583'></a><a href='#L583'>583</a>
 <a name='L584'></a><a href='#L584'>584</a>
-<a name='L585'></a><a href='#L585'>585</a>
-<a name='L586'></a><a href='#L586'>586</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L585'></a><a href='#L585'>585</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -825,11 +824,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -857,7 +856,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1233,19 +1231,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useMemo } from 'react';
-import type { CalendarEvent, Client } from '../types';
-import {
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
+  AlertCircle,
   Calendar as CalendarIcon,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Plus,
   Clock,
-  X,
+  Plus,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
+  X,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import type { CalendarEvent, Client } from '../types';
 &nbsp;
 interface CalendarManagerProps {
   events: CalendarEvent[];
@@ -1409,12 +1407,12 @@ const CalendarManager: React.FC&lt;CalendarManagerProps&gt; = ({
     switch (type) {
       case 'meeting':
         return 'bg-blue-50 text-blue-600 border-blue-100';
-<span class="branch-1 cbranch-no" title="branch not covered" >      case 'task':</span>
-<span class="cstat-no" title="statement not covered" >        return 'bg-emerald-50 text-emerald-600 border-emerald-100';</span>
-<span class="branch-2 cbranch-no" title="branch not covered" >      case 'deadline':</span>
-<span class="cstat-no" title="statement not covered" >        return 'bg-red-50 text-red-600 border-red-100';</span>
-      default:
-        return 'bg-brand-50 text-brand-600 border-brand-100';
+      case 'task':
+        return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'deadline':
+        return 'bg-red-50 text-red-600 border-red-100';
+<span class="branch-3 cbranch-no" title="branch not covered" >      default:</span>
+<span class="cstat-no" title="statement not covered" >        return 'bg-brand-50 text-brand-600 border-brand-100';</span>
     }
   };
 &nbsp;
@@ -1422,9 +1420,9 @@ const CalendarManager: React.FC&lt;CalendarManagerProps&gt; = ({
     &lt;div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-10"&gt;
       &lt;div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6"&gt;
         &lt;div&gt;
-          &lt;h2 className="text-3xl font-bold text-brand-900 tracking-tight font-display"&gt;
+          &lt;h1 className="text-3xl font-bold text-brand-900 tracking-tight font-display"&gt;
             Agenda &amp; Planning
-          &lt;/h2&gt;
+          &lt;/h1&gt;
           &lt;p className="text-brand-500 mt-1 text-sm"&gt;
             Gérez vos rendez-vous, échéances et tâches importantes.
           &lt;/p&gt;
@@ -1462,24 +1460,23 @@ const CalendarManager: React.FC&lt;CalendarManagerProps&gt; = ({
               &lt;div className="flex bg-white rounded-xl border border-brand-100 p-1 shadow-sm"&gt;
                 &lt;button
                   onClick={prevMonth}
+                  aria-label="Mois précédent"
                   className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors"
-                  title="Mois précédent"
                 &gt;
-                  &lt;ChevronLeft size={20} /&gt;
+                  &lt;ChevronLeft size={20} aria-hidden="true" /&gt;
                 &lt;/button&gt;
                 &lt;button
                   onClick={goToToday}
                   className="px-3 py-1 text-xs font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                  title="Aller à aujourd'hui"
                 &gt;
                   Aujourd&amp;apos;hui
                 &lt;/button&gt;
                 &lt;button
                   onClick={nextMonth}
+                  aria-label="Mois suivant"
                   className="p-1.5 hover:bg-brand-50 rounded-lg text-brand-500 transition-colors"
-                  title="Mois suivant"
                 &gt;
-                  &lt;ChevronRight size={20} /&gt;
+                  &lt;ChevronRight size={20} aria-hidden="true" /&gt;
                 &lt;/button&gt;
               &lt;/div&gt;
             &lt;/div&gt;
@@ -1532,10 +1529,10 @@ const CalendarManager: React.FC&lt;CalendarManagerProps&gt; = ({
                         });
 <span class="cstat-no" title="statement not covered" >                        setIsModalOpen(true);</span>
                       }}
+                      aria-label="Ajouter un \u00e9v\u00e9nement"
                       className="opacity-0 group-hover:opacity-100 p-1 text-brand-400 hover:text-brand-900 transition-all"
-                      title="Ajouter un événement"
                     &gt;
-                      &lt;Plus size={14} /&gt;
+                      &lt;Plus size={14} aria-hidden="true" /&gt;
                     &lt;/button&gt;
                   &lt;/div&gt;
 &nbsp;
@@ -1650,10 +1647,10 @@ const CalendarManager: React.FC&lt;CalendarManagerProps&gt; = ({
               &lt;/div&gt;
               &lt;button
                 onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etIsModalOpen(false)}</span>
+                aria-label="Fermer le formulaire"
                 className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors"
-                title="Fermer"
               &gt;
-                &lt;X size={20} /&gt;
+                &lt;X size={20} aria-hidden="true" /&gt;
               &lt;/button&gt;
             &lt;/div&gt;
 &nbsp;
@@ -1825,7 +1822,7 @@ export default CalendarManager;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-27T19:31:47.495Z
+                at 2026-03-29T13:15:19.337Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

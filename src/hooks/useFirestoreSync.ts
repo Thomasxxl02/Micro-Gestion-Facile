@@ -69,11 +69,11 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
         setFromCache(snapshot.metadata.fromCache);
 
         if (snapshot.metadata.fromCache) {
-          console.debug(`[Sync] ${collectionName} chargé du cache (Hors Ligne)`);
+          console.info(`[Sync] ${collectionName} chargé du cache (Hors Ligne)`);
         }
 
         if (snapshot.metadata.hasPendingWrites) {
-          console.debug(`[Sync] ${collectionName}: Modifications locales en attente d'envoi...`);
+          console.info(`[Sync] ${collectionName}: Modifications locales en attente d'envoi...`);
         }
       },
       (err) => {
@@ -102,7 +102,7 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
           userId,
           updatedAt: serverTimestamp(),
           // Ne pas écraser createdAt si présent
-          createdAt: (item as any).createdAt || serverTimestamp(),
+          createdAt: (item as Record<string, unknown>).createdAt || serverTimestamp(),
         };
 
         // Firestore gère l'optimisme (mise à jour locale immédiate)

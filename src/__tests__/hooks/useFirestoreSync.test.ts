@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFirestoreSync } from '../../hooks/useFirestoreSync';
 import type { Client, Invoice } from '../../types';
 
@@ -9,49 +9,51 @@ vi.mock('../../firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', () => {
-  let unsubscribeFn: (() => void) | null = null;
-
   return {
     collection: vi.fn(() => ({})),
-    doc: vi.fn((db: any, collection: string, id: string) => ({
+    doc: vi.fn((_db: unknown, collection: string, id: string) => ({
       _collection: collection,
       _id: id,
     })),
-    onSnapshot: vi.fn((query: any, onSuccess: any, onError: any) => {
-      // Simuler une réponse hors ligne
-      const mockSnapshot = {
-        docs: [
-          {
-            id: 'doc-1',
-            data: () => ({
+    /**
+     * Le hook appelle onSnapshot avec 4 args :
+     * onSnapshot(query, { includeMetadataChanges }, successCb, errorCb)
+     * On détecte si le 2e arg est un objet d'options ou directement le callback.
+     */
+    onSnapshot: vi.fn(
+      (_query: unknown, optionsOrSuccess: unknown, successOrError: unknown, _errorCb?: unknown) => {
+        const successCb =
+          typeof optionsOrSuccess === 'function'
+            ? (optionsOrSuccess as (snap: unknown) => void)
+            : (successOrError as (snap: unknown) => void);
+
+        const mockSnapshot = {
+          docs: [
+            {
               id: 'doc-1',
-              name: 'Test Item',
-              userId: 'user-1',
-            }),
-          },
-        ],
-        metadata: { fromCache: false },
-      };
+              data: () => ({ id: 'doc-1', name: 'Test Item', userId: 'user-1' }),
+            },
+          ],
+          metadata: { fromCache: false, hasPendingWrites: false },
+        };
 
-      // Appeler le callback avec succès
-      setTimeout(() => {
-        onSuccess(mockSnapshot);
-      }, 10);
+        setTimeout(() => successCb(mockSnapshot), 0);
 
-      // Retourner une fonction de désabonnement
-      return vi.fn();
-    }),
+        return vi.fn(); // unsubscribe
+      }
+    ),
     setDoc: vi.fn(async () => Promise.resolve()),
     deleteDoc: vi.fn(async () => Promise.resolve()),
-    query: vi.fn((collection: any, ...constraints: any[]) => ({
+    query: vi.fn((collection: unknown, ...constraints: unknown[]) => ({
       _collection: collection,
       _constraints: constraints,
     })),
-    where: vi.fn((field: string, operator: string, value: any) => ({
+    where: vi.fn((field: string, operator: string, value: unknown) => ({
       _field: field,
       _operator: operator,
       _value: value,
     })),
+    serverTimestamp: vi.fn(() => ({ _type: 'serverTimestamp' })),
     enableIndexedDbPersistence: vi.fn(async () => Promise.resolve()),
   };
 });

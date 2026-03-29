@@ -630,7 +630,10 @@ const App: React.FC = () => {
                     <>
                       <span className="hidden sm:inline">Recevoir un lien magique</span>
                       <span className="sm:hidden">Lien magique</span>
-                      <ArrowRight size={16} className="sm:size-[18px] group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight
+                        size={16}
+                        className="sm:size-[18px] group-hover:translate-x-1 transition-transform"
+                      />
                     </>
                   )}
                 </button>

@@ -140,9 +140,15 @@ const DroppableAction: React.FC<{
     <button
       ref={setNodeRef}
       onClick={action.onClick}
+      aria-label={action.label ? `${action.label}` : 'Action non nommée'}
       className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color || 'bg-brand-700'} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? 'scale-110 bg-[#3ebd93]!' : 'scale-100'}`}
     >
-      {action.icon && React.createElement(action.icon, { className: 'w-4 h-4', strokeWidth: 2 })}
+      {action.icon &&
+        React.createElement(action.icon, {
+          className: 'w-4 h-4',
+          strokeWidth: 2,
+          'aria-hidden': 'true',
+        })}
       {action.label}
       {isOver && action.id === 'quick-action-invoice' && (
         <span className="absolute -bottom-6 left-0 right-0 text-center text-[8px] text-accent-600 font-bold whitespace-nowrap">
@@ -154,7 +160,10 @@ const DroppableAction: React.FC<{
 };
 
 // Draggable Quote Component
-const DraggableQuote: React.FC<{ quote: Invoice }> = ({ quote }) => {
+const DraggableQuote: React.FC<{
+  quote: Invoice;
+  onKeyDown?: (e: React.KeyboardEvent, quote: Invoice) => void;
+}> = ({ quote, onKeyDown }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: `quote-${quote.id}`,
   });
@@ -170,18 +179,22 @@ const DraggableQuote: React.FC<{ quote: Invoice }> = ({ quote }) => {
       style={style}
       {...attributes}
       {...listeners}
+      role="button"
+      tabIndex={0}
+      aria-label={`Devis ${quote.number} - ${quote.total.toLocaleString()} € - Glisser sur 'Facture' pour convertir`}
+      onKeyDown={(e) => onKeyDown?.(e, quote)}
       className={`flex items-center justify-between p-3 rounded-xl border border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-grab active:cursor-grabbing ${isDragging ? 'bg-brand-50 shadow-lg scale-95 opacity-50' : 'bg-white dark:bg-brand-900/50 opacity-100'}`}
     >
       <div className="flex items-center gap-3">
         <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 rounded-lg">
-          <FileText size={14} />
+          <FileText size={14} aria-hidden="true" />
         </div>
         <div>
           <p className="text-xs font-bold text-brand-900 dark:text-brand-50">{quote.number}</p>
           <p className="text-[10px] text-brand-400">{quote.total.toLocaleString()} €</p>
         </div>
       </div>
-      <ArrowRight size={14} className="text-brand-200" />
+      <ArrowRight size={14} className="text-brand-200" aria-hidden="true" />
     </div>
   );
 };
@@ -221,6 +234,15 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, quote: Invoice) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      // In a real dnd scenario, this would trigger the dnd action
+      // Here we can at least navigate or show a menu
+      e.preventDefault();
+      alert(`Sélectionné : Devis ${quote.number}. Utilisez le glisser-déposer pour convertir.`);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -478,9 +500,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <h2 className="text-3xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
+            <h1 className="text-3xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
               Tableau de bord
-            </h2>
+            </h1>
             <p className="text-brand-500 dark:text-brand-400 mt-1 text-sm">
               Aperçu de votre activité et de vos revenus.
             </p>
@@ -868,9 +890,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                         <button
                           onClick={() => onNavigate('invoices')}
+                          aria-label="Afficher toutes les factures"
                           className="text-[10px] font-bold text-brand-600 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-50 transition-colors flex items-center uppercase tracking-widest"
                         >
-                          Tout voir <ArrowRight size={14} className="ml-1.5" />
+                          Tout voir <ArrowRight size={14} className="ml-1.5" aria-hidden="true" />
                         </button>
                       </div>
 
@@ -879,14 +902,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                           {recentActivity.map(
                             (
                               item: Invoice | (Expense & { activityType: 'invoice' | 'expense' })
-                            ) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center justify-between p-4 hover:bg-brand-50 dark:hover:bg-brand-800/50 rounded-2xl transition-all cursor-pointer border border-transparent group"
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div
-                                    className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
+                            ) => {
+                              const isExpense =
+                                'activityType' in item && item.activityType === 'expense';
+                              return (
+                                <div
+                                  key={item.id}
+                                  role="link"
+                                  tabIndex={0}
+                                  aria-label={`Détails ${isExpense ? `de la dépense: ${(item as Expense).description}` : `de la facture: ${(item as Invoice).number}`} - ${item.date}`}
+                                  onClick={() =>
+                                    onNavigate(
+                                      'activityType' in item && item.activityType === 'expense'
+                                        ? 'accounting'
+                                        : 'invoices'
+                                    )
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      onNavigate(
+                                        'activityType' in item && item.activityType === 'expense'
+                                          ? 'accounting'
+                                          : 'invoices'
+                                      );
+                                    }
+                                  }}
+                                  className="flex items-center justify-between p-4 hover:bg-brand-50 dark:hover:bg-brand-800/50 rounded-2xl transition-all cursor-pointer border border-transparent group"
+                                >
+                                  <div className="flex items-center gap-4">
+                                    <div
+                                      className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
                                 ${
                                   'activityType' in item && item.activityType === 'invoice'
                                     ? (item as unknown as Invoice).status === InvoiceStatus.PAID
@@ -896,42 +942,44 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         : 'bg-brand-50 dark:bg-brand-800/50 text-brand-500'
                                     : 'bg-red-50 dark:bg-red-900/20 text-red-500'
                                 }`}
-                                  >
-                                    {'activityType' in item && item.activityType === 'invoice' ? (
-                                      <FileText className="w-[18px] h-[18px]" />
-                                    ) : (
-                                      <ShoppingCart className="w-[18px] h-[18px]" />
-                                    )}
+                                    >
+                                      {'activityType' in item && item.activityType === 'invoice' ? (
+                                        <FileText className="w-4.5 h-4.5" />
+                                      ) : (
+                                        <ShoppingCart className="w-4.5 h-4.5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
+                                        {'activityType' in item && item.activityType === 'invoice'
+                                          ? (item as unknown as Invoice).number
+                                          : 'activityType' in item &&
+                                              item.activityType === 'expense'
+                                            ? (item as Expense).description
+                                            : (item as Invoice).number}
+                                      </p>
+                                      <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
+                                        {new Date(item.date).toLocaleDateString()}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
-                                      {'activityType' in item && item.activityType === 'invoice'
-                                        ? (item as unknown as Invoice).number
-                                        : 'activityType' in item && item.activityType === 'expense'
-                                          ? (item as Expense).description
-                                          : (item as Invoice).number}
+                                  <div className="text-right">
+                                    <p
+                                      className={`text-sm font-bold ${('activityType' in item && item.activityType === 'expense') || (item as unknown as Invoice).type === 'credit_note' ? 'text-red-500' : 'text-brand-900 dark:text-brand-50'}`}
+                                    >
+                                      {('activityType' in item &&
+                                        item.activityType === 'expense') ||
+                                      (item as unknown as Invoice).type === 'credit_note'
+                                        ? '-'
+                                        : ''}
+                                      {('total' in item
+                                        ? item.total
+                                        : (item as unknown as Expense).amount
+                                      )?.toLocaleString('fr-FR')}{' '}
+                                      €
                                     </p>
-                                    <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
-                                      {new Date(item.date).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <p
-                                    className={`text-sm font-bold ${('activityType' in item && item.activityType === 'expense') || (item as unknown as Invoice).type === 'credit_note' ? 'text-red-500' : 'text-brand-900 dark:text-brand-50'}`}
-                                  >
-                                    {('activityType' in item && item.activityType === 'expense') ||
-                                    (item as unknown as Invoice).type === 'credit_note'
-                                      ? '-'
-                                      : ''}
-                                    {('total' in item
-                                      ? item.total
-                                      : (item as unknown as Expense).amount
-                                    )?.toLocaleString('fr-FR')}{' '}
-                                    €
-                                  </p>
-                                  <span
-                                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
+                                    <span
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
                                    ${
                                      'activityType' in item && item.activityType === 'invoice'
                                        ? (item as unknown as Invoice).status === InvoiceStatus.PAID
@@ -942,14 +990,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                                            : 'bg-brand-50 dark:bg-brand-800/50 text-brand-600'
                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700'
                                    }`}
-                                  >
-                                    {'activityType' in item && item.activityType === 'invoice'
-                                      ? (item as unknown as Invoice).status
-                                      : 'Dépense'}
-                                  </span>
+                                    >
+                                      {'activityType' in item && item.activityType === 'invoice'
+                                        ? (item as unknown as Invoice).status
+                                        : 'Dépense'}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            )
+                              );
+                            }
                           )}
                         </div>
                       </div>
@@ -991,7 +1040,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 (i) => i.type === 'quote' && i.status === InvoiceStatus.ACCEPTED
                               )
                               .map((quote) => (
-                                <DraggableQuote key={quote.id} quote={quote} />
+                                <DraggableQuote
+                                  key={quote.id}
+                                  quote={quote}
+                                  onKeyDown={handleKeyDown}
+                                />
                               ))}
                           </SortableContext>
                         ) : (
@@ -1087,12 +1140,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={handlePredict}
                               disabled={isPredicting}
+                              aria-label={
+                                isPredicting ? 'Calcul en cours...' : 'Actualiser la prédiction'
+                              }
                               className="text-[9px] font-bold uppercase tracking-widest text-accent-400 hover:text-accent-300 transition-colors flex items-center gap-1.5"
                             >
                               {isPredicting ? (
-                                <Loader2 size={10} className="animate-spin" />
+                                <Loader2 size={10} className="animate-spin" aria-hidden="true" />
                               ) : (
-                                <TrendingUp size={10} />
+                                <TrendingUp size={10} aria-hidden="true" />
                               )}
                               Actualiser
                             </button>
@@ -1102,12 +1158,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={handlePredict}
                               disabled={isPredicting}
+                              aria-label={
+                                isPredicting
+                                  ? 'Calcul en cours...'
+                                  : "Prédire le chiffre d'affaires"
+                              }
                               className="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10"
                             >
                               {isPredicting ? (
-                                <Loader2 size={14} className="animate-spin" />
+                                <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                               ) : (
-                                <Sparkles size={14} />
+                                <Sparkles size={14} aria-hidden="true" />
                               )}
                               Prédire CA
                             </button>

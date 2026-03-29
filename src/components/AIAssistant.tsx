@@ -246,10 +246,10 @@ const AIAssistant: React.FC = () => {
       <div className="bg-linear-to-r from-brand-900 to-brand-800 p-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="p-2.5 bg-white/20 -webkit-backdrop-blur-md backdrop-blur-md rounded-xl shadow-inner">
-            <Sparkles className="text-white" size={24} />
+            <Sparkles className="text-white" size={24} aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-white font-bold text-lg">Assistant Administratif</h2>
+            <h1 className="text-white font-bold text-lg">Assistant Administratif</h1>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>

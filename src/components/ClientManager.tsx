@@ -225,9 +225,9 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 dark:text-white font-display">
+          <h1 className="text-3xl font-bold text-brand-900 dark:text-white font-display">
             Gestion Clients
-          </h2>
+          </h1>
           <p className="text-brand-500 dark:text-brand-400 mt-1">
             Gérez votre portefeuille client et suivez les revenus.
           </p>
@@ -339,8 +339,8 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
               >
                 <button
                   onClick={() => form.openEdit(client)}
+                  aria-label={`Modifier le client ${(client as Client).name}`}
                   className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                  title="Cliquez pour modifier le client"
                 >
                   <div>
                     <h4 className="font-semibold text-brand-900 dark:text-white">

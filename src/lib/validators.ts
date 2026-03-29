@@ -154,6 +154,9 @@ export function validateIBAN(iban: string): ValidationResult {
  * Approche pragmatique: forme standard + vérifications basiques
  */
 export function validateEmail(email: string): ValidationResult {
+  if (email == null) {
+    return { valid: false, error: 'Email obligatoire' };
+  }
   const cleaned = email.trim();
 
   if (!cleaned) {
@@ -321,6 +324,9 @@ export function validateWebsite(url: string): ValidationResult {
  * Valide un nom (au moins 2 caractères, peut contenir espaces/tirets)
  */
 export function validateName(name: string): ValidationResult {
+  if (name == null) {
+    return { valid: false, error: 'Nom obligatoire' };
+  }
   const cleaned = name.trim();
 
   if (!cleaned) {

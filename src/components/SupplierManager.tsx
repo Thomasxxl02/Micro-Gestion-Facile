@@ -330,8 +330,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               >
                 <button
                   onClick={() => form.openEdit(supplier as Supplier)}
+                  aria-label={`Modifier le fournisseur ${supplier.name}`}
                   className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                  title="Cliquez pour modifier le fournisseur"
                 >
                   <div>
                     <h4 className="font-semibold text-brand-900 dark:text-white">
@@ -354,12 +354,14 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => toggleArchive((supplier as Supplier).id)}
-                    title={
-                      supplier.archived ? 'Restaurer le fournisseur' : 'Archiver le fournisseur'
+                    aria-label={
+                      supplier.archived
+                        ? `Restaurer le fournisseur ${supplier.name}`
+                        : `Archiver le fournisseur ${supplier.name}`
                     }
                     className={`p-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${supplier.archived ? 'bg-amber-50 text-amber-600' : 'hover:bg-brand-50 text-brand-400'}`}
                   >
-                    <Archive size={18} />
+                    <Archive size={18} aria-hidden="true" />
                   </button>
                 </div>
               </div>
