@@ -3,32 +3,70 @@
  * Vitest + @testing-library/react
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
+import { signInWithPopup } from 'firebase/auth';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GitHubLoginButton } from '../components/GitHubLoginButton';
 import { useGitHubAuth } from '../hooks/useGitHubAuth';
 import { GitHubAuthService } from '../services/authService';
-import { signInWithPopup, signOut } from 'firebase/auth';
 
 // Mocks
+vi.mock('../firebase', () => ({
+  auth: {
+    onAuthStateChanged: vi.fn(() => vi.fn()),
+    currentUser: null,
+  },
+  db: {},
+  googleProvider: { setCustomParameters: vi.fn() },
+  githubProvider: { addScope: vi.fn(), setCustomParameters: vi.fn() },
+}));
+
 vi.mock('firebase/auth', () => ({
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
   getAuth: vi.fn(() => ({})),
-  GithubAuthProvider: vi.fn(() => ({
-    addScope: vi.fn(),
-    setCustomParameters: vi.fn(),
-  })),
+  connectAuthEmulator: vi.fn(),
+  GithubAuthProvider: vi.fn().mockImplementation(function () {
+    return { addScope: vi.fn(), setCustomParameters: vi.fn() };
+  }),
+  GoogleAuthProvider: vi.fn().mockImplementation(function () {
+    return { setCustomParameters: vi.fn() };
+  }),
+  isSignInWithEmailLink: vi.fn(() => false),
+  sendSignInLinkToEmail: vi.fn(),
+  signInWithEmailLink: vi.fn(),
 }));
 
 vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(),
+  initializeFirestore: vi.fn(() => ({})),
+  persistentLocalCache: vi.fn(() => ({})),
+  persistentMultipleTabManager: vi.fn(() => ({})),
+  connectFirestoreEmulator: vi.fn(),
+  getDocFromServer: vi.fn(),
+  getFirestore: vi.fn(() => ({})),
   doc: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
   updateDoc: vi.fn(),
   serverTimestamp: vi.fn(() => new Date()),
+  collection: vi.fn(() => ({})),
+  query: vi.fn(() => ({})),
+  where: vi.fn(() => ({})),
+  onSnapshot: vi.fn(() => vi.fn()),
+  deleteDoc: vi.fn(),
+  enableIndexedDbPersistence: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../hooks/useGitHubAuth', () => ({
+  useGitHubAuth: vi.fn(() => ({
+    loginWithGitHub: vi.fn(),
+    isLoading: false,
+    error: null,
+    user: null,
+    isAuthenticated: false,
+    logout: vi.fn(),
+    profile: null,
+  })),
 }));
 
 describe('GitHub OAuth Authentication', () => {

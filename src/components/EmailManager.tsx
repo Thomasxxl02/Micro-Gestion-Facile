@@ -1,25 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import type { Email, EmailTemplate, Client, Invoice, UserProfile } from '../types';
 import {
-  Mail,
-  Send,
-  History,
-  FileText,
-  Plus,
-  Trash2,
-  Search,
-  Clock,
-  CheckCircle2,
   AlertCircle,
-  X,
-  Edit2,
-  Copy,
-  Wand2,
-  User,
   Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Edit2,
   Eye,
+  FileText,
+  History,
+  Mail,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+  User,
+  Wand2,
+  X,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import { draftEmail } from '../services/geminiService';
+import type { Client, Email, EmailTemplate, Invoice, UserProfile } from '../types';
 
 interface EmailManagerProps {
   emails: Email[];
@@ -238,7 +238,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-brand-900">Emails & Communications</h2>
+          <h1 className="text-2xl font-bold text-brand-900">Emails & Communications</h1>
           <p className="text-brand-500">Gérez vos envois de factures, devis et relances.</p>
         </div>
         <button
@@ -361,10 +361,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => deleteEmail(email.id)}
+                          aria-label={`Supprimer l'email \u00e0 ${email.to}`}
                           className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                          title="Supprimer l'email"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} aria-hidden="true" />
                         </button>
                       </td>
                     </tr>
@@ -416,17 +416,17 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       setTemplateFormData(template);
                       setIsComposeOpen(true);
                     }}
+                    aria-label={`Modifier le template "${template.name}"`}
                     className="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
-                    title="Modifier le template"
                   >
-                    <Edit2 size={16} />
+                    <Edit2 size={16} aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => deleteTemplate(template.id)}
+                    aria-label={`Supprimer le template "${template.name}"`}
                     className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                    title="Supprimer le template"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={16} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -468,9 +468,12 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 </button>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
+                  aria-label={
+                    showPreview ? "Retour \u00e0 l'\u00e9dition" : 'Aper\u00e7u du message'
+                  }
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showPreview ? 'bg-brand-900 text-white' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'}`}
                 >
-                  <Eye size={14} />
+                  <Eye size={14} aria-hidden="true" />
                   {showPreview ? 'Éditer' : 'Aperçu'}
                 </button>
               </div>
@@ -498,6 +501,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowPreview(false)}
+                    aria-label="Retour \u00e0 l'\u00e9dition de l'aper\u00e7u"
                     className="px-6 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
                   >
                     Retour à l&apos;édition
@@ -753,10 +757,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </h3>
               <button
                 onClick={() => setIsComposeOpen(false)}
+                aria-label="Fermer"
                 className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors"
-                title="Fermer"
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={handleSaveTemplate} className="p-8 space-y-6">

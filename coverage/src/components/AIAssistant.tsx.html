@@ -437,7 +437,14 @@
 <a name='L372'></a><a href='#L372'>372</a>
 <a name='L373'></a><a href='#L373'>373</a>
 <a name='L374'></a><a href='#L374'>374</a>
-<a name='L375'></a><a href='#L375'>375</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -526,6 +533,9 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -535,6 +545,10 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -811,26 +825,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useRef, useEffect } from 'react';
-import type { ChatMessage } from '../types';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
+  AlertTriangle,
+  Bot,
+  CheckCircle,
+  Loader2,
+  MessageSquare,
+  Send,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  User,
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  generateAssistantResponse,
   checkInvoiceCompliance,
+  generateAssistantResponse,
   predictCashflowJ30,
 } from '../services/geminiService';
 import { useAppStore } from '../store/appStore';
-import {
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  MessageSquare,
-  AlertTriangle,
-  TrendingUp,
-  CheckCircle,
-  Shield,
-  Loader2,
-} from 'lucide-react';
+import type { ChatMessage } from '../types';
 &nbsp;
 const AIAssistant: React.FC = () =&gt; {
   const { invoices, clients, userProfile } = useAppStore();
@@ -899,7 +913,10 @@ const AIAssistant: React.FC = () =&gt; {
       setIsAnalyzing(true);
       try {
         // Cashflow prediction
-        const prediction = await predictCashflowJ30(invoices, userProfile);
+        const prediction = await predictCashflowJ30(
+          invoices,
+          userProfile as unknown as Record&lt;string, unknown&gt;
+        );
         setCashflowPrediction(prediction);
 &nbsp;
         // Compliance check for the last invoice
@@ -908,7 +925,11 @@ const AIAssistant: React.FC = () =&gt; {
         )[0];
         const client = clients.find((c) =&gt; c.id === lastInvoice.clientId);
         if (lastInvoice &amp;&amp; client) {
-          const compliance = await checkInvoiceCompliance(lastInvoice, userProfile, client);
+          const compliance = await checkInvoiceCompliance(
+            lastInvoice,
+            userProfile as unknown as Record&lt;string, unknown&gt;,
+            client as unknown as Record&lt;string, unknown&gt;
+          );
           setComplianceResults(compliance);
         }
       } catch (err) {
@@ -1052,10 +1073,10 @@ const AIAssistant: React.FC = () =&gt; {
       &lt;div className="bg-linear-to-r from-brand-900 to-brand-800 p-6 flex items-center justify-between"&gt;
         &lt;div className="flex items-center gap-4"&gt;
           &lt;div className="p-2.5 bg-white/20 -webkit-backdrop-blur-md backdrop-blur-md rounded-xl shadow-inner"&gt;
-            &lt;Sparkles className="text-white" size={24} /&gt;
+            &lt;Sparkles className="text-white" size={24} aria-hidden="true" /&gt;
           &lt;/div&gt;
           &lt;div&gt;
-            &lt;h2 className="text-white font-bold text-lg"&gt;Assistant Administratif&lt;/h2&gt;
+            &lt;h1 className="text-white font-bold text-lg"&gt;Assistant Administratif&lt;/h1&gt;
             &lt;div className="flex items-center gap-2"&gt;
               &lt;span className="relative flex h-2 w-2"&gt;
                 &lt;span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"&gt;&lt;/span&gt;
@@ -1192,7 +1213,7 @@ export default AIAssistant;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-27T19:31:47.495Z
+                at 2026-03-29T13:15:19.337Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -23,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import React from 'react';
+import { useInvoiceTotals } from '../hooks/useInvoiceTotals';
 import type { Client, Invoice, UserProfile } from '../types';
 
 export interface InvoicePaperProps {
@@ -75,30 +76,11 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
     ? linkedInvoices.find((i) => i.id === invoice.linkedDocumentId)
     : null;
 
-  // ========================================
-  // CALCULS DE MONTANTS
-  // ========================================
-  const subtotalHT = invoice.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const discountVal = subtotalHT * ((invoice.discount || 0) / 100);
-  const subtotalAfterDiscount = subtotalHT - discountVal;
-
-  // Calcul de TVA avec fallback si non stocké
-  let vatAmount = invoice.vatAmount || 0;
-  if (invoice.vatAmount === undefined && !invoice.taxExempt) {
-    vatAmount = invoice.items.reduce((acc, item) => {
-      const itemTotal = item.quantity * item.unitPrice;
-      const itemDiscount = itemTotal * ((invoice.discount || 0) / 100);
-      const itemVat =
-        (itemTotal - itemDiscount) * ((item.vatRate || userProfile.defaultVatRate || 0) / 100);
-      return acc + itemVat;
-    }, 0);
-    if (invoice.shipping) {
-      vatAmount += invoice.shipping * ((userProfile.defaultVatRate || 0) / 100);
-    }
-  }
-
-  const totalTTC = subtotalAfterDiscount + (invoice.shipping || 0) + vatAmount;
-  const balanceDue = totalTTC - (invoice.deposit || 0);
+  // ===================================================
+  // CALCULS DE MONTANTS (via hook réactif)
+  // ===================================================
+  const totals = useInvoiceTotals(invoice, userProfile);
+  const { subtotalHT, discountAmount, vatAmount, total: totalTTC, balanceDue } = totals;
 
   return (
     <div
@@ -275,7 +257,7 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
                 <span className="font-bold uppercase tracking-wider text-[10px]">
                   Remise ({invoice.discount}%)
                 </span>
-                <span className="font-bold">- {discountVal.toFixed(2)} €</span>
+                <span className="font-bold">- {discountAmount.toFixed(2)} €</span>
               </div>
             )}
 

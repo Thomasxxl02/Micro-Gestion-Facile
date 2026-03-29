@@ -1,28 +1,28 @@
-import React, { useState, useMemo } from 'react';
-import type { Product } from '../types';
 import {
-  Plus,
-  Minus,
-  Search,
-  Trash2,
-  Package,
-  Briefcase,
-  X,
-  Edit2,
-  Zap,
-  Download,
-  SortAsc,
-  Filter,
-  Tag,
-  Archive,
-  RotateCcw,
-  Upload,
-  Hash,
-  Ruler,
   AlertCircle,
+  Archive,
   ArrowRightCircle,
+  Briefcase,
+  Download,
+  Edit2,
+  Filter,
+  Hash,
+  Minus,
+  Package,
+  Plus,
+  RotateCcw,
+  Ruler,
+  Search,
+  SortAsc,
+  Tag,
+  Trash2,
+  Upload,
+  X,
+  Zap,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import { validateAmount } from '../lib/validators';
+import type { Product } from '../types';
 
 interface ProductManagerProps {
   products: Product[];
@@ -327,9 +327,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto relative pb-10">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 dark:text-white tracking-tight font-display text-gradient">
+          <h1 className="text-3xl font-bold text-brand-900 dark:text-white tracking-tight font-display text-gradient">
             Catalogue
-          </h2>
+          </h1>
           <p className="text-brand-500 dark:text-brand-400 mt-1">
             Gérez vos produits et prestations de service.
           </p>
@@ -355,18 +355,19 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
           <div className="flex gap-2">
             <label
               className="btn-secondary px-4 py-2.5 cursor-pointer"
+              aria-label="Importer depuis un CSV"
               title="Importer depuis un CSV"
             >
-              <Upload size={18} />
+              <Upload size={18} aria-hidden="true" />
               <span className="hidden sm:inline">Import</span>
               <input type="file" accept=".csv" className="hidden" onChange={importCSV} />
             </label>
             <button
               onClick={exportCSV}
+              aria-label="Exporter en CSV"
               className="btn-secondary px-4 py-2.5"
-              title="Exporter en CSV"
             >
-              <Download size={18} />
+              <Download size={18} aria-hidden="true" />
               <span className="hidden sm:inline">Export</span>
             </button>
             <button onClick={openCreate} className="btn-primary px-6 py-2.5">
@@ -458,10 +459,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             </h3>
             <button
               onClick={() => setIsPanelOpen(false)}
-              title="Fermer le panneau"
+              aria-label="Fermer le panneau"
               className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 
@@ -738,7 +739,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
               Catégorie
             </span>
             <select
-              title="Filtrer par catégorie"
+              aria-label="Filtrer par catégorie"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="bg-transparent text-sm font-bold text-brand-900 dark:text-white outline-none cursor-pointer appearance-none pr-4"
@@ -758,7 +759,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
               Trier par
             </span>
             <select
-              title="Trier les produits"
+              aria-label="Trier les produits"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption | 'stock')}
               className="bg-transparent text-sm font-bold text-brand-900 dark:text-white outline-none cursor-pointer appearance-none pr-4"
@@ -787,24 +788,28 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
               <div className="absolute top-6 right-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
                 <button
                   onClick={() => openEdit(p)}
+                  aria-label={`Modifier ${p.name}`}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-brand-50 dark:hover:bg-brand-800 rounded-xl transition-all"
-                  title="Modifier"
                 >
-                  <Edit2 size={16} />
+                  <Edit2 size={16} aria-hidden="true" />
                 </button>
                 <button
                   onClick={(e) => toggleArchive(p.id, e)}
+                  aria-label={p.archived ? `Restaurer ${p.name}` : `Archiver ${p.name}`}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all"
-                  title={p.archived ? 'Restaurer' : 'Archiver'}
                 >
-                  {p.archived ? <RotateCcw size={16} /> : <Archive size={16} />}
+                  {p.archived ? (
+                    <RotateCcw size={16} aria-hidden="true" />
+                  ) : (
+                    <Archive size={16} aria-hidden="true" />
+                  )}
                 </button>
                 <button
                   onClick={(e) => handleDelete(p.id, e)}
+                  aria-label={`Supprimer ${p.name}`}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all"
-                  title="Supprimer"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
 
@@ -870,23 +875,25 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                     <div className="flex items-center gap-2 bg-brand-50 dark:bg-brand-800 p-1.5 rounded-xl border border-brand-100 dark:border-brand-700">
                       <button
                         onClick={(e) => updateStock(p.id, -1, e)}
-                        title="Diminuer le stock"
+                        aria-label={`Diminuer le stock de ${p.name}`}
                         className="p-1 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-white dark:hover:bg-brand-700 rounded-lg transition-all shadow-sm"
                       >
-                        <Minus size={12} />
+                        <Minus size={12} aria-hidden="true" />
                       </button>
                       <div
                         className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock || 0) ? 'text-red-500 dark:text-red-400' : 'text-brand-900 dark:text-white'}`}
                       >
-                        {p.stock <= (p.minStock || 0) && <AlertCircle size={12} />}
+                        {p.stock <= (p.minStock || 0) && (
+                          <AlertCircle size={12} aria-hidden="true" />
+                        )}
                         <span className="text-sm">{p.stock}</span>
                       </div>
                       <button
                         onClick={(e) => updateStock(p.id, 1, e)}
-                        title="Augmenter le stock"
+                        aria-label={`Augmenter le stock de ${p.name}`}
                         className="p-1 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-white dark:hover:bg-brand-700 rounded-lg transition-all shadow-sm"
                       >
-                        <Plus size={12} />
+                        <Plus size={12} aria-hidden="true" />
                       </button>
                     </div>
                   </div>

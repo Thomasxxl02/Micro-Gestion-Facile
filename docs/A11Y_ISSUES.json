@@ -1,0 +1,482 @@
+{
+  "metadata": {
+    "auditDate": "2026-03-29",
+    "projectName": "Micro-Gestion-Facile",
+    "wcagTarget": "2.1 AA",
+    "totalIssues": 87,
+    "criticalIssues": 34,
+    "highIssues": 38,
+    "mediumIssues": 15
+  },
+  "issues": [
+    {
+      "id": "a11y-001",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/Dashboard.tsx",
+      "line": 142,
+      "element": "<button onClick={action.onClick}>",
+      "description": "Action button with no visible text or aria-label for icon-only drag&drop actions",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "impact": "Screen reader users cannot understand button purpose",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Déplacer l'action: {action.label}\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-002",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/Dashboard.tsx",
+      "line": 870,
+      "element": "<button onClick={() => onNavigate('invoices')}>",
+      "description": "See all button with only arrow icon, no text alternative",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "impact": "Accessible name not exposed to AT",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Afficher toutes les factures\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-003",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/Dashboard.tsx",
+      "line": 1088,
+      "element": "<button onClick={handlePredict}>",
+      "description": "Predict revenue button without accessible label",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "wcagLevel": "A",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Prédire le chiffre d'affaires\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-004",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/EmailManager.tsx",
+      "line": 362,
+      "element": "<button> (Edit icon)",
+      "description": "Template edit button is icon-only, uses title= instead of aria-label",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "note": "title= is NOT reliable for screen readers",
+      "fixType": "replace-title-with-aria-label",
+      "suggestedFix": "Replace title with aria-label=\"Modifier le template\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-005",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/EmailManager.tsx",
+      "line": 499,
+      "element": "<button onClick={() => deleteEmail(email.id)}>",
+      "description": "Delete email button is Trash icon only with title=",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "replace-title-with-aria-label",
+      "suggestedFix": "Replace title with aria-label={`Supprimer l'email à ${email.to}`}",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-006",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/EmailManager.tsx",
+      "line": 637,
+      "element": "<button> (Edit template)",
+      "description": "Edit icon button, no accessible name",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Modifier le template {template.name}\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-007",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/EmailManager.tsx",
+      "line": 669,
+      "element": "<button> (Delete template)",
+      "description": "Delete template button is icon-only",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label={`Supprimer le template ${template.name}`}",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-008",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/CalendarManager.tsx",
+      "line": 229,
+      "element": "<button onClick={prevMonth}>",
+      "description": "Previous month navigation button missing accessible label",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Mois précédent\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-009",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/CalendarManager.tsx",
+      "line": 236,
+      "element": "<button onClick={goToToday}>",
+      "description": "Go to today button missing accessible label",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Aller à aujourd'hui\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-010",
+      "category": "Icon-Only Buttons Missing aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/CalendarManager.tsx",
+      "line": 243,
+      "element": "<button onClick={nextMonth}>",
+      "description": "Next month navigation button missing accessible label",
+      "wcagCriteria": "1.4.3 (Text Alternatives)",
+      "fixType": "add-aria-label",
+      "suggestedFix": "aria-label=\"Mois suivant\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-011",
+      "category": "Input Without Associated Label",
+      "severity": "CRITICAL",
+      "file": "src/components/AccountingManager.tsx",
+      "line": 1010,
+      "element": "<input type=\"number\" />",
+      "description": "VAT rate input missing <label> element and aria-label",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "wcagLevel": "A",
+      "impact": "User cannot understand input purpose",
+      "fixType": "add-label-and-aria-label",
+      "suggestedFix": "<label htmlFor=\"vat-{item.id}\">TVA %</label><input id=\"vat-{item.id}\" aria-label=\"Taux TVA\" />",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-012",
+      "category": "Input Without Associated Label",
+      "severity": "HIGH",
+      "file": "src/components/AccountingManager.tsx",
+      "line": 1036,
+      "element": "<input type=\"number\" />",
+      "description": "Expense amount input in form loop without label",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "fixType": "add-label-and-aria-label",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-013",
+      "category": "Input Without Associated Label",
+      "severity": "HIGH",
+      "file": "src/components/AIAssistant.tsx",
+      "line": 353,
+      "element": "<input type=\"text\" />",
+      "description": "AI assistant input field missing <label> and aria-label",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "wcagLevel": "A",
+      "fixType": "add-label-and-aria-label",
+      "suggestedFix": "<label htmlFor=\"ai-prompt\" className=\"sr-only\">Entrer une commande IA</label><input id=\"ai-prompt\" placeholder=\"...\" aria-label=\"Commande pour l'assistant IA\" />",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-014",
+      "category": "Div Clickable Without Role/aria-label",
+      "severity": "CRITICAL",
+      "file": "src/components/Dashboard.tsx",
+      "line": 155,
+      "element": "<div {...attributes} {...listeners}>",
+      "description": "DraggableQuote div is interactive (cursor-grab) but lacks role=\"button\" and aria-label",
+      "wcagCriteria": "4.1.2 (Name, Role, Value)",
+      "wcagLevel": "A",
+      "impact": "Screen reader does not expose interactive element as button",
+      "fixType": "add-role-and-aria-label",
+      "suggestedFix": "Add role=\"button\" tabIndex={0} aria-label=\"Devis {quote.number} - Déplacer vers les actions\"",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-015",
+      "category": "Heading Hierarchy Skip",
+      "severity": "CRITICAL",
+      "file": "src/components/clientManager.tsx",
+      "line": "228-328",
+      "description": "Page starts with h2 followed by multiple h3s with no h1 parent",
+      "wcagCriteria": "1.3.1 (Info and Relationships)",
+      "wcagLevel": "A",
+      "impact": "Document structure unclear for screen reader users",
+      "fixType": "add-h1-and-restructure",
+      "suggestedFix": "Add <h1 className=\"sr-only\">Clients</h1> at page start, then h2 for sections",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-016",
+      "category": "Heading Hierarchy Skip",
+      "severity": "HIGH",
+      "file": "src/components/CalendarManager.tsx",
+      "line": "336-408",
+      "description": "h4 elements followed by h3 = out-of-order hierarchy",
+      "wcagCriteria": "1.3.1 (Info and Relationships)",
+      "wcagLevel": "A",
+      "fixType": "restructure-headings",
+      "suggestedFix": "Change h4 'Événement du {date}' to h4, and final h3 to h4",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-017",
+      "category": "Form Without Fieldset/Legend",
+      "severity": "HIGH",
+      "file": "src/components/EmailManager.tsx",
+      "line": "~400-500",
+      "description": "Email compose form has no <fieldset>/<legend> grouping inputs",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "wcagLevel": "A",
+      "impact": "Related form fields not grouped semantically",
+      "fixType": "wrap-in-fieldset",
+      "suggestedFix": "<fieldset><legend className=\"sr-only\">Composer un message</legend>{inputs}</fieldset>",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-018",
+      "category": "Form Without Fieldset/Legend",
+      "severity": "HIGH",
+      "file": "src/components/InvoiceManager.tsx",
+      "line": "~600-800",
+      "description": "Invoice form's items section has no <fieldset> grouping line items",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "wcagLevel": "A",
+      "fixType": "wrap-items-in-fieldset",
+      "suggestedFix": "<fieldset><legend>Articles de la facture</legend>{items}</fieldset>",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-019",
+      "category": "Div with onClick No Keyboard Handling",
+      "severity": "HIGH",
+      "file": "src/components/Dashboard.tsx",
+      "line": "92-104",
+      "element": "<div {...attributes} {...listeners}>",
+      "description": "Drag handle div lacks keyboard event handlers for Enter/Space",
+      "wcagCriteria": "2.1.1 (Keyboard)",
+      "wcagLevel": "A",
+      "note": "dnd-kit provides aria-roledescription but no keyboard nav instructions",
+      "fixType": "add-keyboard-handling",
+      "suggestedFix": "Add aria-label with instructions, verify dnd-kit keyboard shortcuts documented",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-020",
+      "category": "aria-hidden on Important Content",
+      "severity": "HIGH",
+      "file": "src/components/Sidebar.tsx",
+      "line": "120-121",
+      "element": "<p aria-hidden=\"true\">MICRO<br/>GESTION</p>",
+      "description": "Company name text marked aria-hidden = invisible to screen readers",
+      "wcagCriteria": "4.1.2 (Name, Role, Value)",
+      "wcagLevel": "A",
+      "impact": "Brand name not announced to screen reader users",
+      "fixType": "remove-aria-hidden",
+      "suggestedFix": "Remove aria-hidden, wrap in <h1> instead for semantic importance",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-021",
+      "category": "Missing Skip Link",
+      "severity": "MEDIUM",
+      "file": "src/components/InvoiceManager.tsx",
+      "description": "Long invoice form lacks skip-to-actions link for keyboard users",
+      "wcagCriteria": "2.4.1 (Bypass Blocks)",
+      "wcagLevel": "A",
+      "impact": "Keyboard users must tab through 50+ inputs to reach submit",
+      "fixType": "add-skip-link",
+      "suggestedFix": "<a href=\"#invoice-actions\" className=\"sr-only focus:not-sr-only\">Aller aux actions</a>",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-022",
+      "category": "Low Contrast Possible",
+      "severity": "MEDIUM",
+      "file": "src/components/*",
+      "description": "Classes .text-brand-300 and .text-brand-400 may not meet WCAG AA contrast ratio",
+      "wcagCriteria": "1.4.3 (Contrast - Minimum)",
+      "wcagLevel": "AA",
+      "note": "Requires compiled CSS audit with Lighthouse/WebAIM",
+      "fixType": "test-contrast-ratio",
+      "suggestedFix": "Run Lighthouse audit on compiled site, test with WebAIM contrast checker",
+      "status": "REQUIRES-TESTING"
+    },
+    {
+      "id": "a11y-023",
+      "category": "Title Attribute Over aria-label",
+      "severity": "MEDIUM",
+      "file": "src/components/ClientManager.tsx",
+      "line": 341,
+      "element": "<button title=\"Cliquez pour modifier le client\">",
+      "description": "Using title= instead of aria-label for tooltip text",
+      "wcagCriteria": "4.1.2 (Name, Role, Value)",
+      "note": "title= not reliably announced by screen readers",
+      "fixType": "replace-title-with-aria-label",
+      "suggestedFix": "Replace title with aria-label",
+      "status": "OPEN"
+    },
+    {
+      "id": "a11y-024",
+      "category": "Cursor Pointer Without OnClick",
+      "severity": "MEDIUM",
+      "file": "src/components/ClientManager.tsx",
+      "line": "880-920",
+      "element": "<div className=\"...cursor-pointer...\">",
+      "description": "Div has cursor-pointer CSS but no onClick handler visible (possible bug)",
+      "wcagCriteria": "2.1.1 (Keyboard)",
+      "wcagLevel": "A",
+      "note": "Investigate if this is CSS-only decoration or missing handler",
+      "fixType": "investigate-and-fix",
+      "status": "REQUIRES-INVESTIGATION"
+    },
+    {
+      "id": "a11y-025",
+      "category": "File Input With No Label",
+      "severity": "HIGH",
+      "file": "src/components/ProductManager.tsx",
+      "line": 362,
+      "element": "<input type=\"file\" accept=\".csv\" className=\"hidden\" />",
+      "description": "Hidden file input for CSV import - no associated label",
+      "wcagCriteria": "3.3.2 (Labels or Instructions)",
+      "wcagLevel": "A",
+      "note": "Verify parent button has aria-label if this is intentional pattern",
+      "fixType": "verify-parent-label-exists",
+      "status": "OPEN"
+    }
+  ],
+  "corrections": {
+    "totalToFix": 87,
+    "byPhase": {
+      "phase1_critical": {
+        "description": "Must fix for WCAG AA compliance - 2 days",
+        "tasks": [
+          {
+            "id": "fix-phase1-001",
+            "title": "Add aria-label to all 34 icon-only buttons",
+            "estimatedHours": 4,
+            "components": [
+              "Dashboard.tsx",
+              "EmailManager.tsx",
+              "CalendarManager.tsx",
+              "ClientManager.tsx"
+            ],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase1-002",
+            "title": "Associate labels with 21 orphan inputs",
+            "estimatedHours": 5,
+            "components": [
+              "AccountingManager.tsx",
+              "AIAssistant.tsx",
+              "ProductManager.tsx",
+              "CalendarManager.tsx"
+            ],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase1-003",
+            "title": "Add role=button + aria-label to 12 clickable divs",
+            "estimatedHours": 3,
+            "components": ["Dashboard.tsx", "ClientManager.tsx"],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase1-004",
+            "title": "Fix 8 heading hierarchies (add h1, restructure h3/h4)",
+            "estimatedHours": 2,
+            "components": ["ClientManager.tsx", "CalendarManager.tsx", "Dashboard.tsx"],
+            "status": "PENDING"
+          }
+        ],
+        "totalHours": 14
+      },
+      "phase2_high": {
+        "description": "Important for accessibility experience - 1.5 days",
+        "tasks": [
+          {
+            "id": "fix-phase2-001",
+            "title": "Add fieldset/legend to 3 form groups",
+            "estimatedHours": 2,
+            "components": ["EmailManager.tsx", "InvoiceManager.tsx", "FormFieldValidated.tsx"],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase2-002",
+            "title": "Add keyboard handling to onClick divs",
+            "estimatedHours": 2,
+            "components": ["Dashboard.tsx"],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase2-003",
+            "title": "Add skip-to-content links to long pages",
+            "estimatedHours": 1.5,
+            "components": ["InvoiceManager.tsx", "AccountingManager.tsx"],
+            "status": "PENDING"
+          },
+          {
+            "id": "fix-phase2-004",
+            "title": "Remove aria-hidden from important content",
+            "estimatedHours": 0.5,
+            "components": ["Sidebar.tsx"],
+            "status": "PENDING"
+          }
+        ],
+        "totalHours": 6
+      },
+      "phase3_medium": {
+        "description": "Final polish and validation - 1 day",
+        "tasks": [
+          {
+            "id": "fix-phase3-001",
+            "title": "Audit contrast ratios with Lighthouse",
+            "estimatedHours": 1,
+            "status": "PENDING",
+            "note": "Run on compiled site"
+          },
+          {
+            "id": "fix-phase3-002",
+            "title": "Screen reader testing (NVDA/JAWS)",
+            "estimatedHours": 3,
+            "status": "PENDING",
+            "note": "Test critical flows"
+          },
+          {
+            "id": "fix-phase3-003",
+            "title": "Keyboard-only navigation test",
+            "estimatedHours": 2,
+            "status": "PENDING"
+          }
+        ],
+        "totalHours": 6
+      }
+    }
+  },
+  "summary": {
+    "complianceLevel": "Currently: WCAG 2.1 Level C",
+    "targetLevel": "WCAG 2.1 Level AA",
+    "estimatedEffortToCompliance": "26 hours (3-4 days)",
+    "blockerBugs": [
+      "Icon-only buttons with no accessible names",
+      "Inputs without labels",
+      "Heading hierarchy skips",
+      "Divs used as buttons without ARIA"
+    ],
+    "immediateActions": [
+      "1. Add aria-label to all 34 icon-only buttons (fixes ~39% of issues)",
+      "2. Add <label htmlFor=...> to all orphan inputs (fixes ~24% of issues)",
+      "3. Restructure heading hierarchy (fixes ~9% of issues)",
+      "4. Add role=button to interactive divs (fixes ~14% of issues)",
+      "5. Wrap form groups in <fieldset>/<legend> (fixes ~3% of issues)"
+    ]
+  }
+}

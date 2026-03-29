@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   connectAuthEmulator,
@@ -76,7 +78,7 @@ async function testConnection() {
     const testDoc = doc(db, 'test', 'connection');
     await getDocFromServer(testDoc);
     clearTimeout(timeoutId);
-    console.debug('✅ Firebase: Connexion établie');
+    console.info('✅ Firebase: Connexion établie');
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error) {

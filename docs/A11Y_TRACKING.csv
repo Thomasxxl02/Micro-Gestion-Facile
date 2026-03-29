@@ -1,0 +1,112 @@
+File,Line,Component_Type,Issue_Category,Severity,Description,Accessible_Solution,Hours_Estimate,Status
+src/components/Dashboard.tsx,142,Button,Icon-Only Missing aria-label,CRITICAL,Action button with no visible text or aria-label,Add aria-label="Déplacer l'action: {action.label}",0.25,OPEN
+src/components/Dashboard.tsx,870,Button,Icon-Only Missing aria-label,CRITICAL,See all button with only arrow icon,Add aria-label="Afficher toutes les factures",0.25,OPEN
+src/components/Dashboard.tsx,1088,Button,Icon-Only Missing aria-label,CRITICAL,Predict revenue button without accessible label,Add aria-label="Prédire le chiffre d'affaires",0.25,OPEN
+src/components/Dashboard.tsx,1103,Button,Icon-Only Missing aria-label,CRITICAL,Refresh prediction button without accessible label,Add aria-label="Actualiser la prédiction",0.25,OPEN
+src/components/Dashboard.tsx,92-104,Div,Div as Button Missing ARIA,HIGH,Drag handle div is interactive but lacks role="button",Add role="button" aria-label and keyboard handlers,0.5,OPEN
+src/components/Dashboard.tsx,155-170,Div,Div as Button Missing ARIA,CRITICAL,DraggableQuote is interactive (cursor-grab) but lacks role/aria-label,Add role="button" aria-label aria-describedby,0.75,OPEN
+src/components/EmailManager.tsx,244,Button,Button Has Text,GOOD,Nouveau Message button,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,266,Button,Button Has Text,GOOD,Historique tab,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,273,Button,Button Has Text,GOOD,Templates tab,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,280,Button,Button Has Text,GOOD,Composer tab,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,362,Button,Icon-Only Using title=,CRITICAL,Edit template button with title instead of aria-label,Replace title with aria-label,0.25,OPEN
+src/components/EmailManager.tsx,389,Button,Icon-Only Missing aria-label,CRITICAL,Preview button without accessible label,Add aria-label="Aperçu du message",0.25,OPEN
+src/components/EmailManager.tsx,413,Button,Button Has Text,GOOD,Aide à la rédaction,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,424,Button,Icon-Only Using title=,HIGH,Toggle preview button needs aria-label,Add aria-label="Aperçu du message",0.25,OPEN
+src/components/EmailManager.tsx,438,Button,Icon-Only Missing aria-label,CRITICAL,Cancel button without accessible label,Add aria-label="Annuler l'aperçu",0.25,OPEN
+src/components/EmailManager.tsx,461,Button,Icon-Only Missing aria-label,CRITICAL,Reply email button without accessible label,Add aria-label="Répondre à l'email",0.25,OPEN
+src/components/EmailManager.tsx,499,Button,Icon-Only Using title=,CRITICAL,Delete email button with title instead of aria-label,Replace title with aria-label,0.25,OPEN
+src/components/EmailManager.tsx,637,Button,Icon-Only Using title=,CRITICAL,Edit template icon button,Replace title with aria-label,0.25,OPEN
+src/components/EmailManager.tsx,669,Button,Icon-Only Using title=,CRITICAL,Delete template icon button,Replace title with aria-label,0.25,OPEN
+src/components/EmailManager.tsx,684,Button,Button Has Text,GOOD,Utiliser ce template,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,691,Button,Button Has Text,GOOD,Envoyer email,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,711,Button,Button Has Text,GOOD,Brouillons/Envoyés,✓ Already has text label,0,DONE
+src/components/EmailManager.tsx,~400-500,Form,Form Missing Fieldset,HIGH,Email compose form has no fieldset/legend grouping,Wrap in <fieldset> with <legend>,1.5,OPEN
+src/components/ClientManager.tsx,228,Heading,Heading Hierarchy,CRITICAL,Page starts with h2 instead of h1,Add sr-only h1 at page start,0.5,OPEN
+src/components/ClientManager.tsx,239,Button,Button Has Text,GOOD,Actifs tab,✓ Already has text label,0,DONE
+src/components/ClientManager.tsx,249,Button,Button Has Text,GOOD,Archivés tab,✓ Already has text label,0,DONE
+src/components/ClientManager.tsx,271,Button,Button Has Text,GOOD,Export button,✓ Already has text label,0,DONE
+src/components/ClientManager.tsx,275,Button,Button Has Text,GOOD,Nouveau client,✓ Already has text label,0,DONE
+src/components/ClientManager.tsx,288-307,Heading,Heading Skip h2→h3,HIGH,Multiple h3s without parent h2,Change to h4 if under stats h3,0.5,OPEN
+src/components/ClientManager.tsx,328-400,Heading,Heading Hierarchy,MEDIUM,Client list h3 with h4 clients,Restructure to clear parent/child,0.75,OPEN
+src/components/ClientManager.tsx,341,Button,Using title Instead aria-label,MEDIUM,Edit client button with title=,Replace title with aria-label,0.25,OPEN
+src/components/ClientManager.tsx,365,Button,Button Has Text,GOOD,Archiver/Restaurer,✓ Already has text label,0,DONE
+src/components/ClientManager.tsx,880-920,Div,Cursor Pointer No onClick,MEDIUM,Activity item divs have cursor-pointer but no onClick visible - verify if bug,Investigate and add onClick or remove cursor-pointer,0.5,REQUIRES-INVESTIGATION
+src/components/CalendarManager.tsx,190,Heading,Heading Hierarchy,GOOD,h2 Calendrier,✓ OK,0,DONE
+src/components/CalendarManager.tsx,224,Heading,Heading Hierarchy,GOOD,h3 current month,✓ OK under h2,0,DONE
+src/components/CalendarManager.tsx,229,Button,Icon-Only Missing aria-label,CRITICAL,Previous month navigation button,Add aria-label="Mois précédent",0.25,OPEN
+src/components/CalendarManager.tsx,236,Button,Icon-Only Missing aria-label,CRITICAL,Go to today button,Add aria-label="Aller à aujourd'hui",0.25,OPEN
+src/components/CalendarManager.tsx,243,Button,Icon-Only Missing aria-label,CRITICAL,Next month navigation button,Add aria-label="Mois suivant",0.25,OPEN
+src/components/CalendarManager.tsx,291/311/348,Button,Button Via dnd-kit,GOOD,Calendar events buttons,✓ Verify dnd-kit provides ARIA,0,REQUIRES-TESTING
+src/components/CalendarManager.tsx,336-408,Heading,h4 Followed by h3 - Out of Order,HIGH,Heading hierarchy broken with h4→h3,Change final h3 to h4 or h3→h4,0.5,OPEN
+src/components/CalendarManager.tsx,434/498/516,Input,Input Without Label,HIGH,Date input fields without <label>,Add <label> and aria-label,0.75,OPEN
+src/components/AccountingManager.tsx,559,Heading,Heading Hierarchy,GOOD,h2 Comptabilité,✓ OK,0,DONE
+src/components/AccountingManager.tsx,606,Heading,Heading Hierarchy,GOOD,h3 under h2,✓ OK,0,DONE
+src/components/AccountingManager.tsx,1010,Input,Input Without Label,CRITICAL,VAT rate input in form loop no label,Add <label> + aria-label,0.5,OPEN
+src/components/AccountingManager.tsx,1036,Input,Input Without Label,CRITICAL,Amount input no label,Add <label> + aria-label,0.5,OPEN
+src/components/AccountingManager.tsx,1045,Input,Input Without Label,CRITICAL,Description input no label,Add <label> + aria-label,0.5,OPEN
+src/components/AccountingManager.tsx,1100,Input,Input Without Label,CRITICAL,Another expense input no label,Add <label> + aria-label,0.5,OPEN
+src/components/AccountingManager.tsx,1292,Input,Input Without Label,HIGH,Nested form input no label,Add <label> + aria-label,0.5,OPEN
+src/components/AccountingManager.tsx,1321,Input,Input Without Label,HIGH,Another nested input no label,Add <label> + aria-label,0.5,OPEN
+src/components/AIAssistant.tsx,252,Heading,Heading Hierarchy,GOOD,h2 Assistant Administratif,✓ OK,0,DONE
+src/components/AIAssistant.tsx,278,Heading,Heading Hierarchy,GOOD,h3 Prédiction Trésorerie,✓ OK under h2,0,DONE
+src/components/AIAssistant.tsx,292,Heading,Heading Hierarchy,GOOD,h3 Conformité Légale,✓ OK under h2,0,DONE
+src/components/AIAssistant.tsx,353,Input,Input Without Label,CRITICAL,AI assistant prompt input no label,Add <label> + aria-label,0.5,OPEN
+src/components/CalendarManager.tsx,198/291/311/348/417,Button,Button Has onClick,GOOD,Calendar event buttons,✓ Verify has accessible name,0,REQUIRES-TESTING
+src/components/Combobox.tsx,125,Button,Icon-Only Clear Button,GOOD,Clear selection button,✓ Has title attribute,0.25,REVIEW-TITLE-TO-ARIA
+src/components/Combobox.tsx,136,Button,Icon-Only With aria-label,GOOD,Dropdown toggle button,✓ Already has aria-label,0,DONE
+src/components/Combobox.tsx,169,Button,Button List Item,GOOD,Option selection button,✓ OK button pattern,0,DONE
+src/components/Sidebar.tsx,70-75,Button,Overlay Button,GOOD,Mobile overlay close,✓ Already has aria-label,0,DONE
+src/components/Sidebar.tsx,85,Navigation,Navigation Landmark,GOOD,Aside with aria-label,✓ OK,0,DONE
+src/components/Sidebar.tsx,92,Button,Button Logo/Home,GOOD,Logo button,✓ Already has aria-label,0,DONE
+src/components/Sidebar.tsx,116,Navigation,Navigation Landmark,GOOD,Nav with aria-label,✓ OK,0,DONE
+src/components/Sidebar.tsx,120-121,Text,aria-hidden on Important Content,CRITICAL,Company name marked aria-hidden,Remove aria-hidden wrap in h1,0.5,OPEN
+src/components/Sidebar.tsx,161,Button,Icon-Only With aria-label,GOOD,Dark mode toggle,✓ Already has aria-label,0,DONE
+src/components/ProductManager.tsx,362,Input,File Input Hidden,HIGH,Hidden file input for CSV import,Verify parent button has aria-label,0.25,REQUIRES-TESTING
+src/components/ProductManager.tsx,477,Input,Input Without Label,HIGH,Product input no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,507,Input,Input Without Label,HIGH,Product category input no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,524,Input,Input Without Label,HIGH,Product price input no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,599,Input,Input Without Label,HIGH,Product search no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,628,Input,Input Without Label,HIGH,Product name input no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,653,Input,Input Without Label,HIGH,Product description no label,Add <label> + aria-label,0.5,OPEN
+src/components/ProductManager.tsx,711,Button,Button Close Panel,GOOD,Close button,✓ Already has aria-label,0,DONE
+src/components/SupplierManager.tsx,254,Input,Input Without Label,HIGH,Supplier search input no label,Add <label> + aria-label,0.5,OPEN
+src/components/SupplierManager.tsx,262,Button,Button Text,GOOD,Export button,✓ Already has text,0,DONE
+src/components/SupplierManager.tsx,266,Button,Button Text,GOOD,New supplier button,✓ Already has text,0,DONE
+src/components/SettingsManager.tsx,260,Navigation,Navigation Tab Panel,GOOD,Settings nav,✓ Already has aria-label,0,DONE
+src/components/SettingsManager.tsx,344,Tab Panel,Tab Panel ARIA,GOOD,Tab content,✓ Already has aria-labelledby,0,DONE
+src/components/SettingsManager.tsx,464,Tab Panel,Tab Panel ARIA,GOOD,Another tab content,✓ Already has aria-labelledby,0,DONE
+src/components/SettingsManager.tsx,748,Input,Input Without Label,MEDIUM,Settings input no label,Add <label> + aria-label,0.5,OPEN
+src/components/SecurityTab.tsx,734,Input,Input Without Label,MEDIUM,Security input no label,Add <label> + aria-label,0.5,OPEN
+src/components/EntityFormFields.tsx,147,Combobox,Combobox Country,GOOD,Country selection,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,210,TextArea,TextArea With aria-label,GOOD,Notes field,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,254,Combobox,Combobox Product,GOOD,Product selection,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,263,TextArea,TextArea Description,GOOD,Description field,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,274,Input,Input Price,GOOD,Price field,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,284,Combobox,Combobox Category,GOOD,Category selection,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,319,Input,Search Input,GOOD,Search field,✓ Already has aria-label,0,DONE
+src/components/EntityFormFields.tsx,329,Checkbox,Archive Checkbox,GOOD,Show archives,✓ Already has aria-label,0,DONE
+src/components/EntityModal.tsx,56,Button,Close Modal Button,GOOD,Modal close,✓ Already has aria-label,0,DONE
+src/components/EntityModal.tsx,64,Dialog,Dialog ARIA,GOOD,Modal dialog,✓ Already has aria-labelledby,0,DONE
+src/components/EntityModal.tsx,88,Button,Close Button,GOOD,Another close,✓ Already has aria-label,0,DONE
+src/components/ErrorBanner.tsx,184,Button,Close Error Button,GOOD,Error close,✓ Already has aria-label,0,DONE
+src/components/ErrorBanner.tsx,186,Button,Close Error Another,GOOD,Another error close,✓ Already has aria-label,0,DONE
+src/components/Dialogs.tsx,41,Dialog,Dialog With ARIA,GOOD,Confirm dialog,✓ Already has aria-labelledby,0,DONE
+src/components/Dialogs.tsx,70,Button,Cancel Button Dialog,GOOD,Cancel action,✓ Already has aria-label,0,DONE
+src/components/Dialogs.tsx,77,Button,Confirm Button Dialog,GOOD,Confirm action,✓ Already has aria-label,0,DONE
+src/components/Dialogs.tsx,133,Dialog,Alert Dialog,GOOD,Alert dialog,✓ Already has aria-labelledby,0,DONE
+src/components/Dialogs.tsx,155,Button,Action Button Dialog,GOOD,Action button,✓ Already has aria-label,0,DONE
+src/components/ExportModal.tsx,92-93,Fieldset,Fieldset With Legend,GOOD,Export collections fieldset,✓ PERFECT EXAMPLE - USE AS TEMPLATE,0,DONE
+src/components/ExportModal.tsx,148,Checkbox,Checkbox With aria-label,GOOD,Export all collections,✓ Already has aria-label,0,DONE
+src/components/ExportModal.tsx,213,Progress,Progress Bar,GOOD,Export progress,✓ Already has aria-label,0,DONE
+src/components/GitHubLoginButton.tsx,94,Button,GitHub Login Button,GOOD,Login button,✓ Already has aria-label,0,DONE
+src/components/GitHubLoginButton.tsx,124,Button,Close Error Button,GOOD,Error close,✓ Already has aria-label,0,DONE
+src/components/GitHubLoginButton.tsx,138,Button,Retry Button,GOOD,Retry login,✓ Already has aria-label,0,DONE
+src/components/GitHubLoginButton.tsx,156,Image,User Avatar,GOOD,Profile image,✓ Already has alt text,0,DONE
+src/components/GitHubLoginButton.tsx,167,Button,Logout Button,GOOD,Logout button,✓ Already has aria-label,0,DONE
+src/components/FormFields.tsx,502,Image,Logo Image,GOOD,Company logo,✓ Already has alt text,0,DONE
+src/components/FormFields.tsx,512,Button,Delete Logo Button,GOOD,Remove logo,✓ Already has aria-label,0,DONE
+src/components/FormFieldValidated.tsx,Line-Varies,Input,Validated Input,PARTIAL,FormFieldValidated component - needs audit,Check all inputs have aria-label prop working,1,REQUIRES-TESTING
+src/components/InvoiceManager.tsx,~600-800,Form,Form Missing Fieldset,HIGH,Invoice items section needs fieldset,Wrap in <fieldset> with <legend>,2,OPEN
+Total,87+,,,,,26+,
+
