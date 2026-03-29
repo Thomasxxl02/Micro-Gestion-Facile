@@ -2,8 +2,32 @@ import { GoogleGenAI } from '@google/genai';
 import type { Invoice } from '../types';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
-// Initialize securely - assumes environment variable is injected
+// Initialize securely - assumes environment variable is injected at build time via Vite define
 const ai = new GoogleGenAI({ apiKey });
+
+/**
+ * Sanitizes user-controlled string input before embedding in AI prompts
+ * to mitigate prompt injection attacks (CodeQL: js/prompt-injection).
+ * Removes non-printable control characters and enforces a maximum length.
+ */
+function sanitizeForPrompt(input: string, maxLength = 1000): string {
+  return String(input)
+    .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/gu, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+/**
+ * Safely serializes structured data for use in AI prompts.
+ * Limits output size to prevent context flooding and prompt manipulation.
+ */
+function serializeForPrompt(data: unknown, maxLength = 8000): string {
+  try {
+    return JSON.stringify(data).slice(0, maxLength);
+  } catch {
+    return '{}';
+  }
+}
 
 export const generateAssistantResponse = async (
   query: string,
@@ -12,15 +36,22 @@ export const generateAssistantResponse = async (
   try {
     const model = 'gemini-3-flash-preview';
 
+    // System instruction contains ONLY trusted static instructions — no user data
     const systemPrompt = `Tu es un assistant expert pour les auto-entrepreneurs en France.
     Tu connais les règles de l'URSSAF, les seuils de TVA (Franchise en base), les plafonds de Chiffre d'Affaires, et les obligations de facturation.
     Réponds de manière concise, professionnelle et utile.
-    Si on te demande de rédiger un email ou un texte, fais-le avec un ton courtois.
-    Contexte actuel de l'utilisateur (si pertinent) : ${context || 'Aucun contexte spécifique'}`;
+    Si on te demande de rédiger un email ou un texte, fais-le avec un ton courtois.`;
+
+    // User-controlled data goes into `contents` (user role), never in system instructions
+    const sanitizedQuery = sanitizeForPrompt(query, 2000);
+    const sanitizedContext = context ? sanitizeForPrompt(context, 500) : null;
+    const userContent = sanitizedContext
+      ? `Contexte : ${sanitizedContext}\n\n${sanitizedQuery}`
+      : sanitizedQuery;
 
     const response = await ai.models.generateContent({
       model: model,
-      contents: query,
+      contents: userContent,
       config: {
         systemInstruction: systemPrompt,
         thinkingConfig: { thinkingBudget: 0 }, // Disable thinking for faster simple Q&A
@@ -39,7 +70,9 @@ export const suggestInvoiceDescription = async (
   serviceType: string
 ): Promise<string> => {
   try {
-    const prompt = `Génère une description professionnelle courte pour une ligne de facture destinée au client "${clientName}" pour un service de type : "${serviceType}".
+    const safeClientName = sanitizeForPrompt(clientName, 100);
+    const safeServiceType = sanitizeForPrompt(serviceType, 200);
+    const prompt = `Génère une description professionnelle courte pour une ligne de facture destinée au client "${safeClientName}" pour un service de type : "${safeServiceType}".
      La description doit être claire et formelle. Ne donne que la description, pas de guillemets.`;
 
     const response = await ai.models.generateContent({
@@ -66,7 +99,7 @@ export const generateInvoiceItemsFromPrompt = async (
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: prompt,
+      contents: sanitizeForPrompt(prompt, 2000),
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: 'application/json',
@@ -90,13 +123,20 @@ export const draftEmail = async (context: {
   companyName: string;
 }): Promise<{ subject: string; body: string }> => {
   try {
+    const safeCompanyName = sanitizeForPrompt(context.companyName, 100);
+    const safeClientName = sanitizeForPrompt(context.clientName, 100);
+    const safeInvoiceNumber = context.invoiceNumber
+      ? sanitizeForPrompt(context.invoiceNumber, 50)
+      : null;
+    const safeTotal = context.total ? sanitizeForPrompt(context.total, 50) : null;
+    const safePurpose = sanitizeForPrompt(context.purpose, 500);
     const prompt = `Rédige un email professionnel en français.
     Contexte :
-    - Expéditeur : ${context.companyName}
-    - Destinataire : ${context.clientName}
-    ${context.invoiceNumber ? `- Numéro de facture : ${context.invoiceNumber}` : ''}
-    ${context.total ? `- Montant total : ${context.total}€` : ''}
-    - Objectif : ${context.purpose}
+    - Expéditeur : ${safeCompanyName}
+    - Destinataire : ${safeClientName}
+    ${safeInvoiceNumber ? `- Numéro de facture : ${safeInvoiceNumber}` : ''}
+    ${safeTotal ? `- Montant total : ${safeTotal}€` : ''}
+    - Objectif : ${safePurpose}
     - Ton : ${context.tone}
 
     Réponds UNIQUEMENT avec un objet JSON ayant les propriétés : subject (string), body (string).
@@ -160,10 +200,12 @@ export const analyzeReceipt = async (
 
 export const predictRevenue = async (history: Invoice[], quotes: Invoice[]): Promise<string> => {
   try {
+    const safeHistory = serializeForPrompt(history);
+    const safeQuotes = serializeForPrompt(quotes);
     const prompt = `En tant qu'expert financier pour micro-entrepreneur, analyse l'historique de chiffre d'affaires (factures payées) et les devis en cours (acceptés ou en attente) pour prédire le chiffre d'affaires du mois prochain.
 
-    Historique (Invoices Paid): ${JSON.stringify(history)}
-    Devis en cours (Quotes): ${JSON.stringify(quotes)}
+    Historique (Invoices Paid): ${safeHistory}
+    Devis en cours (Quotes): ${safeQuotes}
 
     Donne une estimation chiffrée et une brève explication de ton raisonnement.
     Réponds de manière concise en français.`;
@@ -193,11 +235,14 @@ export const checkInvoiceCompliance = async (
   suggestions: string[];
 }> => {
   try {
+    const safeInvoice = serializeForPrompt(invoice);
+    const safeProfile = serializeForPrompt(userProfile, 3000);
+    const safeClient = serializeForPrompt(client, 2000);
     const prompt = `Analyse la conformité légale de cette facture pour un micro-entrepreneur français (Régime 2026).
 
-    FACTURE: ${JSON.stringify(invoice)}
-    MON ENTREPRISE: ${JSON.stringify(userProfile)}
-    CLIENT: ${JSON.stringify(client)}
+    FACTURE: ${safeInvoice}
+    MON ENTREPRISE: ${safeProfile}
+    CLIENT: ${safeClient}
 
     Vérifie spécifiquement:
     1. Présence du SIRET et de l'adresse (émetteur et client).
@@ -242,15 +287,19 @@ export const predictCashflowJ30 = async (
   riskLevel: 'low' | 'medium' | 'high';
 }> => {
   try {
-    const activityType: string =
-      ((userProfile as Record<string, unknown>).activityType as string) || 'SERVICES';
+    const rawActivityType = (userProfile as Record<string, string>).activityType;
+    const activityType = sanitizeForPrompt(
+      typeof rawActivityType === 'string' ? rawActivityType : 'SERVICES',
+      50
+    );
+    const safeInvoices = serializeForPrompt(invoices);
     const prompt = `En tant qu'analyste financier, prédis la trésorerie à 30 jours pour ce micro-entrepreneur.
     Considère :
     - Les factures impayées et leur date d'échéance.
     - L'historique des paiements (si les clients paient souvent en retard).
     - Les charges sociales à prévoir (basé sur le CA encaissé).
 
-    DONNÉES: ${JSON.stringify(invoices)}
+    DONNÉES: ${safeInvoices}
     PROFIL ACTIVITÉ: ${activityType}
 
     Réponds UNIQUEMENT avec un objet JSON :
