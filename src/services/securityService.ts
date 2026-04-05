@@ -186,8 +186,9 @@ export class APIKeyService {
     service: 'GEMINI' | 'FIREBASE' | 'CUSTOM',
     keyValue: string
   ): Promise<APIKey> {
+    const randomSuffix = window.crypto.randomUUID().split('-')[0];
     return {
-      id: `key_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `key_${Date.now()}_${randomSuffix}`,
       name,
       service,
       keyHash: await this.hashAPIKey(keyValue),
@@ -245,8 +246,9 @@ export class SessionService {
    * Crée une nouvelle session
    */
   static createSession(deviceName: string = ''): Session {
+    const randomSuffix = window.crypto.randomUUID().split('-')[0];
     return {
-      id: `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `sess_${Date.now()}_${randomSuffix}`,
       deviceName: deviceName || this.getDeviceName(),
       ipAddress: this.getIPAddress(), // Simulé (côté client)
       userAgent: navigator.userAgent,
@@ -351,9 +353,11 @@ export class SessionService {
 
   private static getIPAddress(): string {
     // Note: Côté client, on ne peut pas obtenir l'IP réelle
-    // Ceci est une simulation pour la démo
+    // Ceci est une simulation sécurisée (PRNG cryptographique)
     // En production, cette info viendrait du serveur au login
-    return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    const array = new Uint8Array(4);
+    window.crypto.getRandomValues(array);
+    return `${array[0]}.${array[1]}.${array[2]}.${array[3]}`;
   }
 }
 

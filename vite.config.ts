@@ -99,7 +99,7 @@ export default defineConfig(({ mode }) => {
             },
             // Firebase Firestore & Auth – NetworkFirst (données fraîches prioritaires)
             {
-              urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
+              urlPattern: /^https:\/\/[^/]+\.googleapis\.com\/.*/i,
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'firebase-api',
