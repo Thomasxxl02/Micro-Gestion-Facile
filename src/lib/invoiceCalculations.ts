@@ -60,22 +60,38 @@ export interface MicroEntrepreneurTaxResult {
 // CONSTANTES FISCALES 2026
 // ============================================================================
 
-/** Plafonds de chiffre d'affaires pour micro-entreprise */
+/** Plafonds de chiffre d'affaires pour micro-entreprise 2026
+ * Source: Art. 50-0 CGI / Loi de Finances 2024 (art. 22)
+ */
 export const MICRO_THRESHOLDS = {
-  // Prestation de services commerciales, libérales, gestion privée
+  // Prestation de services (BIC/BNC) et professions libérales
   SERVICES: 77_700,
-  // Vente de marchandises
-  SALES: 311_900,
+  // Vente de marchandises (BIC commerçants)
+  SALES: 188_700,
 } as const;
 
-/** Taux d'IR appliqué au forfait avec régime micro */
-export const MICRO_INCOME_TAX_RATE = 0.22; // 22% du CA
+/**
+ * Taux de Prélèvement Forfaitaire Libératoire (PFL) par type d'activité
+ * Optionnel selon revenu fiscal de référence - Art. 151-0 CGI
+ * Source: BOFiP BIC - Régime micro / BNC - Régime micro
+ */
+export const MICRO_PFL_RATES = {
+  SERVICES: 0.022, // 2.2% - Professions libérales / BNC
+  SALES: 0.01, // 1.0% - Vente de marchandises (BIC)
+  CRAFTS: 0.017, // 1.7% - Artisans / services commerciaux (BIC)
+} as const;
 
-/** Taux de cotisations sociales applicables */
+/** @deprecated Utiliser MICRO_PFL_RATES selon le type d'activité */
+export const MICRO_INCOME_TAX_RATE = MICRO_PFL_RATES.SERVICES; // 2.2%
+
+/**
+ * Taux de cotisations sociales URSSAF 2026
+ * Source: Circulaire URSSAF 2025 / Décret cotisations micro-entrepreneurs
+ */
 export const SOCIAL_CONTRIBUTION_RATES = {
-  SERVICES: 0.232, // Prestataires libéraux: ~23.2%
-  SALES: 0.125, // Commerçants: ~12.5%
-  CRAFTS: 0.248, // Artisans: ~24.8%
+  SERVICES: 0.232, // BNC / professions libérales: 23.2%
+  SALES: 0.123, // BIC commerçants (vente marchandises): 12.3%
+  CRAFTS: 0.212, // BIC artisans (prestations artisanales): 21.2%
 } as const;
 
 /** Taux de TVA applicables en France métropolitaine */
@@ -247,8 +263,10 @@ export function calculateMicroEntrepreneurCharges(
   const socialRate = new Decimal(SOCIAL_CONTRIBUTION_RATES[businessType]);
   const socialContributions = revenueDecimal.times(socialRate).toDecimalPlaces(2);
 
-  // Impôt sur le revenu (forfait) = CA × 22%
-  const incomeTax = revenueDecimal.times(new Decimal(MICRO_INCOME_TAX_RATE)).toDecimalPlaces(2);
+  // Impôt sur le revenu (PFL) = CA × Taux PFL selon type d'activité
+  // Art. 151-0 CGI: 1% ventes, 1.7% artisans, 2.2% libéraux/BNC
+  const pflRate = new Decimal(MICRO_PFL_RATES[businessType]);
+  const incomeTax = revenueDecimal.times(pflRate).toDecimalPlaces(2);
 
   // Revenu net = CA - Cotisations - IR
   const netIncome = revenueDecimal.minus(socialContributions).minus(incomeTax).toDecimalPlaces(2);

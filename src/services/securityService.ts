@@ -8,28 +8,68 @@
  */
 
 /**
- * TOTP (Time-based One-Time Password) - Basé sur RFC 6238
- * Utilisé par Google Authenticator, Microsoft Authenticator, Authy
+ * TOTP (Time-based One-Time Password) - RFC 6238 / RFC 4226
+ * Implémentation via WebCrypto HMAC-SHA1 — compatible Google/Microsoft Authenticator, Authy
  */
 export class TOTPService {
+  private static readonly BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
   /**
-   * Génère un secret TOTP au format Base32
-   * À partager avec l'utilisateur (code QR ou manuel)
+   * Génère un secret TOTP cryptographiquement sûr (20 octets / 160 bits) encodé Base32.
+   * Utilise crypto.getRandomValues — jamais Math.random() pour la sécurité.
    */
   static generateSecret(): string {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += characters.charAt(Math.floor(Math.random() * characters.length));
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    // Encodage Base32 RFC 4648
+    let result = '';
+    let buffer = 0;
+    let bitsLeft = 0;
+    for (const byte of bytes) {
+      buffer = (buffer << 8) | byte;
+      bitsLeft += 8;
+      while (bitsLeft >= 5) {
+        bitsLeft -= 5;
+        result += this.BASE32_ALPHABET[(buffer >> bitsLeft) & 0x1f];
+      }
     }
-    return secret;
+    if (bitsLeft > 0) {
+      result += this.BASE32_ALPHABET[(buffer << (5 - bitsLeft)) & 0x1f];
+    }
+    return result;
   }
 
   /**
-   * Génère un QR Code (URL) pour Google Authenticator
-   * @param email Email de l'utilisateur
-   * @param secret Secret TOTP
-   * @param issuer Nom de l'application (ex: "Micro-Gestion-Facile")
+   * Décode un secret Base32 en octets bruts (pour HMAC-SHA1).
+   * Retourne l'ArrayBuffer sous-jacent pour compatibilité WebCrypto.
+   */
+  private static base32Decode(base32: string): ArrayBuffer {
+    const clean = base32.toUpperCase().replaceAll(/[^A-Z2-7]/g, '');
+    const bytes: number[] = [];
+    let buffer = 0;
+    let bitsLeft = 0;
+    for (const char of clean) {
+      const idx = this.BASE32_ALPHABET.indexOf(char);
+      if (idx === -1) {
+        continue;
+      }
+      buffer = (buffer << 5) | idx;
+      bitsLeft += 5;
+      if (bitsLeft >= 8) {
+        bitsLeft -= 8;
+        bytes.push((buffer >> bitsLeft) & 0xff);
+      }
+    }
+    const ab = new ArrayBuffer(bytes.length);
+    new Uint8Array(ab).set(bytes);
+    return ab;
+  }
+
+  /**
+   * Génère un QR Code (URL otpauth://) pour Google Authenticator.
+   * @param email  Email de l'utilisateur
+   * @param secret Secret TOTP (Base32)
+   * @param issuer Nom de l'application
    */
   static generateQRCodeUrl(
     email: string,
@@ -39,41 +79,63 @@ export class TOTPService {
     const encodedEmail = encodeURIComponent(email);
     const encodedSecret = encodeURIComponent(secret);
     const encodedIssuer = encodeURIComponent(issuer);
-
     return `otpauth://totp/${encodedIssuer}:${encodedEmail}?secret=${encodedSecret}&issuer=${encodedIssuer}`;
   }
 
   /**
-   * Valide un code TOTP (6 chiffres)
-   * Accepte le code actuel et les 2 codes adjacents (±30 secondes)
+   * Génère un code TOTP 6 chiffres via WebCrypto HMAC-SHA1 (RFC 4226 §5.3).
+   * @param secret Secret Base32
+   * @param step   Compteur de temps (floor(unix_seconds / 30))
    */
-  static validateCode(secret: string, code: string): boolean {
+  static async generateTOTPCode(secret: string, step: number): Promise<string> {
+    const keyBytes = this.base32Decode(secret);
+
+    // Compteur 8 octets big-endian (les 4 octets de poids fort restent à 0 pour ~4000 ans)
+    const counter = new ArrayBuffer(8);
+    const view = new DataView(counter);
+    view.setUint32(0, Math.floor(step / 0x100000000), false); // high 32 bits
+    view.setUint32(4, step >>> 0, false); // low 32 bits
+
+    // HMAC-SHA1 via WebCrypto
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, counter);
+    const hmac = new Uint8Array(signature); // 20 octets SHA-1
+
+    // Troncature dynamique (RFC 4226 §5.4)
+    const offset = (hmac.at(-1) ?? 0) & 0x0f;
+    const code =
+      (((hmac[offset] & 0x7f) << 24) |
+        ((hmac[offset + 1] & 0xff) << 16) |
+        ((hmac[offset + 2] & 0xff) << 8) |
+        (hmac[offset + 3] & 0xff)) %
+      1_000_000;
+
+    return code.toString().padStart(6, '0');
+  }
+
+  /**
+   * Valide un code TOTP 6 chiffres — RFC 6238 compliant.
+   * Accepte le pas courant et les 2 adjacents (±30 s de tolérance horloge).
+   */
+  static async validateCode(secret: string, code: string): Promise<boolean> {
     const cleanCode = code.replaceAll(/\s/g, '');
     if (!/^\d{6}$/.test(cleanCode)) {
       return false;
     }
-
-    const timeSteps = this.getCurrentTimeSteps();
-    for (const step of timeSteps) {
-      if (this.generateTOTPCode(secret, step) === cleanCode) {
+    const now = Math.floor(Date.now() / 1000);
+    const step = Math.floor(now / 30);
+    for (const s of [step - 1, step, step + 1]) {
+      if ((await this.generateTOTPCode(secret, s)) === cleanCode) {
         return true;
       }
     }
     return false;
-  }
-
-  private static getCurrentTimeSteps(): number[] {
-    const now = Math.floor(Date.now() / 1000);
-    const step = Math.floor(now / 30);
-    // Accepter le code actuel et les 2 adjacents
-    return [step - 1, step, step + 1];
-  }
-
-  private static generateTOTPCode(secret: string, step: number): string {
-    // Simulation simple - en production, utiliser crypto-js ou similar
-    const charCode = secret.length > 0 ? (secret.codePointAt(0) ?? 0) : 0;
-    const code = ((step * 31 + charCode) % 1000000).toString();
-    return code.padStart(6, '0');
   }
 }
 

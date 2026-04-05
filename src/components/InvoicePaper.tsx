@@ -22,8 +22,10 @@ import {
   ShoppingBag,
   Zap,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import React from 'react';
 import { useInvoiceTotals } from '../hooks/useInvoiceTotals';
+import { CURRENCY_SYMBOLS, type SupportedCurrency } from '../services/currencyService';
 import type { Client, Invoice, UserProfile } from '../types';
 
 export interface InvoicePaperProps {
@@ -81,6 +83,12 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
   // ===================================================
   const totals = useInvoiceTotals(invoice, userProfile);
   const { subtotalHT, discountAmount, vatAmount, total: totalTTC, balanceDue } = totals;
+
+  // Symbole de devise du profil (€ par défaut)
+  const rawCurrency = (userProfile.currency ?? 'EUR').toUpperCase();
+  const baseCurrency: SupportedCurrency =
+    rawCurrency === 'USD' || rawCurrency === 'GBP' ? rawCurrency : 'EUR';
+  const sym = CURRENCY_SYMBOLS[baseCurrency];
 
   return (
     <div
@@ -228,7 +236,7 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
                 {item.quantity} {item.unit}
               </td>
               <td className="py-6 text-right text-brand-500 font-medium">
-                {item.unitPrice.toFixed(2)} €
+                {item.unitPrice.toFixed(2)} {sym}
               </td>
               {!invoice.taxExempt && (
                 <td className="py-6 text-right text-brand-500 font-medium">
@@ -236,7 +244,7 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
                 </td>
               )}
               <td className="py-6 text-right font-bold text-brand-900 font-display">
-                {(item.quantity * item.unitPrice).toFixed(2)} €
+                {(item.quantity * item.unitPrice).toFixed(2)} {sym}
               </td>
             </tr>
           ))}
@@ -249,7 +257,9 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
           <div className="space-y-4 pb-6 border-b border-brand-100">
             <div className="flex justify-between text-sm">
               <span className="text-brand-500 font-medium">Sous-Total HT</span>
-              <span className="font-bold text-brand-900">{subtotalHT.toFixed(2)} €</span>
+              <span className="font-bold text-brand-900">
+                {subtotalHT.toFixed(2)} {sym}
+              </span>
             </div>
 
             {(invoice.discount || 0) > 0 && (
@@ -257,26 +267,32 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
                 <span className="font-bold uppercase tracking-wider text-[10px]">
                   Remise ({invoice.discount}%)
                 </span>
-                <span className="font-bold">- {discountAmount.toFixed(2)} €</span>
+                <span className="font-bold">
+                  - {discountAmount.toFixed(2)} {sym}
+                </span>
               </div>
             )}
 
             {(invoice.shipping || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-brand-500 font-medium">Frais de port</span>
-                <span className="font-bold text-brand-900">+ {invoice.shipping?.toFixed(2)} €</span>
+                <span className="font-bold text-brand-900">
+                  + {invoice.shipping?.toFixed(2)} {sym}
+                </span>
               </div>
             )}
 
             {invoice.taxExempt ? (
               <div className="flex justify-between text-[10px] text-brand-400 italic">
                 <span>TVA non applicable, art. 293 B du CGI</span>
-                <span>0.00 €</span>
+                <span>0.00 {sym}</span>
               </div>
             ) : (
               <div className="flex justify-between text-sm">
                 <span className="text-brand-500 font-medium">TVA</span>
-                <span className="font-bold text-brand-900">{vatAmount.toFixed(2)} €</span>
+                <span className="font-bold text-brand-900">
+                  {vatAmount.toFixed(2)} {sym}
+                </span>
               </div>
             )}
           </div>
@@ -288,7 +304,7 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
                 Total TTC
               </span>
               <span className="text-brand-900 font-bold text-3xl font-display">
-                {totalTTC.toFixed(2)} €
+                {totalTTC.toFixed(2)} {sym}
               </span>
             </div>
 
@@ -297,11 +313,15 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
               <div className="bg-brand-50 p-5 rounded-2xl border border-brand-100 mt-6">
                 <div className="flex justify-between text-[10px] font-bold text-brand-500 uppercase tracking-wider mb-2">
                   <span>Acompte {docType === 'quote' ? 'demandé' : 'déjà réglé'}</span>
-                  <span className="font-mono">- {invoice.deposit?.toFixed(2)} €</span>
+                  <span className="font-mono">
+                    - {invoice.deposit?.toFixed(2)} {sym}
+                  </span>
                 </div>
                 <div className="flex justify-between font-bold text-xl text-brand-900 border-t border-brand-200 pt-3 font-display">
                   <span>Reste à payer</span>
-                  <span>{balanceDue.toFixed(2)} €</span>
+                  <span>
+                    {balanceDue.toFixed(2)} {sym}
+                  </span>
                 </div>
               </div>
             )}
@@ -383,9 +403,35 @@ export const InvoicePaper: React.FC<InvoicePaperProps> = ({
           </div>
         </div>
 
-        {/* Pied de page final */}
-        <div className="mt-12 text-center text-[8px] text-brand-300 font-bold uppercase tracking-[0.3em] border-t border-brand-50 pt-4">
-          {userProfile.companyName} • SIRET {userProfile.siret} • {userProfile.address}
+        {/* QR Code + Pied de page final */}
+        <div className="mt-12 border-t border-brand-50 pt-6 flex items-end justify-between gap-8">
+          {/* Identité de l'entreprise */}
+          <div className="text-center text-[8px] text-brand-300 font-bold uppercase tracking-[0.3em]">
+            {userProfile.companyName} • SIRET {userProfile.siret} • {userProfile.address}
+          </div>
+
+          {/* QR Code pour Chorus Pro / Factur-X */}
+          <div className="flex flex-col items-center gap-1.5 shrink-0 qr-code-print">
+            <QRCodeSVG
+              value={[
+                `Facture:${invoice.number}`,
+                `Emetteur:${userProfile.companyName}`,
+                `SIRET:${userProfile.siret}`,
+                `Client:${client?.name ?? ''}`,
+                `Montant:${totalTTC.toFixed(2)}EUR`,
+                `Date:${invoice.date}`,
+                `Echeance:${invoice.dueDate}`,
+              ].join('\n')}
+              size={64}
+              level="M"
+              bgColor="#ffffff"
+              fgColor="#0f172a"
+              aria-label={`QR Code facture ${invoice.number}`}
+            />
+            <span className="text-[7px] text-brand-300 font-mono uppercase tracking-widest">
+              #{invoice.number}
+            </span>
+          </div>
         </div>
       </div>
     </div>

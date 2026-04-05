@@ -3,6 +3,7 @@
  * Sources : URSSAF / Service-Public.fr
  */
 
+import Decimal from 'decimal.js';
 import type { ActivityType, UserProfile } from '../types';
 
 export interface SocialContributions {
@@ -41,13 +42,14 @@ export const calculateSocialContributions = (
   const isAcre = profile.isAcreBeneficiary || false;
 
   const rate = isAcre ? ACRE_RATES[type] : STANDARD_RATES[type];
-  const amount = (revenue * rate) / 100;
-  const netRevenue = revenue - amount;
+  const revenueD = new Decimal(revenue);
+  const amount = revenueD.times(new Decimal(rate)).dividedBy(100).toDecimalPlaces(2);
+  const netRevenue = revenueD.minus(amount).toDecimalPlaces(2);
 
   return {
     rate,
-    amount,
-    netRevenue,
+    amount: amount.toNumber(),
+    netRevenue: netRevenue.toNumber(),
     isAcreApplied: isAcre,
   };
 };
@@ -64,7 +66,11 @@ export const calculateIncomeTaxPFL = (revenue: number, type: ActivityType): numb
     LIBERAL: 2.2,
   };
 
-  return (revenue * taxRates[type]) / 100;
+  return new Decimal(revenue)
+    .times(new Decimal(taxRates[type]))
+    .dividedBy(100)
+    .toDecimalPlaces(2)
+    .toNumber();
 };
 
 /**

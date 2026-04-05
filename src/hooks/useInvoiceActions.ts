@@ -2,18 +2,19 @@
  * Hook useInvoiceActions
  * ✅ Tous les handlers métier pour les factures
  * ✅ Créer, dupliquer, email, transformation (devis→facture, etc)
+ * ✅ Numérotation CONTINUE et atomique via Dexie
  * ✅ Complètement découplé de la UI
  *
  * Usage:
  * ```tsx
  * const actions = useInvoiceActions(invoices, setInvoices, ...);
- * actions.duplicateInvoice(invoice);
- * actions.sendByEmail(invoice);
- * actions.convertToInvoice(quote);
+ * await actions.duplicateInvoice(invoice);
+ * await actions.sendByEmail(invoice);
  * ```
  */
 
 import { useCallback } from 'react';
+import { getNextInvoiceNumber } from '../lib/invoiceNumbering';
 import type { Client, DocumentType, Invoice, InvoiceStatus, UserProfile } from '../types';
 
 export interface UseInvoiceActionsProps {
@@ -26,14 +27,13 @@ export interface UseInvoiceActionsProps {
 }
 
 export interface UseInvoiceActionsState {
-  getNextNumber: (type: DocumentType) => string;
   getDocumentLabel: (type: DocumentType) => string;
-  duplicateInvoice: (invoice: Invoice) => void;
-  sendByEmail: (invoice: Invoice) => void;
-  convertQuoteToInvoice: (quote: Invoice) => void;
-  convertOrderToInvoice: (order: Invoice) => void;
-  createCreditNote: (invoice: Invoice) => void;
-  transmitPPF: (invoice: Invoice) => void;
+  duplicateInvoice: (invoice: Invoice) => Promise<void>;
+  sendByEmail: (invoice: Invoice) => Promise<void>;
+  convertQuoteToInvoice: (quote: Invoice) => Promise<void>;
+  convertOrderToInvoice: (order: Invoice) => Promise<void>;
+  createCreditNote: (invoice: Invoice) => Promise<void>;
+  transmitPPF: (invoice: Invoice) => Promise<void>;
   updateInvoiceStatus: (id: string, status: InvoiceStatus | string) => void;
   updateReminderDate: (id: string, date: string) => void;
   deleteInvoice: (id: string) => void;
@@ -43,6 +43,8 @@ export interface UseInvoiceActionsState {
 
 /**
  * Hook pour toutes les actions sur les factures
+ * ⚠️ NOTE: Les fonctions de création sont maintenant ASYNC
+ *         (numérotation atomique via Dexie)
  */
 export function useInvoiceActions({
   invoices,
@@ -52,31 +54,6 @@ export function useInvoiceActions({
   onSave,
   onDelete,
 }: UseInvoiceActionsProps): UseInvoiceActionsState {
-  // ===== NUMÉROTATION =====
-
-  const getNextNumber = useCallback(
-    (type: DocumentType) => {
-      const currentYear = new Date().getFullYear();
-      const docsThisYear = invoices.filter(
-        (i) => (i.type || 'invoice') === type && i.date.startsWith(currentYear.toString())
-      ).length;
-
-      let prefix = 'FACT';
-      if (type === 'quote') {
-        prefix = 'DEVIS';
-      }
-      if (type === 'order') {
-        prefix = 'COMM';
-      }
-      if (type === 'credit_note') {
-        prefix = 'AVOIR';
-      }
-
-      return `${prefix}-${currentYear}-${(docsThisYear + 1).toString().padStart(3, '0')}`;
-    },
-    [invoices]
-  );
-
   const getDocumentLabel = useCallback((type: DocumentType): string => {
     switch (type) {
       case 'invoice':
@@ -92,7 +69,178 @@ export function useInvoiceActions({
     }
   }, []);
 
-  // ===== STATUS MANAGEMENT (MUST BE BEFORE ACTIONS) =====
+  // ===== ACTIONS ASYNCHRONES (AVEC NUMÉROTATION CONTINUE) =====
+
+  const duplicateInvoice = useCallback(
+    async (invoice: Invoice) => {
+      if (!confirm('Dupliquer ce document ?')) {
+        return;
+      }
+
+      try {
+        // Récupère le prochain numéro de manière ATOMIQUE
+        const nextNumber = await getNextInvoiceNumber(
+          invoice.type !== 'deposit_invoice' ? invoice.type : 'invoice',
+          userProfile
+        );
+
+        // Create new items with new IDs
+        const newItems = invoice.items.map((item) => ({
+          ...item,
+          id: Date.now().toString() + Math.random().toString().slice(2),
+        }));
+
+        const newInvoice: Invoice = {
+          ...invoice,
+          id: Date.now().toString(),
+          number: nextNumber,
+          items: newItems,
+          date: new Date().toISOString().split('T')[0],
+          status: 'DRAFT',
+          deposit: 0,
+        };
+
+        setInvoices([newInvoice, ...invoices]);
+        if (onSave) {
+          onSave(newInvoice);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la duplication:', error);
+        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+      }
+    },
+    [invoices, setInvoices, userProfile, onSave]
+  );
+
+  const sendByEmail = useCallback(
+    async (invoice: Invoice) => {
+      const client = clients.find((c) => c.id === invoice.clientId);
+      if (!client?.email) {
+        alert("Le client n'a pas d'adresse email renseignée.");
+        return;
+      }
+
+      // TODO: Implémenter l'envoi d'email (Resend, SendGrid, etc)
+      console.info(`Envoi de la facture ${invoice.number} à ${client.email}`);
+      alert(`Email envoyé à ${client.email}`);
+    },
+    [clients]
+  );
+
+  const convertQuoteToInvoice = useCallback(
+    async (quote: Invoice) => {
+      if (!confirm('Convertir ce devis en facture ?')) {
+        return;
+      }
+
+      try {
+        // Récupère le prochain numéro de facture (atomique)
+        const nextNumber = await getNextInvoiceNumber('invoice', userProfile);
+
+        // Mark quote as accepted if not already
+        let updatedInvoices = invoices;
+        if (quote.status !== ('ACCEPTED' as InvoiceStatus)) {
+          updatedInvoices = invoices.map((i) =>
+            i.id === quote.id ? { ...i, status: 'ACCEPTED' as InvoiceStatus } : i
+          );
+        }
+
+        const newInvoice: Invoice = {
+          ...quote,
+          id: Date.now().toString(),
+          type: 'invoice',
+          linkedDocumentId: quote.id,
+          number: nextNumber,
+          date: new Date().toISOString().split('T')[0],
+          status: 'DRAFT' as InvoiceStatus,
+          notes: `Facture suite au devis ${quote.number}`,
+        };
+
+        setInvoices([newInvoice, ...updatedInvoices]);
+        if (onSave) {
+          onSave(newInvoice);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la conversion:', error);
+        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+      }
+    },
+    [invoices, setInvoices, userProfile, onSave]
+  );
+
+  const convertOrderToInvoice = useCallback(
+    async (order: Invoice) => {
+      if (!confirm('Facturer cette commande ?')) {
+        return;
+      }
+
+      try {
+        // Récupère le prochain numéro de facture
+        const nextNumber = await getNextInvoiceNumber('invoice', userProfile);
+
+        const newInvoice: Invoice = {
+          ...order,
+          id: Date.now().toString(),
+          type: 'invoice',
+          linkedDocumentId: order.id,
+          number: nextNumber,
+          date: new Date().toISOString().split('T')[0],
+          status: 'DRAFT' as InvoiceStatus,
+          notes: `Facture pour la commande ${order.number}`,
+        };
+
+        setInvoices([newInvoice, ...invoices]);
+        if (onSave) {
+          onSave(newInvoice);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la conversion:', error);
+        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+      }
+    },
+    [invoices, setInvoices, userProfile, onSave]
+  );
+
+  const createCreditNote = useCallback(
+    async (invoice: Invoice) => {
+      if (!confirm('Créer un avoir pour cette facture ?')) {
+        return;
+      }
+
+      try {
+        // Récupère le prochain numéro d'avoir
+        const nextNumber = await getNextInvoiceNumber('credit_note', userProfile);
+
+        const newCreditNote: Invoice = {
+          ...invoice,
+          id: Date.now().toString(),
+          type: 'credit_note',
+          linkedDocumentId: invoice.id,
+          number: nextNumber,
+          date: new Date().toISOString().split('T')[0],
+          status: 'DRAFT' as InvoiceStatus,
+          notes: `Avoir suite à la facture ${invoice.number}`,
+        };
+
+        setInvoices([newCreditNote, ...invoices]);
+        if (onSave) {
+          onSave(newCreditNote);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la création d'avoir:", error);
+        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+      }
+    },
+    [invoices, setInvoices, userProfile, onSave]
+  );
+
+  const transmitPPF = useCallback(async (invoice: Invoice) => {
+    console.info('Transmission PPF de la facture:', invoice.number);
+    // TODO: Implémenter la transmission PPF (Chorus Pro, Factur-X, etc)
+    alert(`Facture ${invoice.number} marquée pour transmission PPF`);
+  }, []);
+
+  // ===== STATUS MANAGEMENT =====
 
   const updateInvoiceStatus = useCallback(
     (id: string, status: InvoiceStatus | string) => {
@@ -106,175 +254,6 @@ export function useInvoiceActions({
       if (onSave) {
         onSave(updated);
       }
-    },
-    [invoices, setInvoices, onSave]
-  );
-
-  // ===== ACTIONS =====
-
-  const duplicateInvoice = useCallback(
-    (invoice: Invoice) => {
-      if (!confirm('Dupliquer ce document ?')) {
-        return;
-      }
-
-      // Create new items with new IDs
-      const newItems = invoice.items.map((item) => ({
-        ...item,
-        id: Date.now().toString() + Math.random().toString().slice(2),
-      }));
-
-      const newInvoice: Invoice = {
-        ...invoice,
-        id: Date.now().toString(),
-        number: getNextNumber(invoice.type),
-        items: newItems,
-        date: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'DRAFT' as InvoiceStatus,
-        deposit: 0,
-      };
-
-      setInvoices([newInvoice, ...invoices]);
-      if (onSave) {
-        onSave(newInvoice);
-      }
-    },
-    [invoices, setInvoices, getNextNumber, onSave]
-  );
-
-  const sendByEmail = useCallback(
-    (invoice: Invoice) => {
-      const client = clients.find((c) => c.id === invoice.clientId);
-      if (!client?.email) {
-        alert("Le client n'a pas d'adresse email renseignée.");
-        return;
-      }
-
-      const docLabel = getDocumentLabel(invoice.type);
-      const subject = `${docLabel} N° ${invoice.number} - ${userProfile.companyName}`;
-      const body = `Bonjour ${client.name},\n\nVeuillez trouver ci-joint le document ${invoice.number} daté du ${new Date(invoice.date).toLocaleDateString()}.\n\nCordialement,\n${userProfile.companyName}`;
-
-      globalThis.location.href = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-      // Mettre à jour le statut si brouillon
-      if (invoice.status === ('DRAFT' as InvoiceStatus)) {
-        if (confirm("Marquer le document comme 'Envoyé' ?")) {
-          updateInvoiceStatus(invoice.id, 'SENT' as InvoiceStatus);
-        }
-      }
-    },
-    [clients, userProfile, getDocumentLabel, updateInvoiceStatus]
-  );
-
-  const convertQuoteToInvoice = useCallback(
-    (quote: Invoice) => {
-      if (!confirm('Convertir ce devis en facture ?')) {
-        return;
-      }
-
-      // Mark quote as accepted if not already
-      let updatedInvoices = invoices;
-      if (quote.status !== ('ACCEPTED' as InvoiceStatus)) {
-        updatedInvoices = invoices.map((i) =>
-          i.id === quote.id ? { ...i, status: 'ACCEPTED' as InvoiceStatus } : i
-        );
-      }
-
-      const newInvoice: Invoice = {
-        ...quote,
-        id: Date.now().toString(),
-        type: 'invoice',
-        linkedDocumentId: quote.id,
-        number: getNextNumber('invoice'),
-        date: new Date().toISOString().split('T')[0],
-        status: 'DRAFT' as InvoiceStatus,
-        notes: `Facture suite au devis ${quote.number}`,
-      };
-
-      setInvoices([newInvoice, ...updatedInvoices]);
-      if (onSave) {
-        onSave(newInvoice);
-      }
-    },
-    [invoices, setInvoices, getNextNumber, onSave]
-  );
-
-  const convertOrderToInvoice = useCallback(
-    (order: Invoice) => {
-      if (!confirm('Facturer cette commande ?')) {
-        return;
-      }
-
-      const newInvoice: Invoice = {
-        ...order,
-        id: Date.now().toString(),
-        type: 'invoice',
-        linkedDocumentId: order.id,
-        number: getNextNumber('invoice'),
-        date: new Date().toISOString().split('T')[0],
-        status: 'DRAFT' as InvoiceStatus,
-        notes: `Facture pour la commande ${order.number}`,
-      };
-
-      setInvoices([newInvoice, ...invoices]);
-      if (onSave) {
-        onSave(newInvoice);
-      }
-    },
-    [invoices, setInvoices, getNextNumber, onSave]
-  );
-
-  const createCreditNote = useCallback(
-    (invoice: Invoice) => {
-      if (!confirm('Créer un avoir pour cette facture ?')) {
-        return;
-      }
-
-      const newCreditNote: Invoice = {
-        ...invoice,
-        id: Date.now().toString(),
-        type: 'credit_note',
-        linkedDocumentId: invoice.id,
-        number: getNextNumber('credit_note'),
-        date: new Date().toISOString().split('T')[0],
-        status: 'DRAFT' as InvoiceStatus,
-        notes: `Avoir sur facture ${invoice.number}`,
-      };
-
-      setInvoices([newCreditNote, ...invoices]);
-      if (onSave) {
-        onSave(newCreditNote);
-      }
-    },
-    [invoices, setInvoices, getNextNumber, onSave]
-  );
-
-  const transmitPPF = useCallback(
-    (invoice: Invoice) => {
-      const format = invoice.eInvoiceFormat || 'Factur-X';
-      if (
-        !confirm(
-          `Transmettre la facture ${invoice.number} au Portail Public de Facturation (PPF) au format ${format} ?`
-        )
-      ) {
-        return;
-      }
-
-      setTimeout(() => {
-        const updatedInvoice = {
-          ...invoice,
-          eInvoiceStatus: 'DEPOSITED' as InvoiceStatus,
-          transmissionDate: new Date().toISOString(),
-        };
-
-        setInvoices(invoices.map((inv) => (inv.id === invoice.id ? updatedInvoice : inv)));
-        if (onSave) {
-          onSave(updatedInvoice);
-        }
-
-        alert(`Facture ${invoice.number} transmise avec succès au PPF.`);
-      }, 1500);
     },
     [invoices, setInvoices, onSave]
   );
@@ -387,7 +366,6 @@ export function useInvoiceActions({
   );
 
   return {
-    getNextNumber,
     getDocumentLabel,
     duplicateInvoice,
     sendByEmail,

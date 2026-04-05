@@ -5,17 +5,67 @@
  */
 
 import { Decimal } from 'decimal.js';
+import { z } from 'zod';
 import {
-  type UserProfile,
-  type Invoice,
+  type CalendarEvent,
   type Client,
-  type Supplier,
-  type Product,
-  type Expense,
   type Email,
   type EmailTemplate,
-  type CalendarEvent,
+  type Expense,
+  type Invoice,
+  type Product,
+  type Supplier,
+  type UserProfile,
 } from '../types';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Schémas Zod — validation structurelle à l'import (OWASP A03: Injection)
+// Prevents malicious JSON from crashing the app or injecting unexpected data.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const InvoiceItemZodSchema = z
+  .object({
+    id: z.string(),
+    description: z.string(),
+    quantity: z.number(),
+    unitPrice: z.number(),
+  })
+  .passthrough();
+
+const InvoiceZodSchema = z
+  .object({
+    id: z.string(),
+    type: z.string(),
+    number: z.string(),
+    date: z.string(),
+    dueDate: z.string(),
+    clientId: z.string(),
+    items: z.array(InvoiceItemZodSchema),
+    status: z.string(),
+    total: z.number(),
+  })
+  .passthrough();
+
+const ClientZodSchema = z
+  .object({ id: z.string(), name: z.string(), email: z.string(), address: z.string() })
+  .passthrough();
+
+const GenericEntitySchema = z.object({ id: z.string() }).passthrough();
+
+/** Schéma de validation pour les fichiers d'import/export Micro-Gestion-Facile */
+export const ExportDataSchema = z.object({
+  version: z.string(),
+  exportedAt: z.string(),
+  userProfile: z.record(z.unknown()),
+  invoices: z.array(InvoiceZodSchema).default([]),
+  clients: z.array(ClientZodSchema).default([]),
+  suppliers: z.array(GenericEntitySchema).default([]),
+  products: z.array(GenericEntitySchema).default([]),
+  expenses: z.array(GenericEntitySchema).default([]),
+  emails: z.array(GenericEntitySchema).default([]),
+  emailTemplates: z.array(GenericEntitySchema).default([]),
+  calendarEvents: z.array(GenericEntitySchema).default([]),
+});
 
 export interface ExportOptions {
   format: 'json' | 'csv';
@@ -253,20 +303,24 @@ export const countDocuments = (data: Partial<ExportData>): Record<string, number
 };
 
 /**
- * Parser JSON for import (avec validation)
+ * Parser JSON for import — validation Zod pour prévenir les injections
+ * via fichiers JSON malveillants (OWASP A03)
  */
 export const parseImportJSON = (
   json: string
 ): { valid: boolean; data?: ExportData; error?: string } => {
   try {
-    const data = JSON.parse(json);
-    const validation = validateExportSchema(data);
-    if (!validation.valid) {
-      return { valid: false, error: validation.errors.join(', ') };
+    const raw = JSON.parse(json);
+    const result = ExportDataSchema.safeParse(raw);
+    if (!result.success) {
+      const errors = result.error.issues
+        .map((i) => `${i.path.join('.') || 'racine'}: ${i.message}`)
+        .join('; ');
+      return { valid: false, error: errors };
     }
-    return { valid: true, data };
+    return { valid: true, data: result.data as unknown as ExportData };
   } catch (e) {
-    return { valid: false, error: `Invalid JSON: ${(e as Error).message}` };
+    return { valid: false, error: `JSON invalide : ${(e as Error).message}` };
   }
 };
 

@@ -1,18 +1,18 @@
+import type { User } from 'firebase/auth';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { User } from 'firebase/auth';
 import type {
-  ViewState,
-  Invoice,
+  CalendarEvent,
   Client,
-  Supplier,
-  Product,
-  Expense,
   Email,
   EmailTemplate,
-  CalendarEvent,
-  UserProfile,
+  Expense,
+  Invoice,
   LogEntry,
+  Product,
+  Supplier,
+  UserProfile,
+  ViewState,
 } from '../types';
 
 export interface AppStoreState {
@@ -69,6 +69,10 @@ export interface AppStoreState {
   userProfile: UserProfile;
   setUserProfile: (profile: UserProfile) => void;
   updateUserProfile: (updater: (profile: UserProfile) => Partial<UserProfile>) => void;
+
+  // Sync State
+  isSyncing: boolean;
+  setIsSyncing: (isSyncing: boolean) => void;
 
   // Activity Logs
   activityLogs: LogEntry[];
@@ -210,6 +214,10 @@ export const useAppStore = create<AppStoreState>()(
           set((state) => ({
             userProfile: { ...state.userProfile, ...updater(state.userProfile) },
           })),
+
+        // Sync State
+        isSyncing: true, // Par défaut lors de l'init
+        setIsSyncing: (isSyncing: boolean) => set({ isSyncing }),
 
         // Activity Logs
         activityLogs: [],

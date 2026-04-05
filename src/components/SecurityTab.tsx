@@ -7,39 +7,39 @@
  * ✅ Chiffrement des données sensibles
  */
 
-import React, { useState, useEffect } from 'react';
-import type { UserProfile } from '../types';
 import {
-  Key,
-  Smartphone,
-  KeyRound,
-  LogOut,
-  Eye,
-  EyeOff,
   AlertTriangle,
   CheckCircle,
-  Copy,
-  Trash2,
-  Plus,
   Clock,
-  MapPin,
-  Lock,
-  Zap,
+  Copy,
+  Eye,
+  EyeOff,
   History,
+  Key,
+  KeyRound,
+  Lock,
+  LogOut,
+  MapPin,
+  Plus,
+  Smartphone,
+  Trash2,
+  Zap,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import {
-  TOTPService,
   APIKeyService,
-  SessionService,
-  PasswordResetService,
   DataEncryptionService,
+  PasswordResetService,
   PasswordValidator,
+  SessionService,
+  TOTPService,
   type APIKey,
-  type Session,
   type LoginHistoryEntry,
+  type Session,
 } from '../services/securityService';
+import type { UserProfile } from '../types';
+import { AlertDialog, ConfirmDialog } from './Dialogs';
 import { FormField, SelectField } from './FormFields';
-import { ConfirmDialog, AlertDialog } from './Dialogs';
 
 interface SecurityTabProps {
   userProfile: UserProfile;
@@ -60,18 +60,14 @@ const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({ score, colorC
   const percentage = (score / 5) * 100;
 
   return (
-    <div
-      className="flex-1 h-2 bg-brand-200 dark:bg-brand-700 rounded-full overflow-hidden"
-      style={
-        {
-          '--progress-width': `${percentage}%`,
-          '--progress-color': 'currentColor',
-        } as React.CSSProperties
-      }
-    >
+    <div className="flex-1 h-2 bg-brand-200 dark:bg-brand-700 rounded-full overflow-hidden">
       <div
         className={`h-full transition-all ${colorClass}`}
-        style={{ width: 'var(--progress-width)' } as React.CSSProperties}
+        {...{
+          style: {
+            width: `${percentage}%`,
+          } as React.CSSProperties,
+        }}
       />
     </div>
   );
@@ -86,6 +82,38 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   const [activeSecurityTab, setActiveSecurityTab] = useState<
     '2fa' | 'api-keys' | 'password' | 'sessions' | 'encryption'
   >('2fa');
+
+  // ─── KEYBOARD NAVIGATION (ARIA tablist pattern) ───
+  const SECURITY_TABS = ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const;
+  const handleSecurityTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const idx = SECURITY_TABS.indexOf(activeSecurityTab as (typeof SECURITY_TABS)[number]);
+    let next = idx;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        e.preventDefault();
+        next = (idx + 1) % SECURITY_TABS.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        next = (idx - 1 + SECURITY_TABS.length) % SECURITY_TABS.length;
+        break;
+      case 'Home':
+        e.preventDefault();
+        next = 0;
+        break;
+      case 'End':
+        e.preventDefault();
+        next = SECURITY_TABS.length - 1;
+        break;
+      default:
+        return;
+    }
+    setActiveSecurityTab(SECURITY_TABS[next]);
+    const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    buttons[next]?.focus();
+  };
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([]);
@@ -166,7 +194,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   };
 
   const handleVerifyTOTPCode = async () => {
-    if (!TOTPService.validateCode(totpSecret, totpVerificationCode)) {
+    if (!(await TOTPService.validateCode(totpSecret, totpVerificationCode))) {
       setAlertDialog({
         isOpen: true,
         title: '❌ Code invalide',
@@ -449,35 +477,61 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       className="space-y-8 animate-slide-up"
     >
       {/* SECURITY TABS */}
-      <div className="flex flex-wrap gap-2 bg-brand-50 dark:bg-brand-900/30 p-3 rounded-2xl border border-brand-100 dark:border-brand-800">
-        {['2FA', 'API Keys', 'Mot de passe', 'Sessions', 'Chiffrement'].map((label, idx) => {
-          const tabKeys: Array<'2fa' | 'api-keys' | 'password' | 'sessions' | 'encryption'> = [
-            '2fa',
-            'api-keys',
-            'password',
-            'sessions',
-            'encryption',
-          ];
-          const tabKey = tabKeys[idx];
-          return (
-            <button
-              key={tabKey}
-              onClick={() => setActiveSecurityTab(tabKey)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                activeSecurityTab === tabKey
-                  ? 'bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm'
-                  : 'text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
+      <div
+        role="tablist"
+        aria-label="Paramètres de sécurité"
+        onKeyDown={handleSecurityTabKeyDown}
+        className="flex flex-wrap gap-2 bg-brand-50 dark:bg-brand-900/30 p-3 rounded-2xl border border-brand-100 dark:border-brand-800"
+      >
+        {(['2FA', 'API Keys', 'Mot de passe', 'Sessions', 'Chiffrement'] as const).map(
+          (label, idx) => {
+            const currentTabKey = (
+              ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const
+            )[idx];
+
+            if (activeSecurityTab === currentTabKey) {
+              return (
+                <button
+                  key={currentTabKey}
+                  id={`sec-tab-${currentTabKey}`}
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls={`sec-panel-${currentTabKey}`}
+                  tabIndex={0}
+                  onClick={() => setActiveSecurityTab(currentTabKey)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm"
+                >
+                  {label}
+                </button>
+              );
+            }
+
+            return (
+              <button
+                key={currentTabKey}
+                id={`sec-tab-${currentTabKey}`}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`sec-panel-${currentTabKey}`}
+                tabIndex={-1}
+                onClick={() => setActiveSecurityTab(currentTabKey)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50"
+              >
+                {label}
+              </button>
+            );
+          }
+        )}
       </div>
 
       {/* 2FA TAB */}
       {activeSecurityTab === '2fa' && (
-        <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+        <div
+          id="sec-panel-2fa"
+          role="tabpanel"
+          aria-labelledby="sec-tab-2fa"
+          className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
+        >
           <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
             <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
               <Smartphone size={28} />
@@ -578,7 +632,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       {/* API KEYS TAB */}
       {activeSecurityTab === 'api-keys' && (
-        <div className="space-y-8">
+        <div
+          id="sec-panel-api-keys"
+          role="tabpanel"
+          aria-labelledby="sec-tab-api-keys"
+          className="space-y-8"
+        >
           {/* CREATE NEW KEY */}
           <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
             <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
@@ -708,7 +767,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       {/* PASSWORD RESET TAB */}
       {activeSecurityTab === 'password' && (
-        <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+        <div
+          id="sec-panel-password"
+          role="tabpanel"
+          aria-labelledby="sec-tab-password"
+          className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
+        >
           <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
             <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
               <KeyRound size={28} />
@@ -796,7 +860,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       {/* SESSIONS TAB */}
       {activeSecurityTab === 'sessions' && (
-        <div className="space-y-8">
+        <div
+          id="sec-panel-sessions"
+          role="tabpanel"
+          aria-labelledby="sec-tab-sessions"
+          className="space-y-8"
+        >
           {/* ACTIVE SESSIONS */}
           <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
             <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
@@ -904,7 +973,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       {/* ENCRYPTION TAB */}
       {activeSecurityTab === 'encryption' && (
-        <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+        <div
+          id="sec-panel-encryption"
+          role="tabpanel"
+          aria-labelledby="sec-tab-encryption"
+          className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
+        >
           <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
             <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
               <Lock size={28} />

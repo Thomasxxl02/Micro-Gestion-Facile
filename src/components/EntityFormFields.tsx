@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { FormField, TextAreaField, SelectField } from './FormFields';
+import { type ValidationResult } from '../lib/validators';
+import { FormField, SelectField, TextAreaField } from './FormFields';
 import { FormFieldValidated } from './FormFieldValidated';
 
 /**
@@ -24,6 +25,9 @@ interface ContactFieldsProps {
   phoneError?: string;
   contactNameLabel?: string; // ex: "Contact" pour supplier
   required?: boolean;
+  // Support validation proactive
+  validationErrors?: Record<string, ValidationResult>;
+  touchedFields?: Record<string, boolean>;
 }
 
 export const ContactFields: React.FC<ContactFieldsProps> = ({
@@ -38,6 +42,8 @@ export const ContactFields: React.FC<ContactFieldsProps> = ({
   phoneError: _phoneError,
   contactNameLabel = 'Nom',
   required = true,
+  validationErrors = {},
+  touchedFields = {},
 }) => (
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
     <FormFieldValidated
@@ -47,6 +53,8 @@ export const ContactFields: React.FC<ContactFieldsProps> = ({
       type="text"
       validationType="name"
       required={required}
+      error={validationErrors.name || (validationErrors.contactName as ValidationResult)}
+      touched={touchedFields.name || touchedFields.contactName}
     />
     <FormFieldValidated
       label="Email"
@@ -55,6 +63,8 @@ export const ContactFields: React.FC<ContactFieldsProps> = ({
       type="email"
       validationType="email"
       required={required}
+      error={validationErrors.email}
+      touched={touchedFields.email}
     />
     <FormFieldValidated
       label="Téléphone"
@@ -62,6 +72,8 @@ export const ContactFields: React.FC<ContactFieldsProps> = ({
       onChange={onPhoneChange}
       type="tel"
       validationType="phone"
+      error={validationErrors.phone}
+      touched={touchedFields.phone}
     />
   </div>
 );
@@ -83,6 +95,10 @@ interface AddressFieldsProps {
   postalCodeError?: string;
   cityError?: string;
   required?: boolean;
+  showPostalCity?: boolean;
+  // Support validation proactive
+  validationErrors?: Record<string, ValidationResult>;
+  touchedFields?: Record<string, boolean>;
 }
 
 export const AddressFields: React.FC<AddressFieldsProps> = ({
@@ -97,57 +113,54 @@ export const AddressFields: React.FC<AddressFieldsProps> = ({
   addressError: _addressError,
   postalCodeError: _postalCodeError,
   cityError: _cityError,
-  required = false,
+  required = true,
+  showPostalCity = true,
+  validationErrors = {},
+  touchedFields = {},
 }) => (
   <div className="space-y-4">
     <FormFieldValidated
       label="Adresse"
       value={address}
       onChange={onAddressChange}
-      type="text"
       validationType="address"
       required={required}
+      error={validationErrors.address}
+      touched={touchedFields.address}
     />
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <FormFieldValidated
-        label="Code postal"
-        value={postalCode}
-        onChange={onPostalCodeChange}
-        type="text"
-        validationType="postal-code"
-        required={required}
-      />
-      <FormFieldValidated
-        label="Ville"
-        value={city}
-        onChange={onCityChange}
-        type="text"
-        validationType="name"
-        required={required}
-      />
-      {onCountryChange && (
-        <SelectField
-          label="Pays"
-          value={country}
-          onChange={onCountryChange}
-          options={[
-            { value: 'FR', label: 'France' },
-            { value: 'BE', label: 'Belgique' },
-            { value: 'LU', label: 'Luxembourg' },
-            { value: 'CH', label: 'Suisse' },
-            { value: 'ES', label: 'Espagne' },
-            { value: 'IT', label: 'Italie' },
-            { value: 'DE', label: 'Allemagne' },
-            { value: 'NL', label: 'Pays-Bas' },
-            { value: 'GB', label: 'Royaume-Uni' },
-            { value: 'US', label: 'États-Unis' },
-            { value: 'CA', label: 'Canada' },
-            { value: 'AU', label: 'Australie' },
-          ]}
-          aria-label="Pays"
+
+    {showPostalCity && (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FormFieldValidated
+          label="Code Postal"
+          value={postalCode}
+          onChange={onPostalCodeChange}
+          validationType="postal-code"
+          required={required}
+          error={validationErrors.postalCode}
+          touched={touchedFields.postalCode}
         />
-      )}
-    </div>
+        <FormFieldValidated
+          label="Ville"
+          value={city}
+          onChange={onCityChange}
+          validationType="name"
+          required={required}
+          error={validationErrors.city}
+          touched={touchedFields.city}
+        />
+        {onCountryChange && (
+          <FormFieldValidated
+            label="Pays"
+            value={country}
+            onChange={onCountryChange}
+            validationType="name"
+            error={validationErrors.country}
+            touched={touchedFields.country}
+          />
+        )}
+      </div>
+    )}
   </div>
 );
 

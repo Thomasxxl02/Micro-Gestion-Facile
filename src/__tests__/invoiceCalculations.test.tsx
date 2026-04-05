@@ -1,20 +1,20 @@
-import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
+import { describe, expect, it } from 'vitest';
 import {
-  calculateInvoiceTax,
-  calculateHTFromTTC,
-  calculateMicroEntrepreneurCharges,
-  calculateFullInvoice,
-  calculateFullInvoiceTotals,
   applyDiscount,
   applyFixedDiscount,
+  calculateFullInvoice,
+  calculateFullInvoiceTotals,
+  calculateHTFromTTC,
+  calculateInvoiceTax,
+  calculateMicroEntrepreneurCharges,
   formatCurrency,
-  roundToCents,
   isWithinMicroThreshold,
+  MICRO_INCOME_TAX_RATE,
   MICRO_THRESHOLDS,
+  roundToCents,
   SOCIAL_CONTRIBUTION_RATES,
   VAT_RATES,
-  MICRO_INCOME_TAX_RATE,
 } from '../lib/invoiceCalculations';
 
 /**
@@ -270,7 +270,7 @@ describe('calculateMicroEntrepreneurCharges', () => {
       expect(result.socialContributions).toEqual(expectedCotisations);
     });
 
-    it("calcule correctement l'impôt sur le revenu (22%)", () => {
+    it("calcule correctement l'impôt sur le revenu (PFL 2.2% pour SERVICES)", () => {
       const result = calculateMicroEntrepreneurCharges(10000, 'SERVICES');
 
       const expectedTax = new Decimal(10000 * MICRO_INCOME_TAX_RATE).toDecimalPlaces(2);
@@ -299,7 +299,7 @@ describe('calculateMicroEntrepreneurCharges', () => {
       );
     });
 
-    it('applique le taux de cotisations SALES (12.5%)', () => {
+    it('applique le taux de cotisations SALES (12.3%)', () => {
       const result = calculateMicroEntrepreneurCharges(10000, 'SALES');
 
       const expectedCotisations = new Decimal(10000)
@@ -321,7 +321,7 @@ describe('calculateMicroEntrepreneurCharges', () => {
       expect(result.socialContributions).toEqual(expectedCotisations);
     });
 
-    it('applique le taux de cotisations CRAFTS (24.8%)', () => {
+    it('applique le taux de cotisations CRAFTS (21.2%)', () => {
       const result = calculateMicroEntrepreneurCharges(10000, 'CRAFTS');
 
       expect(result.socialContributions).toEqual(
@@ -353,17 +353,17 @@ describe('calculateMicroEntrepreneurCharges', () => {
     });
 
     it('détecte pas de dépassement SALES en dessous du seuil', () => {
-      const result = calculateMicroEntrepreneurCharges(311900, 'SALES');
+      const result = calculateMicroEntrepreneurCharges(100000, 'SALES');
 
       expect(result.exceedsThreshold).toBe(false);
       expect(result.excessAmount).toEqual(new Decimal('0'));
     });
 
     it('détecte le dépassement SALES au-dessus du seuil', () => {
-      const result = calculateMicroEntrepreneurCharges(400000, 'SALES');
+      const result = calculateMicroEntrepreneurCharges(300000, 'SALES');
 
       expect(result.exceedsThreshold).toBe(true);
-      expect(result.excessAmount).toEqual(new Decimal('88100'));
+      expect(result.excessAmount).toEqual(new Decimal('111300'));
     });
 
     it('détecte pas de dépassement avec type par défaut (SERVICES)', () => {
@@ -769,15 +769,15 @@ describe('isWithinMicroThreshold', () => {
 // ============================================================================
 
 describe('Constantes fiscales', () => {
-  it('MICRO_THRESHOLDS contient les bonnes valeurs', () => {
+  it('MICRO_THRESHOLDS contient les bonnes valeurs 2026', () => {
     expect(MICRO_THRESHOLDS.SERVICES).toBe(77_700);
-    expect(MICRO_THRESHOLDS.SALES).toBe(311_900);
+    expect(MICRO_THRESHOLDS.SALES).toBe(188_700);
   });
 
-  it('SOCIAL_CONTRIBUTION_RATES contient les bonnes valeurs', () => {
+  it('SOCIAL_CONTRIBUTION_RATES contient les bonnes valeurs URSSAF 2026', () => {
     expect(SOCIAL_CONTRIBUTION_RATES.SERVICES).toBe(0.232);
-    expect(SOCIAL_CONTRIBUTION_RATES.SALES).toBe(0.125);
-    expect(SOCIAL_CONTRIBUTION_RATES.CRAFTS).toBe(0.248);
+    expect(SOCIAL_CONTRIBUTION_RATES.SALES).toBe(0.123);
+    expect(SOCIAL_CONTRIBUTION_RATES.CRAFTS).toBe(0.212);
   });
 
   it('VAT_RATES contient les taux français', () => {
@@ -787,8 +787,8 @@ describe('Constantes fiscales', () => {
     expect(VAT_RATES.EXEMPT).toBe(0);
   });
 
-  it('MICRO_INCOME_TAX_RATE est correct', () => {
-    expect(MICRO_INCOME_TAX_RATE).toBe(0.22);
+  it('MICRO_INCOME_TAX_RATE est correct (PFL BNC 2.2%)', () => {
+    expect(MICRO_INCOME_TAX_RATE).toBe(0.022);
   });
 });
 

@@ -1,5 +1,5 @@
-import React from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
+import React from 'react';
 
 /**
  * Composant ConfirmDialog - Accessibilité intégrée, remplace window.confirm()
@@ -36,7 +36,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       role="presentation"
     >
       <div
-        className="bg-white dark:bg-brand-900 rounded-[2rem] shadow-2xl max-w-md w-full p-8 border border-brand-100 dark:border-brand-800"
+        className="bg-white dark:bg-brand-900 rounded-4xl shadow-2xl max-w-md w-full p-8 border border-brand-100 dark:border-brand-800"
         role="alertdialog"
         aria-labelledby="confirm-title"
         aria-describedby="confirm-description"
@@ -128,7 +128,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
       role="presentation"
     >
       <div
-        className="bg-white dark:bg-brand-900 rounded-[2rem] shadow-2xl max-w-md w-full p-8 border border-brand-100 dark:border-brand-800"
+        className="bg-white dark:bg-brand-900 rounded-4xl shadow-2xl max-w-md w-full p-8 border border-brand-100 dark:border-brand-800"
         role="alertdialog"
         aria-labelledby="alert-title"
         aria-describedby="alert-description"

@@ -12,7 +12,7 @@ const ai = new GoogleGenAI({ apiKey });
  */
 function sanitizeForPrompt(input: string, maxLength = 1000): string {
   return String(input)
-    .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/gu, ' ')
+    .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/gu, ' ') // eslint-disable-line no-control-regex
     .trim()
     .slice(0, maxLength);
 }
@@ -34,7 +34,7 @@ export const generateAssistantResponse = async (
   context?: string
 ): Promise<string> => {
   try {
-    const model = 'gemini-3-flash-preview';
+    const model = 'gemini-2.0-flash';
 
     // System instruction contains ONLY trusted static instructions — no user data
     const systemPrompt = `Tu es un assistant expert pour les auto-entrepreneurs en France.
@@ -76,7 +76,7 @@ export const suggestInvoiceDescription = async (
      La description doit être claire et formelle. Ne donne que la description, pas de guillemets.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: prompt,
     });
 
@@ -98,7 +98,7 @@ export const generateInvoiceItemsFromPrompt = async (
     Exemple : [{"description": "Consulting IT", "quantity": 3, "unitPrice": 500, "unit": "jour"}]`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: sanitizeForPrompt(prompt, 2000),
       config: {
         systemInstruction: systemPrompt,
@@ -143,7 +143,7 @@ export const draftEmail = async (context: {
     Le corps de l'email doit être bien structuré avec des sauts de ligne.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -181,7 +181,7 @@ export const analyzeReceipt = async (
     Réponds UNIQUEMENT avec l'objet JSON.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: {
         parts: [{ text: prompt }, { inlineData: { data: base64Image, mimeType } }],
       },
@@ -211,7 +211,7 @@ export const predictRevenue = async (history: Invoice[], quotes: Invoice[]): Pro
     Réponds de manière concise en français.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: prompt,
     });
 

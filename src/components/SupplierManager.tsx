@@ -7,6 +7,7 @@ import type { Expense, Supplier } from '../types';
 import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
 import EntityModal from './EntityModal';
 import { FormFieldValidated } from './FormFieldValidated';
+import { TextAreaField } from './FormFields';
 
 interface SupplierManagerProps {
   suppliers: Supplier[];
@@ -33,8 +34,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
 
   const {
     data: validatedData,
-    errors: _validationErrors,
-    handleChange,
+    errors: validationErrors,
+    touched: touchedFields,
+    handleChange: handleFormChange,
     validate: validateAll,
   } = useFormValidation(form.formData || ({} as Supplier), SupplierSchema, {
     validateOnChange: true,
@@ -385,66 +387,99 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             name={validatedData.name || ''}
             email={validatedData.email || ''}
             phone={validatedData.phone || ''}
-            onNameChange={(val) => handleChange('name')(val)}
-            onEmailChange={(val) => handleChange('email')(val)}
-            onPhoneChange={(val) => handleChange('phone')(val)}
+            onNameChange={(val) => handleFormChange('name')(val)}
+            onEmailChange={(val) => handleFormChange('email')(val)}
+            onPhoneChange={(val) => handleFormChange('phone')(val)}
             contactNameLabel="Nom du fournisseur"
             required={true}
+            validationErrors={validationErrors}
+            touchedFields={touchedFields}
           />
 
           <div className="space-y-4">
             <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 uppercase tracking-wider">
-              Identité Professionnelle
+              Identité Professionnelle & Liens
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
-                label="SIRET"
-                value={validatedData.siret || ''}
-                onChange={(val) => handleChange('siret')(val)}
-                validationType="siret"
-              />
-              <FormFieldValidated
                 label="N° TVA (optionnel)"
                 value={validatedData.tvaNumber || ''}
-                onChange={(val) => handleChange('tvaNumber')(val)}
+                onChange={(val) => handleFormChange('tvaNumber')(val)}
                 validationType="vat"
+                error={validationErrors.tvaNumber}
+                touched={touchedFields.tvaNumber}
+              />
+              <FormFieldValidated
+                label="Site Web"
+                value={validatedData.website || ''}
+                onChange={(val) => handleFormChange('website')(val)}
+                validationType="website"
+                error={validationErrors.website}
+                touched={touchedFields.website}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="IBAN"
                 value={validatedData.phone || ''}
-                onChange={(val) => handleChange('phone')(val)}
+                onChange={(val) => handleFormChange('phone')(val)}
                 validationType="iban"
                 placeholder="FR14..."
+                error={validationErrors.iban}
+                touched={touchedFields.iban}
               />
               <FormFieldValidated
-                label="Site Web"
-                value={validatedData.website || ''}
-                onChange={(val) => handleChange('website')(val)}
-                validationType="website"
+                label="Catégorie"
+                value={validatedData.category || ''}
+                onChange={(val) => handleFormChange('category')(val)}
+                type="text"
+                validationType="name"
+                placeholder="Ex: Matériel, Logiciel..."
+                error={validationErrors.category}
+                touched={touchedFields.category}
               />
             </div>
           </div>
 
           <div className="space-y-4">
             <h4 className="text-xs font-bold text-brand-600 dark:text-brand-300 uppercase tracking-wider">
-              Localisation & Paiement
+              Localisation & Notes
             </h4>
             <AddressFields
               address={validatedData.address || ''}
               postalCode={''}
               city={''}
-              onAddressChange={(val) => handleChange('address')(val)}
+              onAddressChange={(val) => handleFormChange('address')(val)}
               onPostalCodeChange={() => undefined}
               onCityChange={() => undefined}
+              showPostalCity={false}
+              validationErrors={validationErrors}
+              touchedFields={touchedFields}
             />
-            <FormFieldValidated
-              label="Délai de paiement (jours)"
-              value={validatedData.paymentTerms || '30'}
-              onChange={(val) => handleChange('paymentTerms')(val)}
-              type="number"
-              validationType="amount"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormFieldValidated
+                label="Délai de paiement (jours)"
+                value={validatedData.paymentTerms || '30'}
+                onChange={(val) => handleFormChange('paymentTerms')(val)}
+                type="number"
+                validationType="amount"
+                error={validationErrors.paymentTerms}
+                touched={touchedFields.paymentTerms}
+              />
+              <FormFieldValidated
+                label="SIRET"
+                value={validatedData.siret || ''}
+                onChange={(val) => handleFormChange('siret')(val)}
+                validationType="siret"
+                error={validationErrors.siret}
+                touched={touchedFields.siret}
+              />
+            </div>
+            <TextAreaField
+              label="Notes"
+              value={validatedData.notes || ''}
+              onChange={(val) => handleFormChange('notes')(val)}
+              rows={3}
             />
           </div>
         </div>

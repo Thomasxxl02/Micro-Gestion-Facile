@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SettingsManager - Gestion du profil et des paramètres d'entreprise
  * ✅ Accessibilité intégrée (WCAG 2.1 AA)
  * ✅ Composants modulaires (FormFields, Dialogs)
@@ -17,11 +17,14 @@ import {
   Palette,
   Phone as PhoneIcon,
   ShieldCheck,
+  Trash2,
   Upload,
   Wallet,
   Zap,
 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { parseImportJSON } from '../lib/exportUtils';
 import { useAppStore } from '../store/appStore';
 import type {
   Client,
@@ -32,7 +35,7 @@ import type {
   Supplier,
   UserProfile,
 } from '../types';
-import { AlertDialog, ConfirmDialog } from './Dialogs';
+import { ConfirmDialog } from './Dialogs';
 import {
   ColorPicker,
   FormField,
@@ -63,6 +66,8 @@ interface SettingsManagerProps {
   };
 }
 
+const SETTINGS_TABS = ['profile', 'billing', 'preferences', 'security', 'data'] as const;
+
 const SettingsManager: React.FC<SettingsManagerProps> = ({
   userProfile,
   setUserProfile,
@@ -76,6 +81,37 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   >('profile');
   const { addLog } = useAppStore();
 
+  // ─── KEYBOARD NAVIGATION (ARIA tablist pattern) ───
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const idx = SETTINGS_TABS.indexOf(activeTab as (typeof SETTINGS_TABS)[number]);
+    const next = (() => {
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault();
+          return (idx + 1) % SETTINGS_TABS.length;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          return (idx - 1 + SETTINGS_TABS.length) % SETTINGS_TABS.length;
+        case 'Home':
+          e.preventDefault();
+          return 0;
+        case 'End':
+          e.preventDefault();
+          return SETTINGS_TABS.length - 1;
+        default:
+          return null;
+      }
+    })();
+    if (next === null) {
+      return;
+    }
+    setActiveTab(SETTINGS_TABS[next]);
+    const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    buttons[next]?.focus();
+  };
+
   // ─── DIALOG STATES ───
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -85,12 +121,52 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     onConfirm?: () => void;
   }>({ isOpen: false, title: '', description: '' });
 
-  const [alertDialog, setAlertDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    description: string;
-    type: 'success' | 'error' | 'info';
-  }>({ isOpen: false, title: '', description: '', type: 'info' });
+  const [isDirty, setIsDirty] = useState(false);
+
+  // ─── VALIDATION STATE ───
+  const [validationErrors, setValidationErrors] = useState<{
+    siret?: string;
+    bankAccount?: string;
+    email?: string;
+  }>({});
+
+  // ─── LAST BACKUP DATE ───
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(
+    localStorage.getItem('mgf_last_backup_date')
+  );
+
+  // ─── VALIDATION FUNCTIONS ───
+  const validateSIRET = (value: string): string | undefined => {
+    if (!value) {
+      return undefined;
+    }
+    const digits = value.replace(/[\s-]/g, '');
+    if (!/^\d{14}$/.test(digits)) {
+      return 'Le SIRET doit contenir exactement 14 chiffres';
+    }
+    return undefined;
+  };
+
+  const validateIBAN = (value: string): string | undefined => {
+    if (!value) {
+      return undefined;
+    }
+    const normalized = value.replace(/\s/g, '').toUpperCase();
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(normalized)) {
+      return 'Format IBAN invalide (ex : FR76 3000 6000 0112 3456 7890 189)';
+    }
+    return undefined;
+  };
+
+  const validateEmail = (value: string): string | undefined => {
+    if (!value) {
+      return undefined;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return 'Adresse email invalide';
+    }
+    return undefined;
+  };
 
   // ─── HANDLERS ───
   const handleChange = (
@@ -99,17 +175,22 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   ) => {
     const updatedProfile = { ...userProfile, [field]: value };
     setUserProfile(updatedProfile);
-    if (onSaveProfile) {
-      onSaveProfile(updatedProfile);
+    setIsDirty(true);
+    if (field === 'siret') {
+      setValidationErrors((prev) => ({ ...prev, siret: validateSIRET(value as string) }));
+    } else if (field === 'bankAccount') {
+      setValidationErrors((prev) => ({ ...prev, bankAccount: validateIBAN(value as string) }));
+    } else if (field === 'email') {
+      setValidationErrors((prev) => ({ ...prev, email: validateEmail(value as string) }));
     }
-    showSaveMessage('✓ Profil sauvegardé');
   };
 
-  const showSaveMessage = (message: string) => {
-    setAlertDialog({ isOpen: true, title: message, description: '', type: 'success' });
-    setTimeout(() => {
-      setAlertDialog((prev) => ({ ...prev, isOpen: false }));
-    }, 2000);
+  const handleSave = () => {
+    if (onSaveProfile) {
+      onSaveProfile(userProfile);
+    }
+    toast.success('Profil sauvegardé');
+    setIsDirty(false);
   };
 
   // ─── EXPORT / IMPORT HANDLERS ───
@@ -122,8 +203,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     link.download = `backup_micro_gestion_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    const now = new Date().toISOString();
+    localStorage.setItem('mgf_last_backup_date', now);
+    setLastBackupDate(now);
     addLog('Export complet des données effectué', 'DATA', 'INFO');
-    showSaveMessage('✓ Données exportées avec succès');
+    toast.success('Données exportées avec succès');
   };
 
   const handleImportAll = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,36 +218,42 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      const result = parseImportJSON(text);
 
-      if (data.profile) {
-        setUserProfile(data.profile);
+      if (!result.valid || !result.data) {
+        addLog("Échec de l'importation de données", 'DATA', 'ERROR');
+        toast.error("Erreur d'importation", {
+          description: `Fichier invalide : ${result.error ?? 'Format JSON non reconnu'}`,
+        });
+        return;
+      }
+
+      const { data } = result;
+      if (data.userProfile) {
+        setUserProfile(data.userProfile as UserProfile);
       }
       if (data.invoices) {
-        setAllData.setInvoices(data.invoices);
+        setAllData.setInvoices(data.invoices as Invoice[]);
       }
       if (data.clients) {
-        setAllData.setClients(data.clients);
+        setAllData.setClients(data.clients as Client[]);
       }
       if (data.suppliers) {
-        setAllData.setSuppliers(data.suppliers);
+        setAllData.setSuppliers(data.suppliers as Supplier[]);
       }
       if (data.products) {
-        setAllData.setProducts(data.products);
+        setAllData.setProducts(data.products as Product[]);
       }
       if (data.expenses) {
-        setAllData.setExpenses(data.expenses);
+        setAllData.setExpenses(data.expenses as Expense[]);
       }
 
       addLog('Importation de données externe réussie', 'DATA', 'INFO');
-      showSaveMessage('✓ Données importées avec succès');
+      toast.success('Données importées avec succès');
     } catch {
       addLog("Échec de l'importation de données", 'DATA', 'ERROR');
-      setAlertDialog({
-        isOpen: true,
-        title: "⚠️ Erreur d'importation",
+      toast.error("Erreur d'importation", {
         description: 'Le fichier est invalide ou corrompu. Vérifiez le format JSON.',
-        type: 'error',
       });
     }
   };
@@ -236,7 +326,27 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         setAllData.setProducts([...allData.products, ...sampleProducts]);
         setAllData.setInvoices([...allData.invoices, ...sampleInvoices]);
         setConfirmDialog({ isOpen: false, title: '', description: '' });
-        showSaveMessage('✓ Données de test générées');
+        toast.success('Données de test générées');
+      },
+    });
+  };
+
+  const handleResetData = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Réinitialiser toutes les données ?',
+      description:
+        'Cette action est irréversible. Toutes les factures, clients, fournisseurs, produits et dépenses seront supprimés définitivement. Votre profil sera conservé.',
+      isDangerous: true,
+      onConfirm: () => {
+        setAllData.setInvoices([]);
+        setAllData.setClients([]);
+        setAllData.setSuppliers([]);
+        setAllData.setProducts([]);
+        setAllData.setExpenses([]);
+        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        addLog('Réinitialisation complète des données effectuée', 'DATA', 'WARNING');
+        toast.success('Données réinitialisées');
       },
     });
   };
@@ -258,78 +368,136 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         <div
           role="tablist"
           aria-label="Paramètres de l'application"
+          onKeyDown={handleTabKeyDown}
           className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar"
         >
-          <button
-            id="tab-profile"
-            aria-controls="panel-profile"
-            onClick={() => setActiveTab('profile')}
-            role="tab"
-            aria-selected="true"
-            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-              activeTab === 'profile'
-                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-            }`}
-          >
-            Profil
-          </button>
-          <button
-            id="tab-billing"
-            aria-controls="panel-billing"
-            onClick={() => setActiveTab('billing')}
-            role="tab"
-            aria-selected="false"
-            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-              activeTab === 'billing'
-                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-            }`}
-          >
-            Facturation
-          </button>
-          <button
-            id="tab-preferences"
-            aria-controls="panel-preferences"
-            onClick={() => setActiveTab('preferences')}
-            role="tab"
-            aria-selected="false"
-            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-              activeTab === 'preferences'
-                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-            }`}
-          >
-            Style
-          </button>
-          <button
-            id="tab-security"
-            aria-controls="panel-security"
-            onClick={() => setActiveTab('security')}
-            role="tab"
-            aria-selected="false"
-            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-              activeTab === 'security'
-                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-            }`}
-          >
-            Sécurité
-          </button>
-          <button
-            id="tab-data"
-            aria-controls="panel-data"
-            onClick={() => setActiveTab('data')}
-            role="tab"
-            aria-selected="false"
-            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-              activeTab === 'data'
-                ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
-            }`}
-          >
-            Données
-          </button>
+          {activeTab === 'profile' ? (
+            <button
+              id="tab-profile-active"
+              aria-controls="panel-profile"
+              onClick={() => setActiveTab('profile')}
+              role="tab"
+              aria-selected="true"
+              tabIndex={0}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+            >
+              Profil
+            </button>
+          ) : (
+            <button
+              id="tab-profile-inactive"
+              aria-controls="panel-profile"
+              onClick={() => setActiveTab('profile')}
+              role="tab"
+              aria-selected="false"
+              tabIndex={-1}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+            >
+              Profil
+            </button>
+          )}
+
+          {activeTab === 'billing' ? (
+            <button
+              id="tab-billing-active"
+              aria-controls="panel-billing"
+              onClick={() => setActiveTab('billing')}
+              role="tab"
+              aria-selected="true"
+              tabIndex={0}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+            >
+              Facturation
+            </button>
+          ) : (
+            <button
+              id="tab-billing-inactive"
+              aria-controls="panel-billing"
+              onClick={() => setActiveTab('billing')}
+              role="tab"
+              aria-selected="false"
+              tabIndex={-1}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+            >
+              Facturation
+            </button>
+          )}
+
+          {activeTab === 'preferences' ? (
+            <button
+              id="tab-preferences-active"
+              aria-controls="panel-preferences"
+              onClick={() => setActiveTab('preferences')}
+              role="tab"
+              aria-selected="true"
+              tabIndex={0}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+            >
+              Style
+            </button>
+          ) : (
+            <button
+              id="tab-preferences-inactive"
+              aria-controls="panel-preferences"
+              onClick={() => setActiveTab('preferences')}
+              role="tab"
+              aria-selected="false"
+              tabIndex={-1}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+            >
+              Style
+            </button>
+          )}
+
+          {activeTab === 'security' ? (
+            <button
+              id="tab-security-active"
+              onClick={() => setActiveTab('security')}
+              role="tab"
+              aria-selected="true"
+              tabIndex={0}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+            >
+              Sécurité
+            </button>
+          ) : (
+            <button
+              id="tab-security-inactive"
+              onClick={() => setActiveTab('security')}
+              role="tab"
+              aria-selected="false"
+              tabIndex={-1}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+            >
+              Sécurité
+            </button>
+          )}
+
+          {activeTab === 'data' ? (
+            <button
+              id="tab-data-active"
+              aria-controls="panel-data"
+              onClick={() => setActiveTab('data')}
+              role="tab"
+              aria-selected="true"
+              tabIndex={0}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+            >
+              Données
+            </button>
+          ) : (
+            <button
+              id="tab-data-inactive"
+              aria-controls="panel-data"
+              onClick={() => setActiveTab('data')}
+              role="tab"
+              aria-selected="false"
+              tabIndex={-1}
+              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+            >
+              Données
+            </button>
+          )}
         </div>
       </div>
 
@@ -395,6 +563,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     onChange={(val) => handleChange('siret', val)}
                     placeholder="123 456 789 00012"
                     icon={Hash}
+                    error={validationErrors.siret}
+                    description="14 chiffres obligatoires (art. L123-1 Code de commerce)"
                   />
                 </div>
               </div>
@@ -427,6 +597,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       value={userProfile.email}
                       onChange={(val) => handleChange('email', val)}
                       icon={MailIcon}
+                      error={validationErrors.email}
                     />
                     <FormField
                       label="Téléphone"
@@ -510,8 +681,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="IBAN"
                       value={userProfile.bankAccount || ''}
                       onChange={(val) => handleChange('bankAccount', val)}
-                      placeholder="FR76 ..."
+                      placeholder="FR76 3000 6000 0112 3456 7890 189"
                       icon={CreditCard}
+                      error={validationErrors.bankAccount}
                     />
                     <FormField
                       label="BIC / SWIFT"
@@ -536,8 +708,80 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="TVA par défaut (%)"
                       type="number"
                       value={String(userProfile.defaultVatRate || 0)}
-                      onChange={(val) => handleChange('defaultVatRate', Number.parseFloat(val))}
+                      onChange={(val) => {
+                        const parsed = Number.parseFloat(val);
+                        handleChange('defaultVatRate', Number.isNaN(parsed) ? 0 : parsed);
+                      }}
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Numérotation des Documents ─── */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Hash size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                      Numérotation des Documents
+                    </h3>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
+                      Conformité fiscale française — art. L441-9 du Code de commerce
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField
+                      label="Préfixe des Factures"
+                      value={userProfile.invoicePrefix || 'FAC-'}
+                      onChange={(val) => handleChange('invoicePrefix', val)}
+                      placeholder="FAC-2026-"
+                      icon={Hash}
+                      description="Préfixe auto-ajouté avant le numéro séquentiel"
+                    />
+                    <FormField
+                      label="Prochain N° de Facture"
+                      type="number"
+                      value={String(userProfile.invoiceStartNumber ?? 1)}
+                      onChange={(val) => {
+                        const parsed = parseInt(val, 10);
+                        handleChange(
+                          'invoiceStartNumber',
+                          Number.isNaN(parsed) ? 1 : Math.max(1, parsed)
+                        );
+                      }}
+                      min={1}
+                      placeholder="1"
+                      description="Numéro de la prochaine facture émise"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField
+                      label="Préfixe des Devis"
+                      value={userProfile.quotePrefix || 'DEV-'}
+                      onChange={(val) => handleChange('quotePrefix', val)}
+                      placeholder="DEV-2026-"
+                      icon={Hash}
+                    />
+                    <FormField
+                      label="Préfixe des Avoirs"
+                      value={userProfile.creditNotePrefix || 'AV-'}
+                      onChange={(val) => handleChange('creditNotePrefix', val)}
+                      placeholder="AV-2026-"
+                      icon={Hash}
+                    />
+                  </div>
+                  <div className="p-4 bg-brand-50/50 dark:bg-brand-800/30 rounded-2xl border border-dashed border-brand-200 dark:border-brand-700">
+                    <p className="text-[10px] uppercase font-bold text-brand-400 mb-2">
+                      Aperçu du numéro généré
+                    </p>
+                    <p className="text-base font-mono font-bold text-brand-700 dark:text-brand-300">
+                      {userProfile.invoicePrefix || 'FAC-'}
+                      {String(userProfile.invoiceStartNumber ?? 1).padStart(3, '0')}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -546,7 +790,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
           {/* PREFERENCES TAB */}
           {activeTab === 'preferences' && (
-            <div id="panel-preferences" role="tabpanel" className="space-y-8 animate-slide-up">
+            <div
+              id="panel-preferences"
+              role="tabpanel"
+              aria-labelledby="tab-preferences"
+              className="space-y-8 animate-slide-up"
+            >
               {/* Colors Card */}
               <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
@@ -731,7 +980,46 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
           {/* DATA TAB */}
           {activeTab === 'data' && (
-            <div id="panel-data" role="tabpanel" className="space-y-8 animate-slide-up">
+            <div
+              id="panel-data"
+              role="tabpanel"
+              aria-labelledby="tab-data"
+              className="space-y-8 animate-slide-up"
+            >
+              {/* Résumé statistiques */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <h3 className="text-sm font-bold text-brand-900 dark:text-white mb-6">
+                  Résumé des données
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {(
+                    [
+                      { label: 'Factures', count: allData.invoices.length },
+                      { label: 'Clients', count: allData.clients.length },
+                      { label: 'Fournisseurs', count: allData.suppliers.length },
+                      { label: 'Produits', count: allData.products.length },
+                      { label: 'Dépenses', count: allData.expenses.length },
+                    ] as { label: string; count: number }[]
+                  ).map(({ label, count }) => (
+                    <div
+                      key={label}
+                      className="p-4 bg-brand-50/50 dark:bg-brand-800/30 rounded-2xl text-center"
+                    >
+                      <p className="text-2xl font-bold text-brand-900 dark:text-white">{count}</p>
+                      <p className="text-[10px] uppercase font-bold text-brand-400 mt-1">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                {lastBackupDate && (
+                  <p className="text-[11px] text-brand-400 mt-5 text-center">
+                    Dernier export :{' '}
+                    <span className="font-semibold">
+                      {new Date(lastBackupDate).toLocaleString('fr-FR')}
+                    </span>
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <button
                   onClick={handleExportAll}
@@ -754,6 +1042,26 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   aria-label="Sélectionner un fichier de sauvegarde JSON pour l'importation"
                 />
               </div>
+              <div className="pt-4 border-t border-brand-100 dark:border-brand-800 space-y-3">
+                <button
+                  onClick={generateSampleData}
+                  className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-brand-200 dark:border-brand-700 rounded-2xl text-brand-500 dark:text-brand-400 font-bold text-xs hover:border-brand-400 hover:text-brand-700 dark:hover:text-brand-200 transition-colors"
+                >
+                  <Zap size={16} /> Données de Test
+                </button>
+                <p className="text-[11px] text-brand-400 text-center">
+                  Ajoute des clients, produits et factures fictives.
+                </p>
+                <button
+                  onClick={handleResetData}
+                  className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-red-200 dark:border-red-900/50 rounded-2xl text-red-500 dark:text-red-400 font-bold text-xs hover:border-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <Trash2 size={16} /> Réinitialiser toutes les données
+                </button>
+                <p className="text-[11px] text-brand-400 text-center">
+                  Supprime définitivement toutes les factures, clients, fournisseurs et produits.
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -761,36 +1069,139 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         {/* PREVIEW COLUMN */}
         <div className="xl:col-span-1">
           <div className="sticky top-10">
-            <div className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border border-brand-100 dark:border-brand-800 min-h-125 flex flex-col relative overflow-hidden">
+            <div
+              className={`bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 border-brand-100 dark:border-brand-800 min-h-125 flex flex-col relative overflow-hidden border-t-[${userProfile.primaryColor ?? '#102a43'}]`}
+            >
               <div className="border-b border-brand-100 dark:border-brand-800 pb-8 mb-8">
+                {userProfile.logoUrl ? (
+                  <img
+                    src={userProfile.logoUrl}
+                    alt={`Logo ${userProfile.companyName}`}
+                    className="h-12 object-contain mb-3"
+                  />
+                ) : (
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3 bg-[${userProfile.primaryColor ?? '#102a43'}]`}
+                    aria-hidden="true"
+                  >
+                    {(userProfile.companyName || 'E').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <h2 className="font-bold text-brand-900 dark:text-white text-xl">
                   {userProfile.companyName || 'Votre Entreprise'}
                 </h2>
-                <div className="mt-4 space-y-1 text-[11px] text-brand-500">
-                  <p>{userProfile.email}</p>
-                  <p>{userProfile.phone}</p>
-                </div>
+
+                {/* Contenu contextuel selon l'onglet actif */}
+                {activeTab === 'profile' && (
+                  <div className="mt-4 space-y-1 text-[11px] text-brand-500">
+                    {userProfile.email && <p>{userProfile.email}</p>}
+                    {userProfile.phone && <p>{userProfile.phone}</p>}
+                    {userProfile.address && <p className="line-clamp-2">{userProfile.address}</p>}
+                  </div>
+                )}
+                {activeTab === 'billing' && (
+                  <div className="mt-4 space-y-1.5 text-[11px] text-brand-500">
+                    <p>
+                      Régime :{' '}
+                      <span className="font-semibold">{userProfile.taxSystem || 'MICRO-BNC'}</span>
+                    </p>
+                    {userProfile.bankAccount && (
+                      <p>
+                        IBAN :{' '}
+                        <span className="font-mono">
+                          ···· {userProfile.bankAccount.replace(/\s/g, '').slice(-4)}
+                        </span>
+                      </p>
+                    )}
+                    <p>
+                      N° facture :{' '}
+                      <span className="font-mono font-semibold">
+                        {userProfile.invoicePrefix || 'FAC-'}
+                        {String(userProfile.invoiceStartNumber ?? 1).padStart(3, '0')}
+                      </span>
+                    </p>
+                    {userProfile.isVatExempt && (
+                      <p className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        ✓ Franchise TVA (art. 293 B)
+                      </p>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'preferences' && (
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-lg border border-brand-100 dark:border-brand-700 bg-[${userProfile.primaryColor ?? '#102a43'}]`}
+                        aria-label={`Couleur primaire : ${userProfile.primaryColor ?? '#102a43'}`}
+                      />
+                      <p className="text-[11px] text-brand-500 font-mono">
+                        {userProfile.primaryColor ?? '#102a43'}
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-brand-500">
+                      Thème :{' '}
+                      <span className="font-semibold capitalize">
+                        {userProfile.theme || 'auto'}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {activeTab === 'data' && (
+                  <div className="mt-4 space-y-1 text-[11px] text-brand-500">
+                    <p>
+                      {allData.invoices.length} facture
+                      {allData.invoices.length !== 1 ? 's' : ''}
+                    </p>
+                    <p>
+                      {allData.clients.length} client
+                      {allData.clients.length !== 1 ? 's' : ''}
+                    </p>
+                    <p>
+                      {allData.suppliers.length} fournisseur
+                      {allData.suppliers.length !== 1 ? 's' : ''}
+                    </p>
+                    <p>
+                      {allData.products.length} produit
+                      {allData.products.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+                {activeTab === 'security' && (
+                  <div className="mt-4 text-[11px] text-brand-500">
+                    <p>
+                      {userProfile.securitySettings?.isTwoFactorEnabled
+                        ? '🔒 Authentification 2FA activée'
+                        : '🔓 2FA non configuré'}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="mt-auto pt-6 text-[9px] text-center text-brand-400">
                 <p className="font-bold uppercase">{userProfile.companyName}</p>
-                <p>{userProfile.address}</p>
-                <p className="mt-2">SIRET: {userProfile.siret}</p>
+                {userProfile.address && <p>{userProfile.address}</p>}
+                {userProfile.siret && <p className="mt-2">SIRET : {userProfile.siret}</p>}
               </div>
             </div>
 
             <div className="flex flex-col gap-4 mt-8">
-              <button
-                onClick={onSaveProfile ? () => onSaveProfile(userProfile) : undefined}
-                className="btn-primary w-full py-4 rounded-2xl"
-              >
-                Enregistrer
-              </button>
-              <button
-                onClick={generateSampleData}
-                className="w-full p-4 border-2 border-dashed border-brand-200 rounded-2xl text-brand-500 font-bold text-xs"
-              >
-                <Zap size={16} /> Données de Test
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleSave}
+                  className={`btn-primary w-full py-4 rounded-2xl transition-all ${
+                    isDirty ? 'ring-2 ring-amber-400 ring-offset-2' : ''
+                  }`}
+                >
+                  {isDirty && (
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400" />
+                  )}
+                  Enregistrer
+                </button>
+              </div>
+              {isDirty && (
+                <p className="text-[11px] text-center text-amber-600 dark:text-amber-400 -mt-1">
+                  Modifications non enregistrées
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -803,14 +1214,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         isDangerous={confirmDialog.isDangerous}
         onConfirm={confirmDialog.onConfirm || (() => {})}
         onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-      />
-
-      <AlertDialog
-        isOpen={alertDialog.isOpen}
-        title={alertDialog.title}
-        description={alertDialog.description}
-        type={alertDialog.type}
-        onClose={() => setAlertDialog({ ...alertDialog, isOpen: false })}
       />
     </div>
   );

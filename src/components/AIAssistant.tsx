@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   Bot,
@@ -31,20 +32,7 @@ const AIAssistant: React.FC = () => {
     },
   ]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [messageIdCounter, setMessageIdCounter] = useState(1);
-  const [complianceResults, setComplianceResults] = useState<{
-    isCompliant: boolean;
-    issues: string[];
-    suggestions: string[];
-  } | null>(null);
-  const [cashflowPrediction, setCashflowPrediction] = useState<{
-    predictedBalance: number;
-    confidence: number;
-    analysis: string;
-    riskLevel: string;
-  } | null>(null);
+  // État de chargement et données gérés par React Query ci-dessous
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -77,92 +65,86 @@ const AIAssistant: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Initial analysis when component mounts
-  useEffect(() => {
-    const performDeepAnalysis = async () => {
-      if (invoices.length === 0) {
-        return;
-      }
-      setIsAnalyzing(true);
-      try {
-        // Cashflow prediction
-        const prediction = await predictCashflowJ30(
-          invoices,
-          userProfile as unknown as Record<string, unknown>
-        );
-        setCashflowPrediction(prediction);
+  // Analyse initiale — mise en cache React Query (staleTime hérite du QueryClient)
+  // La clé inclut les IDs des factures pour invalider le cache si les données changent
+  const analysisQuery = useQuery({
+    queryKey: [
+      'gemini-analysis',
+      invoices
+        .map((i) => i.id)
+        .sort()
+        .join(','),
+    ],
+    queryFn: async () => {
+      const prediction = await predictCashflowJ30(
+        invoices,
+        userProfile as unknown as Record<string, unknown>
+      );
+      const lastInvoice = [...invoices].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      )[0];
+      const client = clients.find((c) => c.id === lastInvoice.clientId);
+      const compliance =
+        lastInvoice && client
+          ? await checkInvoiceCompliance(
+              lastInvoice,
+              userProfile as unknown as Record<string, unknown>,
+              client as unknown as Record<string, unknown>
+            )
+          : null;
+      return { prediction, compliance };
+    },
+    enabled: invoices.length > 0,
+    retry: 1,
+  });
 
-        // Compliance check for the last invoice
-        const lastInvoice = [...invoices].sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        )[0];
-        const client = clients.find((c) => c.id === lastInvoice.clientId);
-        if (lastInvoice && client) {
-          const compliance = await checkInvoiceCompliance(
-            lastInvoice,
-            userProfile as unknown as Record<string, unknown>,
-            client as unknown as Record<string, unknown>
-          );
-          setComplianceResults(compliance);
-        }
-      } catch (err) {
-        console.error('Analysis error:', err);
-      } finally {
-        setIsAnalyzing(false);
-      }
-    };
+  const cashflowPrediction = analysisQuery.data?.prediction ?? null;
+  const complianceResults = analysisQuery.data?.compliance ?? null;
+  const isAnalyzing = analysisQuery.isPending && invoices.length > 0;
 
-    performDeepAnalysis();
-  }, [invoices, clients, userProfile]); // Include dependencies for analysis
+  // Mutation React Query pour l'envoi de messages — retry désactivé (action utilisateur)
+  const sendMutation = useMutation({
+    mutationFn: async (userContent: string) => {
+      const context = messages
+        .slice(-3)
+        .map((m) => `${m.role}: ${m.content}`)
+        .join('\n');
+      return generateAssistantResponse(userContent, context);
+    },
+    onSuccess: (responseText: string) => {
+      const modelMsg: ChatMessage = {
+        id: `msg-model-${Date.now()}`,
+        role: 'model',
+        content: responseText,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, modelMsg]);
+    },
+    onError: () => {
+      const errorMsg: ChatMessage = {
+        id: `msg-error-${Date.now()}`,
+        role: 'model',
+        content: "Désolé, je n'ai pas pu traiter votre requête. Veuillez réessayer.",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    },
+  });
 
-  const handleSend = async (e?: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSend = (e?: React.SyntheticEvent<HTMLFormElement>) => {
     e?.preventDefault();
-    if (!input.trim() || isLoading) {
+    if (!input.trim() || sendMutation.isPending) {
       return;
     }
-
     const userMsg: ChatMessage = {
-      id: `msg-${messageIdCounter}`,
+      id: `msg-user-${Date.now()}`,
       role: 'user',
       content: input,
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
-    setIsLoading(true);
-    setMessageIdCounter((prev) => prev + 1);
-
-    try {
-      // Build context from last few messages
-      const context = messages
-        .slice(-3)
-        .map((m) => `${m.role}: ${m.content}`)
-        .join('\n');
-
-      const responseText = await generateAssistantResponse(userMsg.content, context);
-
-      const modelMsg: ChatMessage = {
-        id: `msg-${messageIdCounter + 1}`,
-        role: 'model',
-        content: responseText,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, modelMsg]);
-      setMessageIdCounter((prev) => prev + 2);
-    } catch (error) {
-      console.error('Error generating response:', error);
-      // Add an error message to the chat
-      const errorMsg: ChatMessage = {
-        id: `msg-${messageIdCounter + 1}`,
-        role: 'model',
-        content: "Désolé, je n'ai pas pu traiter votre requête. Veuillez réessayer.",
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-      setMessageIdCounter((prev) => prev + 2);
-    } finally {
-      setIsLoading(false);
-    }
+    sendMutation.mutate(input);
   };
 
   const renderCashflowCard = () => {
@@ -226,7 +208,7 @@ const AIAssistant: React.FC = () => {
           </div>
           {complianceResults.issues.length > 0 && (
             <ul className="text-[11px] text-brand-600 space-y-1 mb-2 bg-brand-50/50 p-2 rounded-lg">
-              {complianceResults.issues.slice(0, 2).map((issue) => (
+              {complianceResults.issues.slice(0, 2).map((issue: string) => (
                 <li key={issue.substring(0, 20)} className="flex gap-2">
                   <span className="text-brand-300">•</span>
                   {issue}
@@ -315,8 +297,8 @@ const AIAssistant: React.FC = () => {
                 max-w-[85%] px-5 py-3.5 text-sm leading-relaxed whitespace-pre-wrap shadow-sm
                 ${
                   msg.role === 'user'
-                    ? 'bg-brand-900 text-white rounded-[2rem] rounded-tr-sm'
-                    : 'bg-white text-brand-800 rounded-[2rem] rounded-tl-sm border border-brand-100'
+                    ? 'bg-brand-900 text-white rounded-4xl rounded-tr-sm'
+                    : 'bg-white text-brand-800 rounded-4xl rounded-tl-sm border border-brand-100'
                 }
                 `}
               >
@@ -331,12 +313,12 @@ const AIAssistant: React.FC = () => {
             </div>
           </div>
         ))}
-        {isLoading && (
+        {sendMutation.isPending && (
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-white border border-brand-200 text-brand-600 flex items-center justify-center shrink-0 shadow-sm">
               <Bot size={20} />
             </div>
-            <div className="bg-white px-5 py-4 rounded-[2rem] rounded-tl-sm border border-brand-100 shadow-sm">
+            <div className="bg-white px-5 py-4 rounded-4xl rounded-tl-sm border border-brand-100 shadow-sm">
               <div className="flex gap-1.5">
                 <div className="w-2 h-2 bg-accent-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-accent-400 rounded-full animate-bounce [animation-delay:-.15s]"></div>
@@ -356,11 +338,11 @@ const AIAssistant: React.FC = () => {
             placeholder="Posez une question (ex: Comment déclarer mon CA ?)"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={isLoading}
+            disabled={sendMutation.isPending}
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={sendMutation.isPending || !input.trim()}
             className="px-6 py-3.5 bg-brand-900 text-white rounded-2xl hover:bg-brand-800 disabled:opacity-50 disabled:hover:bg-brand-900 transition-all font-bold shadow-md flex items-center gap-2"
           >
             <span>Envoyer</span>

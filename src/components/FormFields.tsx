@@ -1,5 +1,5 @@
+import { Image as ImageIcon, type LucideIcon, Upload, X } from 'lucide-react';
 import React, { useRef } from 'react';
-import { type LucideIcon, Upload, X, Image as ImageIcon } from 'lucide-react';
 
 /**
  * Composant FormField réutilisable avec accessibilité intégrée
@@ -60,7 +60,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       <div className="flex items-center gap-2">
         <label
           htmlFor={fieldId}
-          className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
+          className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
         >
           {label}
           {required && (
@@ -74,7 +74,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       <div className="relative">
         {Icon && (
           <Icon
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300 pointer-events-none"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300 dark:text-brand-600 pointer-events-none"
             size={18}
             aria-hidden="true"
           />
@@ -92,20 +92,23 @@ export const FormField: React.FC<FormFieldProps> = ({
           min={min}
           max={max}
           step={step}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all ${error ? 'border-red-500 focus:ring-red-500/10' : ''} ${inputClassName}`}
+          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''} ${inputClassName}`}
         />
       </div>
 
       {description && (
         <p
           id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 mt-1 font-medium italic"
+          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
         >
           {description}
         </p>
       )}
       {error && (
-        <p id={`${fieldId}-error`} className="text-[10px] text-red-600 font-medium">
+        <p
+          id={`${fieldId}-error`}
+          className="text-[10px] text-red-600 dark:text-red-400 font-medium"
+        >
           ⚠️ {error}
         </p>
       )}
@@ -160,7 +163,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
     <div className={`space-y-1.5 ${className}`}>
       <label
         htmlFor={fieldId}
-        className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
+        className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
       >
         {label}
         {required && (
@@ -172,7 +175,10 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
 
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-4 top-4 text-brand-300 pointer-events-none" size={18} />
+          <Icon
+            className="absolute left-4 top-4 text-brand-300 dark:text-brand-600 pointer-events-none"
+            size={18}
+          />
         )}
         <textarea
           id={fieldId}
@@ -183,20 +189,23 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
           rows={rows}
           {...ariaAttrs}
           aria-describedby={describedByValue}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-none ${error ? 'border-red-500 focus:ring-red-500/10' : ''}`}
+          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-none ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''}`}
         />
       </div>
 
       {description && (
         <p
           id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 mt-1 font-medium italic"
+          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
         >
           {description}
         </p>
       )}
       {error && (
-        <p id={`${fieldId}-error`} className="text-[10px] text-red-600 font-medium">
+        <p
+          id={`${fieldId}-error`}
+          className="text-[10px] text-red-600 dark:text-red-400 font-medium"
+        >
           ⚠️ {error}
         </p>
       )}
@@ -247,7 +256,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
     <div className={`space-y-1.5 ${className}`}>
       <label
         htmlFor={fieldId}
-        className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
+        className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
       >
         {label}
         {required && (
@@ -264,7 +273,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         onChange={(e) => onChange(e.target.value)}
         {...ariaAttrs}
         aria-describedby={describedByValue}
-        className={`w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer appearance-none ${error ? 'border-red-500 focus:ring-red-500/10' : ''}`}
+        className={`w-full p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) transition-all font-bold cursor-pointer appearance-none ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''}`}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -276,13 +285,16 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       {description && (
         <p
           id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 mt-1 font-medium italic"
+          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
         >
           {description}
         </p>
       )}
       {error && (
-        <p id={`${fieldId}-error`} className="text-[10px] text-red-600 font-medium">
+        <p
+          id={`${fieldId}-error`}
+          className="text-[10px] text-red-600 dark:text-red-400 font-medium"
+        >
           ⚠️ {error}
         </p>
       )}
@@ -311,12 +323,17 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   const switchId = id || `toggle-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
+    <div className="flex items-center gap-4 p-4 bg-white dark:bg-(--input-bg) rounded-2xl border border-(--input-border) transition-colors">
       <div className="flex-1">
-        <label htmlFor={switchId} className="text-sm font-bold text-brand-900 block cursor-pointer">
+        <label
+          htmlFor={switchId}
+          className="text-sm font-bold text-brand-900 dark:text-brand-100 block cursor-pointer"
+        >
           {label}
         </label>
-        {description && <p className="text-[10px] text-brand-400 mt-0.5">{description}</p>}
+        {description && (
+          <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-0.5">{description}</p>
+        )}
       </div>
       {checked ? (
         <button
@@ -406,12 +423,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
+            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 bg-[${color}] ${
               value === color
                 ? 'border-brand-900 scale-110 shadow-md'
                 : 'border-transparent hover:scale-105'
             }`}
-            style={{ backgroundColor: color }}
             aria-label={`Choisir la couleur ${color}`}
             {...(value === color ? { 'aria-pressed': 'true' } : { 'aria-pressed': 'false' })}
           />
@@ -441,12 +457,11 @@ export const ColorCirclePicker: React.FC<{
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            className={`w-10 h-10 rounded-full border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
+            className={`w-10 h-10 rounded-full border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 bg-[${color}] ${
               value === color
                 ? 'border-brand-900 scale-110 shadow-lg'
                 : 'border-transparent hover:scale-105'
             }`}
-            style={{ backgroundColor: color }}
             aria-label={`Choisir la couleur ${color}`}
             {...(value === color ? { 'aria-pressed': 'true' } : { 'aria-pressed': 'false' })}
           />

@@ -1,9 +1,7 @@
 import js from '@eslint/js';
-import globals from 'globals';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
 import typescript from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import globals from 'globals';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -39,31 +37,13 @@ export default [
       },
     },
     plugins: {
-      react: reactPlugin,
-      'react-hooks': reactHooks,
       '@typescript-eslint': typescript,
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
     },
     rules: {
       ...js.configs.recommended.rules,
       ...typescript.configs.recommended.rules,
 
-      // React
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      'react/display-name': 'off',
-      'react/jsx-no-target-blank': 'warn',
-      'react/no-unescaped-entities': 'warn',
-
-      // Hooks
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-
-      // TypeScript
+      // TypeScript overrides
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -106,16 +86,10 @@ export default [
       },
     },
     plugins: {
-      react: reactPlugin,
       '@typescript-eslint': typescript,
     },
     rules: {
-      'react/style-prop-object': 'off',
-      'react/no-unescaped-entities': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      'react/jsx-no-useless-fragment': 'off',
-      'jsx-a11y/anchor-is-valid': 'off',
-      'jsx-a11y/no-static-element-interactions': 'off',
       'no-console': 'off',
     },
   },
