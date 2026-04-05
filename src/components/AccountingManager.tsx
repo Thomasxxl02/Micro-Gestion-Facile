@@ -89,6 +89,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     data: newExpense,
     setData: setNewExpense,
     errors,
+    touched,
+    handleChange: handleFormChange,
     validate: validateAll,
   } = useFormValidation<Partial<Expense>>(initialFormState, ExpenseSchema);
 
@@ -782,12 +784,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                       <div key={cat.name} className="flex items-center justify-between group">
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-2 h-2 rounded-full"
-                            style={
-                              {
-                                backgroundColor: COLORS[idx % COLORS.length],
-                              } as React.CSSProperties
-                            }
+                            className={`w-2 h-2 rounded-full bg-[${COLORS[idx % COLORS.length]}]`}
                           ></div>
                           <span className="text-xs font-semibold text-brand-600">{cat.name}</span>
                         </div>
@@ -1148,8 +1145,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   type="date"
                   required
                   value={newExpense.date || ''}
-                  onChange={(val) => setNewExpense({ ...newExpense, date: val })}
-                  validator={() => ({ valid: !errors.date?.error, error: errors.date?.error })}
+                  onChange={handleFormChange('date')}
+                  error={errors.date}
+                  touched={touched.date}
                 />
                 <FormFieldValidated
                   id="expense-amount"
@@ -1161,13 +1159,15 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   value={newExpense.amount || ''}
                   onChange={(val) => {
                     const amount = Number.parseFloat(val);
+                    handleFormChange('amount')(amount);
                     const vatRate = newExpense.vatRate || 0;
                     const vatAmount = vatRate
                       ? amount * (vatRate / (100 + vatRate))
                       : newExpense.vatAmount || 0;
-                    setNewExpense({ ...newExpense, amount, vatAmount });
+                    setNewExpense((prev) => ({ ...prev, vatAmount }));
                   }}
-                  validator={() => ({ valid: !errors.amount?.error, error: errors.amount?.error })}
+                  error={errors.amount}
+                  touched={touched.amount}
                 />
                 <FormFieldValidated
                   id="expense-vat-amount"
@@ -1176,13 +1176,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   step="0.01"
                   placeholder="0.00"
                   value={newExpense.vatAmount || ''}
-                  onChange={(val) =>
-                    setNewExpense({ ...newExpense, vatAmount: Number.parseFloat(val) })
-                  }
-                  validator={() => ({
-                    valid: !errors.vatAmount?.error,
-                    error: errors.vatAmount?.error,
-                  })}
+                  onChange={(val) => handleFormChange('vatAmount')(Number.parseFloat(val))}
+                  error={errors.vatAmount}
+                  touched={touched.vatAmount}
                 />
                 <div>
                   <label

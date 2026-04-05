@@ -7,7 +7,7 @@ import 'jspdf-autotable';
 import type { Client, Invoice, UserProfile } from '../types';
 
 // Interface pour jsPDF avec propriété facturX custom
-interface jsPDFWithFacturX extends jsPDF {
+interface JsPDFWithFacturX extends jsPDF {
   facturX?: string;
 }
 
@@ -271,7 +271,7 @@ export const generatePDFWithFacturX = async (
   // --- Signature Numérique (Simulation SHA-256) ---
   const pdfString = doc.output();
   const signatureHash = await simulateDigitalSignature(pdfString);
-  (doc as jsPDFWithFacturX).facturX = facturX_XML;
+  (doc as JsPDFWithFacturX).facturX = facturX_XML;
   doc.setFontSize(7);
   doc.setTextColor(150);
   doc.text(`Empreinte numérique (SHA-256) : ${signatureHash}`, 14, 285);
@@ -284,7 +284,7 @@ export const generatePDFWithFacturX = async (
   try {
     // Note: L'attachement réel XML dans un PDF/A-3 requiert un traitement binaire post-génération
     // ou une extension spécifique de jsPDF. On expose ici le XML pour usage tiers ou preuve de concept.
-    (doc as jsPDFWithFacturX).facturX = facturX_XML;
+    (doc as JsPDFWithFacturX).facturX = facturX_XML;
   } catch (e) {
     console.error('Erreur injection Factur-X:', e);
   }

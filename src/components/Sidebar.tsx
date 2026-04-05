@@ -3,10 +3,12 @@ import {
   Calculator,
   Calendar,
   FileText,
+  Landmark,
   LayoutDashboard,
   Mail,
   Moon,
   Package,
+  ReceiptText,
   Settings,
   Sparkles,
   Sun,
@@ -54,6 +56,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'suppliers', label: 'Fournisseurs', icon: <Truck size={18} /> },
     { id: 'products', label: 'Catalogue', icon: <Package size={18} /> },
     { id: 'accounting', label: 'Comptabilité', icon: <Calculator size={18} /> },
+    { id: 'bank_reconciliation', label: 'Rapprochement', icon: <Landmark size={18} /> },
+    { id: 'vat_dashboard', label: 'Suivi TVA', icon: <ReceiptText size={18} /> },
     { id: 'emails', label: 'Emails', icon: <Mail size={18} /> },
     { id: 'ai_assistant', label: 'Assistant IA', icon: <Sparkles size={18} /> },
     { id: 'settings', label: 'Paramètres', icon: <Settings size={18} /> },
@@ -79,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-brand-950 text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out border-r border-brand-100/50 dark:border-brand-900/50 flex flex-col shadow-2xl lg:shadow-none
+          fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-brand-900 text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out border-r border-brand-100/50 dark:border-brand-800/50 flex flex-col shadow-2xl lg:shadow-none
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
         aria-label="Menu de navigation"
@@ -92,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             aria-label="Aller au tableau de bord"
           >
             <div
-              className="bg-brand-900 dark:bg-white text-white dark:text-brand-900 p-3 rounded-2xl shadow-xl group-hover:rotate-12 transition-transform duration-500"
+              className="bg-brand-600 dark:bg-white text-white dark:text-brand-900 p-3 rounded-2xl shadow-xl group-hover:rotate-12 transition-transform duration-500"
               aria-hidden="true"
             >
               <Briefcase size={24} />
@@ -116,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           aria-label="Navigation principale"
         >
           <div
-            className="text-[10px] font-black text-brand-300 dark:text-brand-600 uppercase tracking-[0.25em] mb-6 px-4"
+            className="text-[10px] font-black text-brand-300 dark:text-brand-700 uppercase tracking-[0.25em] mb-6 px-4"
             aria-hidden="true"
           >
             Menu Principal
@@ -130,13 +134,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                 w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden
                 ${
                   currentView === item.id
-                    ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-xl shadow-brand-900/20 dark:shadow-white/5'
-                    : 'text-brand-500 dark:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-900 dark:hover:text-brand-100'
+                    ? 'bg-brand-600 dark:bg-primary-500 text-white shadow-xl shadow-brand-600/30 dark:shadow-primary-500/30'
+                    : 'text-brand-500 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-800/60 hover:text-brand-600 dark:hover:text-brand-100'
                 }
               `}
             >
               <span
-                className={`transition-colors duration-300 ${currentView === item.id ? 'text-white dark:text-brand-900' : 'text-brand-300 dark:text-brand-700 group-hover:text-brand-900 dark:group-hover:text-brand-100'}`}
+                className={`transition-colors duration-300 ${currentView === item.id ? 'text-white' : 'text-brand-300 dark:text-brand-600 group-hover:text-brand-900 dark:group-hover:text-brand-100'}`}
                 aria-hidden="true"
               >
                 {item.icon}
@@ -145,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {currentView === item.id && (
                 <motion.div
                   layoutId="activeNav"
-                  className="absolute inset-0 bg-brand-900 dark:bg-white -z-10"
+                  className="absolute inset-0 bg-brand-600 dark:bg-primary-500 -z-10"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   aria-hidden="true"
                 />
@@ -159,35 +163,40 @@ const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={toggleDarkMode}
             aria-label={isDarkMode ? 'Passer au mode clair' : 'Passer au mode sombre'}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 bg-brand-50 dark:bg-brand-900/30 rounded-2xl transition-all hover:bg-brand-100 dark:hover:bg-brand-900/50 text-brand-600 dark:text-brand-300 border border-brand-100 dark:border-brand-800/50 group"
+            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 bg-brand-50 dark:bg-brand-800/50 rounded-2xl transition-all hover:bg-brand-100 dark:hover:bg-brand-800 text-brand-600 dark:text-brand-300 border border-brand-100 dark:border-brand-700/60 group shadow-sm"
           >
             <div className="flex items-center gap-3">
               <div
-                className="p-2 bg-white dark:bg-brand-800 rounded-xl shadow-sm group-hover:scale-110 transition-transform"
+                className="p-2 bg-white dark:bg-brand-700 rounded-xl shadow-sm group-hover:scale-110 transition-transform"
                 aria-hidden="true"
               >
                 {isDarkMode ? (
-                  <Sun size={18} className="text-amber-500" />
+                  <Sun size={16} className="text-amber-400" />
                 ) : (
-                  <Moon size={18} className="text-brand-600" />
+                  <Moon size={16} className="text-primary-600" />
                 )}
               </div>
-              <span className="text-sm font-bold tracking-tight">
+              <span className="text-sm font-semibold tracking-tight">
                 {isDarkMode ? 'Mode Clair' : 'Mode Sombre'}
               </span>
             </div>
+            {/* Toggle pill animé */}
             <div
-              className={`w-10 h-5 rounded-full p-1 transition-colors duration-300 ${isDarkMode ? 'bg-brand-700' : 'bg-brand-200'}`}
+              className={`relative w-11 h-6 rounded-full transition-colors duration-300 ${
+                isDarkMode ? 'bg-primary-500' : 'bg-brand-300'
+              }`}
               aria-hidden="true"
             >
               <div
-                className={`w-3 h-3 bg-white rounded-full transition-transform duration-300 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
+                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${
+                  isDarkMode ? 'left-6' : 'left-1'
+                }`}
               />
             </div>
           </button>
 
-          <div className="flex items-center gap-4 p-4 bg-white dark:bg-brand-900/30 rounded-[2rem] border border-brand-100 dark:border-brand-800/50 shadow-sm group hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-900 to-brand-700 dark:from-white dark:to-brand-200 flex items-center justify-center text-lg font-black text-white dark:text-brand-900 shadow-lg group-hover:rotate-3 transition-transform">
+          <div className="flex items-center gap-4 p-4 bg-white dark:bg-brand-800/40 rounded-4xl border border-brand-100 dark:border-brand-700/50 shadow-sm group hover:shadow-md transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-900 to-brand-700 dark:from-white dark:to-brand-200 flex items-center justify-center text-lg font-black text-white dark:text-brand-900 shadow-lg group-hover:rotate-3 transition-transform">
               MG
             </div>
             <div className="overflow-hidden flex-1">

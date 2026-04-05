@@ -149,7 +149,7 @@ export function ErrorBanner({
     >
       <div className="flex items-start gap-4">
         {/* Icône */}
-        <Icon size={20} className={`${config.iconColor} flex-shrink-0 mt-0.5`} aria-hidden="true" />
+        <Icon size={20} className={`${config.iconColor} shrink-0 mt-0.5`} aria-hidden="true" />
 
         {/* Contenu */}
         <div className="flex-1 min-w-0">
@@ -173,7 +173,7 @@ export function ErrorBanner({
           <button
             onClick={handleDismiss}
             className={`
-              flex-shrink-0 mt-0.5
+              shrink-0 mt-0.5
               hover:opacity-75
               transition-opacity
               focus:outline-none

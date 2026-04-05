@@ -58,7 +58,9 @@ import {
   calculateThresholdStatus,
   getThresholds,
 } from '../lib/fiscalCalculations';
+import { projectRevenue, type MonthlyRevenue } from '../lib/revenueProjection';
 import { predictRevenue } from '../services/geminiService';
+import { useAppStore } from '../store/appStore';
 import {
   InvoiceStatus,
   type CalendarEvent,
@@ -68,6 +70,7 @@ import {
   type UserProfile,
   type ViewState,
 } from '../types';
+import { ChartSkeleton, StatCardSkeleton } from './Skeleton';
 
 interface DashboardProps {
   invoices: Invoice[];
@@ -104,21 +107,27 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
     id,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-  };
+  const transformValue = CSS.Transform.toString(transform);
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`${className} relative group transition-shadow duration-300 ${isDragging ? 'shadow-2xl opacity-50' : 'opacity-100'}`}
+      className={`dnd-sortable ${className} relative group transition-shadow duration-300 ${
+        isDragging ? 'shadow-2xl opacity-50' : 'opacity-100'
+      }`}
+      {...{
+        style: {
+          ['--dnd-transform' as string]: transformValue,
+          ['--dnd-transition' as string]: transition,
+          ['--dnd-z-index' as string]: isDragging ? 50 : 'auto',
+        } as React.CSSProperties,
+      }}
     >
       <div
         {...attributes}
         {...listeners}
+        role="button"
+        aria-label="Réordonner ce widget"
         className="absolute top-4 right-4 p-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-brand-300 hover:text-brand-600 z-20"
       >
         <GripVertical size={16} />
@@ -168,22 +177,27 @@ const DraggableQuote: React.FC<{
     id: `quote-${quote.id}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    touchAction: 'none',
-  };
+  const transformValue = CSS.Transform.toString(transform);
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      className={`dnd-quote flex items-center justify-between p-3 rounded-xl border border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-grab active:cursor-grabbing ${
+        isDragging
+          ? 'bg-brand-50 shadow-lg scale-95 opacity-50'
+          : 'bg-white dark:bg-brand-900/50 opacity-100'
+      }`}
+      {...{
+        style: {
+          ['--dnd-transform' as string]: transformValue,
+        } as React.CSSProperties,
+      }}
       {...attributes}
       {...listeners}
       role="button"
       tabIndex={0}
       aria-label={`Devis ${quote.number} - ${quote.total.toLocaleString()} € - Glisser sur 'Facture' pour convertir`}
       onKeyDown={(e) => onKeyDown?.(e, quote)}
-      className={`flex items-center justify-between p-3 rounded-xl border border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-grab active:cursor-grabbing ${isDragging ? 'bg-brand-50 shadow-lg scale-95 opacity-50' : 'bg-white dark:bg-brand-900/50 opacity-100'}`}
     >
       <div className="flex items-center gap-3">
         <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 rounded-lg">
@@ -199,14 +213,11 @@ const DraggableQuote: React.FC<{
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({
-  invoices,
-  products,
-  expenses,
-  onNavigate,
-  userProfile,
-  onSaveInvoice,
-}) => {
+const Dashboard: React.FC<DashboardProps> = (props) => {
+  const { invoices, products, expenses, onNavigate, userProfile, onSaveInvoice } = props;
+
+  const isSyncing = useAppStore((state) => state.isSyncing);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [, setActiveId] = useState<string | null>(null);
@@ -320,6 +331,22 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const vatProgress = fiscalStatus.tva.percentage;
   const currentThresholds = getThresholds(userProfile.activityType || 'SERVICE_BNC');
+
+  // ── Projection de CA (régression linéaire locale) ──────────────────────────
+  const revenueProjection = useMemo(() => {
+    const monthsMap: Record<string, number> = {};
+    invoices
+      .filter((inv) => inv.status === InvoiceStatus.PAID && inv.type === 'invoice')
+      .forEach((inv) => {
+        const key = inv.date.slice(0, 7); // YYYY-MM
+        monthsMap[key] = (monthsMap[key] || 0) + inv.total;
+      });
+    const history: MonthlyRevenue[] = Object.entries(monthsMap).map(([month, revenue]) => ({
+      month,
+      revenue,
+    }));
+    return projectRevenue(history, 6, userProfile.activityType || 'SERVICE_BNC');
+  }, [invoices, userProfile.activityType]);
 
   const monthlyData = useMemo(() => {
     const data: Record<string, { income: number; expense: number }> = {};
@@ -517,6 +544,30 @@ const Dashboard: React.FC<DashboardProps> = ({
         <SortableContext items={widgetOrder} strategy={verticalListSortingStrategy}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-auto">
             {widgetOrder.map((id) => {
+              if (isSyncing) {
+                if (id === 'stats') {
+                  return (
+                    <React.Fragment key={id}>
+                      <StatCardSkeleton />
+                      <StatCardSkeleton />
+                      <StatCardSkeleton />
+                    </React.Fragment>
+                  );
+                }
+                if (id === 'performance') {
+                  return <ChartSkeleton key={id} />;
+                }
+                if (id === 'activity') {
+                  return (
+                    <div
+                      key={id}
+                      className="card-modern p-6 h-75 animate-pulse bg-gray-100 dark:bg-gray-800"
+                    />
+                  );
+                }
+                return null;
+              }
+
               if (id === 'stats') {
                 return (
                   <React.Fragment key={id}>
@@ -559,7 +610,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     {/* Profit Card */}
                     <SortableWidget id="stats-profit" className="lg:col-span-1">
-                      <div className="bg-brand-900 dark:bg-brand-950 text-white p-6 rounded-4xl h-full shadow-xl shadow-brand-900/20 relative overflow-hidden group border border-white/5">
+                      <div className="bg-brand-600 dark:bg-brand-900 text-white p-6 rounded-4xl h-full shadow-xl shadow-brand-600/20 relative overflow-hidden group border border-white/5">
                         <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                           <TrendingUp size={120} />
                         </div>
@@ -624,8 +675,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                           <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ease-out ${fiscalStatus.micro.percentage > 85 ? 'bg-orange-500' : 'bg-brand-900 dark:bg-brand-50'}`}
-                              style={{ width: `${Math.min(fiscalStatus.micro.percentage, 100)}%` }}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(fiscalStatus.micro.percentage, 100)}%] ${fiscalStatus.micro.percentage > 85 ? 'bg-orange-500' : 'bg-brand-900 dark:bg-brand-50'}`}
                             ></div>
                           </div>
                           {fiscalStatus.micro.remaining < 5000 && (
@@ -654,8 +704,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                           <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ease-out ${vatProgress > 85 ? 'bg-red-500' : 'bg-brand-900 dark:bg-brand-50'}`}
-                              style={{ width: `${Math.min(vatProgress, 100)}%` }}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(vatProgress, 100)}%] ${vatProgress > 85 ? 'bg-red-500' : 'bg-brand-900 dark:bg-brand-50'}`}
                             ></div>
                           </div>
                           {fiscalStatus.tva.isNear && (
@@ -838,12 +887,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               >
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className="w-2.5 h-2.5 rounded-full"
-                                    style={
-                                      {
-                                        '--indicator-color': COLORS[idx % COLORS.length],
-                                      } as React.CSSProperties
-                                    }
+                                    className={`w-2.5 h-2.5 rounded-full bg-[${COLORS[idx % COLORS.length]}]`}
                                   ></div>
                                   <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
                                     {cat.name}
@@ -1119,62 +1163,191 @@ const Dashboard: React.FC<DashboardProps> = ({
 
               if (id === 'prediction') {
                 return (
-                  <SortableWidget key={id} id={id} className="lg:col-span-1 row-span-1">
-                    <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden bg-linear-to-br from-brand-900 to-brand-950 text-white border-none shadow-xl shadow-brand-900/20">
-                      <div className="absolute -right-4 -top-4 p-8 opacity-10">
-                        <Sparkles size={120} />
-                      </div>
-                      <div className="relative z-10 h-full flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                          <p className="text-[10px] font-bold text-brand-300 uppercase tracking-[0.15em]">
-                            Prédiction IA
-                          </p>
-                          <Sparkles size={16} className="text-accent-400" />
+                  <SortableWidget
+                    key={id}
+                    id={id}
+                    className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-4"
+                  >
+                    <div className="card-modern p-6 relative overflow-hidden">
+                      {/* Alertes seuils dynamiques */}
+                      {revenueProjection.alerts.length > 0 && (
+                        <div className="mb-5 space-y-2">
+                          {revenueProjection.alerts.map((alert, i) => (
+                            <div
+                              key={i}
+                              role="alert"
+                              className={`flex items-start gap-3 p-3 rounded-xl text-[11px] font-semibold ${
+                                alert.severity === 'danger'
+                                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/30'
+                                  : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30'
+                              }`}
+                            >
+                              <AlertCircle
+                                size={14}
+                                className="shrink-0 mt-0.5"
+                                aria-hidden="true"
+                              />
+                              {alert.message}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp size={16} className="text-accent-600" aria-hidden="true" />
+                            <p className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.15em]">
+                              Projection CA — 6 mois
+                            </p>
+                          </div>
+                          <div className="flex items-baseline gap-3 mt-1">
+                            <span className="text-xl font-bold text-brand-900 dark:text-brand-50 font-display">
+                              {revenueProjection.forecast[0]
+                                ? `~${revenueProjection.forecast[0].projected.toLocaleString('fr-FR')} €`
+                                : '—'}
+                            </span>
+                            <span className="text-[10px] text-brand-400 font-medium">
+                              prochain mois estimé
+                            </span>
+                            {revenueProjection.monthlyTrend !== 0 && (
+                              <span
+                                className={`flex items-center text-[10px] font-bold ${
+                                  revenueProjection.monthlyTrend >= 0
+                                    ? 'text-accent-600'
+                                    : 'text-red-500'
+                                }`}
+                              >
+                                {revenueProjection.monthlyTrend >= 0 ? (
+                                  <ArrowUpRight size={12} aria-hidden="true" />
+                                ) : (
+                                  <ArrowDownRight size={12} aria-hidden="true" />
+                                )}
+                                {Math.abs(revenueProjection.monthlyTrend).toFixed(0)} €/mois
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        {prediction ? (
-                          <div className="space-y-3">
-                            <p className="text-[11px] text-brand-100 leading-relaxed line-clamp-3 font-medium">
+                        <div className="flex items-center gap-3">
+                          {revenueProjection.confidence > 0 && (
+                            <span className="text-[9px] font-bold text-brand-300 uppercase tracking-wider">
+                              Fiabilité : {Math.round(revenueProjection.confidence * 100)}%
+                            </span>
+                          )}
+                          <button
+                            onClick={handlePredict}
+                            disabled={isPredicting}
+                            aria-label={
+                              isPredicting ? 'Analyse IA en cours...' : 'Analyse IA du CA'
+                            }
+                            className="flex items-center gap-2 bg-brand-600 dark:bg-white text-white dark:text-brand-900 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all hover:bg-brand-700 dark:hover:bg-brand-50 shadow-lg shadow-brand-600/20"
+                          >
+                            {isPredicting ? (
+                              <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                            ) : (
+                              <Sparkles size={12} aria-hidden="true" />
+                            )}
+                            Analyse IA
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Graphique projection */}
+                      {revenueProjection.forecast.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={180}>
+                          <AreaChart
+                            data={[
+                              ...revenueProjection.history.slice(-3).map((h) => ({
+                                name: h.month.slice(5),
+                                Historique: h.revenue,
+                                Projection: null as number | null,
+                              })),
+                              ...revenueProjection.forecast.map((f) => ({
+                                name: f.month.slice(5),
+                                Historique: null as number | null,
+                                Projection: f.projected,
+                              })),
+                            ]}
+                            margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                          >
+                            <defs>
+                              <linearGradient id="grad-hist" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#0f172a" stopOpacity={0.15} />
+                                <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
+                              </linearGradient>
+                              <linearGradient id="grad-proj" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="#f1f5f9"
+                              vertical={false}
+                            />
+                            <XAxis
+                              dataKey="name"
+                              tick={{ fontSize: 9 }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <YAxis
+                              tick={{ fontSize: 9 }}
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                            />
+                            <Tooltip
+                              formatter={(value, name) =>
+                                value != null
+                                  ? [`${Number(value).toLocaleString('fr-FR')} €`, String(name)]
+                                  : ['-', String(name)]
+                              }
+                              contentStyle={{ fontSize: 10, borderRadius: 12 }}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="Historique"
+                              stroke="#0f172a"
+                              fill="url(#grad-hist)"
+                              strokeWidth={2}
+                              dot={false}
+                              connectNulls
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="Projection"
+                              stroke="#22c55e"
+                              fill="url(#grad-proj)"
+                              strokeWidth={2}
+                              strokeDasharray="5 3"
+                              dot={false}
+                              connectNulls
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-32 text-brand-300 text-[10px] font-bold uppercase tracking-widest">
+                          Pas encore assez de données historiques
+                        </div>
+                      )}
+
+                      {/* Analyse IA */}
+                      {prediction && (
+                        <div className="mt-4 p-4 bg-brand-50 dark:bg-brand-800/30 rounded-2xl border border-brand-100 dark:border-brand-800">
+                          <div className="flex items-start gap-2">
+                            <Sparkles
+                              size={12}
+                              className="text-accent-600 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
+                            <p className="text-[10px] text-brand-600 dark:text-brand-300 leading-relaxed">
                               {prediction}
                             </p>
-                            <button
-                              onClick={handlePredict}
-                              disabled={isPredicting}
-                              aria-label={
-                                isPredicting ? 'Calcul en cours...' : 'Actualiser la prédiction'
-                              }
-                              className="text-[9px] font-bold uppercase tracking-widest text-accent-400 hover:text-accent-300 transition-colors flex items-center gap-1.5"
-                            >
-                              {isPredicting ? (
-                                <Loader2 size={10} className="animate-spin" aria-hidden="true" />
-                              ) : (
-                                <TrendingUp size={10} aria-hidden="true" />
-                              )}
-                              Actualiser
-                            </button>
                           </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-2">
-                            <button
-                              onClick={handlePredict}
-                              disabled={isPredicting}
-                              aria-label={
-                                isPredicting
-                                  ? 'Calcul en cours...'
-                                  : "Prédire le chiffre d'affaires"
-                              }
-                              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10"
-                            >
-                              {isPredicting ? (
-                                <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-                              ) : (
-                                <Sparkles size={14} aria-hidden="true" />
-                              )}
-                              Prédire CA
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </SortableWidget>
                 );

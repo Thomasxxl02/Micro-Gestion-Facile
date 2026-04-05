@@ -38,7 +38,7 @@ export function useFormValidation<T extends object = object>(
   rules: BatchValidationRules,
   options: UseFormValidationOptions = {}
 ) {
-  const { validateOnBlur = true, validateOnChange = false, showErrorsAfterBlur = true } = options;
+  const { validateOnBlur = true, validateOnChange = true, showErrorsAfterBlur = false } = options;
 
   const [data, setData] = useState(initialData);
   const [errors, setErrors] = useState<Record<string, ValidationResult>>({});

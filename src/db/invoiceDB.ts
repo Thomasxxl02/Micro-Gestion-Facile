@@ -11,18 +11,35 @@
 
 import Dexie, { type Table } from 'dexie';
 import type {
-  Invoice,
-  InvoiceItem,
+  CalendarEvent,
+  ChatMessage,
   Client,
-  Supplier,
-  Product,
-  Expense,
   Email,
   EmailTemplate,
-  CalendarEvent,
+  Expense,
+  Invoice,
+  InvoiceItem,
+  Product,
+  Supplier,
   UserProfile,
-  ChatMessage,
 } from '../types';
+
+/**
+ * Séquence de numérotation continue pour les documents
+ * Garantit l'unicité et la continuité légale en France
+ *
+ * La clé primaire est `type`. Le champ `year` permet de détecter
+ * le passage d'année et de réinitialiser le compteur automatiquement
+ * (ex: passage de 2026 à 2027 → repart à 001).
+ *
+ * Ref légale : Art. 289-I-5° CGI — séquence chronologique continue
+ */
+export interface InvoiceNumberSequence {
+  type: 'invoice' | 'quote' | 'order' | 'credit_note';
+  year: number; // Année en cours de la séquence (reset si changement d'année)
+  currentNumber: number; // Dernier numéro utilisé pour (type, year)
+  lastUsedAt: string; // ISO timestamp pour audit
+}
 
 /**
  * Classe principale de la base de données IndexedDB
@@ -41,9 +58,11 @@ class InvoiceDB extends Dexie {
   calendarEvents!: Table<CalendarEvent>;
   userProfile!: Table<UserProfile>;
   chatMessages!: Table<ChatMessage>;
+  invoiceNumberSequences!: Table<InvoiceNumberSequence>;
 
   constructor() {
     super('MicroGestionFacile');
+
     this.version(1).stores({
       // Schéma initial - v1
       // Format : { tableName: 'primaryKey, index1, index2, ...' }
@@ -60,11 +79,96 @@ class InvoiceDB extends Dexie {
       chatMessages: '&id, timestamp, role',
     });
 
-    // Migrations futures peuvent être ajoutées avec this.version(2), etc.
-    // Exemple :
-    // this.version(2).stores({...}).upgrade(tx => {
-    //   // Logique de migration
-    // });
+    // Migration v2 - Ajout de la table de séquences pour numérotation continue
+    this.version(2)
+      .stores({
+        invoices: '&id, number, clientId, date, status, eInvoiceStatus',
+        invoiceItems: '&id, invoiceId',
+        clients: '&id, name, email, archived',
+        suppliers: '&id, name, email, archived',
+        products: '&id, name, category, archived',
+        expenses: '&id, supplierId, date, category',
+        emails: '&id, relatedId, type, status, sentAt',
+        emailTemplates: '&id, type, name',
+        calendarEvents: '&id, clientId, invoiceId, start, type',
+        userProfile: '&id',
+        chatMessages: '&id, timestamp, role',
+        invoiceNumberSequences: '&type', // 'invoice', 'quote', 'order', 'credit_note'
+      })
+      .upgrade(async (tx) => {
+        // Initialise les séquences à partir des numéros existants
+        const invoices = (await tx.table('invoices').toArray()) as Invoice[];
+        const sequences: Record<string, InvoiceNumberSequence> = {};
+
+        // Extrait le dernier numéro utilisé pour chaque type
+        for (const doc of invoices) {
+          const type = (doc.type || 'invoice') as 'invoice' | 'quote' | 'order' | 'credit_note';
+          const match = doc.number.match(/(\d+)$/); // Extrait le dernier nombre
+          const num = match ? parseInt(match[1], 10) : 0;
+
+          if (!sequences[type] || sequences[type].currentNumber < num) {
+            // year sera ajouté par la migration v3 ; on caste pour compatibilité
+            sequences[type] = {
+              type,
+              year: 0, // Valeur temporaire — mise à jour par la migration v3
+              currentNumber: num,
+              lastUsedAt: new Date().toISOString(),
+            };
+          }
+        }
+
+        // Insère les séquences initialisées (ou defaut si aucun doc)
+        const docTypes: Array<'invoice' | 'quote' | 'order' | 'credit_note'> = [
+          'invoice',
+          'quote',
+          'order',
+          'credit_note',
+        ];
+        for (const type of docTypes) {
+          if (!sequences[type]) {
+            sequences[type] = {
+              type,
+              year: 0, // Valeur temporaire — mise à jour par la migration v3
+              currentNumber: 0,
+              lastUsedAt: new Date().toISOString(),
+            };
+          }
+        }
+
+        await tx.table('invoiceNumberSequences').bulkPut(Object.values(sequences));
+      });
+
+    // Migration v3 — Ajout du champ `year` sur les séquences existantes
+    // Art. 289-I-5° CGI : la numérotation doit être remise à 1 chaque année
+    this.version(3)
+      .stores({
+        // Schéma identique à v2 — aucun index supplémentaire requis
+        invoices: '&id, number, clientId, date, status, eInvoiceStatus',
+        invoiceItems: '&id, invoiceId',
+        clients: '&id, name, email, archived',
+        suppliers: '&id, name, email, archived',
+        products: '&id, name, category, archived',
+        expenses: '&id, supplierId, date, category',
+        emails: '&id, relatedId, type, status, sentAt',
+        emailTemplates: '&id, type, name',
+        calendarEvents: '&id, clientId, invoiceId, start, type',
+        userProfile: '&id',
+        chatMessages: '&id, timestamp, role',
+        invoiceNumberSequences: '&type',
+      })
+      .upgrade(async (tx) => {
+        // Ajoute le champ `year` aux séquences qui ne l'ont pas encore
+        const sequences = await tx.table('invoiceNumberSequences').toArray();
+        for (const seq of sequences) {
+          if (seq.year === undefined) {
+            // On déduit l'année depuis lastUsedAt ; à défaut l'année courante
+            const year = seq.lastUsedAt
+              ? new Date(seq.lastUsedAt).getFullYear()
+              : new Date().getFullYear();
+            await tx.table('invoiceNumberSequences').put({ ...seq, year });
+          }
+        }
+      });
   }
 
   /**
@@ -178,7 +282,8 @@ export async function initializeDB(): Promise<void> {
     // Initialiser le profil utilisateur s'il n'existe pas
     const existingProfile = await db.userProfile.toArray();
     if (existingProfile.length === 0) {
-      const defaultProfile: UserProfile = {
+      const defaultProfile = {
+        id: 'main', // Clé primaire requise par le schéma Dexie '&id'
         companyName: 'Ma Micro-Entreprise',
         siret: '',
         address: '',
@@ -190,7 +295,7 @@ export async function initializeDB(): Promise<void> {
         orderPrefix: 'CMD',
         creditNotePrefix: 'AV',
         defaultVatRate: 20,
-      };
+      } satisfies UserProfile & { id: string };
       await db.userProfile.add(defaultProfile);
       console.warn('✅ Profil utilisateur initialisé');
     }

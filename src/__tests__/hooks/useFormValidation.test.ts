@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { useFormValidation } from '../../hooks/useFormValidation';
 
 describe('useFormValidation Hook', () => {
@@ -422,7 +422,7 @@ describe('useFormValidation Hook', () => {
         result.current.handleChange('email')('test@example.fr');
       });
 
-      expect(result.current.errors.email).toBeUndefined();
+      expect(result.current.errors.email.valid).toBe(true);
     });
 
     it('piste les champs "touched" au fil du temps', () => {

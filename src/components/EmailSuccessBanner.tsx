@@ -101,7 +101,7 @@ export function EmailSuccessBanner({
     return (
       <div className="p-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg">
         <div className="flex items-start gap-3">
-          <MailOpen size={24} className="text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <MailOpen size={24} className="text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1">
             <h3 className="font-bold text-red-900 dark:text-red-100">Lien expiré 🔌</h3>
             <p className="text-sm text-red-700 dark:text-red-200 mt-1">
@@ -131,7 +131,7 @@ export function EmailSuccessBanner({
     >
       <div className="flex items-start gap-4">
         {/* Icône */}
-        <Mail size={24} className="text-blue-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <Mail size={24} className="text-blue-500 shrink-0 mt-0.5" aria-hidden="true" />
 
         {/* Contenu */}
         <div className="flex-1 min-w-0">

@@ -6,28 +6,40 @@
   --font-display: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  --color-brand-50: #f8fafc;
-  --color-brand-100: #f1f5f9;
-  --color-brand-200: #e2e8f0;
-  --color-brand-300: #cbd5e1;
-  --color-brand-400: #94a3b8;
-  --color-brand-500: #64748b;
-  --color-brand-600: #475569;
-  --color-brand-700: #334155;
-  --color-brand-800: #1e293b;
-  --color-brand-900: #0f172a;
-  --color-brand-950: #020617;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --color-brand-950: #2e1065;
 
-  --color-accent-50: #f0fdf4;
-  --color-accent-100: #dcfce7;
-  --color-accent-200: #bbf7d0;
-  --color-accent-300: #86efac;
-  --color-accent-400: #4ade80;
-  --color-accent-500: #22c55e;
-  --color-accent-600: #16a34a;
-  --color-accent-700: #15803d;
-  --color-accent-800: #166534;
-  --color-accent-900: #14532d;
+  --color-accent-50: #fff1f2;
+  --color-accent-100: #ffe4e6;
+  --color-accent-200: #fecdd3;
+  --color-accent-300: #fda4af;
+  --color-accent-400: #fb7185;
+  --color-accent-500: #f43f5e;
+  --color-accent-600: #e11d48;
+  --color-accent-700: #be123c;
+  --color-accent-800: #9f1239;
+  --color-accent-900: #881337;
+
+  /* ── Palette Primaire (Cyan/Teal) ── */
+  --color-primary-50: #ecfeff;
+  --color-primary-100: #cffafe;
+  --color-primary-200: #a5f3fc;
+  --color-primary-300: #67e8f9;
+  --color-primary-400: #22d3ee;
+  --color-primary-500: #06b6d4;
+  --color-primary-600: #0891b2;
+  --color-primary-700: #0e7490;
+  --color-primary-800: #155e75;
+  --color-primary-900: #164e63;
 
   --animate-fade-in: fadeIn 0.5s ease-out;
   --animate-slide-up: slideUp 0.5s ease-out;
@@ -54,23 +66,55 @@
 }
 
 :root {
-  --bg-main: #fcfcfc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
+  color-scheme: light;
+  /* ── Fond moderne et vibrant ── */
+  --bg-main: #fcfaff;
+  --bg-subtle: #f3f0ff;
+  --text-main: #1e1b4b;
+  --text-muted: #4338ca;
+  --text-disabled: #94a3b8;
   --card-bg: #ffffff;
-  --card-border: #eef2f6;
+  --card-border: #e0e7ff;
   --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-border: rgba(99, 102, 241, 0.1);
+  /* ── Formulaires / inputs ── */
+  --input-bg: #ffffff;
+  --input-border: #c7d2fe;
+  --input-text: #1e1b4b;
+  --input-placeholder: #a5b4fc;
+  --input-focus-border: #8b5cf6;
+  --input-focus-ring: rgba(139, 92, 246, 0.15);
+  /* ── Système d'élévation chaleureux ── */
+  --shadow-xs: 0 1px 2px rgba(51, 47, 46, 0.04);
+  --shadow-sm: 0 1px 3px rgba(51, 47, 46, 0.06), 0 1px 2px rgba(51, 47, 46, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(51, 47, 46, 0.08), 0 2px 4px -2px rgba(51, 47, 46, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(51, 47, 46, 0.08), 0 4px 6px -4px rgba(51, 47, 46, 0.04);
 }
 
 .dark {
-  --bg-main: #050505;
-  --text-main: #f1f5f9;
+  color-scheme: dark;
+  /* ── Palette sombre vibrante (Sombre Electrique) ── */
+  --bg-main: #020617;
+  --bg-subtle: #0f172a;
+  --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --card-bg: #0d1117;
-  --card-border: #1f2937;
-  --glass-bg: rgba(13, 17, 23, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  --text-disabled: #334155;
+  --card-bg: #111827;
+  --card-border: #1e293b;
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(99, 102, 241, 0.2);
+  /* ── Formulaires / inputs ── */
+  --input-bg: #030712;
+  --input-border: #1e293b;
+  --input-text: #f8fafc;
+  --input-placeholder: #475569;
+  --input-focus-border: #8b5cf6;
+  --input-focus-ring: rgba(139, 92, 246, 0.3);
+  /* ── Élévation dark (ombres plus prononcées pour se détacher) ── */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 body {
@@ -78,8 +122,8 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+    background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 h1,
@@ -101,9 +145,10 @@ h4 {
 ::-webkit-scrollbar-thumb {
   background: var(--card-border);
   border-radius: 10px;
+  transition: background 0.2s ease;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: var(--card-border);
+  background: #3d4f68;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
@@ -121,12 +166,13 @@ html {
 /* Glassmorphism utility */
 .glass {
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(200%);
   border: 1px solid var(--glass-border);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+  transition:
+    background 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Bento Grid */
@@ -163,11 +209,15 @@ html {
 
 /* Buttons */
 .btn-primary {
-  @apply px-6 py-3 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-brand-900/20 dark:hover:shadow-white/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none;
+  @apply px-6 py-3 bg-linear-to-br from-brand-900 to-brand-700 dark:from-white dark:to-brand-100 text-white dark:text-brand-900 rounded-2xl font-bold transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-lg shadow-brand-900/20 dark:shadow-white/10 hover:shadow-xl hover:shadow-brand-900/30 dark:hover:shadow-white/15 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
 }
 
 .btn-secondary {
-  @apply px-6 py-3 bg-white dark:bg-brand-900 text-brand-900 dark:text-white border border-brand-200 dark:border-brand-800 rounded-2xl font-bold transition-all hover:bg-brand-50 dark:hover:bg-brand-800 flex items-center justify-center gap-2;
+  @apply px-6 py-3 bg-white dark:bg-brand-900/60 text-brand-900 dark:text-brand-100 border border-brand-200 dark:border-brand-700 rounded-2xl font-bold transition-all hover:bg-brand-50 hover:border-brand-300 dark:hover:bg-brand-800/60 dark:hover:border-brand-600 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+}
+
+.btn-danger {
+  @apply px-6 py-3 bg-red-600 dark:bg-red-500 text-white rounded-2xl font-bold transition-all hover:scale-[1.02] hover:bg-red-700 dark:hover:bg-red-600 active:scale-95 shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2;
 }
 
 /* Card styling */
@@ -175,30 +225,93 @@ html {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 1.5rem;
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.05),
-    0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .card-modern {
-  border-image: linear-gradient(to bottom right, var(--card-border), transparent) 1;
+  /* Inset highlight sur le bord haut + lueur bleue subtile */
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(30, 50, 90, 0.5);
 }
 
 .card-modern:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.05),
-    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+.dark .card-modern:hover {
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(50, 80, 140, 0.6);
+}
+
+/* Utilitaires de surface (élévation en mode sombre) */
+.surface-1 {
+  background: var(--bg-subtle);
+}
+
+.surface-2 {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
 /* Data Grid Styles */
 .data-row {
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .data-row:hover {
-  background-color: var(--bg-main);
+  background-color: var(--bg-subtle);
+}
+
+/* ─── Formulaires — input/select/textarea ───────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.field-input {
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 1rem;
+  color: var(--input-text);
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.field-input::placeholder {
+  color: var(--input-placeholder);
+}
+
+.field-input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 4px var(--input-focus-ring);
+}
+
+/* Ring focus accessible unifié */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--tw-color-primary-500, #6366f1);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }
 
 /* Status Badges */
@@ -211,34 +324,142 @@ html {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border: 1px solid transparent;
 }
 
-/* Print styles for PDF Generation */
+/* ─── D&D Sortable & Draggable Utility ─── */
+.dnd-sortable,
+.dnd-quote {
+  transform: var(--dnd-transform);
+  transition: var(--dnd-transition);
+  z-index: var(--dnd-z-index);
+}
+
+/* Badge sémantiques */
+.badge-success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+.dark .badge-success {
+  background-color: rgba(20, 83, 45, 0.35);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.2);
+}
+.badge-warning {
+  background-color: #fef9c3;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.dark .badge-warning {
+  background-color: rgba(120, 53, 15, 0.35);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.badge-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.dark .badge-danger {
+  background-color: rgba(127, 29, 29, 0.35);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.2);
+}
+.badge-info {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.dark .badge-info {
+  background-color: rgba(29, 78, 216, 0.25);
+  color: #93c5fd;
+  border-color: rgba(147, 197, 253, 0.2);
+}
+
+/* ─── PRINT — Impression A4 optimisée ─────────────────────────────────────── */
 @media print {
+  /* Format A4 standard avec marges comptables */
   @page {
-    margin: 0;
-    size: auto;
+    size: A4 portrait;
+    margin: 15mm 15mm 20mm 15mm;
   }
+
+  /* Masquer tout sauf la facture */
+  body,
   body * {
     visibility: hidden;
   }
+
+  /* Afficher uniquement l'aperçu facture */
   #invoice-preview,
   #invoice-preview * {
     visibility: visible;
   }
+
+  /* Positionnement absolu depuis le coin supérieur gauche */
   #invoice-preview {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
+    position: fixed;
+    inset: 0;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
     padding: 0;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     background: white !important;
+    color: #0f172a !important;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  .no-print {
+
+  /* Assurer que le fond des cellules colorées est imprimé */
+  .invoice-a4 * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Éviter les coupures de page au milieu d'un tableau */
+  table {
+    page-break-inside: avoid;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* orphans/widows non supportés par Firefox — règle retirée volontairement */
+
+  /* Ne pas couper les blocs importants */
+  .page-break-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Masquer les éléments d'interface */
+  .no-print,
+  aside,
+  header,
+  nav,
+  footer,
+  button:not(.print-visible),
+  [role='banner'],
+  [role='navigation'],
+  [aria-label='Menu de navigation'] {
     display: none !important;
+  }
+
+  /* QR code toujours visible à l'impression */
+  .qr-code-print {
+    display: block !important;
+    visibility: visible !important;
   }
 }
 
@@ -262,12 +483,51 @@ button[style*='--button-color'] {
   backdrop-filter: blur(4px);
 }
 
-/* A4 Invoice paper size */
+/* A4 Invoice paper size — affichage web */
 .invoice-a4 {
   max-width: 210mm;
+  width: 100%;
+  min-height: 297mm;
+  box-sizing: border-box;
 }
 
 /* Password strength progress bar */
 .password-strength-bar {
   width: var(--progress-width);
+}
+
+/* TVA progress bar — styled via data-state to avoid inline styles */
+.vat-progress-bar {
+  appearance: none;
+  display: block;
+  border: none;
+  border-radius: 9999px;
+}
+.vat-progress-bar::-webkit-progress-bar {
+  background: transparent;
+  border-radius: 9999px;
+}
+.vat-progress-bar::-webkit-progress-value {
+  border-radius: 9999px;
+  transition: width 700ms;
+}
+.vat-progress-bar::-moz-progress-bar {
+  border-radius: 9999px;
+  transition: width 700ms;
+}
+.vat-progress-bar[data-state='normal']::-webkit-progress-value,
+.vat-progress-bar[data-state='normal']::-moz-progress-bar {
+  background-color: var(--color-accent-500);
+}
+.vat-progress-bar[data-state='warning']::-webkit-progress-value,
+.vat-progress-bar[data-state='warning']::-moz-progress-bar {
+  background-color: #fbbf24;
+}
+.vat-progress-bar[data-state='exceeded']::-webkit-progress-value,
+.vat-progress-bar[data-state='exceeded']::-moz-progress-bar {
+  background-color: #f59e0b;
+}
+.vat-progress-bar[data-state='critical']::-webkit-progress-value,
+.vat-progress-bar[data-state='critical']::-moz-progress-bar {
+  background-color: #ef4444;
 }

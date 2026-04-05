@@ -1,8 +1,18 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AIAssistant from '../components/AIAssistant';
 import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import AIAssistant from '../components/AIAssistant';
+
+// Wrapper QueryClient pour les tests
+const createTestQueryClient = () =>
+  new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+};
 
 // Mock geminiService
 vi.mock('../services/geminiService', () => ({
@@ -21,8 +31,8 @@ vi.mock('../store/appStore', () => ({
 }));
 
 import {
-  generateAssistantResponse,
   checkInvoiceCompliance,
+  generateAssistantResponse,
   predictCashflowJ30,
 } from '../services/geminiService';
 import { useAppStore } from '../store/appStore';
@@ -55,24 +65,24 @@ describe('AIAssistant Component - Improved Tests', () => {
 
   describe('Rendering & UI', () => {
     it('devrait rendre le composant sans erreur', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
       expect(screen.getByText(/assistant administratif virtuel/i)).toBeTruthy();
     });
 
     it('affiche le titre principal du composant', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
       const title = screen.getByText(/assistant administratif virtuel/i);
       expect(title).toBeTruthy();
     });
 
     it('affiche le champ de saisie pour les questions', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
       const input = screen.getByPlaceholderText(/Posez une question/i);
       expect(input).toBeTruthy();
     });
 
     it("affiche le bouton d'envoi", () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
       const sendButton = screen.getByText('Envoyer');
       expect(sendButton).toBeTruthy();
     });
@@ -81,7 +91,7 @@ describe('AIAssistant Component - Improved Tests', () => {
   describe('Message Interaction', () => {
     it('devrait envoyer un message et afficher la réponse', async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -98,7 +108,7 @@ describe('AIAssistant Component - Improved Tests', () => {
 
     it('vide le champ de saisie après envoi', async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -113,7 +123,7 @@ describe('AIAssistant Component - Improved Tests', () => {
 
     it("n'envoie pas de message vide", async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const sendButton = screen.getByText('Envoyer');
       await user.click(sendButton);
@@ -124,7 +134,7 @@ describe('AIAssistant Component - Improved Tests', () => {
 
     it("affiche l'historique des messages", async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -141,13 +151,13 @@ describe('AIAssistant Component - Improved Tests', () => {
 
   describe('AI Features', () => {
     it('affiche la section de prédiction', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
       const predictions = screen.getAllByText(/Prédiction|prédiction/i);
       expect(predictions.length).toBeGreaterThanOrEqual(1);
     });
 
     it('affiche la balance prédite', async () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       await waitFor(() => {
         // Vérifie que les informations de prédiction sont affichées
@@ -179,7 +189,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         userProfile: { name: 'Test User', siret: '12345678901234' },
       });
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       await waitFor(() => {
         expect(predictCashflowJ30).toHaveBeenCalled();
@@ -219,7 +229,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         userProfile: { name: 'Test User', siret: '12345678901234' },
       });
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       await waitFor(
         () => {
@@ -244,7 +254,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         riskLevel: 'low',
       });
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -268,7 +278,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         suggestions: ['Suggestion 1'],
       });
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       // Le composant devrait toujours être rendu
       await waitFor(() => {
@@ -287,7 +297,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         riskLevel: 'low',
       });
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -309,7 +319,7 @@ describe('AIAssistant Component - Improved Tests', () => {
         () => new Promise((resolve) => setTimeout(() => resolve('Réponse'), 100))
       );
 
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       const sendButton = screen.getByText('Envoyer');
@@ -325,7 +335,7 @@ describe('AIAssistant Component - Improved Tests', () => {
   describe('Keyboard Navigation', () => {
     it('envoie le message avec Enter', async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       await user.type(input, 'Test{Enter}');
@@ -341,7 +351,7 @@ describe('AIAssistant Component - Improved Tests', () => {
 
     it('gère correctement le champ de saisie', async () => {
       const user = userEvent.setup();
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       if (!(input instanceof HTMLInputElement)) {
@@ -364,7 +374,7 @@ describe('AIAssistant Component - Improved Tests', () => {
 
   describe('Accessibility', () => {
     it('a des labels descriptifs pour les éléments interactifs', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const input = screen.getByPlaceholderText(/Posez une question/i);
       expect(input).toHaveAttribute('placeholder');
@@ -372,7 +382,7 @@ describe('AIAssistant Component - Improved Tests', () => {
     });
 
     it('le bouton est accessible au clavier', () => {
-      render(<AIAssistant />);
+      renderWithQueryClient(<AIAssistant />);
 
       const sendButton = screen.getByText('Envoyer');
       expect(sendButton).toBeTruthy();

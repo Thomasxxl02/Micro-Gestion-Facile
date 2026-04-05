@@ -131,12 +131,15 @@ interface FormFieldValidatedProps {
   min?: string | number;
   max?: string | number;
   step?: string | number;
-  _validateOnChange?: boolean;
-  _validateOnBlur?: boolean;
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+  showErrorsImmediate?: boolean;
   showValidationIcon?: boolean;
   'aria-label'?: string;
   autoComplete?: string;
   maxLength?: number;
+  error?: ValidationResult | null;
+  touched?: boolean;
 }
 
 export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
@@ -156,13 +159,19 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   min,
   max,
   step,
-  _validateOnChange = true,
-  _validateOnBlur = true,
+  validateOnChange = true,
+  validateOnBlur = true,
+  showErrorsImmediate = true,
   showValidationIcon = true,
   'aria-label': ariaLabel,
   autoComplete,
   maxLength,
+  // Propriétés optionnelles pour intégration avec useFormValidation
+  error: externalError,
+  touched: externalTouched,
 }) => {
+  const isTextarea = type === 'textarea';
+
   // Déterminer le validateur à utiliser
   const determineValidator = (): ((value: string | number) => ValidationResult) => {
     // Si validationType est fourni, utiliser ça
@@ -182,21 +191,25 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
 
   const finalValidator = determineValidator();
 
-  // État de validation
-  const [error, setError] = useState<ValidationResult | null>(null);
+  // État de validation interne (fallback si pas d'error externe)
+  const [internalError, setInternalError] = useState<ValidationResult | null>(null);
+  const [internalTouched, setInternalTouched] = useState(false);
 
-  // Validation effet - sauvegarde l'état de validation
+  // Validation au changement
   useEffect(() => {
-    if (value) {
+    if (validateOnChange && value !== undefined) {
       const result = finalValidator(value);
-      setError(result);
-    } else {
-      // Réinitialiser si vide
-      setError(null);
+      setInternalError(result);
     }
-  }, [value, finalValidator]);
+  }, [value, finalValidator, validateOnChange]);
 
-  const isValid = error?.valid === true;
+  // Déterminer l'erreur et le statut touché final
+  const currentError = externalError !== undefined ? externalError : internalError;
+  const isTouched = externalTouched !== undefined ? externalTouched : internalTouched;
+
+  // Afficher l'erreur si on a une erreur ET (soit on affiche tout de suite, soit le champ a été touché)
+  const shouldShowError = currentError && !currentError.valid && (showErrorsImmediate || isTouched);
+  const isValid = currentError?.valid === true;
 
   // Handler combiné pour onChange
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -204,10 +217,18 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
     onChange(newValue);
   };
 
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setInternalTouched(true);
+    if (validateOnBlur) {
+      const result = finalValidator(e.target.value);
+      setInternalError(result);
+    }
+  };
+
   const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
 
   let describedByValue: string | undefined;
-  if (error && !error.valid) {
+  if (shouldShowError) {
     describedByValue = `${fieldId}-error`;
   } else if (description) {
     describedByValue = `${fieldId}-description`;
@@ -215,12 +236,11 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
 
   const ariaAttrs = {
     'aria-required': required ? ('true' as const) : ('false' as const),
-    'aria-invalid': isValid ? ('false' as const) : ('true' as const),
+    'aria-invalid': !isValid && isTouched ? ('true' as const) : ('false' as const),
   };
 
-  const isTextarea = type === 'textarea';
-  const hasError = error && !error.valid;
-  const hasSuccess = error && error.valid && value;
+  const hasError = shouldShowError;
+  const hasSuccess = currentError && currentError.valid && value;
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -228,7 +248,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
       <div className="flex items-center justify-between gap-2">
         <label
           htmlFor={fieldId}
-          className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
+          className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
         >
           {label}
           {required && (
@@ -238,7 +258,11 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
           )}
         </label>
         {showValidationIcon && hasSuccess && (
-          <CheckCircle2 size={14} className="text-green-600" aria-hidden="true" />
+          <CheckCircle2
+            size={14}
+            className="text-green-600 dark:text-green-400"
+            aria-hidden="true"
+          />
         )}
       </div>
 
@@ -246,7 +270,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
       <div className="relative">
         {Icon && (
           <Icon
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300 pointer-events-none"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300 dark:text-brand-600 pointer-events-none"
             size={18}
             aria-hidden="true"
           />
@@ -258,12 +282,13 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             required={required}
             value={value}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder={placeholder}
             {...ariaAttrs}
             aria-label={ariaLabel}
             aria-describedby={describedByValue}
             maxLength={maxLength}
-            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(error && error.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
           />
         ) : (
           <input
@@ -272,6 +297,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             required={required}
             value={value}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder={placeholder}
             {...ariaAttrs}
             aria-label={ariaLabel}
@@ -279,9 +305,8 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             min={min}
             max={max}
             step={step}
-            autoComplete={autoComplete ?? (type === 'password' ? 'current-password' : 'on')}
             maxLength={maxLength}
-            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all ${getFieldBorderClass(!!hasError, !!(error && error.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
           />
         )}
 
@@ -289,7 +314,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
         {showValidationIcon && hasError && (
           <AlertCircle
             size={18}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-red-600 pointer-events-none"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-red-600 dark:text-red-400 pointer-events-none"
             aria-hidden="true"
           />
         )}
@@ -299,7 +324,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
       {description && (
         <p
           id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 mt-1 font-medium italic"
+          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
         >
           {description}
         </p>
@@ -309,16 +334,16 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
       {hasError && (
         <p
           id={`${fieldId}-error`}
-          className="text-[10px] text-red-600 font-medium flex items-center gap-1"
+          className="text-[10px] text-red-600 dark:text-red-400 font-medium flex items-center gap-1"
         >
           <AlertCircle size={12} aria-hidden="true" />
-          {error.error}
+          {currentError.error}
         </p>
       )}
 
       {/* Succès (optionnel) */}
       {hasSuccess && !description && (
-        <p className="text-[10px] text-green-600 font-medium flex items-center gap-1">
+        <p className="text-[10px] text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
           <CheckCircle2 size={12} aria-hidden="true" />
           Valide !
         </p>
