@@ -42,9 +42,10 @@ export function setupDexieForTests() {
       for (const dbName of databases.map((d: any) => d.name)) {
         try {
           const req = indexedDB.deleteDatabase(dbName);
-          await new Promise((resolve, reject) => {
+          await new Promise((resolve) => {
             req.onsuccess = resolve;
-            req.onerror = reject;
+            req.onerror = resolve; // Ne pas rejeter — ignorer les erreurs
+            req.onblocked = resolve; // Ne pas bloquer si une connexion est ouverte
           });
         } catch (e) {
           // Ignorer les erreurs (la DB peut déjà être fermée)
@@ -54,7 +55,7 @@ export function setupDexieForTests() {
       // Ignorer les erreurs de nettoyage
       console.warn('Cleanup error:', e);
     }
-  });
+  }, 5000);
 }
 
 /**

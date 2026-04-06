@@ -117,7 +117,7 @@ class InvoiceDB extends Dexie {
           }
         }
 
-        // Insère les séquences initialisées (ou defaut si aucun doc)
+        // Insère les séquences initialisées (ou défaut si aucun doc)
         const docTypes: Array<'invoice' | 'quote' | 'order' | 'credit_note'> = [
           'invoice',
           'quote',

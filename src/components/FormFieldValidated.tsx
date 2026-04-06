@@ -25,21 +25,25 @@
 import { AlertCircle, CheckCircle2, type LucideIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
-  validateAddress,
+  validateAddressForm,
   validateAmount,
   validateDate,
-  validateEmail,
-  validateFrenchPhone,
+  validateEmailForm,
   validateFrenchPostalCode,
   validateIBAN,
   validateName,
+  validatePhoneForm,
   validateRequired,
   validateSIREN,
-  validateSIRET,
-  validateVATNumber,
-  validateWebsite,
+  validateSIRETForm,
+  validateTVANumberForm,
+  validateWebsiteForm,
   type ValidationResult,
-} from '../lib/validators';
+} from '../lib/zod-schemas';
+
+// Aliases for validator map keys
+const validateFrenchPhone = validatePhoneForm;
+const validateVATNumber = validateTVANumberForm;
 
 type ValidationType =
   | 'siret'
@@ -59,19 +63,19 @@ type ValidationType =
 
 // Map des validateurs - accepte any pour les différentes signatures de validateurs
 const validatorsMap: Record<ValidationType, (value: unknown) => ValidationResult> = {
-  siret: validateSIRET as (value: unknown) => ValidationResult,
-  siren: validateSIREN as (value: unknown) => ValidationResult,
-  iban: validateIBAN as (value: unknown) => ValidationResult,
-  email: validateEmail as (value: unknown) => ValidationResult,
-  'postal-code': validateFrenchPostalCode as (value: unknown) => ValidationResult,
-  phone: validateFrenchPhone as (value: unknown) => ValidationResult,
-  vat: validateVATNumber as (value: unknown) => ValidationResult,
-  website: validateWebsite as (value: unknown) => ValidationResult,
-  name: validateName as (value: unknown) => ValidationResult,
-  amount: validateAmount as (value: unknown) => ValidationResult,
-  date: validateDate as (value: unknown) => ValidationResult,
-  required: validateRequired as (value: unknown) => ValidationResult,
-  address: validateAddress as (value: unknown) => ValidationResult,
+  siret: validateSIRETForm,
+  siren: validateSIREN,
+  iban: validateIBAN,
+  email: validateEmailForm,
+  'postal-code': validateFrenchPostalCode,
+  phone: validateFrenchPhone,
+  vat: validateVATNumber,
+  website: validateWebsiteForm,
+  name: validateName,
+  amount: validateAmount,
+  date: validateDate,
+  required: validateRequired,
+  address: validateAddressForm,
   none: () => ({ valid: true }),
 };
 
@@ -164,11 +168,11 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   showErrorsImmediate = true,
   showValidationIcon = true,
   'aria-label': ariaLabel,
-  autoComplete,
   maxLength,
   // Propriétés optionnelles pour intégration avec useFormValidation
   error: externalError,
   touched: externalTouched,
+  autoComplete: _autoComplete, // Capture pour éviter warning ESLint
 }) => {
   const isTextarea = type === 'textarea';
 
@@ -284,6 +288,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder={placeholder}
+            autoComplete={_autoComplete}
             {...ariaAttrs}
             aria-label={ariaLabel}
             aria-describedby={describedByValue}
@@ -299,6 +304,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder={placeholder}
+            autoComplete={_autoComplete}
             {...ariaAttrs}
             aria-label={ariaLabel}
             aria-describedby={describedByValue}

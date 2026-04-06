@@ -10,7 +10,9 @@ import {
   validateBatch,
   type BatchValidationRules,
   type ValidationResult,
-} from '../lib/validators';
+} from '../lib/zod-schemas';
+
+export type { BatchValidationRules };
 
 interface UseFormValidationOptions {
   validateOnBlur?: boolean; // Valider quand on quitte le champ

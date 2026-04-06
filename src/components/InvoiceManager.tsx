@@ -1,9 +1,13 @@
-import { Copy, Mail, Plus, Trash2 } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import { Copy, Mail, Plus, Printer, ShieldCheck, Trash2 } from 'lucide-react';
+import React, { Suspense, useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { useInvoiceActions } from '../hooks/useInvoiceActions';
+import { signInvoice } from '../lib/electronicSignature';
 import { useAppStore } from '../store/appStore';
 import type { Client, DocumentType, Invoice, InvoiceStatus, Product, UserProfile } from '../types';
 import { TableRowSkeleton } from './Skeleton';
+
+const InvoicePaper = React.lazy(() => import('./InvoicePaper'));
 
 type FilterStatus = 'all' | InvoiceStatus;
 
@@ -32,6 +36,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   const [sortBy, setSortBy] = useState<'date' | 'number' | 'total'>('date');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [signingId, setSigningId] = useState<string | null>(null);
 
   const isSyncing = useAppStore((state) => state.isSyncing);
 
@@ -130,6 +136,23 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
       setSelectedIds(new Set());
     }
   }, [selectedIds, deleteInvoice]);
+
+  const handleSign = useCallback(
+    async (inv: Invoice) => {
+      setSigningId(inv.id);
+      try {
+        const sig = await signInvoice(inv, userProfile);
+        toast.success(`Facture ${inv.number} signée`, {
+          description: `Empreinte : ${sig.hash.slice(0, 16)}…`,
+        });
+      } catch {
+        toast.error('Erreur lors de la signature numérique');
+      } finally {
+        setSigningId(null);
+      }
+    },
+    [userProfile]
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -319,6 +342,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button
+                          onClick={() => setPreviewInvoice(inv)}
+                          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                          title="Aperçu / Imprimer"
+                        >
+                          <Printer size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleSign(inv)}
+                          disabled={signingId === inv.id}
+                          className="p-2 hover:bg-green-100 dark:hover:bg-green-900 rounded text-green-600 disabled:opacity-50"
+                          title="Signer numériquement"
+                        >
+                          <ShieldCheck size={16} />
+                        </button>
+                        <button
                           onClick={() => duplicateInvoice(inv)}
                           className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                           title="Dupliquer"
@@ -348,8 +386,20 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           </table>
         )}
       </div>
+
+      {/* ── APERÇU IMPRESSION ─────────────────────────────────────────────── */}
+      {previewInvoice && (
+        <Suspense fallback={null}>
+          <InvoicePaper
+            invoice={previewInvoice}
+            client={clients.find((c) => c.id === previewInvoice.clientId)}
+            userProfile={userProfile}
+            onClose={() => setPreviewInvoice(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
 
-export default InvoiceManager;
+export default React.memo(InvoiceManager);

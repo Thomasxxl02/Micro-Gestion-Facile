@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-brand-900 text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out border-r border-brand-100/50 dark:border-brand-800/50 flex flex-col shadow-2xl lg:shadow-none
+          fixed top-0 left-0 z-30 h-screen w-72 glass text-brand-600 dark:text-brand-300 transition-transform duration-500 ease-in-out flex flex-col
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
         aria-label="Menu de navigation"

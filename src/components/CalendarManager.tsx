@@ -581,4 +581,4 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
   );
 };
 
-export default CalendarManager;
+export default React.memo(CalendarManager);

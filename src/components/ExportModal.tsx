@@ -1,253 +1,333 @@
-﻿import React, { useState } from 'react';
-import { X, Download, Loader2, AlertCircle } from 'lucide-react';
-import { useExportData } from '../lib/useExportData';
-import type { ExportData } from '../lib/exportUtils';
+/**
+ * ExportModal — Modal d'export complet des données
+ * ─────────────────────────────────────────────────
+ * Permet à l'utilisateur d'exporter ses données au format JSON ou CSV.
+ * Conformité RGPD Art. 20 (droit à la portabilité des données).
+ *
+ * Formats :
+ *   - JSON : export complet avec toutes les collections (backup complet)
+ *   - CSV  : export par collection (compatible Excel/OpenOffice)
+ */
 
-interface ExportModalProps {
-  open: boolean;
+import { Archive, Check, Download, FileJson, FileSpreadsheet, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import {
+  downloadFile,
+  exportAsCSV,
+  exportAsJSON,
+  generateFilename,
+  type ExportData,
+} from '../lib/exportUtils';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ExportFormat = 'json' | 'csv';
+
+type CollectionKey = Exclude<keyof ExportData, 'version' | 'exportedAt' | 'userProfile'>;
+
+const COLLECTION_LABELS: Record<CollectionKey, string> = {
+  invoices: 'Factures & devis',
+  clients: 'Clients',
+  suppliers: 'Fournisseurs',
+  products: 'Produits & services',
+  expenses: 'Dépenses',
+  emails: 'Emails',
+  emailTemplates: "Modèles d'email",
+  calendarEvents: 'Événements calendrier',
+};
+
+const CSV_COLLECTION_KEYS: CollectionKey[] = [
+  'invoices',
+  'clients',
+  'suppliers',
+  'products',
+  'expenses',
+];
+
+export interface ExportModalProps {
+  isOpen: boolean;
   onClose: () => void;
-  data: Partial<ExportData>;
+  data: ExportData;
 }
 
-export const ExportModal: React.FC<ExportModalProps> = ({ open, onClose, data }) => {
-  const { isExporting, progress, error, exportAllAsJSON, exportCollectionAsCSV, getExportStats } =
-    useExportData();
-  const [selectedFormat, setSelectedFormat] = useState<'json' | 'csv'>('json');
-  const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set(['all']));
+// ─── Composant ────────────────────────────────────────────────────────────────
 
-  if (!open) {
+const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
+  const [format, setFormat] = useState<ExportFormat>('json');
+  const [selectedCollections, setSelectedCollections] = useState<Set<CollectionKey>>(
+    new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[])
+  );
+  const [isExporting, setIsExporting] = useState(false);
+
+  if (!isOpen) {
     return null;
   }
 
-  const stats = getExportStats(data);
+  // ─── Handlers ───────────────────────────────────────────────────────────────
 
-  const collections = [
-    { key: 'invoices', label: 'Factures', count: stats.counts.invoices },
-    { key: 'clients', label: 'Clients', count: stats.counts.clients },
-    { key: 'suppliers', label: 'Fournisseurs', count: stats.counts.suppliers },
-    { key: 'products', label: 'Produits', count: stats.counts.products },
-    { key: 'expenses', label: 'DÃ©penses', count: stats.counts.expenses },
-    { key: 'emails', label: 'E-mails', count: stats.counts.emails },
-    { key: 'calendarEvents', label: 'Ã‰vÃ©nements', count: stats.counts.calendarEvents },
-  ];
+  const toggleCollection = (key: CollectionKey) => {
+    setSelectedCollections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () =>
+    setSelectedCollections(new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[]));
+
+  const deselectAll = () => setSelectedCollections(new Set());
 
   const handleExport = async () => {
-    if (selectedCollections.has('all')) {
-      // Export all data as JSON
-      await exportAllAsJSON(data);
-    } else if (selectedFormat === 'csv' && selectedCollections.size === 1) {
-      // Export single collection as CSV
-      const collection = Array.from(selectedCollections)[0];
-      const value = data[collection as keyof ExportData];
-      const items = Array.isArray(value) ? value : [];
-      await exportCollectionAsCSV(
-        collection as keyof Exclude<ExportData, 'version' | 'exportedAt' | 'userProfile'>,
-        items
-      );
-    } else {
-      // Export multiple as JSON
-      await exportAllAsJSON(data);
+    if (selectedCollections.size === 0) {
+      toast.warning('Sélectionnez au moins une collection à exporter.');
+      return;
     }
-    onClose();
+
+    setIsExporting(true);
+    try {
+      if (format === 'json') {
+        // Export complet JSON avec les collections sélectionnées
+        const partial: Partial<ExportData> = { userProfile: data.userProfile };
+        for (const key of selectedCollections) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (partial as any)[key] = data[key];
+        }
+        const json = await exportAsJSON(partial);
+        downloadFile(json, generateFilename('backup', 'json'), 'application/json');
+        toast.success('Export JSON téléchargé avec succès');
+      } else {
+        // Export CSV par collection (une par fichier)
+        const csvKeys = CSV_COLLECTION_KEYS.filter((k) => selectedCollections.has(k));
+        if (csvKeys.length === 0) {
+          toast.warning(
+            'Le format CSV ne supporte que : factures, clients, fournisseurs, produits, dépenses.'
+          );
+          return;
+        }
+        for (const key of csvKeys) {
+          const rows = data[key] as unknown[];
+          if (rows.length === 0) {
+            continue;
+          }
+          const csv = exportAsCSV(key, rows);
+          downloadFile(csv, generateFilename(key, 'csv'), 'text/csv;charset=utf-8');
+        }
+        toast.success(`${csvKeys.length} fichier(s) CSV téléchargé(s)`);
+      }
+      onClose();
+    } catch (err) {
+      console.error('[ExportModal] Erreur export:', err);
+      toast.error("L'export a échoué. Veuillez réessayer.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  const toggleCollection = (key: string) => {
-    const newSelected = new Set(selectedCollections);
-    if (newSelected.has('all')) {
-      newSelected.delete('all');
-    }
-    if (newSelected.has(key)) {
-      newSelected.delete(key);
-    } else {
-      newSelected.add(key);
-    }
-    setSelectedCollections(newSelected);
-  };
+  // ─── Rendu ──────────────────────────────────────────────────────────────────
+
+  const csvOnlyCollections: CollectionKey[] = CSV_COLLECTION_KEYS;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-brand-900 rounded-4xl shadow-2xl w-full max-w-2xl animate-scale-in">
-        {/* Header */}
-        <div className="flex items-center justify-between p-8 border-b border-brand-100 dark:border-brand-800">
-          <div>
-            <h2 className="text-2xl font-bold text-brand-900 dark:text-white">
-              Exporter vos données
-            </h2>
-            <p className="text-brand-500 text-sm mt-1">
-              Conformité RGPD Art. 20 - Droit à la portabilité
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-brand-100 dark:hover:bg-brand-800 rounded-xl transition-colors"
-            title="Fermer"
-          >
-            <X size={24} className="text-brand-500" />
-          </button>
-        </div>
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-        {/* Content */}
-        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
-          {/* Format selection */}
-          <fieldset>
-            <legend className="block text-sm font-bold text-brand-900 dark:text-white mb-3">
-              Format
-            </legend>
-            <div className="flex gap-3">
-              {(['json', 'csv'] as const).map((fmt) => {
-                if (selectedFormat === fmt) {
-                  return (
-                    <button
-                      key={fmt}
-                      type="button"
-                      onClick={() => setSelectedFormat(fmt)}
-                      aria-pressed="true"
-                      className="flex-1 py-3 px-4 rounded-2xl font-medium transition-all bg-brand-900 text-white dark:bg-brand-700"
-                    >
-                      {fmt.toUpperCase()}
-                    </button>
-                  );
-                }
-                return (
-                  <button
-                    key={fmt}
-                    type="button"
-                    onClick={() => setSelectedFormat(fmt)}
-                    aria-pressed="false"
-                    className="flex-1 py-3 px-4 rounded-2xl font-medium transition-all bg-brand-50 text-brand-900 dark:bg-brand-800 dark:text-brand-100"
-                  >
-                    {fmt.toUpperCase()}
-                  </button>
-                );
-              })}
+      {/* Modal */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-modal-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <div className="bg-white dark:bg-brand-900 rounded-3xl shadow-2xl w-full max-w-lg border border-brand-100 dark:border-brand-800 animate-slide-up">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-brand-100 dark:border-brand-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-brand-100 dark:bg-brand-800 rounded-2xl">
+                <Archive
+                  size={20}
+                  className="text-brand-600 dark:text-brand-300"
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <h2
+                  id="export-modal-title"
+                  className="text-lg font-bold text-brand-900 dark:text-white"
+                >
+                  Exporter vos données
+                </h2>
+                <p className="text-xs text-brand-500 dark:text-brand-400">
+                  RGPD Art. 20 — Portabilité
+                </p>
+              </div>
             </div>
-          </fieldset>
-
-          {/* Collections */}
-          <div>
-            <span className="block text-sm font-bold text-brand-900 dark:text-white mb-3">
-              Collections
-            </span>
-
-            <label
-              className={`w-full py-3 px-4 rounded-2xl font-medium transition-all mb-3 flex items-center cursor-pointer ${
-                selectedCollections.has('all')
-                  ? 'bg-brand-900 text-white dark:bg-brand-700'
-                  : 'bg-brand-50 text-brand-900 dark:bg-brand-800 dark:text-brand-100'
-              }`}
+            <button
+              onClick={onClose}
+              title="Fermer"
+              className="p-2 hover:bg-brand-100 dark:hover:bg-brand-800 rounded-xl transition-colors text-brand-500"
+              aria-label="Fermer la modal d'export"
             >
-              <input
-                type="checkbox"
-                checked={selectedCollections.has('all')}
-                onChange={() =>
-                  setSelectedCollections(
-                    selectedCollections.has('all') ? new Set() : new Set(['all'])
-                  )
-                }
-                className="mr-2"
-                aria-label="Exporter toutes les collections"
-              />
-              Exporter tout
-            </label>
+              <X size={18} />
+            </button>
+          </div>
 
-            {selectedCollections.has('all') ? (
-              <div className="bg-brand-50 dark:bg-brand-800/50 rounded-2xl p-4 text-sm text-brand-700 dark:text-brand-300">
-                <strong>Total:</strong>{' '}
-                {Object.values(stats.counts).reduce((a: number, b: number) => a + b, 0)} documents (
-                {stats.size.mb} MB)
+          <div className="p-6 space-y-6">
+            {/* Choix du format */}
+            <fieldset>
+              <legend className="text-sm font-semibold text-brand-700 dark:text-brand-300 mb-3">
+                Format d'export
+              </legend>
+              <div className="grid grid-cols-2 gap-3">
+                <label
+                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                    format === 'json'
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200'
+                      : 'border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="export-format"
+                    value="json"
+                    checked={format === 'json'}
+                    onChange={() => setFormat('json')}
+                    className="sr-only"
+                  />
+                  <FileJson size={24} aria-hidden="true" />
+                  <div>
+                    <p className="font-bold text-sm">JSON</p>
+                    <p className="text-[10px] opacity-70">Backup complet</p>
+                  </div>
+                  {format === 'json' && (
+                    <Check size={14} className="ml-auto text-brand-500" aria-hidden="true" />
+                  )}
+                </label>
+
+                <label
+                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                    format === 'csv'
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200'
+                      : 'border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="export-format"
+                    value="csv"
+                    checked={format === 'csv'}
+                    onChange={() => setFormat('csv')}
+                    className="sr-only"
+                  />
+                  <FileSpreadsheet size={24} aria-hidden="true" />
+                  <div>
+                    <p className="font-bold text-sm">CSV</p>
+                    <p className="text-[10px] opacity-70">Compatible Excel</p>
+                  </div>
+                  {format === 'csv' && (
+                    <Check size={14} className="ml-auto text-brand-500" aria-hidden="true" />
+                  )}
+                </label>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {collections.map((col) => (
+            </fieldset>
+
+            {/* Collections */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-brand-700 dark:text-brand-300">
+                  Collections à inclure
+                </p>
+                <div className="flex gap-2">
                   <button
-                    key={col.key}
-                    onClick={() => toggleCollection(col.key)}
-                    className={`p-3 rounded-xl text-left transition-all ${
-                      selectedCollections.has(col.key)
-                        ? 'bg-brand-100 dark:bg-brand-700 border-2 border-brand-900'
-                        : 'bg-brand-50 dark:bg-brand-800 border-2 border-transparent hover:bg-brand-100 dark:hover:bg-brand-700'
-                    }`}
+                    onClick={selectAll}
+                    className="text-[10px] font-bold uppercase tracking-wide text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
                   >
-                    <div className="font-medium text-brand-900 dark:text-white">{col.label}</div>
-                    <div className="text-xs text-brand-500">{col.count} items</div>
+                    Tout
                   </button>
-                ))}
+                  <span className="text-brand-200 dark:text-brand-700">|</span>
+                  <button
+                    onClick={deselectAll}
+                    className="text-[10px] font-bold uppercase tracking-wide text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                  >
+                    Aucun
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Info */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
-            <div className="flex gap-3">
-              <div className="shrink-0">
-                <AlertCircle size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {(Object.keys(COLLECTION_LABELS) as CollectionKey[]).map((key) => {
+                  const isDisabledForCSV = format === 'csv' && !csvOnlyCollections.includes(key);
+                  const count = (data[key] as unknown[]).length;
+                  const checked = selectedCollections.has(key) && !isDisabledForCSV;
+
+                  return (
+                    <label
+                      key={key}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                        isDisabledForCSV
+                          ? 'opacity-40 cursor-not-allowed'
+                          : 'hover:bg-brand-50 dark:hover:bg-brand-800/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={isDisabledForCSV}
+                        onChange={() => !isDisabledForCSV && toggleCollection(key)}
+                        className="w-4 h-4 rounded accent-brand-600"
+                        aria-label={`Inclure ${COLLECTION_LABELS[key]}`}
+                      />
+                      <span className="flex-1 text-sm text-brand-700 dark:text-brand-300">
+                        {COLLECTION_LABELS[key]}
+                      </span>
+                      <span className="text-xs font-mono text-brand-400 dark:text-brand-600 bg-brand-50 dark:bg-brand-800 px-2 py-0.5 rounded-full">
+                        {count}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
-              <div className="text-sm text-blue-800 dark:text-blue-300">
-                <strong>RGPD compliant:</strong> Vos données restent confidentielles. Aucune donnée
-                n&apos;est transmise à nos serveurs lors de l&apos;export.
-              </div>
+
+              {format === 'csv' && (
+                <p className="mt-2 text-[10px] text-amber-600 dark:text-amber-400">
+                  Le format CSV exporte chaque collection dans un fichier séparé. Emails, modèles et
+                  événements sont disponibles uniquement en JSON.
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Error */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-800 flex gap-3">
-              <AlertCircle size={20} className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-              <div className="text-sm text-red-800 dark:text-red-300">{error}</div>
-            </div>
-          )}
-
-          {/* Progress */}
-          {isExporting && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Loader2 size={18} className="animate-spin text-brand-600" />
-                <span className="text-sm font-medium text-brand-900 dark:text-white">
-                  Exportation en cours...
-                </span>
-              </div>
-              <progress
-                className="w-full"
-                value={progress}
-                max={100}
-                aria-label="Progression de l'exportation"
-              />
-              <div className="text-xs text-brand-600 dark:text-brand-400 text-right">
-                {progress}%
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex gap-3 p-8 border-t border-brand-100 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-800/50">
-          <button
-            onClick={onClose}
-            disabled={isExporting}
-            className="flex-1 py-3 px-4 rounded-2xl font-medium text-brand-900 dark:text-white bg-white dark:bg-brand-900 border border-brand-200 dark:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={isExporting || selectedCollections.size === 0}
-            className="flex-1 py-3 px-4 rounded-2xl font-medium text-white bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Export...
-              </>
-            ) : (
-              <>
-                <Download size={18} />
-                Exporter
-              </>
-            )}
-          </button>
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-brand-100 dark:border-brand-800">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-800 rounded-xl transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isExporting || selectedCollections.size === 0}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors"
+              title="Lancer l'export"
+            >
+              <Download size={16} aria-hidden="true" />
+              {isExporting ? 'Export en cours...' : `Exporter (${selectedCollections.size})`}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

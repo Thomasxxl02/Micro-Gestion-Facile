@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import Dashboard from '../components/Dashboard';
-import React from 'react';
 import { InvoiceStatus } from '../types';
 
 // Mock Recharts car SVG/Canvas causes issues in JSDOM
@@ -82,6 +81,11 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
+// Mock appStore to disable syncing skeleton (isSyncing:true by default blocks real UI)
+vi.mock('../store/appStore', () => ({
+  useAppStore: (selector: (state: any) => any) => selector({ isSyncing: false }),
+}));
+
 describe('Dashboard', () => {
   const mockProps = {
     invoices: [
@@ -138,7 +142,8 @@ describe('Dashboard', () => {
 
   it('affiche les graphiques Recharts (mockés)', () => {
     render(<Dashboard {...mockProps} />);
-    expect(screen.getByTestId('area-chart')).toBeTruthy();
+    const areaCharts = screen.getAllByTestId('area-chart');
+    expect(areaCharts.length).toBeGreaterThanOrEqual(1);
     // Le PieChart est maintenant visible car expensesByCategory n est plus vide
     expect(screen.getByTestId('pie-chart')).toBeTruthy();
   });

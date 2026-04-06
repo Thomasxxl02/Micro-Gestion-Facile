@@ -36,6 +36,7 @@ import type {
   UserProfile,
 } from '../types';
 import { ConfirmDialog } from './Dialogs';
+import ExportModal from './ExportModal';
 import {
   ColorPicker,
   FormField,
@@ -131,6 +132,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   }>({});
 
   // ─── LAST BACKUP DATE ───
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(
     localStorage.getItem('mgf_last_backup_date')
   );
@@ -1022,7 +1024,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <button
-                  onClick={handleExportAll}
+                  onClick={() => setIsExportModalOpen(true)}
                   className="flex items-center justify-center gap-3 p-5 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-2xl font-bold text-sm shadow-xl shadow-brand-900/10"
                 >
                   <Download size={20} /> Exporter (.json)
@@ -1207,6 +1209,23 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         </div>
       </div>
 
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        data={{
+          version: '1.0',
+          exportedAt: new Date().toISOString(),
+          userProfile,
+          invoices: allData.invoices,
+          clients: allData.clients,
+          suppliers: allData.suppliers,
+          products: allData.products,
+          expenses: allData.expenses,
+          emails: [],
+          emailTemplates: [],
+          calendarEvents: [],
+        }}
+      />
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title={confirmDialog.title}

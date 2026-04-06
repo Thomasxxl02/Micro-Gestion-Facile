@@ -26,7 +26,7 @@ import {
   YAxis,
 } from 'recharts';
 import { useFormValidation } from '../hooks/useFormValidation';
-import { ExpenseSchema } from '../lib/schemas';
+import { ExpenseSchema, schemaToRules } from '../lib/zod-schemas';
 import { analyzeReceipt } from '../services/geminiService';
 import {
   type Client,
@@ -92,7 +92,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     touched,
     handleChange: handleFormChange,
     validate: validateAll,
-  } = useFormValidation<Partial<Expense>>(initialFormState, ExpenseSchema);
+  } = useFormValidation<Partial<Expense>>(initialFormState, schemaToRules(ExpenseSchema));
 
   const resetExpenseForm = () => {
     setNewExpense(initialFormState);
@@ -546,7 +546,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     'Achats',
     'Loyer',
     'Logiciels',
-    'Deplacements',
+    'Déplacements',
     'Assurance',
     'Marketing',
     'Repas',
@@ -1408,4 +1408,4 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   );
 };
 
-export default AccountingManager;
+export default React.memo(AccountingManager);

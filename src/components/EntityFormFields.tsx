@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { type ValidationResult } from '../lib/validators';
+import { type ValidationResult } from '../lib/zod-schemas';
 import { FormField, SelectField, TextAreaField } from './FormFields';
 import { FormFieldValidated } from './FormFieldValidated';
 

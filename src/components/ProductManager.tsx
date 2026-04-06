@@ -21,7 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
-import { validateAmount } from '../lib/validators';
+import { validateAmount } from '../lib/zod-schemas';
 import type { Product } from '../types';
 
 interface ProductManagerProps {

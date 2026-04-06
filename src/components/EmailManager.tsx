@@ -299,7 +299,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
             />
           </div>
 
-          <div className="bg-white border border-brand-100 rounded-[2rem] overflow-hidden shadow-sm">
+          <div className="bg-white border border-brand-100 rounded-4xl overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-brand-900 text-white">
@@ -392,7 +392,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               setTemplateFormData({ name: '', subject: '', body: '', type: 'custom' });
               setIsComposeOpen(true); // Reusing compose modal for template creation
             }}
-            className="border-2 border-dashed border-brand-200 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group"
+            className="border-2 border-dashed border-brand-200 rounded-4xl p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group"
           >
             <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Plus size={32} />
@@ -403,7 +403,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           {templates.map((template) => (
             <div
               key={template.id}
-              className="bg-white border border-brand-100 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all group relative"
+              className="bg-white border border-brand-100 rounded-4xl p-6 shadow-sm hover:shadow-md transition-all group relative"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600">
@@ -451,7 +451,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
       {activeTab === 'compose' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white border border-brand-100 rounded-[2rem] p-8 shadow-sm">
+          <div className="lg:col-span-2 bg-white border border-brand-100 rounded-4xl p-8 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-brand-900 flex items-center gap-2">
                 <Mail className="text-brand-500" size={20} />
@@ -494,7 +494,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       {composeData.subject || '(Sans objet)'}
                     </div>
                   </div>
-                  <div className="text-brand-800 whitespace-pre-wrap leading-relaxed min-h-[200px]">
+                  <div className="text-brand-800 whitespace-pre-wrap leading-relaxed min-h-50">
                     {composeData.body || '(Message vide)'}
                   </div>
                 </div>
@@ -705,7 +705,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           </div>
 
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-brand-50 border border-brand-100 rounded-[2rem] p-6">
+            <div className="bg-brand-50 border border-brand-100 rounded-4xl p-6">
               <h4 className="text-sm font-bold text-brand-900 mb-4 flex items-center gap-2">
                 <FileText className="text-brand-400" size={18} />
                 Templates Disponibles
@@ -733,7 +733,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </div>
             </div>
 
-            <div className="bg-accent-50 border border-accent-100 rounded-[2rem] p-6">
+            <div className="bg-accent-50 border border-accent-100 rounded-4xl p-6">
               <h4 className="text-sm font-bold text-accent-900 mb-2 flex items-center gap-2">
                 <Wand2 size={18} />
                 Astuce IA
@@ -750,7 +750,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       {/* Template Modal (Reusing Compose UI logic for simplicity) */}
       {isComposeOpen && activeTab === 'templates' && (
         <div className="fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-slide-up">
+          <div className="bg-white rounded-4xl w-full max-w-2xl shadow-2xl overflow-hidden animate-slide-up">
             <div className="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
               <h3 className="text-xl font-bold text-brand-900">
                 {editingTemplateId ? 'Modifier le Template' : 'Nouveau Template'}
@@ -837,3 +837,4 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 };
 
 export default EmailManager;
+

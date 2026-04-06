@@ -121,7 +121,9 @@ export function useInvoiceActions({
       }
 
       // TODO: Implémenter l'envoi d'email (Resend, SendGrid, etc)
-      console.info(`Envoi de la facture ${invoice.number} à ${client.email}`);
+      if (import.meta.env.DEV) {
+        console.info(`Envoi de la facture ${invoice.number} à ${client.email}`);
+      }
       alert(`Email envoyé à ${client.email}`);
     },
     [clients]
@@ -235,7 +237,9 @@ export function useInvoiceActions({
   );
 
   const transmitPPF = useCallback(async (invoice: Invoice) => {
-    console.info('Transmission PPF de la facture:', invoice.number);
+    if (import.meta.env.DEV) {
+      console.info('Transmission PPF de la facture:', invoice.number);
+    }
     // TODO: Implémenter la transmission PPF (Chorus Pro, Factur-X, etc)
     alert(`Facture ${invoice.number} marquée pour transmission PPF`);
   }, []);

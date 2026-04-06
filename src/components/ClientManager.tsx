@@ -9,7 +9,7 @@ import { AlertCircle, Archive, Download, Plus, TrendingUp, Upload, Users } from 
 import React, { useMemo, useRef } from 'react';
 import { useEntityFilters, useEntityForm } from '../hooks/useEntity';
 import { useFormValidation } from '../hooks/useFormValidation';
-import { ClientSchema } from '../lib/schemas';
+import { ClientSchema, schemaToRules } from '../lib/zod-schemas';
 import { type Client, type Invoice, InvoiceStatus } from '../types';
 import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
 import EntityModal from './EntityModal';
@@ -38,7 +38,9 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, invoices, onSave
     touched: touchedFields,
     handleChange: handleFormChange,
     validate: validateAll,
-  } = useFormValidation(form.formData || ({} as Client), ClientSchema, { validateOnChange: true });
+  } = useFormValidation(form.formData || ({} as Client), schemaToRules(ClientSchema), {
+    validateOnChange: true,
+  });
 
   // Stats: revenue by client, total count
   const getClientStats = (clientId: unknown) => {

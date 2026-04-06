@@ -68,12 +68,13 @@ export function useFirestoreSync<T extends { id: string }>(options: UseFirestore
         setStatus('SUCCESS');
         setFromCache(snapshot.metadata.fromCache);
 
-        if (snapshot.metadata.fromCache) {
-          console.info(`[Sync] ${collectionName} chargé du cache (Hors Ligne)`);
-        }
-
-        if (snapshot.metadata.hasPendingWrites) {
-          console.info(`[Sync] ${collectionName}: Modifications locales en attente d'envoi...`);
+        if (import.meta.env.DEV) {
+          if (snapshot.metadata.fromCache) {
+            console.info(`[Sync] ${collectionName} chargé du cache (Hors Ligne)`);
+          }
+          if (snapshot.metadata.hasPendingWrites) {
+            console.info(`[Sync] ${collectionName}: Modifications locales en attente d'envoi...`);
+          }
         }
       },
       (err) => {

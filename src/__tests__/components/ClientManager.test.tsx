@@ -1,8 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import ClientManager from '../../components/ClientManager';
-import React from 'react';
 import type { Client, Invoice } from '../../types';
 import { InvoiceStatus } from '../../types';
 
@@ -18,9 +17,11 @@ vi.mock('lucide-react', () => ({
   Search: () => <span>SearchIcon</span>,
   X: () => <span>XIcon</span>,
   Check: () => <span>CheckIcon</span>,
+  CheckCircle2: () => <span>CheckCircle2Icon</span>,
   Edit2: () => <span>Edit2Icon</span>,
   Trash2: () => <span>Trash2Icon</span>,
   Eye: () => <span>EyeIcon</span>,
+  Image: () => <span>ImageIcon</span>,
 }));
 
 // Mock child components

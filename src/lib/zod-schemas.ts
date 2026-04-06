@@ -1,278 +1,490 @@
 /**
- * Schémas de validation Zod pour Micro-Gestion-Facile
- * Remplace schemas.ts custom - fournit validation runtime typée
+ * zod-schemas.ts
+ * CENTRALIZED VALIDATION usando Zod
  *
- * Inclut: Client, Supplier, Invoice, Expense, Product avec règles métier françaises
- * Chaque schéma peut être utilisé avec .parse(), .safeParse() ou inféré pour TypeScript
+ * Phase 2.3: Consolidate custom validators + Zod into single source
+ * Replaces: schemas.ts (custom ValidationSchema) + partial validators.ts
+ *
+ * Benefits:
+ * ✅ Single source of truth
+ * ✅ Type inference: z.infer<typeof ClientSchema>
+ * ✅ Runtime + compile-time safety
+ * ✅ Reusable for forms, imports, API validation
  */
 
 import { z } from 'zod';
 
-/**
- * Validateurs personnalisés français
- */
+// ============================================================================
+// VALIDATORS (functions for field-level validation)
+// ============================================================================
 
-const _SIRET_VALIDATION = /^[\d\s-]*$/;
-const _SIREN_VALIDATION = /^[\d\s-]*$/;
-const _IBAN_VALIDATION = /^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/;
-const PHONE_VALIDATION = /^(?:(?:\+|00)33|0)[1-9](?:[\s.-]?\d{2}){4}$/;
-const _POSTAL_CODE_VALIDATION = /^[\d]{5}$/;
-const VAT_NUMBER_VALIDATION = /^[A-Z]{2}\d{10}$/;
-
-/**
- * Schéma Client
- */
-export const ClientSchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z
-      .string()
-      .min(2, 'Le nom doit contenir au moins 2 caractères')
-      .max(100, 'Le nom ne peut pas dépasser 100 caractères'),
-    email: z.string().email('Adresse email invalide'),
-    address: z.string().min(5, 'Adresse trop courte').max(200, 'Adresse trop longue'),
-    phone: z
-      .string()
-      .regex(PHONE_VALIDATION, 'Numéro de téléphone français invalide')
-      .optional()
-      .or(z.literal('')),
-    siret: z.string().length(14, 'SIRET doit contenir 14 chiffres').optional().or(z.literal('')),
-    siren: z.string().length(9, 'SIREN doit contenir 9 chiffres').optional().or(z.literal('')),
-    notes: z.string().max(500, 'Les notes ne peuvent pas dépasser 500 caractères').optional(),
-    archived: z.boolean().optional(),
-    contactName: z.string().max(100).optional().or(z.literal('')),
-    website: z.string().url('URL invalide').optional().or(z.literal('')),
-    tvaNumber: z
-      .string()
-      .regex(VAT_NUMBER_VALIDATION, 'Numéro TVA invalide')
-      .optional()
-      .or(z.literal('')),
-    paymentTerms: z.string().optional(),
-    category: z.enum(['Particulier', 'Entreprise', 'Association', 'Public']).optional(),
-    isPublicEntity: z.boolean().optional(),
-    createdAt: z.string().datetime().optional(),
-    isTest: z.boolean().optional(),
-  })
-  .strict();
-
-export type Client = z.infer<typeof ClientSchema>;
-
-/**
- * Schéma Supplier
- */
-export const SupplierSchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z
-      .string()
-      .min(2, 'Le nom doit contenir au moins 2 caractères')
-      .max(100, 'Le nom ne peut pas dépasser 100 caractères'),
-    email: z.string().email('Adresse email invalide').optional().or(z.literal('')),
-    phone: z
-      .string()
-      .regex(PHONE_VALIDATION, 'Numéro de téléphone français invalide')
-      .optional()
-      .or(z.literal('')),
-    siret: z.string().length(14, 'SIRET doit contenir 14 chiffres').optional().or(z.literal('')),
-    siren: z.string().length(9, 'SIREN doit contenir 9 chiffres').optional().or(z.literal('')),
-    address: z.string().max(200, 'Adresse trop longue').optional(),
-    category: z.string().optional(),
-    notes: z.string().max(500, 'Les notes ne peuvent pas dépasser 500 caractères').optional(),
-    contactName: z.string().max(100).optional().or(z.literal('')),
-    website: z.string().url('URL invalide').optional().or(z.literal('')),
-    tvaNumber: z
-      .string()
-      .regex(VAT_NUMBER_VALIDATION, 'Numéro TVA invalide')
-      .optional()
-      .or(z.literal('')),
-    paymentTerms: z.string().optional(),
-    archived: z.boolean().optional(),
-    createdAt: z.string().datetime().optional(),
-  })
-  .strict();
-
-export type Supplier = z.infer<typeof SupplierSchema>;
-
-/**
- * Schéma Product
- */
-export const ProductSchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z
-      .string()
-      .min(2, 'Le nom doit contenir au moins 2 caractères')
-      .max(100, 'Le nom ne peut pas dépasser 100 caractères'),
-    description: z.string().max(500, 'Description trop longue').optional(),
-    price: z
-      .number()
-      .positive('Le prix doit être positif')
-      .finite('Le prix doit être un nombre fini'),
-    type: z.enum(['service', 'product']),
-    category: z.string().optional(),
-    sku: z.string().max(50, 'SKU trop long').optional().or(z.literal('')),
-    unit: z.string().optional(), // ex: "heure", "jour", "unité"
-    stock: z.number().int().nonnegative().optional(),
-    minStock: z.number().int().nonnegative().optional(),
-    archived: z.boolean().optional(),
-    createdAt: z.string().datetime().optional(),
-    isTest: z.boolean().optional(),
-  })
-  .strict();
-
-export type Product = z.infer<typeof ProductSchema>;
-
-/**
- * Schéma InvoiceItem
- */
-export const InvoiceItemSchema = z
-  .object({
-    id: z.string().uuid(),
-    description: z.string().min(1, 'Description obligatoire').max(500, 'Description trop longue'),
-    quantity: z.number().positive('Quantité doit être positive').finite('Quantité invalide'),
-    unitPrice: z
-      .number()
-      .positive('Prix unitaire doit être positif')
-      .finite('Prix unitaire invalide'),
-    unit: z.string().optional(),
-    vatRate: z
-      .number()
-      .min(0, 'Taux TVA ne peut pas être négatif')
-      .max(100, 'Taux TVA invalide')
-      .optional(),
-  })
-  .strict();
-
-export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
-
-/**
- * Schéma Invoice
- */
-export const InvoiceSchema = z
-  .object({
-    id: z.string().uuid(),
-    type: z.enum(['invoice', 'quote', 'order', 'credit_note', 'deposit_invoice']),
-    number: z.string().min(1, 'Numéro de facture obligatoire').max(50, 'Numéro trop long'),
-    linkedDocumentId: z.string().uuid().optional(),
-    date: z
-      .string()
-      .datetime()
-      .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide')),
-    dueDate: z
-      .string()
-      .datetime()
-      .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide')),
-    clientId: z.string().uuid('ID client invalide'),
-    items: z.array(InvoiceItemSchema).min(1, 'Au moins un article obligatoire'),
-    status: z.string(),
-    notes: z.string().max(1000).optional(),
-    total: z.number().nonnegative('Total ne peut pas être négatif').finite('Total invalide'),
-    reminderDate: z.string().datetime().optional(),
-    discount: z
-      .number()
-      .min(0, 'Remise ne peut pas être négative')
-      .max(100, 'Remise invalide')
-      .optional(),
-    shipping: z
-      .number()
-      .nonnegative('Frais de port invalides')
-      .finite('Frais de port invalides')
-      .optional(),
-    deposit: z.number().nonnegative('Acompte invalide').finite('Acompte invalide').optional(),
-    vatAmount: z.number().nonnegative('TVA invalide').finite('TVA invalide').optional(),
-    taxExempt: z.boolean().optional(),
-    eInvoiceFormat: z.enum(['Factur-X', 'UBL', 'CII']).optional(),
-    eInvoiceStatus: z.string().optional(),
-    transmissionDate: z.string().datetime().optional(),
-    operationCategory: z.enum(['BIENS', 'SERVICES', 'MIXTE']).optional(),
-    deliveryAddress: z.string().optional(),
-    isTest: z.boolean().optional(),
-    subtotal: z
-      .number()
-      .nonnegative('Sous-total invalide')
-      .finite('Sous-total invalide')
-      .optional(),
-  })
-  .strict()
-  .refine((data) => {
-    try {
-      return new Date(data.dueDate as string) >= new Date(data.date as string);
-    } catch {
-      return true; // Validation de date va échouer avant cette règle
-    }
-  }, "La date d'échéance doit être après ou égale à la date de facture");
-
-export type Invoice = z.infer<typeof InvoiceSchema>;
-
-/**
- * Schéma Expense
- */
-export const ExpenseSchema = z
-  .object({
-    id: z.string().uuid(),
-    date: z
-      .string()
-      .datetime()
-      .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide')),
-    description: z.string().min(1, 'Description obligatoire').max(500, 'Description trop longue'),
-    amount: z.number().positive('Montant doit être positif').finite('Montant invalide'),
-    vatAmount: z.number().nonnegative('TVA invalide').finite('TVA invalide').optional(),
-    vatRate: z
-      .number()
-      .min(0, 'Taux TVA ne peut pas être négatif')
-      .max(100, 'Taux TVA invalide')
-      .optional(),
-    category: z.string().min(1, 'Catégorie obligatoire'),
-    supplierId: z.string().uuid().optional(),
-  })
-  .strict();
-
-export type Expense = z.infer<typeof ExpenseSchema>;
-
-/**
- * Schémas pour formes - versions sans UUID (création)
- */
-
-export const ClientCreateSchema = ClientSchema.omit({ id: true, createdAt: true });
-export type ClientCreate = z.infer<typeof ClientCreateSchema>;
-
-export const SupplierCreateSchema = SupplierSchema.omit({ id: true, createdAt: true });
-export type SupplierCreate = z.infer<typeof SupplierCreateSchema>;
-
-export const ProductCreateSchema = ProductSchema.omit({ id: true, createdAt: true });
-export type ProductCreate = z.infer<typeof ProductCreateSchema>;
-
-// InvoiceCreateSchema: For creation forms, use type definition instead of schema
-// because omit() doesn't work with ZodEffects (from refine)
-export type InvoiceCreate = Omit<Invoice, 'id'>;
-
-export const ExpenseCreateSchema = ExpenseSchema.omit({ id: true });
-export type ExpenseCreate = z.infer<typeof ExpenseCreateSchema>;
-
-/**
- * Utilitaires pour validation sûre
- */
-
-export const validateClient = (data: unknown) => ClientSchema.safeParse(data);
-export const validateSupplier = (data: unknown) => SupplierSchema.safeParse(data);
-export const validateProduct = (data: unknown) => ProductSchema.safeParse(data);
-export const validateInvoice = (data: unknown) => InvoiceSchema.safeParse(data);
-export const validateExpense = (data: unknown) => ExpenseSchema.safeParse(data);
-
-export const validateClientCreate = (data: unknown) => ClientCreateSchema.safeParse(data);
-export const validateSupplierCreate = (data: unknown) => SupplierCreateSchema.safeParse(data);
-export const validateProductCreate = (data: unknown) => ProductCreateSchema.safeParse(data);
-// validateInvoiceCreate: Parse against base InvoiceSchema, the 'id' field is ignored by client
-export const validateInvoiceCreate = (data: unknown) => {
-  const validated = InvoiceSchema.safeParse(data);
-  if (validated.success) {
-    // Remove id if present to ensure it's not included
-    const { id: _id, ...withoutId } = validated.data;
-    return { success: true, data: withoutId } as z.SafeParseReturnType<
-      InvoiceCreate,
-      InvoiceCreate
-    >;
+/** French SIRET: 14 digits, validates Luhn (mod 10) checksum, accepts spaces/dashes */
+export const validateSIRET = (val: string): boolean => {
+  const digits = val.replace(/[\s\-.]/g, '');
+  if (!/^\d{14}$/.test(digits)) {
+    return false;
   }
-  return validated;
+  let sum = 0;
+  for (let i = 0; i < 14; i++) {
+    let n = parseInt(digits[i], 10);
+    if ((14 - i) % 2 === 0) {
+      n *= 2;
+      if (n > 9) {
+        n -= 9;
+      }
+    }
+    sum += n;
+  }
+  return sum % 10 === 0;
 };
-export const validateExpenseCreate = (data: unknown) => ExpenseCreateSchema.safeParse(data);
+
+/** French TVA format: FR123456789 */
+export const validateTVA = (val: string): boolean => /^(FR|fr)?\d{2}\d{9}$/.test(val);
+
+/** French phone format: 01-05 XXXXX or +33 format */
+export const validatePhone = (val: string): boolean =>
+  /^(?:\+33[1-9]|0[1-9])\d{8}$/.test(val.replace(/[\s.-]/g, ''));
+
+/** Email validation */
+export const validateEmail = (val: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+
+/** Website must be valid URL */
+export const validateWebsite = (val: string): boolean => {
+  try {
+    new URL(val.includes('://') ? val : `https://${val}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** French address: at least street + city */
+export const validateAddress = (val: string): boolean =>
+  val.split(',').length >= 2 && val.length >= 10;
+
+// Aliases for backward compatibility
+export const validateTVANumber = validateTVA;
+export const validateFrenchPhone = validatePhone;
+
+// ============================================================================
+// BASE SCHEMAS
+// ============================================================================
+
+export const ClientSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(2, 'Nom requis (min 2 caractères)'),
+  email: z.string().email('Email valide requis'),
+  phone: z.string().refine(validateFrenchPhone, 'Format FR requis').optional().or(z.literal('')),
+  siret: z
+    .string()
+    .refine(validateSIRET, 'Format SIRET invalide (123 456 789 00012)')
+    .optional()
+    .or(z.literal('')),
+  tvaNumber: z
+    .string()
+    .refine(validateTVA, 'Format TVA invalide (FR123456789)')
+    .optional()
+    .or(z.literal('')),
+  address: z.string().refine(validateAddress, 'Adresse invalide').optional().or(z.literal('')),
+  website: z
+    .string()
+    .refine((val) => !val || validateWebsite(val), 'URL invalide')
+    .optional()
+    .or(z.literal('')),
+  isTest: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+});
+
+export const SupplierSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(2, 'Nom requis (min 2 caractères)'),
+  email: z.string().email('Email valide requis').optional().or(z.literal('')),
+  phone: z
+    .string()
+    .refine((val) => !val || validateFrenchPhone(val), 'Format FR requis')
+    .optional()
+    .or(z.literal('')),
+  siret: z
+    .string()
+    .refine((val) => !val || validateSIRET(val), 'Format SIRET invalide')
+    .optional()
+    .or(z.literal('')),
+  tvaNumber: z
+    .string()
+    .refine((val) => !val || validateTVA(val), 'Format TVA invalide')
+    .optional()
+    .or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  isTest: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+});
+
+export const ProductSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(2, 'Nom requis (min 2 caractères)'),
+  description: z.string().optional().or(z.literal('')),
+  price: z.number().min(0, 'Prix doit être positif'),
+  unitOfMeasure: z.string().optional().or(z.literal('pièce')),
+  isTest: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+});
+
+export const ExpenseSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(2, 'Description requise'),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Date invalide'),
+  amount: z.number().min(0, 'Montant doit être positif'),
+  vatAmount: z.number().min(0, 'Montant TVA doit être positif'),
+  category: z.string().optional().or(z.literal('other')),
+  isTest: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+});
+
+export const InvoiceItemSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(2),
+  quantity: z.number().min(0),
+  unitPrice: z.number().min(0),
+  vatRate: z.number().min(0).max(100).optional().default(0),
+});
+
+export const InvoiceSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(['invoice', 'quote', 'order', 'creditNote']),
+  number: z.string().min(1, 'Numéro requis'),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Date invalide'),
+  dueDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Date d'échéance invalide"),
+  clientId: z.string().min(1, 'Client requis'),
+  items: z.array(InvoiceItemSchema).min(1, 'Au moins une ligne requise'),
+  discount: z.number().min(0).default(0),
+  shipping: z.number().min(0).default(0),
+  status: z.enum(['draft', 'sent', 'paid', 'overdue']),
+  total: z.number().min(0),
+  isTest: z.boolean().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT & IMPORT SCHEMAS (for RGPD data portability)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ExportDataSchema = z.object({
+  version: z.string(),
+  exportedAt: z.string(),
+  userProfile: z.record(z.string(), z.unknown()),
+  invoices: z.array(InvoiceSchema).default([]),
+  clients: z.array(ClientSchema).default([]),
+  suppliers: z.array(SupplierSchema).default([]),
+  products: z.array(ProductSchema).default([]),
+  expenses: z.array(ExpenseSchema).default([]),
+  emails: z.array(z.record(z.string(), z.unknown())).default([]),
+  emailTemplates: z.array(z.record(z.string(), z.unknown())).default([]),
+  calendarEvents: z.array(z.record(z.string(), z.unknown())).default([]),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPE INFERENCE (TypeScript types from schemas)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ClientInput = z.infer<typeof ClientSchema>;
+export type SupplierInput = z.infer<typeof SupplierSchema>;
+export type ProductInput = z.infer<typeof ProductSchema>;
+export type ExpenseInput = z.infer<typeof ExpenseSchema>;
+export type InvoiceInput = z.infer<typeof InvoiceSchema>;
+export type ExportDataInput = z.infer<typeof ExportDataSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VALIDATION HELPERS (for use in forms/components)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Validate a single field using Zod schema
+ * @param schema Zod schema to validate against
+ * @param data Data to validate
+ * @returns { valid: true } or { valid: false, error: string }
+ */
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/** Batch validation rules mapping field names to validator functions */
+export type BatchValidationRules = Record<string, (value: unknown) => ValidationResult>;
+
+export const validateWithSchema = <T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult => {
+  try {
+    schema.parse(data);
+    return { valid: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const firstError = error.issues[0];
+      return {
+        valid: false,
+        error: firstError.message || 'Validation échouée',
+      };
+    }
+    return { valid: false, error: 'Erreur de validation inconnue' };
+  }
+};
+
+/**
+ * Create a field validator from schema
+ * Useful for individual field validation in forms
+ * @param schema Zod schema
+ * @param fieldName Name of the field to validate
+ */
+export const createFieldValidator = <T>(schema: z.ZodSchema<T>, fieldName: keyof T) => {
+  return (value: unknown): ValidationResult => {
+    try {
+      if (schema instanceof z.ZodObject) {
+        const fieldSchema = (schema as z.ZodObject<z.ZodRawShape>).shape[fieldName as string];
+        if (fieldSchema) {
+          (fieldSchema as unknown as { parse(v: unknown): unknown }).parse(value);
+        }
+      }
+      return { valid: true };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return { valid: false, error: error.issues[0]?.message || 'Validation échouée' };
+      }
+      return { valid: false, error: 'Erreur de validation' };
+    }
+  };
+};
+
+/**
+ * Safe parse (doesn't throw, useful for form fields)
+ * @param schema Zod schema
+ * @param data Data to parse
+ * @returns Parsed data or original data if invalid
+ */
+export const safeParse = <T>(schema: z.ZodSchema<T>, data: unknown): T | unknown => {
+  try {
+    return schema.parse(data);
+  } catch {
+    return data;
+  }
+};
+
+/**
+ * Batch validate multiple fields (backward compatibility for useFormValidation)
+ * @param data Form data to validate
+ * @param rules Field validators
+ * @returns Record of validation results by field name
+ */
+export const validateBatch = (
+  data: Record<string, unknown>,
+  rules: Record<string, (value: unknown) => ValidationResult>
+): Record<string, ValidationResult> => {
+  const results: Record<string, ValidationResult> = {};
+
+  for (const [fieldName, validator] of Object.entries(rules)) {
+    const value = data[fieldName];
+    results[fieldName] = validator(value);
+  }
+
+  return results;
+};
+
+/**
+ * Check if all validation results are valid
+ * @param results Validation results from validateBatch
+ * @returns true if all results are valid
+ */
+export const areAllValid = (results: Record<string, ValidationResult>): boolean => {
+  return Object.values(results).every((result) => result.valid === true);
+};
+
+/**
+ * Check if a single validation result is valid
+ * @param result A single validation result
+ * @returns true if the result is valid
+ */
+export const isValid = (result: ValidationResult): boolean => {
+  return result.valid === true;
+};
+// ─────────────────────────────────────────────────────────────────────────────
+// ADDITIONAL VALIDATORS (for backward compatibility with forms)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Validators for additional field types used in FormFieldValidated */
+
+export const validateSIREN = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: false, error: 'SIREN obligatoire' };
+  }
+  if (!/^\d{9}$/.test(str)) {
+    return { valid: false, error: 'SIREN: 9 chiffres requis' };
+  }
+  return { valid: true };
+};
+
+export const validateIBAN = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: false, error: 'IBAN obligatoire' };
+  }
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/.test(str.replace(/\s/g, ''))) {
+    return { valid: false, error: 'Format IBAN invalide' };
+  }
+  return { valid: true };
+};
+
+export const validateFrenchPostalCode = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: false, error: 'Code postal obligatoire' };
+  }
+  if (!/^\d{5}$/.test(str)) {
+    return { valid: false, error: 'Code postal: 5 chiffres requis' };
+  }
+  return { valid: true };
+};
+
+export const validateName = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: false, error: 'Nom obligatoire' };
+  }
+  if (str.length < 2) {
+    return { valid: false, error: 'Nom: au moins 2 caractères' };
+  }
+  return { valid: true };
+};
+
+// ValidationResult wrappers for form validators
+// (Boolean versions above are used by Zod schemas)
+
+export const validateAddressForm = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (str && str.length < 5) {
+    return { valid: false, error: 'Adresse: au moins 5 caractères' };
+  }
+  return { valid: true };
+};
+
+export const validateWebsiteForm = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: true };
+  } // Optional field
+  try {
+    new URL(str.startsWith('http') ? str : `https://${str}`);
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'URL invalide' };
+  }
+};
+
+export const validateAmount = (val: unknown): ValidationResult => {
+  const num = Number(val);
+  if (isNaN(num)) {
+    return { valid: false, error: 'Montant doit être un nombre' };
+  }
+  if (num < 0) {
+    return { valid: false, error: 'Montant doit être positif' };
+  }
+  return { valid: true };
+};
+
+export const validateDate = (val: unknown): ValidationResult => {
+  const str = String(val || '');
+  if (!str) {
+    return { valid: false, error: 'Date obligatoire' };
+  }
+  const date = new Date(str);
+  if (isNaN(date.getTime())) {
+    return { valid: false, error: 'Date invalide' };
+  }
+  return { valid: true };
+};
+
+export const validateRequired = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: false, error: 'Champ obligatoire' };
+  }
+  return { valid: true };
+};
+
+// ValidationResult wrappers for form validators (compatible with useFormValidation)
+// These use the boolean validators above internally
+export const validateEmailForm = (val: unknown): ValidationResult => {
+  if (validateEmail(val as string)) {
+    return { valid: true };
+  }
+  return { valid: false, error: 'Email invalide' };
+};
+
+export const validatePhoneForm = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: true };
+  } // Optional
+  if (validatePhone(str)) {
+    return { valid: true };
+  }
+  return { valid: false, error: 'Format téléphone invalide' };
+};
+
+export const validateSIRETForm = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: true };
+  } // Optional
+  if (validateSIRET(str)) {
+    return { valid: true };
+  }
+  return { valid: false, error: 'Format SIRET invalide (123 456 789 00012)' };
+};
+
+export const validateTVANumberForm = (val: unknown): ValidationResult => {
+  const str = String(val || '').trim();
+  if (!str) {
+    return { valid: true };
+  } // Optional
+  if (validateTVA(str)) {
+    return { valid: true };
+  }
+  return { valid: false, error: 'Format TVA invalide (FR123456789)' };
+};
+
+// ============================================================================
+// SCHEMA TO VALIDATION RULES ADAPTER (for useFormValidation)
+// ============================================================================
+
+/**
+ * Converts a Zod schema into BatchValidationRules for use with useFormValidation
+ * Useful for Manager components that use useFormValidation with Zod schemas
+ *
+ * @param schema Zod schema (e.g., ClientSchema, ExpenseSchema)
+ * @returns BatchValidationRules object for field validation
+ */
+export const schemaToRules = <T>(schema: z.ZodSchema<T>): BatchValidationRules => {
+  const rules: BatchValidationRules = {};
+
+  if (schema instanceof z.ZodObject) {
+    const shape = (schema as z.ZodObject<z.ZodRawShape>).shape;
+    for (const [fieldName, fieldSchema] of Object.entries(shape)) {
+      rules[fieldName] = (value: unknown): ValidationResult => {
+        try {
+          (fieldSchema as unknown as { parse(v: unknown): unknown }).parse(value);
+          return { valid: true };
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            return { valid: false, error: error.issues[0]?.message || 'Validation échouée' };
+          }
+          return { valid: false, error: 'Erreur de validation inconnue' };
+        }
+      };
+    }
+  }
+
+  return rules;
+};
