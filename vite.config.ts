@@ -1,5 +1,4 @@
 import tailwindcss from '@tailwindcss/vite';
-import legacy from '@vitejs/plugin-legacy';
 import react from '@vitejs/plugin-react';
 import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano';
@@ -17,10 +16,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      legacy({
-        targets: ['defaults', 'not IE 11', 'Edge >= 79', 'Firefox >= 78'],
-        additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
-      }),
       VitePWA({
         registerType: 'prompt',
         injectRegister: null, // On gère l'enregistrement manuellement dans main

@@ -1,6 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportData } from '../../lib/exportUtils';
-import { exportAsCSV, exportAsJSON } from '../../lib/exportUtils';
+import {
+  countDocuments,
+  downloadFile,
+  estimateExportSize,
+  exportAsCSV,
+  exportAsJSON,
+  generateFilename,
+  mergeImportData,
+  parseImportJSON,
+  validateExportSchema,
+} from '../../lib/exportUtils';
 
 describe('exportUtils', () => {
   const mockData: Partial<ExportData> = {
@@ -534,6 +544,404 @@ describe('exportUtils', () => {
       const decoded = Buffer.from(base64, 'base64').toString('utf-8');
 
       expect(JSON.parse(decoded)).toBeDefined();
+    });
+  });
+
+  // ─── downloadFile ──────────────────────────────────────────────────────────
+  describe('downloadFile', () => {
+    let createObjectURLMock: ReturnType<typeof vi.fn>;
+    let revokeObjectURLMock: ReturnType<typeof vi.fn>;
+    let appendChildSpy: ReturnType<typeof vi.spyOn>;
+    let removeChildSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      createObjectURLMock = vi.fn(() => 'blob:http://localhost/mock-url');
+      revokeObjectURLMock = vi.fn();
+      Object.defineProperty(URL, 'createObjectURL', {
+        value: createObjectURLMock,
+        configurable: true,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        value: revokeObjectURLMock,
+        configurable: true,
+      });
+      appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
+      removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('crée et déclenche le téléchargement', () => {
+      const clickSpy = vi.fn();
+      const originalCreateElement = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        const el = originalCreateElement(tag);
+        if (tag === 'a') {
+          Object.defineProperty(el, 'click', { value: clickSpy });
+        }
+        return el;
+      });
+
+      downloadFile('content', 'test.json', 'application/json');
+
+      expect(createObjectURLMock).toHaveBeenCalledOnce();
+      expect(clickSpy).toHaveBeenCalledOnce();
+      expect(revokeObjectURLMock).toHaveBeenCalledOnce();
+    });
+
+    it('utilise text/plain comme mimeType par défaut', () => {
+      const clickSpy = vi.fn();
+      const originalCreateElement = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        const el = originalCreateElement(tag);
+        if (tag === 'a') {
+          Object.defineProperty(el, 'click', { value: clickSpy });
+        }
+        return el;
+      });
+
+      downloadFile('simple content', 'output.txt');
+
+      expect(createObjectURLMock).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'text/plain' })
+      );
+    });
+  });
+
+  // ─── generateFilename ──────────────────────────────────────────────────────
+  describe('generateFilename', () => {
+    it('génère un nom de fichier JSON', () => {
+      const filename = generateFilename('invoices', 'json');
+      expect(filename).toMatch(/^micro-gestion-invoices-\d{4}-\d{2}-\d{2}\.json$/);
+    });
+
+    it('génère un nom de fichier CSV', () => {
+      const filename = generateFilename('clients', 'csv');
+      expect(filename).toMatch(/^micro-gestion-clients-\d{4}-\d{2}-\d{2}\.csv$/);
+    });
+
+    it('ajoute .enc pour les fichiers chiffrés', () => {
+      const filename = generateFilename('expenses', 'json', true);
+      expect(filename).toMatch(/\.json\.enc$/);
+    });
+
+    it('sans chiffrement, pas de .enc', () => {
+      const filename = generateFilename('expenses', 'json', false);
+      expect(filename).not.toContain('.enc');
+      expect(filename).toMatch(/\.json$/);
+    });
+
+    it('inclut la collection dans le nom', () => {
+      const filename = generateFilename('my-collection', 'csv');
+      expect(filename).toContain('my-collection');
+    });
+  });
+
+  // ─── validateExportSchema ──────────────────────────────────────────────────
+  describe('validateExportSchema', () => {
+    it('valide un schéma correct', () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        invoices: [],
+        clients: [],
+      });
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('signale la version manquante', () => {
+      const result = validateExportSchema({
+        exportedAt: new Date().toISOString(),
+        invoices: [],
+        clients: [],
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('Missing version field');
+    });
+
+    it('signale exportedAt manquant', () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        invoices: [],
+        clients: [],
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('Missing exportedAt field');
+    });
+
+    it('signale invoices non-array', () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        invoices: 'not-an-array',
+        clients: [],
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('invoices must be array');
+    });
+
+    it('signale clients non-array', () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        invoices: [],
+        clients: null,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('clients must be array');
+    });
+
+    it("valide la structure d'une facture sample", () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        invoices: [{ id: 'inv-1', number: 'FAC-001', totalHT: 100 }],
+        clients: [],
+      });
+      expect(result.valid).toBe(true);
+    });
+
+    it('signale une structure de facture invalide', () => {
+      const result = validateExportSchema({
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        invoices: [{ description: 'missing id and number' }],
+        clients: [],
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('Invalid invoice structure');
+    });
+
+    it('accumule plusieurs erreurs', () => {
+      const result = validateExportSchema({
+        invoices: 'bad',
+        clients: 42,
+      });
+      expect(result.errors.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  // ─── estimateExportSize ────────────────────────────────────────────────────
+  describe('estimateExportSize', () => {
+    it('retourne bytes > 0 pour des données non-vides', () => {
+      const result = estimateExportSize(mockData);
+      expect(result.bytes).toBeGreaterThan(0);
+    });
+
+    it('retourne un string mb formaté à 2 décimales', () => {
+      const result = estimateExportSize(mockData);
+      expect(result.mb).toMatch(/^\d+\.\d{2}$/);
+    });
+
+    it('retourne des valeurs faibles pour des données vides', () => {
+      const result = estimateExportSize({});
+      expect(result.bytes).toBeGreaterThan(0);
+      expect(parseFloat(result.mb)).toBeLessThan(1);
+    });
+
+    it('les tailles croissent avec plus de données', () => {
+      const small = estimateExportSize({ invoices: [] });
+      const large = estimateExportSize({
+        invoices: Array.from({ length: 100 }, (_, i) => ({
+          id: `inv-${i}`,
+          number: `FAC-${i}`,
+          date: '2026-01-01',
+          dueDate: '2026-02-01',
+          clientId: 'cli-1',
+          items: [],
+          total: 1000,
+          status: 'paid' as const,
+          type: 'invoice' as const,
+        })),
+      });
+      expect(large.bytes).toBeGreaterThan(small.bytes);
+    });
+  });
+
+  // ─── countDocuments ────────────────────────────────────────────────────────
+  describe('countDocuments', () => {
+    it('compte les documents dans chaque collection', () => {
+      const counts = countDocuments(mockData);
+      expect(counts.invoices).toBe(1);
+      expect(counts.clients).toBe(1);
+    });
+
+    it('retourne 0 pour les collections absentes', () => {
+      const counts = countDocuments({});
+      expect(counts.invoices).toBe(0);
+      expect(counts.clients).toBe(0);
+      expect(counts.suppliers).toBe(0);
+      expect(counts.products).toBe(0);
+      expect(counts.expenses).toBe(0);
+      expect(counts.emails).toBe(0);
+      expect(counts.emailTemplates).toBe(0);
+      expect(counts.calendarEvents).toBe(0);
+    });
+
+    it('retourne le bon compte pour plusieurs éléments', () => {
+      const data: Partial<ExportData> = {
+        invoices: mockData.invoices,
+        clients: [
+          { id: 'c1', name: 'A', email: '', phone: '', address: '', siret: '', archived: false },
+          { id: 'c2', name: 'B', email: '', phone: '', address: '', siret: '', archived: false },
+          { id: 'c3', name: 'C', email: '', phone: '', address: '', siret: '', archived: false },
+        ],
+      };
+      const counts = countDocuments(data);
+      expect(counts.invoices).toBe(1);
+      expect(counts.clients).toBe(3);
+    });
+  });
+
+  // ─── parseImportJSON ───────────────────────────────────────────────────────
+  describe('parseImportJSON', () => {
+    // JSON minimal satisfaisant ExportDataSchema (sans SIRET/address soumis à
+    // validation stricte Luhn / format adresse)
+    const validExportJSON = JSON.stringify({
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      userProfile: { uid: 'u1', companyName: 'Test' },
+      invoices: [],
+      clients: [],
+      suppliers: [],
+      products: [],
+      expenses: [],
+      emails: [],
+      emailTemplates: [],
+      calendarEvents: [],
+    });
+
+    it('parse un JSON valide et conforme', () => {
+      const result = parseImportJSON(validExportJSON);
+      expect(result.valid).toBe(true);
+      expect(result.data).toBeDefined();
+    });
+
+    it('rejette un JSON malformé', () => {
+      const result = parseImportJSON('{invalid json}');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('JSON invalide');
+    });
+
+    it('rejette un JSON avec structure invalide (Zod)', () => {
+      const result = parseImportJSON(JSON.stringify({ notAValidExport: true }));
+      expect(result.valid).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    it('retourne les données parsées en cas de succès', () => {
+      const result = parseImportJSON(validExportJSON);
+      expect(result.valid).toBe(true);
+      expect(result.data?.invoices).toBeDefined();
+    });
+  });
+
+  // ─── mergeImportData ───────────────────────────────────────────────────────
+  describe('mergeImportData', () => {
+    const existingData: Partial<ExportData> = {
+      invoices: [
+        {
+          id: 'inv-existing',
+          number: 'FAC-OLD',
+          date: '2025-01-01',
+          dueDate: '2025-02-01',
+          clientId: 'c1',
+          items: [],
+          total: 500,
+          status: 'paid',
+          type: 'invoice',
+        },
+      ],
+      clients: [
+        {
+          id: 'cli-1',
+          name: 'Old Client',
+          email: 'old@test.fr',
+          phone: '',
+          address: '',
+          siret: '',
+          archived: false,
+        },
+      ],
+    };
+
+    const importedData: Partial<ExportData> = {
+      invoices: [
+        {
+          id: 'inv-new',
+          number: 'FAC-NEW',
+          date: '2026-01-01',
+          dueDate: '2026-02-01',
+          clientId: 'c1',
+          items: [],
+          total: 1500,
+          status: 'draft',
+          type: 'invoice',
+        },
+      ],
+      clients: [
+        {
+          id: 'cli-2',
+          name: 'New Client',
+          email: 'new@test.fr',
+          phone: '',
+          address: '',
+          siret: '',
+          archived: false,
+        },
+      ],
+    };
+
+    it('stratégie overwrite remplace tout', () => {
+      const result = mergeImportData(existingData, importedData, 'overwrite');
+      expect(result.invoices).toHaveLength(1);
+      expect(result.invoices![0].id).toBe('inv-new');
+    });
+
+    it('stratégie rename renomme les invoices importées', () => {
+      const result = mergeImportData(existingData, importedData, 'rename');
+      const importedInv = result.invoices?.find((i) => i.number.includes('IMPORTED'));
+      expect(importedInv).toBeDefined();
+      expect(importedInv?.number).toBe('FAC-NEW-IMPORTED');
+    });
+
+    it('stratégie merge (défaut) déduplique par ID', () => {
+      const result = mergeImportData(existingData, importedData);
+      const ids = result.invoices?.map((i) => i.id);
+      expect(ids).toContain('inv-existing');
+      expect(ids).toContain('inv-new');
+    });
+
+    it("stratégie merge prend l'importé en cas de conflit d'ID", () => {
+      const conflictImport: Partial<ExportData> = {
+        invoices: [
+          {
+            id: 'inv-existing',
+            number: 'FAC-OVERRIDDEN',
+            date: '2026-01-01',
+            dueDate: '2026-02-01',
+            clientId: 'c1',
+            items: [],
+            total: 9999,
+            status: 'paid',
+            type: 'invoice',
+          },
+        ],
+        clients: [],
+      };
+      const result = mergeImportData(existingData, conflictImport, 'merge');
+      const found = result.invoices?.find((i) => i.id === 'inv-existing');
+      expect(found?.number).toBe('FAC-OVERRIDDEN');
+    });
+
+    it('stratégie merge fusionne les clients', () => {
+      const result = mergeImportData(existingData, importedData, 'merge');
+      const clientIds = result.clients?.map((c) => c.id);
+      expect(clientIds).toContain('cli-1');
+      expect(clientIds).toContain('cli-2');
     });
   });
 });

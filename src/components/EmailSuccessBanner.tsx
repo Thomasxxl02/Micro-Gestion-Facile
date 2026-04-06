@@ -17,7 +17,7 @@ import { useCallback } from 'react';
 import { useEmailTimer } from '../hooks/useEmailTimer';
 
 interface EmailSuccessBannerProps {
-  /** Email auxuel le lien a été envoyé */
+  /** Email auquel le lien a été envoyé */
   email: string;
   /** Callback quand utilisateur clique "resend" */
   onResend: () => Promise<void>;

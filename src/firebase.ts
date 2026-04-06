@@ -78,14 +78,18 @@ async function testConnection() {
     const testDoc = doc(db, 'test', 'connection');
     await getDocFromServer(testDoc);
     clearTimeout(timeoutId);
-    console.info('✅ Firebase: Connexion établie');
+    if (import.meta.env.DEV) {
+      console.info('✅ Firebase: Connexion établie');
+    }
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         console.warn('⚠️ Firebase: Timeout lors du test de connexion (Lenteur réseau)');
       } else if (error.message.includes('the client is offline')) {
-        console.info('ℹ️ Firebase: Travailler en mode hors ligne');
+        if (import.meta.env.DEV) {
+          console.info('ℹ️ Firebase: Travailler en mode hors ligne');
+        }
       } else {
         console.error('❌ Firebase: Erreur de configuration', error.message);
       }
@@ -163,7 +167,9 @@ export const sendEmailLink = async (email: string) => {
     globalThis.localStorage.setItem('emailForSignIn', email);
     globalThis.localStorage.setItem('nonceForSignIn', nonce);
 
-    console.info(`✅ Email lien envoyé à ${email} (nonce: ${nonce.slice(0, 8)}...)`);
+    if (import.meta.env.DEV) {
+      console.info(`✅ Email lien envoyé à ${email} (nonce: ${nonce.slice(0, 8)})...`);
+    }
     return { success: true, nonce };
   } catch (error) {
     console.error(

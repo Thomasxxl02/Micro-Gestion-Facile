@@ -87,7 +87,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   const SECURITY_TABS = ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const;
   const handleSecurityTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const idx = SECURITY_TABS.indexOf(activeSecurityTab as (typeof SECURITY_TABS)[number]);
-    let next = idx;
+    let next: number;
     switch (e.key) {
       case 'ArrowRight':
       case 'ArrowDown':
@@ -313,7 +313,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       isOpen: true,
       title: 'Révoquer la clé API ?',
       description:
-        'Cette action désactivera la clé imédiatement. Vous devrez en créer une nouvelle.',
+        'Cette action désactivera la clé immédiatement. Vous devrez en créer une nouvelle.',
       isDangerous: true,
       onConfirm: () => {
         const updated = apiKeys.map((k) => (k.id === keyId ? APIKeyService.revokeAPIKey(k) : k));
@@ -1016,7 +1016,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               </div>
 
               <FormField
-                label="Défissez un mot de passe de chiffrement"
+                label="Définissez un mot de passe de chiffrement"
                 type="password"
                 placeholder="Mot de passe fort (⚠️ Ne l'oubliez pas!)"
                 value={encryptionPassword}

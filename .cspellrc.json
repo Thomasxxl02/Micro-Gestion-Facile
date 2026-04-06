@@ -1,13 +1,21 @@
 {
   "version": "0.2",
-  "language": "en",
+  "language": "en,fr",
+  "import": ["@cspell/dict-fr-fr/cspell-ext.json"],
   "dictionaryDefinitions": [
     {
-      "name": "french",
+      "name": "french-custom",
       "path": "./.cspell.french.txt"
     }
   ],
-  "dictionaries": ["french"],
+  "dictionaries": ["french-custom", "fr-fr"],
+  "languageSettings": [
+    {
+      "languageId": "*",
+      "locale": "*",
+      "dictionaries": ["fr-fr", "french-custom"]
+    }
+  ],
   "ignorePaths": [
     "node_modules",
     "coverage",
@@ -224,7 +232,47 @@
     "inconnue",
     "RABAIS",
     "négatif",
-    "montante"
+    "montante",
+    "gemini",
+    "siret",
+    "iban",
+    "TOTP",
+    "totp",
+    "Totp",
+    "IBANSIRET",
+    "Boursorama",
+    "STMTTRN",
+    "TRNAMT",
+    "DTPOSTED",
+    "fitid",
+    "FITID",
+    "Dédupliquer",
+    "Aujourd",
+    "nement",
+    "refactorisé",
+    "Authy",
+    "authenticateur",
+    "Revoquée",
+    "qrcode",
+    "otpauth",
+    "efgh",
+    "sess",
+    "partialize",
+    "linkedin",
+    "TRPUFRPPXXX",
+    "mailinator",
+    "unsub",
+    "todas",
+    "persistée",
+    "Retentative",
+    "usando",
+    "réauthentification",
+    "Reauthentification",
+    "gstatic",
+    "CSPRNG",
+    "Emulateurs",
+    "Échap",
+    "Depenses"
   ],
   "allowCompoundWords": true
 }

@@ -2,7 +2,7 @@ import { AlertCircle, Archive, Download, Plus, Truck, Upload, Wallet } from 'luc
 import React, { useMemo, useRef } from 'react';
 import { useEntityFilters, useEntityForm } from '../hooks/useEntity';
 import { useFormValidation } from '../hooks/useFormValidation';
-import { SupplierSchema } from '../lib/schemas';
+import { schemaToRules, SupplierSchema } from '../lib/zod-schemas';
 import type { Expense, Supplier } from '../types';
 import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
 import EntityModal from './EntityModal';
@@ -38,7 +38,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
     touched: touchedFields,
     handleChange: handleFormChange,
     validate: validateAll,
-  } = useFormValidation(form.formData || ({} as Supplier), SupplierSchema, {
+  } = useFormValidation(form.formData || ({} as Supplier), schemaToRules(SupplierSchema), {
     validateOnChange: true,
   });
 

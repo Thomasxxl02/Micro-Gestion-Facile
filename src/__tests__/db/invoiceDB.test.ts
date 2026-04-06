@@ -8,6 +8,7 @@ import type {
   Invoice,
   InvoiceItem,
   Product,
+  UserProfile,
 } from '../../types';
 
 describe('InvoiceDB - Dexie Database', () => {
@@ -709,6 +710,329 @@ describe('InvoiceDB - Dexie Database', () => {
       await db.invoices.add(minimalInvoice);
       const retrieved = await db.invoices.get('inv-min');
       expect(retrieved).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // IMPORT DATA — couverture de toutes les tables
+  // ============================================================================
+
+  describe('importData — toutes les tables', () => {
+    it('importe les invoiceItems', async () => {
+      await db.importData({
+        invoiceItems: [
+          {
+            id: 'itm-import-1',
+            invoiceId: 'inv-1',
+            description: 'Import item',
+            quantity: 2,
+            unitPrice: 100,
+            vatRate: 20,
+          },
+        ],
+      });
+      const items = await db.invoiceItems.toArray();
+      expect(items).toHaveLength(1);
+    });
+
+    it('importe les suppliers', async () => {
+      await db.importData({
+        suppliers: [
+          {
+            id: 'sup-import-1',
+            name: 'Fournisseur Import',
+            email: 'sup@import.fr',
+            phone: '',
+            address: '',
+            siret: '',
+            archived: false,
+          },
+        ],
+      });
+      const suppliers = await db.suppliers.toArray();
+      expect(suppliers).toHaveLength(1);
+    });
+
+    it('importe les products', async () => {
+      await db.importData({
+        products: [
+          {
+            id: 'prod-import-1',
+            name: 'Produit Import',
+            description: '',
+            price: 50,
+            type: 'product',
+            category: 'Services',
+            archived: false,
+          },
+        ],
+      });
+      const products = await db.products.toArray();
+      expect(products).toHaveLength(1);
+    });
+
+    it('importe les expenses', async () => {
+      await db.importData({
+        expenses: [
+          {
+            id: 'exp-import-1',
+            supplierId: 'sup-1',
+            date: '2026-01-01',
+            category: 'Fournitures',
+            amount: 100,
+            description: '',
+          },
+        ],
+      });
+      const expenses = await db.expenses.toArray();
+      expect(expenses).toHaveLength(1);
+    });
+
+    it('importe les emails', async () => {
+      await db.importData({
+        emails: [
+          {
+            id: 'email-import-1',
+            relatedId: 'inv-1',
+            type: 'invoice',
+            status: 'sent',
+            sentAt: new Date().toISOString(),
+            subject: 'Test',
+            body: 'Body',
+            to: 'test@test.fr',
+          },
+        ],
+      });
+      const emails = await db.emails.toArray();
+      expect(emails).toHaveLength(1);
+    });
+
+    it('importe les emailTemplates', async () => {
+      await db.importData({
+        emailTemplates: [
+          {
+            id: 'tpl-import-1',
+            type: 'reminder',
+            name: 'Template Import',
+            subject: 'Rappel',
+            body: '...',
+          },
+        ],
+      });
+      const templates = await db.emailTemplates.toArray();
+      expect(templates).toHaveLength(1);
+    });
+
+    it('importe les calendarEvents', async () => {
+      await db.importData({
+        calendarEvents: [
+          {
+            id: 'evt-import-1',
+            clientId: 'cli-1',
+            invoiceId: 'inv-1',
+            start: '2026-04-01T10:00:00Z',
+            end: '2026-04-01T11:00:00Z',
+            type: 'task',
+            title: 'Réunion Import',
+            description: '',
+          },
+        ],
+      });
+      const events = await db.calendarEvents.toArray();
+      expect(events).toHaveLength(1);
+    });
+
+    it('importe le profil utilisateur', async () => {
+      await db.importData({
+        userProfile: [
+          {
+            id: 'main',
+            companyName: 'Import SARL',
+            siret: '12345678901234',
+            address: '',
+            email: '',
+            phone: '',
+          },
+        ],
+      });
+      const profiles = await db.userProfile.toArray();
+      expect(profiles).toHaveLength(1);
+      expect(profiles[0].companyName).toBe('Import SARL');
+    });
+
+    it('importe les chatMessages', async () => {
+      await db.importData({
+        chatMessages: [
+          { id: 'msg-import-1', timestamp: Date.now(), role: 'user', content: 'Hello import' },
+        ],
+      });
+      const messages = await db.chatMessages.toArray();
+      expect(messages).toHaveLength(1);
+    });
+
+    it('ignore les propriétés inconnues sans erreur', async () => {
+      await expect(db.importData({ unknownTable: [{ id: '1' }] })).resolves.not.toThrow();
+    });
+
+    it('importe plusieurs tables en même temps', async () => {
+      await db.importData({
+        invoices: [
+          {
+            id: 'inv-multi',
+            number: 'FAC-M001',
+            date: '2026-01-01',
+            dueDate: '2026-02-01',
+            clientId: 'cli-1',
+            items: [],
+            total: 500,
+            status: 'draft',
+            type: 'invoice',
+          },
+        ],
+        clients: [
+          {
+            id: 'cli-multi',
+            name: 'Client Multi',
+            email: 'multi@test.fr',
+            phone: '',
+            address: '',
+            siret: '',
+            archived: false,
+          },
+        ],
+      });
+      expect(await db.invoices.count()).toBe(1);
+      expect(await db.clients.count()).toBe(1);
+    });
+  });
+
+  // ============================================================================
+  // GET STATISTICS — toutes les collections
+  // ============================================================================
+
+  describe('getStatistics — toutes les tables', () => {
+    it('retourne les comptages pour toutes les collections', async () => {
+      // Ajouter des enregistrements dans chaque table couverte par getStatistics
+      await db.invoices.add({
+        id: 'inv-stat-1',
+        number: 'FAC-S001',
+        date: '2026-01-01',
+        dueDate: '2026-02-01',
+        clientId: 'cli-1',
+        items: [],
+        total: 100,
+        status: 'draft',
+        type: 'invoice',
+      });
+      await db.clients.add({
+        id: 'cli-stat-1',
+        name: 'Client Stat',
+        email: 'stat@test.fr',
+        phone: '',
+        address: '',
+        siret: '',
+        archived: false,
+      });
+      await db.suppliers.add({
+        id: 'sup-stat-1',
+        name: 'Fournisseur Stat',
+        email: 'stat@sup.fr',
+        phone: '',
+        address: '',
+        siret: '',
+        archived: false,
+      });
+      await db.products.add({
+        id: 'prod-stat-1',
+        name: 'Produit Stat',
+        description: '',
+        price: 10,
+        type: 'product',
+        category: 'Test',
+        archived: false,
+      });
+      await db.expenses.add({
+        id: 'exp-stat-1',
+        supplierId: 'sup-stat-1',
+        date: '2026-01-01',
+        category: 'Test',
+        amount: 50,
+        description: '',
+      });
+      await db.emails.add({
+        id: 'email-stat-1',
+        relatedId: 'inv-stat-1',
+        type: 'invoice',
+        status: 'sent',
+        sentAt: new Date().toISOString(),
+        subject: 'Test',
+        body: 'Body',
+        to: 'test@test.fr',
+      });
+      await db.calendarEvents.add({
+        id: 'evt-stat-1',
+        clientId: 'cli-stat-1',
+        invoiceId: 'inv-stat-1',
+        start: '2026-04-01T10:00:00Z',
+        end: '2026-04-01T11:00:00Z',
+        type: 'task',
+        title: 'Event Stat',
+        description: '',
+      });
+
+      const stats = await db.getStatistics();
+
+      expect(stats.invoices).toBe(1);
+      expect(stats.clients).toBe(1);
+      expect(stats.suppliers).toBe(1);
+      expect(stats.products).toBe(1);
+      expect(stats.expenses).toBe(1);
+      expect(stats.emails).toBe(1);
+      expect(stats.calendarEvents).toBe(1);
+    });
+
+    it('retourne des zéros pour une base vide', async () => {
+      const stats = await db.getStatistics();
+      expect(stats.invoices).toBe(0);
+      expect(stats.clients).toBe(0);
+    });
+  });
+
+  // ============================================================================
+  // INITIALIZE DB
+  // ============================================================================
+
+  describe('initializeDB', () => {
+    it('crée un profil utilisateur par défaut si la base est vide', async () => {
+      const { initializeDB } = await import('../../db/invoiceDB');
+
+      await initializeDB();
+
+      const profiles = (await db.userProfile.toArray()) as (UserProfile & { id: string })[];
+      expect(profiles.length).toBeGreaterThanOrEqual(1);
+      expect(profiles[0].id).toBe('main');
+      expect(profiles[0].companyName).toBe('Ma Micro-Entreprise');
+    });
+
+    it('ne crée pas de profil dupliqué si un profil existe déjà', async () => {
+      const { initializeDB } = await import('../../db/invoiceDB');
+
+      // Créer un profil existant
+      await db.userProfile.add({
+        id: 'main',
+        companyName: 'Entreprise Existante',
+        siret: '',
+        address: '',
+        email: '',
+        phone: '',
+      } as UserProfile & { id: string });
+
+      await initializeDB();
+
+      const profiles = await db.userProfile.toArray();
+      expect(profiles).toHaveLength(1);
+      // L'existant ne doit pas être écrasé
+      expect(profiles[0].companyName).toBe('Entreprise Existante');
     });
   });
 });

@@ -67,7 +67,7 @@ export class GitHubAuthService {
     this.githubProvider.addScope('user:email');
     this.githubProvider.addScope('read:user');
 
-    // Force la réuthentification GitHub à chaque connexion
+    // Force la réauthentification GitHub à chaque connexion
     this.githubProvider.setCustomParameters({
       prompt: 'consent', // Force la sélection du compte
       allow_signup: 'true', // Permet l'inscription

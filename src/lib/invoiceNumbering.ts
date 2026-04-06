@@ -234,9 +234,11 @@ export async function repairSequence(type?: SequencedDocumentType): Promise<void
       };
 
       await db.invoiceNumberSequences.put(repairedSequence);
-      console.info(
-        `[invoiceNumbering] repairSequence: "${docType}" → currentNumber=${maxNum} (année ${currentYear})`
-      );
+      if (import.meta.env.DEV) {
+        console.info(
+          `[invoiceNumbering] repairSequence: "${docType}" → currentNumber=${maxNum} (année ${currentYear})`
+        );
+      }
     }
   });
 }

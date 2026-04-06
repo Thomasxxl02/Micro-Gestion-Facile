@@ -1,39 +1,35 @@
 /**
  * Module de Signature Électronique Simple
  * ─────────────────────────────────────────
- * Appose un hash SHA-256 sur le contenu sérialisé d'une facture,
- * stocké dans les métadonnées. Utilise exclusivement la Web Crypto API
- * native du navigateur — aucune dépendance externe, zéro serveur.
- *
- * Usage :
- *   const sig = await signInvoice(invoice, userProfile);
- *   const valid = await verifyInvoiceSignature(invoice, sig);
+ * Appose un hash HMAC-SHA-256 sur le contenu canonique d'une facture.
+ * Utilise exclusivement la Web Crypto API native — aucune dépendance externe.
  *
  * Sécurité :
- *   - Hash SHA-256 HMAC de la représentation canonique de la facture
- *   - La clé HMAC est dérivée du SIRET + date de signature (HKDF)
- *   - Le résultat est un string hex 64 caractères stockable dans un champ
+ *   - La clé HMAC est dérivée du SIRET + timestamp ISO de signature
+ *   - Le résultat est un hex string 64 caractères stockable dans l'Invoice
  *   - Protège contre la falsification a posteriori des montants / dates
  *
  * ⚠️  Ce n'est PAS une signature qualifiée eIDAS — c'est un tampon
- *     d'intégrité numérique (audit trail). Pour eIDAS, utiliser DocuSign/
- *     Yousign via API.
+ *     d'intégrité numérique (audit trail interne). Pour eIDAS qualifié,
+ *     utiliser DocuSign / Yousign via API dédiée.
  */
 
 import type { Invoice, UserProfile } from '../types';
 
 export interface InvoiceSignatureResult {
-  hash: string; // SHA-256 hex, 64 chars
+  /** HMAC-SHA-256 hex, 64 chars */
+  hash: string;
   algorithm: 'SHA-256-HMAC';
-  signedAt: string; // ISO datetime
+  /** ISO datetime au moment de la signature */
+  signedAt: string;
   signerSiret: string;
   invoiceId: string;
   invoiceNumber: string;
 }
 
 /**
- * Sérialise les champs fiscalement significatifs d'une facture
- * dans un ordre canonique reproductible.
+ * Sérialise les champs fiscalement significatifs dans un ordre canonique
+ * déterministe pour garantir la reproductibilité du hash.
  */
 function canonicalize(invoice: Invoice): string {
   return JSON.stringify({
@@ -43,121 +39,103 @@ function canonicalize(invoice: Invoice): string {
     dueDate: invoice.dueDate,
     clientId: invoice.clientId,
     total: invoice.total,
+    vatAmount: invoice.vatAmount ?? 0,
+    discount: invoice.discount ?? 0,
+    shipping: invoice.shipping ?? 0,
     items: invoice.items.map((item) => ({
+      id: item.id,
       description: item.description,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       vatRate: item.vatRate ?? 0,
     })),
-    taxExempt: invoice.taxExempt ?? false,
-    discount: invoice.discount ?? 0,
   });
 }
 
 /**
- * Encode une string en Uint8Array UTF-8
+ * Importe une clé HMAC depuis les bytes SIRET + signedAt.
+ * La diversification par `signedAt` rend chaque signature unique
+ * même si le SIRET ne change pas.
  */
-function encode(s: string): Uint8Array<ArrayBuffer> {
-  const raw = new TextEncoder().encode(s);
-  return new Uint8Array(raw.buffer as ArrayBuffer);
+async function importHMACKey(siret: string, signedAt: string): Promise<CryptoKey> {
+  const keyBytes = new TextEncoder().encode(`${siret}:${signedAt}`);
+  return crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify',
+  ]);
+}
+
+function bufferToHex(buffer: ArrayBuffer): string {
+  return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function hexToBuffer(hex: string): ArrayBuffer {
+  const bytes = hex.match(/.{1,2}/g)?.map((b) => parseInt(b, 16)) ?? [];
+  const ab = new ArrayBuffer(bytes.length);
+  new Uint8Array(ab).set(bytes);
+  return ab;
 }
 
 /**
- * Convertit un ArrayBuffer en string hexadécimale
- */
-function toHex(buffer: ArrayBuffer): string {
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-/**
- * Dérive une clé HMAC à partir du SIRET + date (HKDF-like avec SHA-256).
- * La clé est éphémère et non stockée — recréée à chaque vérification.
- */
-async function deriveKey(siret: string, isoDate: string): Promise<CryptoKey> {
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encode(`${siret}::${isoDate}`),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
-  );
-  return keyMaterial;
-}
-
-/**
- * Génère et retourne la signature SHA-256 HMAC d'une facture.
- * Utilise la Web Crypto API (disponible dans tous les navigateurs modernes).
+ * Signe une facture avec HMAC-SHA-256.
+ * Renvoie un objet contenant le hash et les métadonnées de signature.
+ *
+ * @param invoice     Facture à signer
+ * @param userProfile Profil de l'utilisateur (SIRET requis)
  */
 export async function signInvoice(
   invoice: Invoice,
   userProfile: UserProfile
 ): Promise<InvoiceSignatureResult> {
-  if (!crypto.subtle) {
-    throw new Error(
-      "Web Crypto API non disponible — vérifiez que l'application est servie en HTTPS."
-    );
-  }
-
   const signedAt = new Date().toISOString();
-  const canon = canonicalize(invoice);
-  const key = await deriveKey(userProfile.siret, signedAt.slice(0, 10));
-  const sig = await crypto.subtle.sign('HMAC', key, encode(canon));
+  const siret = userProfile.siret || 'NO_SIRET';
+  const canonical = canonicalize(invoice);
+
+  const key = await importHMACKey(siret, signedAt);
+  const signatureBuffer = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(canonical)
+  );
 
   return {
-    hash: toHex(sig),
+    hash: bufferToHex(signatureBuffer),
     algorithm: 'SHA-256-HMAC',
     signedAt,
-    signerSiret: userProfile.siret,
+    signerSiret: siret,
     invoiceId: invoice.id,
     invoiceNumber: invoice.number,
   };
 }
 
 /**
- * Vérifie l'intégrité d'une facture à partir de sa signature stockée.
- * Retourne `true` si le contenu n'a pas été modifié depuis la signature.
+ * Vérifie l'intégrité d'une facture par rapport à sa signature stockée.
+ * Retourne `true` si la facture n'a pas été modifiée depuis la signature.
+ *
+ * @param invoice   Facture à vérifier
+ * @param userProfile Profil de l'utilisateur (même SIRET que lors de la signature)
+ * @param signature Résultat de signature précédemment émis par `signInvoice`
  */
 export async function verifyInvoiceSignature(
   invoice: Invoice,
+  userProfile: UserProfile,
   signature: InvoiceSignatureResult
 ): Promise<boolean> {
-  if (!crypto.subtle) {
-    return false;
-  }
   try {
-    const canon = canonicalize(invoice);
-    const key = await deriveKey(signature.signerSiret, signature.signedAt.slice(0, 10));
+    if (signature.invoiceId !== invoice.id) {
+      return false;
+    }
+    const siret = userProfile.siret || 'NO_SIRET';
+    const canonical = canonicalize(invoice);
+    const key = await importHMACKey(siret, signature.signedAt);
 
-    // Reconvertir le hex en Uint8Array
-    const hexBytes = (signature.hash.match(/.{1,2}/g) ?? []).map((byte) => parseInt(byte, 16));
-    const ab = new ArrayBuffer(hexBytes.length);
-    const hashBytes = new Uint8Array(ab);
-    hashBytes.set(hexBytes);
-
-    return await crypto.subtle.verify('HMAC', key, hashBytes, encode(canon));
+    return await crypto.subtle.verify(
+      'HMAC',
+      key,
+      hexToBuffer(signature.hash),
+      new TextEncoder().encode(canonical)
+    );
   } catch {
     return false;
   }
-}
-
-/**
- * Formate la signature pour affichage sur la facture (version courte).
- * Affiche les 16 premiers caractères du hash précédé d'un préfixe visuel.
- */
-export function formatSignatureShort(sig: InvoiceSignatureResult): string {
-  return `SIG-${sig.hash.slice(0, 8).toUpperCase()}…${sig.hash.slice(-4).toUpperCase()}`;
-}
-
-/**
- * Crée un "empreinte visuelle" : QR-friendly string encodant la signature.
- */
-export function signaturePayload(sig: InvoiceSignatureResult): string {
-  return [
-    `FAC:${sig.invoiceNumber}`,
-    `SIG:${sig.hash.slice(0, 16)}`,
-    `DATE:${sig.signedAt.slice(0, 10)}`,
-    `SIRET:${sig.signerSiret}`,
-  ].join('|');
 }

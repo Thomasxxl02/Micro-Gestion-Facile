@@ -1,7 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import Sidebar from '../components/Sidebar';
-import React from 'react';
 import { ViewState } from '../types';
 
 // Mock framer-motion car il cause des problèmes dans JSDOM
@@ -19,6 +18,18 @@ vi.mock('motion/react', () => ({
     ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+// Mock Firebase hooks to avoid real connections in JSDOM
+vi.mock('../hooks/useFirestoreSync', () => ({
+  useFirestoreSync: () => ({ isOffline: false, data: [], status: 'SUCCESS' }),
+}));
+
+vi.mock('../store/appStore', () => ({
+  useAppStore: (selector?: (s: any) => any) => {
+    const state = { user: null, isSyncing: false };
+    return selector ? selector(state) : state;
+  },
 }));
 
 describe('Sidebar', () => {

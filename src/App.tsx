@@ -14,7 +14,7 @@ const App: React.FC = () => {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-(--bg-main)">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-brand-600 dark:text-brand-400 animate-spin" />
       </div>
     );
