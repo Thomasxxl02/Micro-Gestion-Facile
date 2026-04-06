@@ -82,7 +82,6 @@ describe('Client Flow Integration', () => {
   describe('Scenario 1: Create → Store', () => {
     it('crée un client dans le formulaire et le sauvegarde en mémoire', () => {
       const { result: formResult } = renderHook(() => useEntityForm<Client>());
-      const store = useAppStore.getState();
 
       // Étape 1 : Ouvrir le formulaire de création
       act(() => {
