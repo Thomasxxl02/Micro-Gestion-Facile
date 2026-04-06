@@ -196,21 +196,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   };
 
   // ─── EXPORT / IMPORT HANDLERS ───
-  const handleExportAll = () => {
-    const data = { profile: userProfile, ...allData };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `backup_micro_gestion_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    const now = new Date().toISOString();
-    localStorage.setItem('mgf_last_backup_date', now);
-    setLastBackupDate(now);
-    addLog('Export complet des données effectué', 'DATA', 'INFO');
-    toast.success('Données exportées avec succès');
-  };
+  // Note: export is handled by <ExportModal> (RGPD Art.20)
 
   const handleImportAll = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

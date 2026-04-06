@@ -90,7 +90,7 @@ describe('GitHub OAuth Authentication', () => {
     });
 
     it('devrait être désactivé pendant le chargement', () => {
-      const { rerender } = render(<GitHubLoginButton />);
+      render(<GitHubLoginButton />);
 
       // Simuler le chargement
       const button = screen.getByRole('button');

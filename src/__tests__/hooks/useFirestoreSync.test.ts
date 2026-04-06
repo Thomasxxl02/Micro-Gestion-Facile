@@ -176,7 +176,7 @@ describe('useFirestoreSync Hook', () => {
 
   describe('Error Handling', () => {
     it("change le status à ERROR en cas d'erreur", async () => {
-      const { getByTestId } = vi.mocked(require('firebase/firestore')).onSnapshot;
+      vi.mocked(require('firebase/firestore')).onSnapshot;
 
       const { result } = renderHook(() =>
         useFirestoreSync<Client>({
@@ -448,8 +448,6 @@ describe('useFirestoreSync Hook', () => {
         expect(result.current.status).toBe('SUCCESS');
       });
 
-      const initialDataLength = result.current.data.length;
-
       // Simuler une reconnexion (dans un cas réel)
       // Les données devraient être mises à jour côté serveur
 
@@ -487,8 +485,6 @@ describe('useFirestoreSync Hook', () => {
       await waitFor(() => {
         expect(result.current.status).toBe('SUCCESS');
       });
-
-      const firstUserData = result.current.data;
 
       rerender({ userId: 'user-2' });
 
