@@ -1,0 +1,16 @@
+name: 'CodeQL Config - Micro-Gestion-Facile'
+
+# Exclure les répertoires auto-générés, de build et de dépendances
+# pour éviter les faux positifs sur du code non maintenu
+paths-ignore:
+  - coverage # Rapports de couverture Istanbul/v8 (auto-générés)
+  - dist # Build de production Vite (auto-généré)
+  - node_modules # Dépendances NPM (non maintenues ici)
+  - public # Assets statiques pré-compilés
+  - scripts # Scripts de CI ponctuels
+  - '**/*.min.js' # Fichiers minifiés (lisibilité CodeQL dégradée)
+  - '**/*.map' # Source maps
+
+# Utiliser uniquement les requêtes de sécurité (pas de style/qualité)
+queries:
+  - uses: security-and-quality
