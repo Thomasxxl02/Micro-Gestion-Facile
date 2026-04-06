@@ -54,8 +54,8 @@
 #### 1️⃣ Révoquer les Clés Exposées
 
 ```
-Firebase Key : AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4
-Gemini Key   : AIzaSyBXejKbJpVWxARCRP3hYroCEbREQiVWbiE
+Firebase Key : [REDACTED_KEY_1]
+Gemini Key   : [REDACTED_KEY_2]
 ```
 
 **Lien direct** : https://console.cloud.google.com/apis/credentials
@@ -159,7 +159,7 @@ Vérifier que : https://github.com/Thomasxxl02/Micro-Gestion-Facile/actions
 
    ```bash
    npm install -g bfg
-   echo "AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4" > secrets.txt
+   echo "[REDACTED_KEY_1]" > secrets.txt
    bfg --replace-text secrets.txt
    git push --force
    ```

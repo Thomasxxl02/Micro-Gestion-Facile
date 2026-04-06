@@ -10,11 +10,11 @@
 
 Deux clés API secrètes ont été exposées dans l'historique Git et détectées par GitHub Secret Scanning :
 
-1. **Firebase API Key** : `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
+1. **Firebase API Key** : `[REDACTED_KEY_1]`
    - Détectée dans le commit : `a50b612`
    - Lieu : Code source historique
 
-2. **Gemini API Key** : `AIzaSyBXejKbJpVWxARCRP3hYroCEbREQiVWbiE`
+2. **Gemini API Key** : `[REDACTED_KEY_2]`
    - Détectée par : GitHub Secret Scanning
    - Lieu : Potentiellement logs CI/CD ou historique
 
@@ -27,7 +27,7 @@ Deux clés API secrètes ont été exposées dans l'historique Git et détectée
 - [ ] **Firebase Console** : https://console.cloud.google.com/apis/credentials
   - [ ] Se connecter avec le compte Google du projet
   - [ ] Aller dans "Credentials" → "API Keys"
-  - [ ] Trouver la clé : `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
+  - [ ] Trouver la clé : `[REDACTED_KEY_1]`
   - [ ] Cliquer sur les trois points → "Supprimer" (Delete)
   - [ ] Confirmer la suppression
 
@@ -102,8 +102,8 @@ Deux clés API secrètes ont été exposées dans l'historique Git et détectée
   npm install -g bfg
 
   # Créer un fichier secrets.txt avec les clés à supprimer
-  echo "AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4" >> secrets.txt
-  echo "AIzaSyBXejKbJpVWxARCRP3hYroCEbREQiVWbiE" >> secrets.txt
+  echo "[REDACTED_KEY_1]" >> secrets.txt
+  echo "[REDACTED_KEY_2]" >> secrets.txt
 
   # Nettoyer l'historique
   bfg --replace-text secrets.txt
