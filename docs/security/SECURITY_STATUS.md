@@ -2,7 +2,7 @@
 
 **Date**: 18 mars 2026  
 **Alerte**: Clé API Google divulguée publiquement  
-**Clé Compromise**: `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`  
+**Clé Compromise**: `[REDACTED_KEY_1]`  
 **Statut**: 🟡 EN COURS (code sécurisé, action utilisateur requise)
 
 ---
@@ -52,7 +52,7 @@ ement
   - Accéder à: https://console.cloud.google.com
   - Projet: `gen-lang-client-0231981865`
   - APIs & Services → Credentials
-  - Supprimer: `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
+  - Supprimer: `[REDACTED_KEY_1]`
 - [ ] **Générer une nouvelle clé API**
   - Dans Google Cloud Console
   - Ajouter les restrictions API (Firestore, Storage, etc.)
@@ -70,7 +70,7 @@ ement
 - [ ] Nettoyer l'historique Git
   ```bash
   # Option recommandée: BFG
-  bfg --replace-text "AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4=>"
+  bfg --replace-text "[REDACTED_KEY_1]=>"
   git push --force --all
   ```
 
@@ -101,7 +101,7 @@ ement
 
 ```
 firebase-applet-config.json (commité dans Git)
-├── apiKey: AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4
+├── apiKey: [REDACTED_KEY_1]
 ├── projectId: gen-lang-client-0231981865
 └── ... (autres configs)
 
@@ -164,7 +164,7 @@ git diff --cached | grep -E "AIza|secret|token"
 ```bash
 # 1. Nettoyer l'historique
 npm install -g bfg
-bfg --replace-text "AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4=>"
+bfg --replace-text "[REDACTED_KEY_1]=>"
 git gc --aggressive --prune=now
 git push --force --all
 

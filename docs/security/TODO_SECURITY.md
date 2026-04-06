@@ -8,7 +8,7 @@
 1. Ouvrez: https://console.cloud.google.com
 2. Projet: gen-lang-client-0231981865
 3. Menu: APIs & Services → Credentials
-4. Cherchez: AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4
+4. Cherchez: [REDACTED_KEY_1]
 5. Cliquez: Delete
 6. ✅ Confirmez la suppression
 ```
@@ -71,7 +71,7 @@ npm install -g bfg
 
 # Nettoyer l'historique
 cd c:\Users\Thomas\Micro-Gestion-Facile
-bfg --replace-text "AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4=>"
+bfg --replace-text "[REDACTED_KEY_1]=>"
 
 # Finaliser
 git gc --aggressive --prune=now

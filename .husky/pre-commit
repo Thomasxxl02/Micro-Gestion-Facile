@@ -1,1 +1,32 @@
+#!/bin/sh
+# Husky pre-commit hook
+
+# 1. Check for API keys and secrets before lint-staged runs
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+google_key_pattern="AIza[A-Za-z0-9_-]{35}"
+
+for file in $staged_files; do
+  # Skip doc and example files (may contain redacted keys for reference)
+  if [[ "$file" == docs/* ]] || [[ "$file" == *.example.* ]]; then
+    continue
+  fi
+
+  # Prevent committing firebase-applet-config.json
+  if [[ "$file" == "config/firebase-applet-config.json" ]] && git diff --cached "$file" | grep -qE "$google_key_pattern"; then
+    echo "❌ BLOCKED: Cannot commit firebase-applet-config.json with real API keys"
+    echo "   This file should ONLY exist locally (.gitignore protects it)"
+    echo "   Use 'git reset $file' and ensure keys are in .env.local instead"
+    exit 1
+  fi
+
+  # Warn about potential API keys outside of config/
+  if ! [[ "$file" =~ ^config/ ]] && [[ "$file" == *.json* ]] || [[ "$file" == *.ts* ]]; then
+    if git diff --cached "$file" | grep -qE "$google_key_pattern"; then
+      echo "⚠️  WARNING: Possible Google API Key detected in $file (outside config/)"
+      echo "   If this is intentional, use [REDACTED_KEY_X] format in documentation"
+    fi
+  fi
+done
+
+# 2. Run linting
 npx lint-staged

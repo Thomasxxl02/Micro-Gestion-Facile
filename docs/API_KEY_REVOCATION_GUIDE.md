@@ -27,7 +27,7 @@ URL : https://console.cloud.google.com/apis/credentials
 
 1. Menu latéral → **"APIs & Services"** → **"Credentials"**
 2. Onglet **"API Keys"**
-3. Chercher la clé : `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
+3. Chercher la clé : `[REDACTED_KEY_1]`
 
 **Suppression** :
 
@@ -94,7 +94,7 @@ URL : https://aistudio.google.com/apikey
 **Navigation** :
 
 1. Onglet **"API Keys"**
-2. Chercher l'ancienne clé : `AIzaSyBXejKbJpVWxARCRP3hYroCEbREQiVWbiE`
+2. Chercher l'ancienne clé : `[REDACTED_KEY_2]`
 
 **Suppression** :
 
@@ -224,8 +224,8 @@ npm install -g bfg
 
 ```bash
 cat > secrets.txt << 'EOF'
-AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4
-AIzaSyBXejKbJpVWxARCRP3hYroCEbREQiVWbiE
+[REDACTED_KEY_1]
+[REDACTED_KEY_2]
 EOF
 ```
 

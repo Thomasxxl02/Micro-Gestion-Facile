@@ -2,7 +2,7 @@
 
 ## ⚠️ Statut: URGENT - Clé API compromise
 
-La clé API Google `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4` a été divulguée publiquement dans le dépôt. Une action immédiate est requise.
+La clé API Google `[REDACTED_KEY_1]` a été divulguée publiquement dans le dépôt. Une action immédiate est requise.
 
 ---
 
@@ -34,7 +34,7 @@ firebase-applet-config.example.json # ← Template obligatoire
 1. Accédez à [Google Cloud Console](https://console.cloud.google.com)
 2. Sélectionnez le projet: **gen-lang-client-0231981865**
 3. Allez dans: **APIs & Services** → **Credentials**
-4. Trouvez la clé API: `AIzaSyAryNVYzN1uXwiaFhFPC5xSeW4neFRs7B4`
+4. Trouvez la clé API: `[REDACTED_KEY_1]`
 5. Cliquez sur **Delete** ou **Disable**
 6. ⚠️ Confirmez la suppression
 
