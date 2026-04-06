@@ -87,7 +87,7 @@ export function useInvoiceActions({
         // Create new items with new IDs
         const newItems = invoice.items.map((item) => ({
           ...item,
-          id: Date.now().toString() + Math.random().toString().slice(2),
+          id: crypto.randomUUID(),
         }));
 
         const newInvoice: Invoice = {

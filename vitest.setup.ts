@@ -1,11 +1,11 @@
 // ⚠️ CRITICAL: Import fake-indexeddb FIRST before anything else uses IndexedDB
 import 'fake-indexeddb/auto';
 
-import { afterEach, vi, beforeAll, afterAll } from 'vitest';
-import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { server } from './src/mocks/server';
+import { cleanup } from '@testing-library/react';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { setupDexieForTests } from './src/__tests__/integration/dexieIntegrationSetup';
+import { server } from './src/mocks/server';
 
 // Configurer le setup Dexie pour les tests d'intégration IndexedDB
 setupDexieForTests();
@@ -33,16 +33,14 @@ Object.defineProperty(globalThis, 'matchMedia', {
   })),
 });
 
-// Mock de crypto si nécessaire
-if (!globalThis.crypto) {
-  globalThis.crypto = {
-    getRandomValues: (arr: Uint8Array | Uint32Array) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 256);
-      }
-      return arr;
-    },
-  } as Crypto;
+// Polyfill crypto avec l'API webcrypto de Node.js (CSPRNG — jamais Math.random)
+import { webcrypto } from 'node:crypto';
+if (!globalThis.crypto?.getRandomValues) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    writable: false,
+    configurable: true,
+  });
 }
 
 // Mock de scrollIntoView pour JSDOM
