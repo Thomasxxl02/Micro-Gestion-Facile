@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SettingsManager - Gestion du profil et des paramètres d'entreprise
  * ✅ Accessibilité intégrée (WCAG 2.1 AA)
  * ✅ Composants modulaires (FormFields, Dialogs)
@@ -8,8 +8,10 @@
 import {
   Briefcase,
   Building,
+  Check,
   CreditCard,
   Download,
+  FileText,
   Globe,
   Hash,
   Mail as MailIcon,
@@ -22,7 +24,7 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { parseImportJSON } from '../lib/exportUtils';
 import { useAppStore } from '../store/appStore';
@@ -46,6 +48,166 @@ import {
   ToggleSwitch,
 } from './FormFields';
 import SecurityTab from './SecurityTab';
+
+// ─── INVOICE TEMPLATES ───────────────────────────────────────────────────────
+const INVOICE_TEMPLATES = [
+  { id: 'modern' as const, label: 'Moderne' },
+  { id: 'classic' as const, label: 'Classique' },
+  { id: 'minimal' as const, label: 'Épuré' },
+  { id: 'corporate' as const, label: 'Corporate' },
+] as const;
+
+type InvoiceTemplateId = 'modern' | 'classic' | 'minimal' | 'corporate';
+
+interface InvoiceTemplateThumbnailProps {
+  template: InvoiceTemplateId;
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  companyName?: string;
+  invoiceNumber?: string;
+  size?: 'thumb' | 'preview';
+}
+
+const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
+  template,
+  primaryColor,
+  secondaryColor,
+  fontFamily,
+  companyName,
+  invoiceNumber,
+  size = 'thumb',
+}) => {
+  const name = companyName ?? 'Votre Entreprise';
+  const number = invoiceNumber ?? 'FAC-001';
+  const isPreview = size === 'preview';
+  const wrapClass = isPreview
+    ? 'rounded-xl overflow-hidden border border-brand-100 dark:border-brand-700 shadow-sm text-[9px]'
+    : 'rounded-lg overflow-hidden border border-brand-100 dark:border-brand-700 text-[7px] h-24';
+  const bodyPad = isPreview ? 'px-3 py-2' : 'px-2 py-1';
+  const nameSize = isPreview ? 'text-[10px]' : 'text-[8px]';
+  const spacing = isPreview ? 'space-y-1.5' : 'space-y-0.5';
+
+  if (template === 'modern') {
+    return (
+      <div className={wrapClass} style={{ fontFamily }}>
+        <div className={`${bodyPad} text-white`} style={{ backgroundColor: primaryColor }}>
+          <p className={`font-bold truncate ${nameSize}`}>{name}</p>
+          <p className="opacity-75">FACTURE N° {number}</p>
+        </div>
+        <div className={`${bodyPad} bg-white dark:bg-brand-900/50 ${spacing}`}>
+          <div className="h-0.5 rounded-full w-8" style={{ backgroundColor: secondaryColor }} />
+          <div className="flex justify-between text-brand-500 dark:text-brand-400">
+            <span>Prestation × 1</span>
+            <span className="font-semibold">500,00 €</span>
+          </div>
+          <div className="border-t border-brand-100 dark:border-brand-700 pt-1 flex justify-between font-bold text-brand-700 dark:text-brand-300">
+            <span>Total TTC</span>
+            <span>500,00 €</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === 'classic') {
+    return (
+      <div className={`${wrapClass} bg-white dark:bg-brand-900/60`} style={{ fontFamily }}>
+        <div
+          className={`${bodyPad} flex justify-between items-start border-b-2`}
+          style={{ borderColor: primaryColor }}
+        >
+          <div>
+            <p className={`font-bold ${nameSize}`} style={{ color: primaryColor }}>
+              {name}
+            </p>
+            <p className="text-brand-400 text-[6px]">contact@entreprise.fr</p>
+          </div>
+          <div className="text-right">
+            <p className={`font-bold ${nameSize} text-brand-700 dark:text-brand-300`}>FACTURE</p>
+            <p className="text-brand-400">{number}</p>
+          </div>
+        </div>
+        <div className={`${bodyPad} ${spacing}`}>
+          <div className="flex justify-between text-brand-400">
+            <span>Prestation × 1</span>
+            <span>500,00 €</span>
+          </div>
+          <div
+            className="border-t border-brand-200 pt-0.5 flex justify-between font-bold"
+            style={{ color: primaryColor }}
+          >
+            <span>Total TTC</span>
+            <span>500,00 €</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === 'minimal') {
+    return (
+      <div className={`${wrapClass} bg-white dark:bg-brand-900/60`} style={{ fontFamily }}>
+        <div className={`${bodyPad}`}>
+          <p className={`${nameSize} text-brand-900 dark:text-white font-medium`}>{name}</p>
+          <div className="h-px mt-1" style={{ backgroundColor: primaryColor }} />
+          <div className="flex justify-between mt-1 text-brand-400">
+            <span>FACTURE {number}</span>
+            <span>
+              {new Date().toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
+          </div>
+        </div>
+        <div className={`${bodyPad} ${spacing}`}>
+          <div className="flex justify-between text-brand-400">
+            <span>Prestation × 1</span>
+            <span>500,00 €</span>
+          </div>
+          <div className="border-t border-brand-100 pt-0.5 flex justify-between font-semibold text-brand-700 dark:text-brand-300">
+            <span>Total</span>
+            <span>500,00 €</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // corporate
+  return (
+    <div className={wrapClass} style={{ fontFamily }}>
+      <div className="flex" style={{ height: isPreview ? '2.5rem' : '2.5rem' }}>
+        <div
+          className="w-2/3 px-2 py-1.5 text-white flex flex-col justify-center"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <p className={`font-bold ${nameSize} truncate`}>{name}</p>
+          <p className="opacity-70 text-[6px]">SIRET : 000 000 000</p>
+        </div>
+        <div
+          className="w-1/3 px-1.5 py-1.5 flex flex-col justify-center"
+          style={{ backgroundColor: secondaryColor }}
+        >
+          <p className="font-bold text-white text-[7px]">FACTURE</p>
+          <p className="text-white opacity-80 text-[6px]">{number}</p>
+        </div>
+      </div>
+      <div className={`${bodyPad} bg-white dark:bg-brand-900/60 ${spacing}`}>
+        <div className="flex justify-between text-brand-400">
+          <span>Prestation × 1</span>
+          <span>500,00 €</span>
+        </div>
+        <div className="border-t border-brand-100 pt-0.5 flex justify-between font-bold text-brand-700 dark:text-brand-300">
+          <span>Total TTC</span>
+          <span>500,00 €</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface SettingsManagerProps {
   userProfile: UserProfile;
@@ -133,7 +295,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
   // ─── LAST BACKUP DATE ───
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [lastBackupDate, setLastBackupDate] = useState<string | null>(
+  const [lastBackupDate, _setLastBackupDate] = useState<string | null>(
     localStorage.getItem('mgf_last_backup_date')
   );
 
@@ -186,6 +348,21 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       setValidationErrors((prev) => ({ ...prev, email: validateEmail(value as string) }));
     }
   };
+
+  // ─── APPLICATION IMMÉDIATE DU THÈME ───
+  useEffect(() => {
+    const theme = userProfile.theme ?? 'auto';
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // auto → suivre la préférence système
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.toggle('dark', prefersDark);
+    }
+  }, [userProfile.theme]);
 
   const handleSave = () => {
     if (onSaveProfile) {
@@ -359,133 +536,32 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           onKeyDown={handleTabKeyDown}
           className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar"
         >
-          {activeTab === 'profile' ? (
+          {(
+            [
+              { id: 'profile', label: 'Profil' },
+              { id: 'billing', label: 'Facturation' },
+              { id: 'preferences', label: 'Style' },
+              { id: 'security', label: 'Sécurité' },
+              { id: 'data', label: 'Données' },
+            ] as { id: typeof activeTab; label: string }[]
+          ).map(({ id: tabId, label }) => (
             <button
-              id="tab-profile-active"
-              aria-controls="panel-profile"
-              onClick={() => setActiveTab('profile')}
+              key={tabId}
+              id={`tab-${tabId}`}
+              aria-controls={`panel-${tabId}`}
+              onClick={() => setActiveTab(tabId)}
               role="tab"
-              aria-selected="true"
-              tabIndex={0}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+              aria-selected={activeTab === tabId}
+              tabIndex={activeTab === tabId ? 0 : -1}
+              className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                activeTab === tabId
+                  ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
+                  : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+              }`}
             >
-              Profil
+              {label}
             </button>
-          ) : (
-            <button
-              id="tab-profile-inactive"
-              aria-controls="panel-profile"
-              onClick={() => setActiveTab('profile')}
-              role="tab"
-              aria-selected="false"
-              tabIndex={-1}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
-            >
-              Profil
-            </button>
-          )}
-
-          {activeTab === 'billing' ? (
-            <button
-              id="tab-billing-active"
-              aria-controls="panel-billing"
-              onClick={() => setActiveTab('billing')}
-              role="tab"
-              aria-selected="true"
-              tabIndex={0}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
-            >
-              Facturation
-            </button>
-          ) : (
-            <button
-              id="tab-billing-inactive"
-              aria-controls="panel-billing"
-              onClick={() => setActiveTab('billing')}
-              role="tab"
-              aria-selected="false"
-              tabIndex={-1}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
-            >
-              Facturation
-            </button>
-          )}
-
-          {activeTab === 'preferences' ? (
-            <button
-              id="tab-preferences-active"
-              aria-controls="panel-preferences"
-              onClick={() => setActiveTab('preferences')}
-              role="tab"
-              aria-selected="true"
-              tabIndex={0}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
-            >
-              Style
-            </button>
-          ) : (
-            <button
-              id="tab-preferences-inactive"
-              aria-controls="panel-preferences"
-              onClick={() => setActiveTab('preferences')}
-              role="tab"
-              aria-selected="false"
-              tabIndex={-1}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
-            >
-              Style
-            </button>
-          )}
-
-          {activeTab === 'security' ? (
-            <button
-              id="tab-security-active"
-              onClick={() => setActiveTab('security')}
-              role="tab"
-              aria-selected="true"
-              tabIndex={0}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
-            >
-              Sécurité
-            </button>
-          ) : (
-            <button
-              id="tab-security-inactive"
-              onClick={() => setActiveTab('security')}
-              role="tab"
-              aria-selected="false"
-              tabIndex={-1}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
-            >
-              Sécurité
-            </button>
-          )}
-
-          {activeTab === 'data' ? (
-            <button
-              id="tab-data-active"
-              aria-controls="panel-data"
-              onClick={() => setActiveTab('data')}
-              role="tab"
-              aria-selected="true"
-              tabIndex={0}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
-            >
-              Données
-            </button>
-          ) : (
-            <button
-              id="tab-data-inactive"
-              aria-controls="panel-data"
-              onClick={() => setActiveTab('data')}
-              role="tab"
-              aria-selected="false"
-              tabIndex={-1}
-              className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
-            >
-              Données
-            </button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -644,12 +720,42 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         { value: 'LIBERAL', label: 'Profession libérale' },
                       ]}
                     />
+                    <SelectField
+                      label="Type d'activité URSSAF"
+                      value={userProfile.activityType || 'SERVICE_BNC'}
+                      onChange={(val) => handleChange('activityType', val)}
+                      options={[
+                        { value: 'SERVICE_BNC', label: 'Service BNC (Profession libérale)' },
+                        { value: 'SERVICE_BIC', label: 'Service BIC (Artisan / Commerçant)' },
+                        { value: 'SALE', label: 'Vente de marchandises' },
+                        { value: 'LIBERAL', label: 'Profession libérale réglementée' },
+                      ]}
+                      description="Détermine les taux de cotisations URSSAF applicables"
+                    />
                   </div>
                   <ToggleSwitch
                     label="Franchise en base de TVA"
                     description="Active la mention automatique 'TVA non applicable, art. 293 B du CGI' sur vos documents"
                     checked={userProfile.isVatExempt || false}
                     onChange={(val) => handleChange('isVatExempt', val)}
+                  />
+                  <ToggleSwitch
+                    label="Bénéficiaire de l'ACRE"
+                    description="Aide à la Création et Reprise d'Entreprise — réduction de 50 % des cotisations la 1ère année (art. L. 5141-1 Code du Travail)"
+                    checked={userProfile.isAcreBeneficiary || false}
+                    onChange={(val) => handleChange('isAcreBeneficiary', val)}
+                  />
+                  <ToggleSwitch
+                    label="Alerte seuil de TVA"
+                    description="Vous avertir à l'approche du seuil de franchise TVA (37 500 € services / 85 000 € ventes)"
+                    checked={userProfile.vatThresholdAlert || false}
+                    onChange={(val) => handleChange('vatThresholdAlert', val)}
+                  />
+                  <ToggleSwitch
+                    label="Alerte plafond de revenus"
+                    description="Vous alerter à l'approche du plafond de CA de la micro-entreprise"
+                    checked={userProfile.revenueThresholdAlert || false}
+                    onChange={(val) => handleChange('revenueThresholdAlert', val)}
                   />
                 </div>
               </div>
@@ -773,6 +879,53 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* ─── Mentions Légales & Facturation Électronique ─── */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                      Mentions Légales &amp; e-Facture
+                    </h3>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
+                      Obligations légales et conformité 2026
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField
+                      label="N° TVA Intracommunautaire"
+                      value={userProfile.tvaNumber || ''}
+                      onChange={(val) => handleChange('tvaNumber', val)}
+                      placeholder="FR12 123456789"
+                      description="Obligatoire pour les échanges UE (art. 289 CGI)"
+                    />
+                    <SelectField
+                      label="Format e-Facture par défaut"
+                      value={userProfile.defaultEInvoiceFormat || 'Factur-X'}
+                      onChange={(val) => handleChange('defaultEInvoiceFormat', val)}
+                      options={[
+                        { value: 'Factur-X', label: 'Factur-X (PDF/A-3 embarqué)' },
+                        { value: 'UBL', label: 'UBL 2.1 (Universal Business Language)' },
+                        { value: 'CII', label: 'CII (Cross Industry Invoice)' },
+                      ]}
+                      description="Obligatoire pour la facturation électronique 2026"
+                    />
+                  </div>
+                  <TextAreaField
+                    label="Mentions légales (pied de facture)"
+                    value={userProfile.legalMentions || ''}
+                    onChange={(val) => handleChange('legalMentions', val)}
+                    placeholder="Ex : Dispensé d'immatriculation — art. L123-1-1 Code de commerce. TVA non applicable, art. 293 B du CGI."
+                    rows={3}
+                    description="Texte affiché en bas de chaque facture"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -806,14 +959,98 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         { value: 'auto', label: '🔄 Auto (selon système)' },
                       ]}
                     />
-                    <div>
-                      <ColorPicker
-                        label="Couleur Primaire"
-                        value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
-                        onChange={(val) => handleChange('primaryColor', val)}
-                      />
-                    </div>
+                    <SelectField
+                      label="Police de caractères (factures)"
+                      value={userProfile.fontFamily || 'Inter'}
+                      onChange={(val) => handleChange('fontFamily', val)}
+                      options={[
+                        { value: 'Inter', label: 'Inter (moderne, lisible)' },
+                        { value: 'Georgia', label: 'Georgia (sérif, classique)' },
+                        { value: 'Helvetica Neue', label: 'Helvetica (neutre, professionnel)' },
+                        { value: 'Palatino', label: 'Palatino (élégant, premium)' },
+                        { value: 'Courier New', label: 'Courier New (monospace, technique)' },
+                      ]}
+                      description="Appliquée sur les PDF et aperçus de facture"
+                    />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <ColorPicker
+                      label="Couleur Primaire (en-tête facture)"
+                      value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
+                      onChange={(val) => handleChange('primaryColor', val)}
+                    />
+                    <ColorPicker
+                      label="Couleur Secondaire (accentuation)"
+                      value={userProfile.secondaryColor || '#059669'}
+                      onChange={(val) => handleChange('secondaryColor', val)}
+                      presets={[
+                        '#059669',
+                        '#0891b2',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6',
+                        '#ec4899',
+                        '#14b8a6',
+                        '#f97316',
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Template Card */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                      Gabarit de Facture
+                    </h3>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
+                      Mise en page appliquée aux PDF et aperçus
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {INVOICE_TEMPLATES.map((tpl) => {
+                    const isSelected = (userProfile.invoiceTemplate || 'modern') === tpl.id;
+                    return (
+                      <button
+                        key={tpl.id}
+                        onClick={() => handleChange('invoiceTemplate', tpl.id)}
+                        className={`relative rounded-2xl border-2 p-3 transition-all text-left ${
+                          isSelected
+                            ? 'border-brand-900 dark:border-white shadow-md'
+                            : 'border-brand-100 dark:border-brand-700 hover:border-brand-300 dark:hover:border-brand-500'
+                        }`}
+                        aria-pressed={isSelected ? 'true' : 'false'}
+                        title={`Sélectionner le gabarit ${tpl.label}`}
+                      >
+                        <InvoiceTemplateThumbnail
+                          template={tpl.id}
+                          primaryColor={userProfile.primaryColor ?? '#102a43'}
+                          secondaryColor={userProfile.secondaryColor || '#059669'}
+                          fontFamily={userProfile.fontFamily || 'Inter'}
+                        />
+                        <p
+                          className={`mt-2 text-[10px] font-bold uppercase tracking-wider text-center ${
+                            isSelected
+                              ? 'text-brand-900 dark:text-white'
+                              : 'text-brand-500 dark:text-brand-400'
+                          }`}
+                        >
+                          {tpl.label}
+                        </p>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-brand-900 dark:bg-white flex items-center justify-center">
+                            <Check size={10} className="text-white dark:text-brand-900" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1058,7 +1295,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         <div className="xl:col-span-1">
           <div className="sticky top-10">
             <div
-              className={`bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 border-brand-100 dark:border-brand-800 min-h-125 flex flex-col relative overflow-hidden border-t-[${userProfile.primaryColor ?? '#102a43'}]`}
+              style={{ borderTopColor: userProfile.primaryColor ?? '#102a43' }}
+              className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 border-brand-100 dark:border-brand-800 min-h-125 flex flex-col relative overflow-hidden"
             >
               <div className="border-b border-brand-100 dark:border-brand-800 pb-8 mb-8">
                 {userProfile.logoUrl ? (
@@ -1069,7 +1307,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   />
                 ) : (
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3 bg-[${userProfile.primaryColor ?? '#102a43'}]`}
+                    style={{ backgroundColor: userProfile.primaryColor ?? '#102a43' }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3"
                     aria-hidden="true"
                   >
                     {(userProfile.companyName || 'E').charAt(0).toUpperCase()}
@@ -1117,15 +1356,43 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 )}
                 {activeTab === 'preferences' && (
                   <div className="mt-4 space-y-3">
-                    <div className="flex items-center gap-3">
+                    {/* Mini-aperçu de facture en temps réel — affiche le gabarit sélectionné */}
+                    <InvoiceTemplateThumbnail
+                      template={(userProfile.invoiceTemplate || 'modern') as InvoiceTemplateId}
+                      primaryColor={userProfile.primaryColor ?? '#102a43'}
+                      secondaryColor={userProfile.secondaryColor || '#059669'}
+                      fontFamily={userProfile.fontFamily || 'Inter, sans-serif'}
+                      companyName={userProfile.companyName || 'Votre Entreprise'}
+                      invoiceNumber={`${userProfile.invoicePrefix || 'FAC-'}001`}
+                      size="preview"
+                    />
+                    <div className="flex items-center gap-2">
                       <div
-                        className={`w-8 h-8 rounded-lg border border-brand-100 dark:border-brand-700 bg-[${userProfile.primaryColor ?? '#102a43'}]`}
-                        aria-label={`Couleur primaire : ${userProfile.primaryColor ?? '#102a43'}`}
+                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0"
+                        style={{ backgroundColor: userProfile.primaryColor ?? '#102a43' }}
+                        aria-hidden="true"
                       />
-                      <p className="text-[11px] text-brand-500 font-mono">
+                      <div
+                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0"
+                        style={{ backgroundColor: userProfile.secondaryColor || '#059669' }}
+                        aria-hidden="true"
+                      />
+                      <p className="text-[11px] text-brand-500 font-mono truncate">
                         {userProfile.primaryColor ?? '#102a43'}
                       </p>
                     </div>
+                    <p className="text-[11px] text-brand-500">
+                      Police :{' '}
+                      <span className="font-semibold">{userProfile.fontFamily || 'Inter'}</span>
+                    </p>
+                    <p className="text-[11px] text-brand-500">
+                      Gabarit :{' '}
+                      <span className="font-semibold">
+                        {INVOICE_TEMPLATES.find(
+                          (t) => t.id === (userProfile.invoiceTemplate || 'modern')
+                        )?.label ?? 'Moderne'}
+                      </span>
+                    </p>
                     <p className="text-[11px] text-brand-500">
                       Thème :{' '}
                       <span className="font-semibold capitalize">

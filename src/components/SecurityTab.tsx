@@ -489,33 +489,21 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const
             )[idx];
 
-            if (activeSecurityTab === currentTabKey) {
-              return (
-                <button
-                  key={currentTabKey}
-                  id={`sec-tab-${currentTabKey}`}
-                  role="tab"
-                  aria-selected="true"
-                  aria-controls={`sec-panel-${currentTabKey}`}
-                  tabIndex={0}
-                  onClick={() => setActiveSecurityTab(currentTabKey)}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm"
-                >
-                  {label}
-                </button>
-              );
-            }
-
+            const isActive = activeSecurityTab === currentTabKey;
             return (
               <button
                 key={currentTabKey}
                 id={`sec-tab-${currentTabKey}`}
                 role="tab"
-                aria-selected="false"
+                aria-selected={isActive}
                 aria-controls={`sec-panel-${currentTabKey}`}
-                tabIndex={-1}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveSecurityTab(currentTabKey)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50"
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm'
+                    : 'text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50'
+                }`}
               >
                 {label}
               </button>
