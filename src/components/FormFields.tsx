@@ -423,7 +423,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 bg-[${color}] ${
+            style={{ backgroundColor: color }}
+            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
               value === color
                 ? 'border-brand-900 scale-110 shadow-md'
                 : 'border-transparent hover:scale-105'
@@ -457,7 +458,8 @@ export const ColorCirclePicker: React.FC<{
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            className={`w-10 h-10 rounded-full border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 bg-[${color}] ${
+            style={{ backgroundColor: color }}
+            className={`w-10 h-10 rounded-full border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
               value === color
                 ? 'border-brand-900 scale-110 shadow-lg'
                 : 'border-transparent hover:scale-105'

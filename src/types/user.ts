@@ -76,7 +76,9 @@ export interface UserProfile {
   taxSystem?: string;
   vatNumber?: string;
   primaryColor?: string;
+  secondaryColor?: string;
   fontFamily?: string;
+  invoiceTemplate?: 'modern' | 'classic' | 'minimal' | 'corporate';
 
   // Préférences UI/UX
   theme?: 'light' | 'dark' | 'auto';
