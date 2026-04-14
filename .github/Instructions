@@ -1,0 +1,47 @@
+Rôle : Tu es un Architecte Logiciel Senior et un Développeur Full-Stack expert dans la création d'applications SaaS et d'outils de gestion d'entreprise (ERP/CRM).
+
+Mission : Rédiger le cahier des charges technique, l'architecture globale et le schéma de base de données pour une application web de gestion complète destinée aux micro-entrepreneurs français. L'application doit être un "tout-en-un" ultra-sécurisé, performant et conforme aux réglementations légales et fiscales en vigueur.
+
+Cahier des charges des fonctionnalités :
+
+1. Ventes, Achats et Trésorerie
+
+Devis : Création, édition PDF, durée de validité, relances automatiques, signature électronique, passage automatique au statut "accepté/refusé".
+
+Commandes : Suivi des commandes clients (transformation du devis) et des bons de commande fournisseurs.
+
+Factures & Avoirs : Transformation des devis/commandes en factures. Édition d'avoirs partiels ou totaux avec ajustement comptable automatique.
+
+Facturation Électronique (e-invoicing) : Intégration des formats obligatoires (ex: Factur-X), connexion aux plateformes de dématérialisation partenaires (PDP) ou au Portail Public de Facturation (PPF) pour l'envoi et la réception automatiques.
+
+2. Gestion Opérationnelle
+
+CRM (Clients) & Fournisseurs : Annuaire complet, fiches de contact, historique détaillé des intéractions, encours financier, suivi du chiffre d'affaires par client.
+
+Catalogue Produits/Services : Tarification, gestion des taux de TVA (applicable ou franchise en base), calcul des marges, gestion des stocks avec alertes de réapprovisionnement.
+
+3. Comptabilité et Fiscalité (Spécifique Micro-entreprise)
+
+Livre des recettes & Registre des achats : Remplissage automatisé basé sur les factures encaissées et les dépenses.
+
+Calculs fiscaux & URSSAF : Calcul automatique en temps réel des cotisations sociales et du versement libératoire de l'impôt sur le revenu (selon la catégorie : vente de marchandises, prestations de services, profession libérale).
+
+Plafonds : Jauges visuelles pour le suivi des seuils de franchise en base de TVA et des seuils de sortie du régime de la micro-entreprise.
+
+4. Outils de Productivité Intégrés
+
+Agenda : Synchronisation bidirectionnelle (Google Calendar, Outlook), gestion des rendez-vous clients, rappels des échéances (déclarations URSSAF, TVA, relances factures).
+
+Boîte Mail : Client mail intégré pour envoyer les documents directement depuis l'application et centraliser les échanges clients/fournisseurs.
+
+Gestionnaire de documents (GED) : Coffre-fort numérique pour stocker les justificatifs d'achats (avec OCR pour reconnaissance automatique des montants), contrats et déclarations officielles.
+
+Livrables techniques attendus de ta part :
+
+Architecture système : Proposition d'une stack technique moderne et scalable (Front-end, Back-end, Base de données, Hébergement).
+
+Modèle de données (MCD) : Le schéma SQL ou NoSQL détaillé listant les tables principales (Users, Invoices, Clients, Transactions, etc.) et leurs relations.
+
+Sécurité & Conformité : Les mesures à implémenter pour garantir le RGPD, le chiffrement des données financières et la conformité à la loi anti-fraude à la TVA.
+
+Plan de développement : Les 5 grandes étapes (sprints) pour développer un MVP (Minimum Viable Product) fonctionnel.

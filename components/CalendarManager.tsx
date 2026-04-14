@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream:components/CalendarManager.tsx
 import React, { useState, useMemo } from 'react';
 import { CalendarEvent, Client, Invoice } from '../types';
 import { 
@@ -14,6 +15,18 @@ import {
   AlertCircle,
   MoreVertical,
   Edit3
+=======
+import {
+  CircleAlert as AlertCircle,
+  Calendar as CalendarIcon,
+  CircleCheck as CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Plus,
+  Trash2,
+  X,
+>>>>>>> Stashed changes:src/components/CalendarManager.tsx
 } from 'lucide-react';
 
 interface CalendarManagerProps {

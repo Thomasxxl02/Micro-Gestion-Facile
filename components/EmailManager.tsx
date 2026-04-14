@@ -1,6 +1,29 @@
+<<<<<<< Updated upstream:components/EmailManager.tsx
 import React, { useState, useMemo } from 'react';
 import { Email, EmailTemplate, Client, Invoice, UserProfile } from '../types';
 import { Mail, Send, History, FileText, Plus, Trash2, Search, Filter, Clock, CheckCircle2, AlertCircle, X, Edit2, Copy, Wand2, User, Check, Eye } from 'lucide-react';
+=======
+import {
+  CircleAlert as AlertCircle,
+  Check,
+  CircleCheck as CheckCircle2,
+  Clock,
+  Copy,
+  Pencil as Edit2,
+  Eye,
+  FileText,
+  History,
+  Mail,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+  User,
+  Wand as Wand2,
+  X,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+>>>>>>> Stashed changes:src/components/EmailManager.tsx
 import { draftEmail } from '../services/geminiService';
 
 interface EmailManagerProps {

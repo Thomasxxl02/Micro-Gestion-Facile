@@ -1,0 +1,10 @@
+﻿{
+  "projectId": "micro-gestion-facile",
+  "appId": "1:650389832449:web:3f5dab3ff1992f26971100",
+  "apiKey": "AIzaSyAJAyeNzafJN0jkbyWPywgB2ERwPbTRSHI",
+  "authDomain": "micro-gestion-facile.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "micro-gestion-facile.firebasestorage.app",
+  "messagingSenderId": "650389832449",
+  "measurementId": "G-27ZPTDJ3H6"
+}
