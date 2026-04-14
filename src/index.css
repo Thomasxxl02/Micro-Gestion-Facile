@@ -1,0 +1,714 @@
+/* --- Importation des polices Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* --- Importation de Tailwind CSS --- */
+@import 'tailwindcss';
+
+/* --- Configuration du thème Tailwind v4 --- */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* --- Palette Slate Brand (Épuré Professionnel) --- */
+  --color-brand-50: #f8fafc;
+  --color-brand-100: #e2e8f0;
+  --color-brand-200: #cbd5e1;
+  --color-brand-300: #94a3b8;
+  --color-brand-400: #64748b;
+  --color-brand-500: #475569;
+  --color-brand-600: #334155;
+  --color-brand-700: #1e293b;
+  --color-brand-800: #0f172a;
+  --color-brand-900: #020617;
+  --color-brand-950: #0a0d14;
+
+  /* --- Palette Émeraude Accent (Croissance & Confiance) --- */
+  --color-accent-50: #f0fdf4;
+  --color-accent-100: #dcfce7;
+  --color-accent-200: #bbf7d0;
+  --color-accent-300: #86efac;
+  --color-accent-400: #4ade80;
+  --color-accent-500: #22c55e;
+  --color-accent-600: #16a34a;
+  --color-accent-700: #15803d;
+  --color-accent-800: #166534;
+  --color-accent-900: #0f3319;
+
+  /* --- Palette Bleu Ciel Primary (Confiance & Clarté) --- */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #065f86;
+  --color-primary-900: #0c4a6e;
+
+  /* --- Définition des animations --- */
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-slide-up: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-slow: pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes slideUp {
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes pulseSlow {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* --- Variables CSS Globales (Theme Management) --- */
+:root {
+  color-scheme: light;
+  /* Taille de police dynamique pour l'accessibilité */
+  --app-font-size: 16px;
+  /* Configuration des couleurs d'arrière-plan modernes */
+  --bg-color-stop1: #f8fafc;
+  --bg-color-stop2: #f1f5f9;
+  --bg-glow1: rgba(34, 197, 94, 0.12); /* Émeraude accent */
+  --bg-glow2: rgba(14, 165, 233, 0.1); /* Bleu ciel primary */
+
+  --bg-main: #f8fafc; /* Fallback */
+  --bg-subtle: rgba(248, 250, 252, 0.6);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-disabled: #94a3b8;
+
+  /* Composants Glassmorphic (Effet de verre) */
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.5);
+
+  /* Thème des Formulaires */
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --input-placeholder: #94a3b8;
+  --input-focus-border: #22c55e;
+  --input-focus-ring: rgba(34, 197, 94, 0.2);
+
+  /* Ombres portées élégantes */
+  --shadow-xs: 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 40px -8px rgba(15, 23, 42, 0.12);
+
+  /* ─── Tokens financiers sémantiques ────────────────────── */
+  --financial-profit: #16a34a; /* green-600  */
+  --financial-profit-bg: rgba(22, 163, 74, 0.1);
+  --financial-profit-border: rgba(22, 163, 74, 0.3);
+  --financial-loss: #dc2626; /* red-600    */
+  --financial-loss-bg: rgba(220, 38, 38, 0.1);
+  --financial-loss-border: rgba(220, 38, 38, 0.3);
+  --financial-neutral: #475569; /* slate-600  */
+  --financial-pending: #f59e0b; /* amber-500 (pour visibilité) */
+  --financial-pending-bg: rgba(245, 158, 11, 0.1);
+  --financial-pending-border: rgba(245, 158, 11, 0.3);
+}
+
+/* --- Mode Sombre (Dark Mode Customization) --- */
+.dark {
+  color-scheme: dark;
+  --bg-color-stop1: #020617;
+  --bg-color-stop2: #0f172a;
+  --bg-glow1: rgba(34, 197, 94, 0.1);
+  --bg-glow2: rgba(14, 165, 233, 0.08);
+
+  --bg-main: #020617; /* Fallback */
+  --bg-subtle: rgba(15, 23, 42, 0.6);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-disabled: #334155;
+
+  /* Dark Glassmorphic Components */
+  --card-bg: rgba(15, 23, 42, 0.65);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Dark Form Styles */
+  --input-bg: rgba(2, 6, 23, 0.8);
+  --input-border: #1e293b;
+  --input-text: #f8fafc;
+  --input-placeholder: #475569;
+  --input-focus-border: #a855f7;
+  --input-focus-ring: rgba(168, 85, 247, 0.35);
+
+  --shadow-md: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+
+  /* ─── Tokens financiers sémantiques (dark) ─────────────── */
+  --financial-profit: #4ade80; /* green-400  */
+  --financial-profit-bg: rgba(74, 222, 128, 0.12);
+  --financial-profit-border: rgba(74, 222, 128, 0.25);
+  --financial-loss: #f87171; /* red-400    */
+  --financial-loss-bg: rgba(248, 113, 113, 0.12);
+  --financial-loss-border: rgba(248, 113, 113, 0.25);
+  --financial-neutral: #94a3b8; /* slate-400  */
+  --financial-pending: #fbbf24; /* amber-400  */
+  --financial-pending-bg: rgba(251, 191, 36, 0.12);
+  --financial-pending-border: rgba(251, 191, 36, 0.25);
+}
+
+/* --- Styles du corps de page --- */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--app-font-size);
+  background-color: var(--bg-main);
+  background-image:
+    radial-gradient(circle at 15% 15%, var(--bg-glow1) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, var(--bg-glow2) 0%, transparent 40%),
+    linear-gradient(135deg, var(--bg-color-stop1) 0%, var(--bg-color-stop2) 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  transition:
+    background 0.4s ease,
+    color 0.4s ease;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--input-border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Scrollbar étroit pour les zones de contenu denses */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--input-border);
+  border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--input-border) transparent;
+}
+
+/* --- Effet Glassmorphism (Verre dépoli) --- */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  border-radius: 1.5rem;
+}
+
+.glass-strong {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(48px) saturate(100%); /* Plus de flou, moins de saturation */
+  backdrop-filter: blur(48px) saturate(100%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: 2rem;
+}
+
+.glass-card {
+  @apply card-modern;
+  background: rgba(255, 255, 255, 0.03); /* Presque invisible par défaut */
+  border-color: rgba(255, 255, 255, 0.05);
+}
+.glass-card:hover {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+/* --- Drag & Drop (@dnd-kit) --- */
+.dnd-sortable {
+  transform: var(--dnd-transform, none);
+  transition: var(--dnd-transition, none);
+  z-index: var(--dnd-z-index, auto);
+  will-change: transform;
+}
+
+/* --- Système de Grille Bento --- */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* --- Éléments Bento et Gradients de texte --- */
+.bento-item {
+  @apply card-modern p-6 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-linear-to-r from-brand-600 to-accent-500 dark:from-brand-300 dark:to-accent-300 font-extrabold;
+}
+
+.text-gradient-accent {
+  @apply bg-clip-text text-transparent bg-linear-to-r from-primary-600 to-primary-400 dark:from-primary-300 dark:to-primary-200 font-extrabold;
+}
+
+/* --- Boutons Modernes --- */
+.btn-primary {
+  @apply px-6 py-3 bg-linear-to-r from-brand-600 to-accent-500 text-white rounded-2xl font-bold transition-all duration-300
+    hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-95
+    flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-white/50 dark:bg-black/20 text-brand-900 border border-brand-200/50
+    backdrop-blur-md dark:text-brand-100 dark:border-brand-700/50
+    rounded-2xl font-bold transition-all duration-300
+    hover:bg-white/80 hover:border-brand-300 dark:hover:bg-brand-900/40 dark:hover:border-brand-500
+    flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 hover:shadow-md;
+}
+
+.btn-danger {
+  @apply px-6 py-3 bg-linear-to-r from-red-500 to-rose-500 text-white rounded-2xl font-bold transition-all duration-300
+    hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] active:scale-95
+    flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2;
+}
+
+/* --- Cartes Modernes (Design System) --- */
+@utility card-modern {
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--card-border);
+  border-radius: 1.5rem;
+  box-shadow: var(--card-shadow);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ligne brillante sur le dessus des cartes pour la profondeur */
+.card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  opacity: 0.5;
+}
+
+.dark .card-modern {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+.dark .card-modern::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(168, 85, 247, 0.3); /* Lueur au survol */
+}
+
+/* --- Styles des Formulaires --- */
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0.75rem;
+  color: var(--input-text);
+  outline: none;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.field-input::placeholder {
+  color: var(--input-placeholder);
+}
+.field-input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow:
+    0 0 0 4px var(--input-focus-ring),
+    inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  transform: translateY(-1px);
+}
+
+/* --- Grille de Données et Badges --- */
+.data-row {
+  transition: all 0.2s ease;
+}
+.data-row:hover {
+  background-color: var(--bg-glow1);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* --- Info-bulles sémantiques (ToolTip) --- */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  padding: 0.5rem 0.75rem;
+  background: var(--brand-900);
+  color: white;
+  font-size: 0.7rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+}
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- Variantes de Badges Sémantiques --- */
+.badge-success {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: #166534;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.1);
+}
+.dark .badge-success {
+  color: #4ade80;
+}
+.badge-warning {
+  background-color: rgba(250, 204, 21, 0.2);
+  color: #92400e;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.1);
+}
+.dark .badge-warning {
+  color: #facc15;
+}
+.badge-danger {
+  background-color: rgba(248, 113, 113, 0.2);
+  color: #991b1b;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.1);
+}
+.dark .badge-danger {
+  color: #f87171;
+}
+.badge-info {
+  background-color: rgba(96, 165, 250, 0.2);
+  color: #1e40af;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.1);
+}
+.dark .badge-info {
+  color: #60a5fa;
+}
+
+/* --- Configuration de l'Impression (Factures A4) --- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 20mm 15mm;
+  }
+  body,
+  body * {
+    visibility: hidden;
+  }
+  /* On ne rend visible que la zone de prévisualisation de la facture */
+  #invoice-preview,
+  #invoice-preview * {
+    visibility: visible;
+  }
+  #invoice-preview {
+    position: fixed;
+    inset: 0;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 0;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: white !important;
+    color: #0f172a !important;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .invoice-a4 * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Masquer les éléments inutiles à l'impression */
+  .no-print,
+  aside,
+  header,
+  nav,
+  footer,
+  button:not(.print-visible) {
+    display: none !important;
+  }
+}
+
+/* --- Utilitaires de Layout et Composants Spécifiques --- */
+.invoice-a4 {
+  max-width: 210mm;
+  width: 100%;
+  min-height: 297mm;
+  box-sizing: border-box;
+}
+
+.color-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--indicator-color, #0f172a);
+}
+
+.overlay-button {
+  background: rgba(15, 23, 42, 0.4);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Barrettes de progression (TVA / Force de mot de passe) */
+.password-strength-bar {
+  width: var(--progress-width);
+}
+
+.vat-progress-bar {
+  appearance: none;
+  display: block;
+  border: none;
+  border-radius: 9999px;
+  height: 0.75rem;
+}
+.vat-progress-bar::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+}
+.dark .vat-progress-bar::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+.vat-progress-bar::-webkit-progress-value {
+  border-radius: 9999px;
+  transition: width 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* États de la barre de progression fiscale */
+.vat-progress-bar[data-state='normal']::-webkit-progress-value {
+  background-image: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-500));
+}
+.vat-progress-bar[data-state='warning']::-webkit-progress-value {
+  background-image: linear-gradient(90deg, #fde047, #eab308);
+}
+.vat-progress-bar[data-state='exceeded']::-webkit-progress-value {
+  background-image: linear-gradient(90deg, #fcd34d, #f59e0b);
+}
+.vat-progress-bar[data-state='critical']::-webkit-progress-value {
+  background-image: linear-gradient(90deg, #fca5a5, #ef4444);
+}
+
+/* --- Classes Utilitaires pour les Comptes et la Fiscalité --- */
+.financial-profit {
+  color: var(--financial-profit);
+}
+.financial-loss {
+  color: var(--financial-loss);
+}
+.financial-pending {
+  color: var(--financial-pending);
+}
+.financial-card-profit {
+  background: var(--financial-profit-bg);
+  border: 1px solid var(--financial-profit-border);
+}
+.financial-card-loss {
+  background: var(--financial-loss-bg);
+  border: 1px solid var(--financial-loss-border);
+}
+.financial-card-pending {
+  background: var(--financial-pending-bg);
+  border: 1px solid var(--financial-pending-border);
+}
+
+/* Densité d'affichage pour les tableaux complexes */
+@utility density-compact {
+  @apply py-1.5 px-3 text-sm;
+}
+@utility density-standard {
+  @apply py-3 px-6;
+}
+@utility density-comfortable {
+  @apply py-6 px-8;
+}
+
+/* Grille de statistiques adaptive */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* --- Badge Certifié avec effet "Shine" --- */
+.certified-badge {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: #166534;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.1);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+.dark .certified-badge {
+  color: #4ade80;
+}
+.certified-badge::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  20% {
+    transform: translate(50%, 50%) rotate(45deg);
+  }
+  100% {
+    transform: translate(50%, 50%) rotate(45deg);
+  }
+}
+
+/* --- Accessibilité : Réduction de mouvement --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-modern:hover {
+    transform: none;
+  }
+
+  .btn-primary:hover,
+  .btn-danger:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  body {
+    background-attachment: scroll;
+  }
+}
