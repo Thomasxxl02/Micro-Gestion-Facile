@@ -1,4 +1,4 @@
-﻿# Logs
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -11,8 +11,6 @@ node_modules
 dist
 dist-ssr
 *.local
-.tsbuildinfo
-coverage
 
 # Editor directories and files
 .vscode/*
@@ -24,9 +22,3 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-# Environment & Secrets
-.env
-.env.local
-.env.*.local
-firebase-applet-config.json
-!firebase-applet-config.example.json
