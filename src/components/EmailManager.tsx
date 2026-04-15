@@ -19,7 +19,13 @@ import {
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { draftEmail } from "../services/geminiService";
-import { Client, Email, EmailTemplate, Invoice, UserProfile } from "../types";
+import type {
+  Client,
+  Email,
+  EmailTemplate,
+  Invoice,
+  UserProfile,
+} from "../types";
 
 interface EmailManagerProps {
   emails: Email[];
@@ -60,7 +66,6 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Compose State
   const [composeData, setComposeData] = useState({
     to: "",
     subject: "",
@@ -71,7 +76,6 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     invoiceId: "",
   });
 
-  // Template Form State
   const [templateFormData, setTemplateFormData] = useState<
     Partial<EmailTemplate>
   >({
@@ -200,7 +204,6 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     const client = clients.find((c) => c.id === composeData.clientId);
     const invoice = invoices.find((i) => i.id === composeData.invoiceId);
 
-    // Basic variable replacement
     const replacements: Record<string, string> = {
       "{{company_name}}": userProfile.companyName,
       "{{client_name}}": client?.name || "Client",
@@ -216,12 +219,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       subject = subject.replace(new RegExp(key, "g"), value);
     });
 
-    setComposeData({
-      ...composeData,
-      subject,
-      body,
-      type: template.type,
-    });
+    setComposeData({ ...composeData, subject, body, type: template.type });
   };
 
   const deleteEmail = (id: string) => {
@@ -310,7 +308,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
             />
           </div>
 
-          <div className="bg-white border border-brand-100 rounded-[2rem] overflow-hidden shadow-sm">
+          <div className="bg-white border border-brand-100 rounded-4xl overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-brand-900 text-white">
@@ -381,6 +379,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => deleteEmail(email.id)}
+                          title="Supprimer l'email"
                           className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                         >
                           <Trash2 size={16} />
@@ -407,7 +406,6 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
       {activeTab === "templates" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Add Template Card */}
           <button
             onClick={() => {
               setEditingTemplateId(null);
@@ -417,9 +415,9 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 body: "",
                 type: "custom",
               });
-              setIsComposeOpen(true); // Reusing compose modal for template creation
+              setIsComposeOpen(true);
             }}
-            className="border-2 border-dashed border-brand-200 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group"
+            className="border-2 border-dashed border-brand-200 rounded-4xl p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group"
           >
             <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Plus size={32} />
@@ -432,7 +430,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           {templates.map((template) => (
             <div
               key={template.id}
-              className="bg-white border border-brand-100 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all group relative"
+              className="bg-white border border-brand-100 rounded-4xl p-6 shadow-sm hover:shadow-md transition-all group relative"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600">
@@ -445,12 +443,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       setTemplateFormData(template);
                       setIsComposeOpen(true);
                     }}
+                    title="Modifier le template"
                     className="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
                   >
                     <Edit2 size={16} />
                   </button>
                   <button
                     onClick={() => deleteTemplate(template.id)}
+                    title="Supprimer le template"
                     className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                   >
                     <Trash2 size={16} />
@@ -480,7 +480,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
       {activeTab === "compose" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white border border-brand-100 rounded-[2rem] p-8 shadow-sm">
+          <div className="lg:col-span-2 bg-white border border-brand-100 rounded-4xl p-8 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-brand-900 flex items-center gap-2">
                 <Mail className="text-brand-500" size={20} />
@@ -528,7 +528,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       {composeData.subject || "(Sans objet)"}
                     </div>
                   </div>
-                  <div className="text-brand-800 whitespace-pre-wrap leading-relaxed min-h-[200px]">
+                  <div className="text-brand-800 whitespace-pre-wrap leading-relaxed min-h-50">
                     {composeData.body || "(Message vide)"}
                   </div>
                 </div>
@@ -555,6 +555,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       />
                       <select
                         required
+                        title="Sélectionner un client"
                         className="w-full pl-10 pr-4 py-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                         value={composeData.clientId}
                         onChange={(e) => {
@@ -587,6 +588,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                         size={16}
                       />
                       <select
+                        title="Document lié (optionnel)"
                         className="w-full pl-10 pr-4 py-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                         value={composeData.invoiceId}
                         onChange={(e) =>
@@ -631,6 +633,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       Type d'email
                     </label>
                     <select
+                      title="Type d'email"
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none"
                       value={composeData.type}
                       onChange={(e) =>
@@ -744,7 +747,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
           </div>
 
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-brand-50 border border-brand-100 rounded-[2rem] p-6">
+            <div className="bg-brand-50 border border-brand-100 rounded-4xl p-6">
               <h4 className="text-sm font-bold text-brand-900 mb-4 flex items-center gap-2">
                 <FileText className="text-brand-400" size={18} />
                 Templates Disponibles
@@ -772,7 +775,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </div>
             </div>
 
-            <div className="bg-accent-50 border border-accent-100 rounded-[2rem] p-6">
+            <div className="bg-accent-50 border border-accent-100 rounded-4xl p-6">
               <h4 className="text-sm font-bold text-accent-900 mb-2 flex items-center gap-2">
                 <Wand2 size={18} />
                 Astuce IA
@@ -787,10 +790,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({
         </div>
       )}
 
-      {/* Template Modal (Reusing Compose UI logic for simplicity) */}
+      {/* Template Modal */}
       {isComposeOpen && activeTab === "templates" && (
         <div className="fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-slide-up">
+          <div className="bg-white rounded-4xl w-full max-w-2xl shadow-2xl overflow-hidden animate-slide-up">
             <div className="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
               <h3 className="text-xl font-bold text-brand-900">
                 {editingTemplateId
@@ -799,6 +802,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </h3>
               <button
                 onClick={() => setIsComposeOpen(false)}
+                title="Fermer"
                 className="p-2 hover:bg-brand-200 rounded-full text-brand-500 transition-colors"
               >
                 <X size={20} />

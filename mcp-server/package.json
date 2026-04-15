@@ -1,0 +1,20 @@
+{
+  "name": "micro-gestion-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Micro-Gestion Fiscal and Invoice Logic",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "decimal.js": "^10.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}

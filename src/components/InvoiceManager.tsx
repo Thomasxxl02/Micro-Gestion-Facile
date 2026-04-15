@@ -180,7 +180,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
       try {
         const sig = await signInvoice(inv, userProfile);
         toast.success(`Facture ${inv.number} signée`, {
-          description: `Empreinte : ${sig.hash.slice(0, 16)}…`,
+          description: `Empreinte : ${sig.signature.slice(0, 16)}…`,
         });
       } catch {
         toast.error('Erreur lors de la signature numérique');

@@ -15,7 +15,7 @@
 
 import { useCallback } from 'react';
 import { calculateDueDate } from '../lib/invoiceDates';
-import { getNextInvoiceNumber } from '../lib/invoiceNumbering';
+import { generateInvoiceNumber } from '../lib/invoiceNumbering';
 import type { Client, DocumentType, Invoice, InvoiceStatus, UserProfile } from '../types';
 
 export interface UseInvoiceActionsProps {
@@ -81,7 +81,7 @@ export function useInvoiceActions({
 
       try {
         // Récupère le prochain numéro de manière ATOMIQUE
-        const nextNumber = await getNextInvoiceNumber(
+        const nextNumber = await generateInvoiceNumber(
           invoice.type !== 'deposit_invoice' ? invoice.type : 'invoice',
           userProfile
         );
@@ -143,7 +143,7 @@ export function useInvoiceActions({
 
       try {
         // Récupère le prochain numéro de facture (atomique)
-        const nextNumber = await getNextInvoiceNumber('invoice', userProfile);
+        const nextNumber = await generateInvoiceNumber('invoice', userProfile);
 
         // Mark quote as accepted if not already
         let updatedInvoices = invoices;
@@ -188,7 +188,7 @@ export function useInvoiceActions({
 
       try {
         // Récupère le prochain numéro de facture
-        const nextNumber = await getNextInvoiceNumber('invoice', userProfile);
+        const nextNumber = await generateInvoiceNumber('invoice', userProfile);
 
         const issueDate = new Date().toISOString().split('T')[0];
         const dueDate = calculateDueDate(issueDate, userProfile);
@@ -225,7 +225,7 @@ export function useInvoiceActions({
 
       try {
         // Récupère le prochain numéro d'avoir
-        const nextNumber = await getNextInvoiceNumber('credit_note', userProfile);
+        const nextNumber = await generateInvoiceNumber('credit_note', userProfile);
 
         const newCreditNote: Invoice = {
           ...invoice,

@@ -1,6 +1,7 @@
+import type { ActivityType } from './common';
 import type { EInvoiceFormat } from './invoice';
 
-export type ActivityType = 'SERVICE_BNC' | 'SERVICE_BIC' | 'SALE' | 'LIBERAL';
+export type { ActivityType };
 
 /**
  * Clé API sécurisée
