@@ -19,10 +19,10 @@ import {
   Upload,
   X,
   Zap,
-} from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-import { validateAmount } from '../lib/zod-schemas';
-import type { Product } from '../types';
+} from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { validateAmount } from "../lib/zod-schemas";
+import type { Product } from "../types";
 
 interface ProductManagerProps {
   products: Product[];
@@ -30,28 +30,34 @@ interface ProductManagerProps {
   onDelete?: (id: string) => void;
 }
 
-type SortOption = 'name' | 'price' | 'type' | 'category' | 'stock';
+type SortOption = "name" | "price" | "type" | "category" | "stock";
 
-const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDelete }) => {
+const ProductManager: React.FC<ProductManagerProps> = ({
+  products,
+  onSave,
+  onDelete,
+}) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('name');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("name");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [showArchived, setShowArchived] = useState(false);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // État pour les erreurs de validation
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   const [formData, setFormData] = useState<Partial<Product>>({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     price: 0,
-    type: 'service',
-    category: '',
-    sku: '',
-    unit: 'unité',
+    type: "service",
+    category: "",
+    sku: "",
+    unit: "unité",
     stock: 0,
     minStock: 0,
   });
@@ -65,13 +71,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
   const openCreate = () => {
     setEditingId(null);
     setFormData({
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       price: 0,
-      type: 'service',
-      category: '',
-      sku: '',
-      unit: 'unité',
+      type: "service",
+      category: "",
+      sku: "",
+      unit: "unité",
       stock: 0,
       minStock: 0,
     });
@@ -89,23 +95,23 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     const errors: Record<string, string> = {};
 
     if (!formData.name?.trim()) {
-      errors.name = 'Nom obligatoire';
+      errors.name = "Nom obligatoire";
     }
 
     const priceValue = Number(formData.price) || 0;
     if (priceValue < 0) {
-      errors.price = 'Prix doit être positif ou zéro';
+      errors.price = "Prix doit être positif ou zéro";
     } else {
       const amountResult = validateAmount(formData.price || 0);
       if (!amountResult.valid) {
-        errors.price = amountResult.error || 'Prix invalide';
+        errors.price = amountResult.error || "Prix invalide";
       }
     }
 
-    if (formData.type === 'product') {
+    if (formData.type === "product") {
       const stockValue = Number(formData.stock) || 0;
       if (stockValue < 0) {
-        errors.stock = 'Stock doit être positif ou zéro';
+        errors.stock = "Stock doit être positif ou zéro";
       }
       const minStockValue = Number(formData.minStock) || 0;
       if (minStockValue < 0) {
@@ -117,13 +123,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
   };
 
   const createProductFromForm = (): Product => {
-    const isService = formData.type === 'service';
+    const isService = formData.type === "service";
     return {
       id: Date.now().toString(),
-      name: formData.name || '',
-      description: formData.description || '',
+      name: formData.name || "",
+      description: formData.description || "",
       price: Number(formData.price) || 0,
-      type: (formData.type as 'service' | 'product') || 'product',
+      type: (formData.type as "service" | "product") || "product",
       category: formData.category,
       sku: formData.sku,
       unit: formData.unit,
@@ -157,7 +163,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Supprimer définitivement cet élément du catalogue ?')) {
+    if (confirm("Supprimer définitivement cet élément du catalogue ?")) {
       if (onDelete) {
         onDelete(id);
       }
@@ -179,7 +185,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     e.stopPropagation();
     const product = products.find((p) => p.id === id);
     if (product) {
-      const updated = { ...product, stock: Math.max(0, (product.stock || 0) + delta) };
+      const updated = {
+        ...product,
+        stock: Math.max(0, (product.stock || 0) + delta),
+      };
       if (onSave) {
         onSave(updated);
       }
@@ -188,57 +197,66 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
   const exportCSV = () => {
     const headers = [
-      'Référence',
-      'Nom',
-      'Type',
-      'Catégorie',
-      'Prix',
-      'Unité',
-      'Stock',
-      'Seuil Alerte',
-      'Description',
-      'Statut',
+      "Référence",
+      "Nom",
+      "Type",
+      "Catégorie",
+      "Prix",
+      "Unité",
+      "Stock",
+      "Seuil Alerte",
+      "Description",
+      "Statut",
     ];
     const rows = products.map((p) =>
       [
-        `"${p.sku || ''}"`,
+        `"${p.sku || ""}"`,
         `"${p.name}"`,
-        `"${p.type === 'service' ? 'Prestation' : 'Marchandise'}"`,
-        `"${p.category || ''}"`,
+        `"${p.type === "service" ? "Prestation" : "Marchandise"}"`,
+        `"${p.category || ""}"`,
         p.price.toFixed(2),
-        `"${p.unit || ''}"`,
-        p.stock ?? '',
-        p.minStock ?? '',
+        `"${p.unit || ""}"`,
+        p.stock ?? "",
+        p.minStock ?? "",
         `"${p.description.replaceAll('"', '""')}"`,
         p.archived ? '"Archivé"' : '"Actif"',
-      ].join(',')
+      ].join(","),
     );
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+    const csvContent =
+      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `catalogue_export_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `catalogue_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     link.remove();
   };
 
   const parseCSVLine = (line: string): string[] =>
-    line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((p) => p.trim().replaceAll('"', ''));
+    line
+      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      .map((p) => p.trim().replaceAll('"', ""));
 
-  const createProductFromCSVLine = (parts: string[], lineIndex: number): Product => ({
+  const createProductFromCSVLine = (
+    parts: string[],
+    lineIndex: number,
+  ): Product => ({
     id: (Date.now() + lineIndex).toString(),
-    sku: parts[0] || '',
+    sku: parts[0] || "",
     name: parts[1],
-    type: parts[2]?.toLowerCase().includes('prest') ? 'service' : 'product',
-    category: parts[3] || '',
+    type: parts[2]?.toLowerCase().includes("prest") ? "service" : "product",
+    category: parts[3] || "",
     price: Number.parseFloat(parts[4]) || 0,
-    unit: parts[5] || 'unité',
+    unit: parts[5] || "unité",
     stock: parts[6] ? Number.parseInt(parts[6]) : undefined,
     minStock: parts[7] ? Number.parseInt(parts[7]) : undefined,
-    description: parts[8] || '',
-    archived: parts[9]?.toLowerCase().includes('arch') ?? false,
+    description: parts[8] || "",
+    archived: parts[9]?.toLowerCase().includes("arch") ?? false,
     createdAt: new Date().toISOString(),
   });
 
@@ -249,7 +267,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     }
 
     const text = await file.text();
-    const lines = text.split('\n');
+    const lines = text.split("\n");
     const newProducts: Product[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -273,8 +291,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
   // --- STATISTICS HELPERS ---
   const globalStats = useMemo(() => {
     const activeProducts = products.filter((p) => !p.archived);
-    const services = activeProducts.filter((p) => p.type === 'service');
-    const goods = activeProducts.filter((p) => p.type === 'product');
+    const services = activeProducts.filter((p) => p.type === "service");
+    const goods = activeProducts.filter((p) => p.type === "product");
     const lowStock = goods.filter((p) => (p.stock || 0) <= (p.minStock || 0));
 
     return {
@@ -289,10 +307,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
     const term = searchTerm.toLowerCase();
     let result = products.filter(
       (p) =>
-        ((p.name || '').toLowerCase().includes(term) ||
-          (p.description || '').toLowerCase().includes(term) ||
-          (p.sku || '').toLowerCase().includes(term)) &&
-        (showArchived ? p.archived === true : !p.archived)
+        ((p.name || "").toLowerCase().includes(term) ||
+          (p.description || "").toLowerCase().includes(term) ||
+          (p.sku || "").toLowerCase().includes(term)) &&
+        (showArchived ? p.archived === true : !p.archived),
     );
 
     if (selectedCategory) {
@@ -301,19 +319,22 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
     if (showLowStockOnly) {
       result = result.filter(
-        (p) => p.type === 'product' && p.stock !== undefined && p.stock <= (p.minStock || 0)
+        (p) =>
+          p.type === "product" &&
+          p.stock !== undefined &&
+          p.stock <= (p.minStock || 0),
       );
     }
 
     return result.sort((a, b) => {
       let comparison;
-      if (sortBy === 'price') {
+      if (sortBy === "price") {
         comparison = b.price - a.price;
-      } else if (sortBy === 'type') {
+      } else if (sortBy === "type") {
         comparison = a.type.localeCompare(b.type);
-      } else if (sortBy === 'category') {
-        comparison = (a.category || '').localeCompare(b.category || '');
-      } else if (sortBy === 'stock') {
+      } else if (sortBy === "category") {
+        comparison = (a.category || "").localeCompare(b.category || "");
+      } else if (sortBy === "stock") {
         comparison = (a.stock || 0) - (b.stock || 0);
       } else {
         comparison = a.name.localeCompare(b.name);
@@ -321,7 +342,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
       return comparison;
     });
-  }, [products, searchTerm, sortBy, showArchived, selectedCategory, showLowStockOnly]);
+  }, [
+    products,
+    searchTerm,
+    sortBy,
+    showArchived,
+    selectedCategory,
+    showLowStockOnly,
+  ]);
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto relative pb-10">
@@ -340,13 +368,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
           <div className="bg-white dark:bg-brand-900 p-1.5 rounded-2xl shadow-sm border border-brand-200 dark:border-brand-800 flex gap-1">
             <button
               onClick={() => setShowArchived(false)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg' : 'text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
             >
               Actifs
             </button>
             <button
               onClick={() => setShowArchived(true)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg' : 'text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800'}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
             >
               Archivés
             </button>
@@ -360,7 +388,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             >
               <Upload size={18} aria-hidden="true" />
               <span className="hidden sm:inline">Import</span>
-              <input type="file" accept=".csv" className="hidden" onChange={importCSV} />
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={importCSV}
+              />
             </label>
             <button
               onClick={exportCSV}
@@ -393,7 +426,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display">
               {globalStats.total}
             </h3>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">Éléments actifs</p>
+            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
+              Éléments actifs
+            </p>
           </div>
         </div>
         <div className="bento-item">
@@ -409,7 +444,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400 font-display">
               {globalStats.servicesCount}
             </h3>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">Services proposés</p>
+            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
+              Services proposés
+            </p>
           </div>
         </div>
         <div className="bento-item">
@@ -440,7 +477,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             </span>
           </div>
           <div>
-            <h3 className="text-lg font-bold font-display">Optimiser le stock</h3>
+            <h3 className="text-lg font-bold font-display">
+              Optimiser le stock
+            </h3>
             <button className="mt-2 text-xs font-bold flex items-center gap-2 hover:underline">
               Générer une commande <ArrowRightCircle size={14} />
             </button>
@@ -450,12 +489,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
       {/* Side Panel Form */}
       <div
-        className={`fixed inset-y-0 right-0 w-full sm:w-112.5 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-brand-100 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 w-full sm:w-112.5 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-brand-100 ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-brand-100 flex justify-between items-center bg-brand-50/50">
             <h3 className="text-xl font-bold text-brand-900">
-              {editingId ? 'Modifier l&apos;élément' : 'Nouvel élément'}
+              {editingId ? "Modifier l&apos;élément" : "Nouvel élément"}
             </h3>
             <button
               onClick={() => setIsPanelOpen(false)}
@@ -466,7 +505,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="flex-1 overflow-y-auto p-8 space-y-6"
+          >
             <div className="space-y-6">
               <div>
                 <label
@@ -480,15 +522,21 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                   type="text"
                   required
                   className={
-                    'w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ' +
-                    (validationErrors.name ? 'border-red-500' : 'border-brand-200')
+                    "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
+                    (validationErrors.name
+                      ? "border-red-500"
+                      : "border-brand-200")
                   }
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Ex: Création site web"
                 />
                 {validationErrors.name && (
-                  <p className="text-xs text-red-600 mt-1">{validationErrors.name}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {validationErrors.name}
+                  </p>
                 )}
               </div>
 
@@ -509,8 +557,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                       id="formData-sku"
                       type="text"
                       className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                      value={formData.sku || ''}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                      value={formData.sku || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sku: e.target.value })
+                      }
                       placeholder="REF-001"
                     />
                   </div>
@@ -526,8 +576,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                     id="formData-category"
                     type="text"
                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                    value={formData.category || ''}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    value={formData.category || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     placeholder="Ex: Développement"
                     list="product-categories"
                   />
@@ -553,7 +605,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                     className="w-full p-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
                     value={formData.type}
                     onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value as 'service' | 'product' })
+                      setFormData({
+                        ...formData,
+                        type: e.target.value as "service" | "product",
+                      })
                     }
                   >
                     <option value="service">Prestation</option>
@@ -576,8 +631,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                       id="formData-unit"
                       title="Sélectionner l'unité"
                       className="w-full pl-10 pr-3 py-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
-                      value={formData.unit || 'unité'}
-                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                      value={formData.unit || "unité"}
+                      onChange={(e) =>
+                        setFormData({ ...formData, unit: e.target.value })
+                      }
                     >
                       <option value="unité">Unité</option>
                       <option value="heure">Heure</option>
@@ -604,20 +661,27 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                   placeholder="0.00"
                   title="Prix HT (hors taxe) en euros"
                   className={
-                    'w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ' +
-                    (validationErrors.price ? 'border-red-500' : 'border-brand-200')
+                    "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
+                    (validationErrors.price
+                      ? "border-red-500"
+                      : "border-brand-200")
                   }
                   value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, price: Number.parseFloat(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      price: Number.parseFloat(e.target.value),
+                    })
                   }
                 />
                 {validationErrors.price && (
-                  <p className="text-xs text-red-600 mt-1">{validationErrors.price}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {validationErrors.price}
+                  </p>
                 )}
               </div>
 
-              {formData.type === 'product' && (
+              {formData.type === "product" && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label
@@ -632,16 +696,23 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                       placeholder="0"
                       title="Quantité en stock actuel"
                       className={
-                        'w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ' +
-                        (validationErrors.stock ? 'border-red-500' : 'border-brand-200')
+                        "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
+                        (validationErrors.stock
+                          ? "border-red-500"
+                          : "border-brand-200")
                       }
                       value={formData.stock}
                       onChange={(e) =>
-                        setFormData({ ...formData, stock: Number.parseInt(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          stock: Number.parseInt(e.target.value) || 0,
+                        })
                       }
                     />
                     {validationErrors.stock && (
-                      <p className="text-xs text-red-600 mt-1">{validationErrors.stock}</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        {validationErrors.stock}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -657,12 +728,17 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                       placeholder="0"
                       title="Seuil minimum d'alerte pour le stock"
                       className={
-                        'w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ' +
-                        (validationErrors.minStock ? 'border-red-500' : 'border-brand-200')
+                        "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
+                        (validationErrors.minStock
+                          ? "border-red-500"
+                          : "border-brand-200")
                       }
                       value={formData.minStock}
                       onChange={(e) =>
-                        setFormData({ ...formData, minStock: Number.parseInt(e.target.value) || 0 })
+                        setFormData({
+                          ...formData,
+                          minStock: Number.parseInt(e.target.value) || 0,
+                        })
                       }
                     />
                   </div>
@@ -681,7 +757,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                   rows={4}
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all resize-none"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Description détaillée qui apparaîtra sur les documents..."
                 />
               </div>
@@ -700,7 +778,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
               onClick={handleSubmit}
               className="px-6 py-2.5 bg-brand-900 text-white rounded-2xl hover:bg-brand-800 font-medium shadow-lg shadow-brand-200 transition-all hover:scale-[1.02]"
             >
-              {editingId ? 'Mettre à jour' : 'Enregistrer'}
+              {editingId ? "Mettre à jour" : "Enregistrer"}
             </button>
           </div>
         </div>
@@ -761,7 +839,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
             <select
               aria-label="Trier les produits"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption | 'stock')}
+              onChange={(e) =>
+                setSortBy(e.target.value as SortOption | "stock")
+              }
               className="bg-transparent text-sm font-bold text-brand-900 dark:text-white outline-none cursor-pointer appearance-none pr-4"
             >
               <option value="name">Nom (A-Z)</option>
@@ -774,7 +854,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
           <button
             onClick={() => setShowLowStockOnly(!showLowStockOnly)}
-            className={`px-8 py-3 rounded-3xl text-[10px] font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${showLowStockOnly ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 shadow-sm' : 'bg-white dark:bg-brand-900 text-brand-600 dark:text-brand-400 border-brand-100 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-800 shadow-sm'}`}
+            className={`px-8 py-3 rounded-3xl text-[10px] font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${showLowStockOnly ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 shadow-sm" : "bg-white dark:bg-brand-900 text-brand-600 dark:text-brand-400 border-brand-100 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-800 shadow-sm"}`}
           >
             <AlertCircle size={16} />
             Stock Bas
@@ -783,7 +863,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {processedProducts.map((p) => (
-            <div key={p.id} className="card-modern p-8 group relative flex flex-col">
+            <div
+              key={p.id}
+              className="card-modern p-8 group relative flex flex-col"
+            >
               {/* Actions Top Right */}
               <div className="absolute top-6 right-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
                 <button
@@ -795,7 +878,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                 </button>
                 <button
                   onClick={(e) => toggleArchive(p.id, e)}
-                  aria-label={p.archived ? `Restaurer ${p.name}` : `Archiver ${p.name}`}
+                  aria-label={
+                    p.archived ? `Restaurer ${p.name}` : `Archiver ${p.name}`
+                  }
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all"
                 >
                   {p.archived ? (
@@ -817,10 +902,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                 <div
                   className={`
                             w-16 h-16 rounded-3xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110
-                            ${p.type === 'service' ? 'bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700' : 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30'}
+                            ${p.type === "service" ? "bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700" : "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30"}
                         `}
                 >
-                  {p.type === 'service' ? <Briefcase size={28} /> : <Package size={28} />}
+                  {p.type === "service" ? (
+                    <Briefcase size={28} />
+                  ) : (
+                    <Package size={28} />
+                  )}
                 </div>
                 {p.sku && (
                   <span className="text-[10px] font-mono font-bold text-brand-400 dark:text-brand-500 bg-brand-50 dark:bg-brand-800 px-2.5 py-1 rounded-lg border border-brand-100 dark:border-brand-700">
@@ -833,10 +922,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span
                     className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border
-                                ${p.type === 'service' ? 'bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700' : 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30'}
+                                ${p.type === "service" ? "bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700" : "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30"}
                             `}
                   >
-                    {p.type === 'service' ? 'Prestation' : 'Marchandise'}
+                    {p.type === "service" ? "Prestation" : "Marchandise"}
                   </span>
                   {p.category && (
                     <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-800 text-brand-500 dark:text-brand-400 border border-brand-100 dark:border-brand-700 flex items-center gap-1.5">
@@ -848,7 +937,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                   {p.name}
                 </h4>
                 <p className="text-sm text-brand-500 dark:text-brand-400 line-clamp-2 h-10 leading-relaxed">
-                  {p.description || 'Aucune description'}
+                  {p.description || "Aucune description"}
                 </p>
               </div>
 
@@ -862,12 +951,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                       {p.price.toFixed(2)} €
                     </span>
                     <span className="text-[10px] text-brand-400 dark:text-brand-500 font-bold uppercase tracking-widest">
-                      / {p.unit || 'unité'}
+                      / {p.unit || "unité"}
                     </span>
                   </div>
                 </div>
 
-                {p.type === 'product' && p.stock !== undefined && (
+                {p.type === "product" && p.stock !== undefined && (
                   <div className="text-right">
                     <span className="text-[9px] uppercase font-black text-brand-400 dark:text-brand-500 tracking-widest block mb-1">
                       Stock
@@ -881,7 +970,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                         <Minus size={12} aria-hidden="true" />
                       </button>
                       <div
-                        className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock || 0) ? 'text-red-500 dark:text-red-400' : 'text-brand-900 dark:text-white'}`}
+                        className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock || 0) ? "text-red-500 dark:text-red-400" : "text-brand-900 dark:text-white"}`}
                       >
                         {p.stock <= (p.minStock || 0) && (
                           <AlertCircle size={12} aria-hidden="true" />
@@ -911,7 +1000,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onSave, onDel
                 Catalogue vide
               </h3>
               <p className="text-brand-400 dark:text-brand-500 text-sm max-w-xs mx-auto">
-                Essayez une autre recherche ou changez de filtre pour trouver ce que vous cherchez.
+                Essayez une autre recherche ou changez de filtre pour trouver ce
+                que vous cherchez.
               </p>
             </div>
           )}

@@ -10,19 +10,25 @@ import {
   ShieldCheck,
   Trash2,
   TrendingUp,
-} from 'lucide-react';
-import React, { Suspense, useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { useInvoiceActions } from '../hooks/useInvoiceActions';
-import { signInvoice } from '../lib/electronicSignature';
-import { useAppStore } from '../store/appStore';
-import type { Client, DocumentType, Invoice, Product, UserProfile } from '../types';
-import { InvoiceStatus } from '../types/invoice';
-import { TableRowSkeleton } from './Skeleton';
+} from "lucide-react";
+import React, { Suspense, useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useInvoiceActions } from "../hooks/useInvoiceActions";
+import { signInvoice } from "../lib/electronicSignature";
+import { useAppStore } from "../store/appStore";
+import type {
+  Client,
+  DocumentType,
+  Invoice,
+  Product,
+  UserProfile,
+} from "../types";
+import { InvoiceStatus } from "../types/invoice";
+import { TableRowSkeleton } from "./Skeleton";
 
-const InvoicePaper = React.lazy(() => import('./InvoicePaper'));
+const InvoicePaper = React.lazy(() => import("./InvoicePaper"));
 
-type FilterStatus = 'all' | InvoiceStatus | string;
+type FilterStatus = "all" | InvoiceStatus | string;
 
 interface InvoiceManagerProps {
   invoices: Invoice[];
@@ -44,10 +50,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   onSave,
   onDelete,
 }) => {
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [filterType, setFilterType] = useState<DocumentType | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'number' | 'total'>('date');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterType, setFilterType] = useState<DocumentType | "all">("all");
+  const [sortBy, setSortBy] = useState<"date" | "number" | "total">("date");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [signingId, setSigningId] = useState<string | null>(null);
@@ -78,30 +84,38 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
     const now = new Date();
     return invoices.reduce(
       (acc, inv) => {
-        if (inv.type === 'invoice') {
+        if (inv.type === "invoice") {
           acc.totalInvoiced += inv.total;
-          if (inv.status !== InvoiceStatus.PAID && inv.status !== InvoiceStatus.CANCELLED) {
+          if (
+            inv.status !== InvoiceStatus.PAID &&
+            inv.status !== InvoiceStatus.CANCELLED
+          ) {
             acc.pendingPayment += inv.total;
             if (inv.dueDate && new Date(inv.dueDate) < now) {
               acc.overdueCount += 1;
             }
           }
-        } else if (inv.type === 'quote' && inv.status === InvoiceStatus.DRAFT) {
+        } else if (inv.type === "quote" && inv.status === InvoiceStatus.DRAFT) {
           acc.quotesToFollowUp += 1;
         }
         return acc;
       },
-      { totalInvoiced: 0, pendingPayment: 0, overdueCount: 0, quotesToFollowUp: 0 }
+      {
+        totalInvoiced: 0,
+        pendingPayment: 0,
+        overdueCount: 0,
+        quotesToFollowUp: 0,
+      },
     );
   }, [invoices]);
 
   // ─── FILTRAGE & TRI ───
   const filtered = useMemo(() => {
     const result = invoices.filter((inv) => {
-      if (filterStatus !== 'all' && inv.status !== filterStatus) {
+      if (filterStatus !== "all" && inv.status !== filterStatus) {
         return false;
       }
-      if (filterType !== 'all' && inv.type !== filterType) {
+      if (filterType !== "all" && inv.type !== filterType) {
         return false;
       }
 
@@ -120,13 +134,13 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
     });
 
     result.sort((a, b) => {
-      if (sortBy === 'date') {
+      if (sortBy === "date") {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       }
-      if (sortBy === 'number') {
+      if (sortBy === "number") {
         return b.number.localeCompare(a.number);
       }
-      if (sortBy === 'total') {
+      if (sortBy === "total") {
         return b.total - a.total;
       }
       return 0;
@@ -138,33 +152,33 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   // ─── HANDLERS ───
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm('Supprimer ce document?')) {
+      if (confirm("Supprimer ce document?")) {
         deleteInvoice(id);
       }
     },
-    [deleteInvoice]
+    [deleteInvoice],
   );
 
   const handleStatusChange = useCallback(
     (id: string, status: string) => {
       updateInvoiceStatus(id, status);
     },
-    [updateInvoiceStatus]
+    [updateInvoiceStatus],
   );
 
   const handleBulkExport = useCallback(() => {
     if (selectedIds.size === 0) {
-      alert('Sélectionnez au moins un document');
+      alert("Sélectionnez au moins un document");
       return;
     }
 
     const selectedDocs = invoices.filter((i) => selectedIds.has(i.id));
-    exportToCSV(selectedDocs, selectedDocs[0]?.type || 'invoice');
+    exportToCSV(selectedDocs, selectedDocs[0]?.type || "invoice");
   }, [selectedIds, invoices, exportToCSV]);
 
   const handleBulkDelete = useCallback(() => {
     if (selectedIds.size === 0) {
-      alert('Sélectionnez au moins un document');
+      alert("Sélectionnez au moins un document");
       return;
     }
 
@@ -183,19 +197,21 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           description: `Empreinte : ${sig.signature.slice(0, 16)}…`,
         });
       } catch {
-        toast.error('Erreur lors de la signature numérique');
+        toast.error("Erreur lors de la signature numérique");
       } finally {
         setSigningId(null);
       }
     },
-    [userProfile]
+    [userProfile],
   );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-black text-brand-900 dark:text-white">Documents</h2>
+        <h2 className="text-3xl font-black text-brand-900 dark:text-white">
+          Documents
+        </h2>
         <button className="bg-brand-900 text-white px-6 py-3 rounded-2xl flex items-center gap-2 hover:bg-brand-800">
           <Plus size={20} />
           Nouveau
@@ -210,9 +226,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               <TrendingUp size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Facturé HT</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Facturé HT
+              </p>
               <p className="text-xl font-bold dark:text-white">
-                {stats.totalInvoiced.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                {stats.totalInvoiced.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                })}{" "}
+                €
               </p>
             </div>
           </div>
@@ -224,9 +245,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               <Calendar size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">En attente paiement</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                En attente paiement
+              </p>
               <p className="text-xl font-bold dark:text-white">
-                {stats.pendingPayment.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                {stats.pendingPayment.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                })}{" "}
+                €
               </p>
             </div>
           </div>
@@ -238,8 +264,12 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               <ShieldCheck size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Factures en retard</p>
-              <p className="text-xl font-bold dark:text-white">{stats.overdueCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Factures en retard
+              </p>
+              <p className="text-xl font-bold dark:text-white">
+                {stats.overdueCount}
+              </p>
             </div>
           </div>
         </div>
@@ -250,8 +280,12 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               <Mail size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Devis à relancer</p>
-              <p className="text-xl font-bold dark:text-white">{stats.quotesToFollowUp}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Devis à relancer
+              </p>
+              <p className="text-xl font-bold dark:text-white">
+                {stats.quotesToFollowUp}
+              </p>
             </div>
           </div>
         </div>
@@ -265,7 +299,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             type="text"
             placeholder="Rechercher... (numéro ou client)"
             value={searchTerm}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setSearchTerm(e.target.value)
+            }
             className="px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
           />
 
@@ -273,7 +309,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           <select
             value={filterType}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setFilterType(e.target.value as DocumentType | 'all')
+              setFilterType(e.target.value as DocumentType | "all")
             }
             className="px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
             title="Filtrer par type de document"
@@ -305,7 +341,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           <select
             value={sortBy}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setSortBy(e.target.value as 'date' | 'number' | 'total')
+              setSortBy(e.target.value as "date" | "number" | "total")
             }
             className="px-3 py-2 border rounded dark:bg-gray-700 dark:text-white"
             title="Trier par"
@@ -337,8 +373,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
 
       {/* RESULTS COUNT */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        {filtered.length} document{filtered.length !== 1 ? 's' : ''} trouvé
-        {filtered.length !== 1 ? 's' : ''}
+        {filtered.length} document{filtered.length !== 1 ? "s" : ""} trouvé
+        {filtered.length !== 1 ? "s" : ""}
       </div>
 
       {/* TABLE */}
@@ -350,7 +386,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Aucun document trouvé</div>
+          <div className="p-8 text-center text-gray-500">
+            Aucun document trouvé
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-700 border-b">
@@ -358,7 +396,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                 <th className="px-4 py-3 text-left w-12">
                   <input
                     type="checkbox"
-                    checked={selectedIds.size === filtered.length && filtered.length > 0}
+                    checked={
+                      selectedIds.size === filtered.length &&
+                      filtered.length > 0
+                    }
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       if (e.target.checked) {
                         setSelectedIds(new Set(filtered.map((i) => i.id)));
@@ -384,26 +425,28 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               {filtered.map((inv) => {
                 const client = clients.find((c) => c.id === inv.clientId);
                 const isOverdue =
-                  inv.type === 'invoice' &&
+                  inv.type === "invoice" &&
                   inv.status !== InvoiceStatus.PAID &&
                   inv.dueDate &&
                   new Date(inv.dueDate) < new Date();
                 const isUrgent =
-                  inv.type === 'invoice' &&
+                  inv.type === "invoice" &&
                   inv.status !== InvoiceStatus.PAID &&
                   inv.dueDate &&
                   !isOverdue &&
-                  new Date(inv.dueDate).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000;
+                  new Date(inv.dueDate).getTime() - new Date().getTime() <
+                    3 * 24 * 60 * 60 * 1000;
 
                 const isLocked =
-                  inv.type === 'invoice' &&
-                  (inv.status === InvoiceStatus.SENT || inv.status === InvoiceStatus.PAID);
+                  inv.type === "invoice" &&
+                  (inv.status === InvoiceStatus.SENT ||
+                    inv.status === InvoiceStatus.PAID);
 
                 return (
                   <tr
                     key={inv.id}
                     className={`border-b hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
-                      isLocked ? 'opacity-90' : ''
+                      isLocked ? "opacity-90" : ""
                     }`}
                   >
                     <td className="px-4 py-3">
@@ -437,9 +480,12 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         {getDocumentLabel(inv.type)}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{client?.name || 'N/A'}</td>
+                    <td className="px-4 py-3">{client?.name || "N/A"}</td>
                     <td className="px-4 py-3 text-right font-semibold">
-                      {inv.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                      {inv.total.toLocaleString("fr-FR", {
+                        minimumFractionDigits: 2,
+                      })}{" "}
+                      €
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -449,8 +495,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         }
                         className={`px-2 py-1 rounded border text-sm dark:bg-gray-700 dark:text-white ${
                           inv.status === InvoiceStatus.PAID
-                            ? 'border-green-500 text-green-700 bg-green-50'
-                            : ''
+                            ? "border-green-500 text-green-700 bg-green-50"
+                            : ""
                         }`}
                         title={`Changer le statut du document ${inv.number}`}
                         aria-label={`Changer le statut du document ${inv.number}`}
@@ -458,12 +504,18 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         <option value={InvoiceStatus.DRAFT}>Brouillon</option>
                         <option value={InvoiceStatus.SENT}>Envoyée</option>
                         <option value={InvoiceStatus.PAID}>Payée</option>
-                        <option value={InvoiceStatus.PARTIALLY_PAID}>Partiellement payée</option>
+                        <option value={InvoiceStatus.PARTIALLY_PAID}>
+                          Partiellement payée
+                        </option>
                         <option value={InvoiceStatus.CANCELLED}>Annulée</option>
-                        {inv.type === 'quote' && (
+                        {inv.type === "quote" && (
                           <>
-                            <option value={InvoiceStatus.ACCEPTED}>Accepté</option>
-                            <option value={InvoiceStatus.REJECTED}>Refusé</option>
+                            <option value={InvoiceStatus.ACCEPTED}>
+                              Accepté
+                            </option>
+                            <option value={InvoiceStatus.REJECTED}>
+                              Refusé
+                            </option>
                           </>
                         )}
                       </select>
@@ -473,33 +525,34 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         <span
                           className={`text-xs font-semibold px-2 py-1 rounded ${
                             isOverdue
-                              ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
                               : isUrgent
-                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+                                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                           }`}
                         >
-                          {new Date(inv.dueDate).toLocaleDateString('fr-FR')}
+                          {new Date(inv.dueDate).toLocaleDateString("fr-FR")}
                         </span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {new Date(inv.date).toLocaleDateString('fr-FR')}
+                      {new Date(inv.date).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-1">
-                        {inv.type === 'quote' && inv.status === InvoiceStatus.ACCEPTED && (
-                          <button
-                            onClick={() => convertQuoteToInvoice(inv)}
-                            className="p-2 hover:bg-brand-100 dark:hover:bg-brand-900 rounded text-brand-600"
-                            title="Convertir en Facture"
-                            aria-label={`Convertir le devis ${inv.number} en facture`}
-                          >
-                            <ArrowRightLeft size={16} />
-                          </button>
-                        )}
+                        {inv.type === "quote" &&
+                          inv.status === InvoiceStatus.ACCEPTED && (
+                            <button
+                              onClick={() => convertQuoteToInvoice(inv)}
+                              className="p-2 hover:bg-brand-100 dark:hover:bg-brand-900 rounded text-brand-600"
+                              title="Convertir en Facture"
+                              aria-label={`Convertir le devis ${inv.number} en facture`}
+                            >
+                              <ArrowRightLeft size={16} />
+                            </button>
+                          )}
                         <button
                           onClick={() => setPreviewInvoice(inv)}
                           className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
@@ -546,7 +599,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         <button
                           onClick={() => handleDelete(inv.id)}
                           className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded text-red-600 disabled:opacity-30 disabled:hover:bg-transparent"
-                          title={isLocked ? 'Document verrouillé' : 'Supprimer'}
+                          title={isLocked ? "Document verrouillé" : "Supprimer"}
                           aria-label={`Supprimer le document ${inv.number}`}
                           disabled={isLocked}
                         >
