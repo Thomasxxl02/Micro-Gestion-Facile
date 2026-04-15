@@ -35,7 +35,7 @@ import type {
  * Ref légale : Art. 289-I-5° CGI — séquence chronologique continue
  */
 export interface InvoiceNumberSequence {
-  type: 'invoice' | 'quote' | 'order' | 'credit_note';
+  type: 'invoice' | 'quote' | 'order' | 'credit_note' | 'deposit_invoice';
   year: number; // Année en cours de la séquence (reset si changement d'année)
   currentNumber: number; // Dernier numéro utilisé pour (type, year)
   lastUsedAt: string; // ISO timestamp pour audit

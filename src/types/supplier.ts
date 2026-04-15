@@ -11,6 +11,7 @@ export interface Supplier {
   contactName?: string;
   website?: string;
   tvaNumber?: string;
+  iban?: string;
   paymentTerms?: string;
   archived?: boolean;
   createdAt?: string;

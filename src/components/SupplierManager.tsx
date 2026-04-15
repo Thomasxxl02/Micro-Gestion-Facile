@@ -429,8 +429,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="IBAN"
-                value={validatedData.phone || ''}
-                onChange={(val) => handleFormChange('phone')(val)}
+                value={validatedData.iban || ''}
+                onChange={(val) => handleFormChange('iban')(val)}
                 validationType="iban"
                 placeholder="FR14..."
                 error={validationErrors.iban}

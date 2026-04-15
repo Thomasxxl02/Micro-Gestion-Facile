@@ -26,12 +26,12 @@ import {
   User,
   Wallet,
   Zap,
-} from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { parseImportJSON } from '../lib/exportUtils';
-import { useAppStore } from '../store/appStore';
-import useLogStore from '../store/useLogStore';
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { parseImportJSON } from "../lib/exportUtils";
+import { useAppStore } from "../store/appStore";
+import useLogStore from "../store/useLogStore";
 import type {
   Client,
   Expense,
@@ -40,9 +40,9 @@ import type {
   Product,
   Supplier,
   UserProfile,
-} from '../types';
-import { ConfirmDialog } from './Dialogs';
-import ExportModal from './ExportModal';
+} from "../types";
+import { ConfirmDialog } from "./Dialogs";
+import ExportModal from "./ExportModal";
 import {
   ColorPicker,
   FormField,
@@ -51,18 +51,18 @@ import {
   SignatureUploader,
   TextAreaField,
   ToggleSwitch,
-} from './FormFields';
-import SecurityTab from './SecurityTab';
+} from "./FormFields";
+import SecurityTab from "./SecurityTab";
 
 // ─── INVOICE TEMPLATES ───────────────────────────────────────────────────────
 const INVOICE_TEMPLATES = [
-  { id: 'modern' as const, label: 'Moderne' },
-  { id: 'classic' as const, label: 'Classique' },
-  { id: 'minimal' as const, label: 'Épuré' },
-  { id: 'corporate' as const, label: 'Corporate' },
+  { id: "modern" as const, label: "Moderne" },
+  { id: "classic" as const, label: "Classique" },
+  { id: "minimal" as const, label: "Épuré" },
+  { id: "corporate" as const, label: "Corporate" },
 ] as const;
 
-type InvoiceTemplateId = 'modern' | 'classic' | 'minimal' | 'corporate';
+type InvoiceTemplateId = "modern" | "classic" | "minimal" | "corporate";
 
 interface InvoiceTemplateThumbnailProps {
   template: InvoiceTemplateId;
@@ -71,7 +71,7 @@ interface InvoiceTemplateThumbnailProps {
   fontFamily: string;
   companyName?: string;
   invoiceNumber?: string;
-  size?: 'thumb' | 'preview';
+  size?: "thumb" | "preview";
 }
 
 const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
@@ -81,27 +81,30 @@ const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
   fontFamily,
   companyName,
   invoiceNumber,
-  size = 'thumb',
+  size = "thumb",
 }) => {
-  const name = companyName ?? 'Votre Entreprise';
-  const number = invoiceNumber ?? 'FAC-001';
-  const isPreview = size === 'preview';
+  const name = companyName ?? "Votre Entreprise";
+  const number = invoiceNumber ?? "FAC-001";
+  const isPreview = size === "preview";
   const wrapClass = isPreview
-    ? 'rounded-xl overflow-hidden border border-brand-100 dark:border-brand-700 shadow-sm text-[9px]'
-    : 'rounded-lg overflow-hidden border border-brand-100 dark:border-brand-700 text-[7px] h-24';
-  const bodyPad = isPreview ? 'px-3 py-2' : 'px-2 py-1';
-  const nameSize = isPreview ? 'text-[10px]' : 'text-[8px]';
-  const spacing = isPreview ? 'space-y-1.5' : 'space-y-0.5';
+    ? "rounded-xl overflow-hidden border border-brand-100 dark:border-brand-700 shadow-sm text-[9px]"
+    : "rounded-lg overflow-hidden border border-brand-100 dark:border-brand-700 text-[7px] h-24";
+  const bodyPad = isPreview ? "px-3 py-2" : "px-2 py-1";
+  const nameSize = isPreview ? "text-[10px]" : "text-[8px]";
+  const spacing = isPreview ? "space-y-1.5" : "space-y-0.5";
   // CSS vars injectées une seule fois sur l'élément racine de chaque gabarit
   const cssVars = {
-    '--itmpl-primary': primaryColor,
-    '--itmpl-secondary': secondaryColor,
-    '--itmpl-font': fontFamily,
+    "--itmpl-primary": primaryColor,
+    "--itmpl-secondary": secondaryColor,
+    "--itmpl-font": fontFamily,
   } as React.CSSProperties;
 
-  if (template === 'modern') {
+  if (template === "modern") {
     return (
-      <div className={`${wrapClass} [font-family:var(--itmpl-font)]`} style={cssVars}>
+      <div
+        className={`${wrapClass} [font-family:var(--itmpl-font)]`}
+        style={cssVars}
+      >
         <div className={`${bodyPad} text-white bg-(--itmpl-primary)`}>
           <p className={`font-bold truncate ${nameSize}`}>{name}</p>
           <p className="opacity-75">FACTURE N° {number}</p>
@@ -121,7 +124,7 @@ const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
     );
   }
 
-  if (template === 'classic') {
+  if (template === "classic") {
     return (
       <div
         className={`${wrapClass} bg-white dark:bg-brand-900/60 [font-family:var(--itmpl-font)]`}
@@ -131,11 +134,17 @@ const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
           className={`${bodyPad} flex justify-between items-start border-b-2 border-(--itmpl-primary)`}
         >
           <div>
-            <p className={`font-bold ${nameSize} text-(--itmpl-primary)`}>{name}</p>
+            <p className={`font-bold ${nameSize} text-(--itmpl-primary)`}>
+              {name}
+            </p>
             <p className="text-brand-400 text-[6px]">contact@entreprise.fr</p>
           </div>
           <div className="text-right">
-            <p className={`font-bold ${nameSize} text-brand-700 dark:text-brand-300`}>FACTURE</p>
+            <p
+              className={`font-bold ${nameSize} text-brand-700 dark:text-brand-300`}
+            >
+              FACTURE
+            </p>
             <p className="text-brand-400">{number}</p>
           </div>
         </div>
@@ -153,22 +162,26 @@ const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
     );
   }
 
-  if (template === 'minimal') {
+  if (template === "minimal") {
     return (
       <div
         className={`${wrapClass} bg-white dark:bg-brand-900/60 [font-family:var(--itmpl-font)]`}
         style={cssVars}
       >
         <div className={`${bodyPad}`}>
-          <p className={`${nameSize} text-brand-900 dark:text-white font-medium`}>{name}</p>
+          <p
+            className={`${nameSize} text-brand-900 dark:text-white font-medium`}
+          >
+            {name}
+          </p>
           <div className="h-px mt-1 bg-(--itmpl-primary)" />
           <div className="flex justify-between mt-1 text-brand-400">
             <span>FACTURE {number}</span>
             <span>
-              {new Date().toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
+              {new Date().toLocaleDateString("fr-FR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
               })}
             </span>
           </div>
@@ -189,7 +202,10 @@ const InvoiceTemplateThumbnail: React.FC<InvoiceTemplateThumbnailProps> = ({
 
   // corporate
   return (
-    <div className={`${wrapClass} [font-family:var(--itmpl-font)]`} style={cssVars}>
+    <div
+      className={`${wrapClass} [font-family:var(--itmpl-font)]`}
+      style={cssVars}
+    >
       <div className="flex h-10">
         <div className="w-2/3 px-2 py-1.5 text-white flex flex-col justify-center bg-(--itmpl-primary)">
           <p className={`font-bold ${nameSize} truncate`}>{name}</p>
@@ -234,7 +250,13 @@ interface SettingsManagerProps {
   };
 }
 
-const SETTINGS_TABS = ['profile', 'billing', 'preferences', 'security', 'data'] as const;
+const SETTINGS_TABS = [
+  "profile",
+  "billing",
+  "preferences",
+  "security",
+  "data",
+] as const;
 
 const SettingsManager: React.FC<SettingsManagerProps> = ({
   userProfile,
@@ -245,32 +267,36 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<
-    'profile' | 'billing' | 'data' | 'preferences' | 'security'
-  >('profile');
+    "profile" | "billing" | "data" | "preferences" | "security"
+  >("profile");
   const { addLog, fontSize, setFontSize } = useAppStore();
   const { activityLogs } = useLogStore();
 
   const dataLogs = activityLogs.filter(
-    (log) => (log.category as string) === 'SYSTEM' || (log.category as string) === 'DATA'
+    (log) =>
+      (log.category as string) === "SYSTEM" ||
+      (log.category as string) === "DATA",
   );
 
   // ─── KEYBOARD NAVIGATION (ARIA tablist pattern) ───
   const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const idx = SETTINGS_TABS.indexOf(activeTab as (typeof SETTINGS_TABS)[number]);
+    const idx = SETTINGS_TABS.indexOf(
+      activeTab as (typeof SETTINGS_TABS)[number],
+    );
     const next = (() => {
       switch (e.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
+        case "ArrowRight":
+        case "ArrowDown":
           e.preventDefault();
           return (idx + 1) % SETTINGS_TABS.length;
-        case 'ArrowLeft':
-        case 'ArrowUp':
+        case "ArrowLeft":
+        case "ArrowUp":
           e.preventDefault();
           return (idx - 1 + SETTINGS_TABS.length) % SETTINGS_TABS.length;
-        case 'Home':
+        case "Home":
           e.preventDefault();
           return 0;
-        case 'End':
+        case "End":
           e.preventDefault();
           return SETTINGS_TABS.length - 1;
         default:
@@ -281,7 +307,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       return;
     }
     setActiveTab(SETTINGS_TABS[next]);
-    const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const buttons =
+      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
     buttons[next]?.focus();
   };
 
@@ -292,7 +319,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     description: string;
     isDangerous?: boolean;
     onConfirm?: () => void;
-  }>({ isOpen: false, title: '', description: '' });
+  }>({ isOpen: false, title: "", description: "" });
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -306,7 +333,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   // ─── LAST BACKUP DATE ───
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [lastBackupDate, _setLastBackupDate] = useState<string | null>(
-    localStorage.getItem('mgf_last_backup_date')
+    localStorage.getItem("mgf_last_backup_date"),
   );
 
   // ─── VALIDATION FUNCTIONS ───
@@ -314,9 +341,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     if (!value) {
       return undefined;
     }
-    const digits = value.replace(/[\s-]/g, '');
+    const digits = value.replace(/[\s-]/g, "");
     if (!/^\d{14}$/.test(digits)) {
-      return 'Le SIRET doit contenir exactement 14 chiffres';
+      return "Le SIRET doit contenir exactement 14 chiffres";
     }
     return undefined;
   };
@@ -325,9 +352,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     if (!value) {
       return undefined;
     }
-    const normalized = value.replace(/\s/g, '').toUpperCase();
+    const normalized = value.replace(/\s/g, "").toUpperCase();
     if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(normalized)) {
-      return 'Format IBAN invalide (ex : FR76 3000 6000 0112 3456 7890 189)';
+      return "Format IBAN invalide (ex : FR76 3000 6000 0112 3456 7890 189)";
     }
     return undefined;
   };
@@ -337,7 +364,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       return undefined;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return 'Adresse email invalide';
+      return "Adresse email invalide";
     }
     return undefined;
   };
@@ -345,32 +372,43 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   // ─── HANDLERS ───
   const handleChange = (
     field: keyof UserProfile,
-    value: string | number | boolean | Record<string, unknown>
+    value: string | number | boolean | Record<string, unknown>,
   ) => {
     const updatedProfile = { ...userProfile, [field]: value };
     setUserProfile(updatedProfile);
     setIsDirty(true);
-    if (field === 'siret') {
-      setValidationErrors((prev) => ({ ...prev, siret: validateSIRET(value as string) }));
-    } else if (field === 'bankAccount') {
-      setValidationErrors((prev) => ({ ...prev, bankAccount: validateIBAN(value as string) }));
-    } else if (field === 'email') {
-      setValidationErrors((prev) => ({ ...prev, email: validateEmail(value as string) }));
+    if (field === "siret") {
+      setValidationErrors((prev) => ({
+        ...prev,
+        siret: validateSIRET(value as string),
+      }));
+    } else if (field === "bankAccount") {
+      setValidationErrors((prev) => ({
+        ...prev,
+        bankAccount: validateIBAN(value as string),
+      }));
+    } else if (field === "email") {
+      setValidationErrors((prev) => ({
+        ...prev,
+        email: validateEmail(value as string),
+      }));
     }
   };
 
   // ─── APPLICATION IMMÉDIATE DU THÈME ───
   useEffect(() => {
-    const theme = userProfile.theme ?? 'auto';
+    const theme = userProfile.theme ?? "auto";
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else if (theme === 'light') {
-      root.classList.remove('dark');
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else if (theme === "light") {
+      root.classList.remove("dark");
     } else {
       // auto → suivre la préférence système
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.toggle('dark', prefersDark);
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      root.classList.toggle("dark", prefersDark);
     }
   }, [userProfile.theme]);
 
@@ -378,7 +416,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     if (onSaveProfile) {
       onSaveProfile(userProfile);
     }
-    toast.success('Profil sauvegardé');
+    toast.success("Profil sauvegardé");
     setIsDirty(false);
   };
 
@@ -392,18 +430,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     }
 
     try {
-      const text = await file.text();
-      const result = parseImportJSON(text);
+      const data = await parseImportJSON(file);
 
-      if (!result.valid || !result.data) {
-        addLog("Échec de l'importation de données", 'DATA', 'ERROR');
+      if (!data || Object.keys(data).length === 0) {
+        addLog("Échec de l'importation de données", "DATA", "ERROR");
         toast.error("Erreur d'importation", {
-          description: `Fichier invalide : ${result.error ?? 'Format JSON non reconnu'}`,
+          description: "Fichier invalide ou vide : Format JSON non reconnu",
         });
         return;
       }
 
-      const { data } = result;
       if (data.userProfile) {
         setUserProfile(data.userProfile as UserProfile);
       }
@@ -423,12 +459,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         setAllData.setExpenses(data.expenses as Expense[]);
       }
 
-      addLog('Importation de données externe réussie', 'DATA', 'INFO');
-      toast.success('Données importées avec succès');
+      addLog("Importation de données externe réussie", "DATA", "INFO");
+      toast.success("Données importées avec succès");
     } catch {
-      addLog("Échec de l'importation de données", 'DATA', 'ERROR');
+      addLog("Échec de l'importation de données", "DATA", "ERROR");
       toast.error("Erreur d'importation", {
-        description: 'Le fichier est invalide ou corrompu. Vérifiez le format JSON.',
+        description:
+          "Le fichier est invalide ou corrompu. Vérifiez le format JSON.",
       });
     }
   };
@@ -437,8 +474,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
    * handleCleanData - Nettoyage des données (doublons de clients, produits inutilisés)
    * @param type 'clients' | 'products'
    */
-  const handleCleanData = async (type: 'clients' | 'products') => {
-    if (type === 'clients') {
+  const handleCleanData = async (type: "clients" | "products") => {
+    if (type === "clients") {
       const namesMap = new Map<string, Client>();
       const toKeep: Client[] = [];
       const duplicatesCount = { total: 0 };
@@ -454,22 +491,26 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       });
 
       if (duplicatesCount.total === 0) {
-        toast.info('Aucun client en doublon détecté.');
+        toast.info("Aucun client en doublon détecté.");
         return;
       }
 
       setConfirmDialog({
         isOpen: true,
-        title: 'Fusionner les clients en doublon ?',
+        title: "Fusionner les clients en doublon ?",
         description: `Nous avons détecté ${duplicatesCount.total} client(s) avec des noms identiques. Voulez-vous les fusionner ? (Seul le premier profil sera conservé).`,
         onConfirm: () => {
           setAllData.setClients(toKeep);
-          addLog(`${duplicatesCount.total} clients fusionnés/nettoyés`, 'DATA', 'INFO');
+          addLog(
+            `${duplicatesCount.total} clients fusionnés/nettoyés`,
+            "DATA",
+            "INFO",
+          );
           toast.success(`${duplicatesCount.total} clients fusionnés`);
-          setConfirmDialog({ isOpen: false, title: '', description: '' });
+          setConfirmDialog({ isOpen: false, title: "", description: "" });
         },
       });
-    } else if (type === 'products') {
+    } else if (type === "products") {
       const usedProductIds = new Set<string>();
       allData.invoices.forEach((inv) => {
         inv.items.forEach((item) => {
@@ -479,23 +520,33 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         });
       });
 
-      const unusedProducts = allData.products.filter((p) => !usedProductIds.has(p.id));
+      const unusedProducts = allData.products.filter(
+        (p) => !usedProductIds.has(p.id),
+      );
 
       if (unusedProducts.length === 0) {
-        toast.info('Tous vos produits sont actuellement utilisés dans des factures.');
+        toast.info(
+          "Tous vos produits sont actuellement utilisés dans des factures.",
+        );
         return;
       }
 
       setConfirmDialog({
         isOpen: true,
-        title: 'Supprimer les produits inutilisés ?',
+        title: "Supprimer les produits inutilisés ?",
         description: `Il y a ${unusedProducts.length} produit(s) qui n'ont jamais été ajoutés à une facture ou un devis. Voulez-vous les supprimer ?`,
         onConfirm: () => {
-          const keptProducts = allData.products.filter((p) => usedProductIds.has(p.id));
+          const keptProducts = allData.products.filter((p) =>
+            usedProductIds.has(p.id),
+          );
           setAllData.setProducts(keptProducts);
-          addLog(`${unusedProducts.length} produits inutilisés supprimés`, 'DATA', 'INFO');
+          addLog(
+            `${unusedProducts.length} produits inutilisés supprimés`,
+            "DATA",
+            "INFO",
+          );
           toast.success(`${unusedProducts.length} produits supprimés`);
-          setConfirmDialog({ isOpen: false, title: '', description: '' });
+          setConfirmDialog({ isOpen: false, title: "", description: "" });
         },
       });
     }
@@ -504,63 +555,66 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   const generateSampleData = () => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Générer des données de test ?',
-      description: 'Cela ajoutera des clients, produits et factures fictives à votre application.',
+      title: "Générer des données de test ?",
+      description:
+        "Cela ajoutera des clients, produits et factures fictives à votre application.",
       onConfirm: () => {
         const sampleClients: Client[] = [
           {
-            id: 'c1',
-            name: 'Acme Corp',
-            email: 'contact@acme.com',
-            address: '10 Rue de la Paix, Paris',
-            category: 'Entreprise',
+            id: "c1",
+            name: "Acme Corp",
+            email: "contact@acme.com",
+            address: "10 Rue de la Paix, Paris",
+            category: "Entreprise",
           },
           {
-            id: 'c2',
-            name: 'Jean Dupont',
-            email: 'jean.dupont@gmail.com',
-            address: '5 Avenue des Champs, Lyon',
-            category: 'Particulier',
+            id: "c2",
+            name: "Jean Dupont",
+            email: "jean.dupont@gmail.com",
+            address: "5 Avenue des Champs, Lyon",
+            category: "Particulier",
           },
         ];
 
         const sampleProducts: Product[] = [
           {
-            id: 'p1',
-            name: 'Consulting IT',
-            description: 'Prestation de conseil technique',
+            id: "p1",
+            name: "Consulting IT",
+            description: "Prestation de conseil technique",
             price: 650,
-            type: 'service',
-            unit: 'jour',
+            type: "service",
+            unit: "jour",
           },
           {
-            id: 'p2',
-            name: 'Développement Web',
-            description: 'Création de site vitrine',
+            id: "p2",
+            name: "Développement Web",
+            description: "Création de site vitrine",
             price: 2500,
-            type: 'service',
-            unit: 'unité',
+            type: "service",
+            unit: "unité",
           },
         ];
 
         const sampleInvoices: Invoice[] = [
           {
-            id: 'i1',
-            type: 'invoice',
-            number: 'FAC-2024-001',
-            date: new Date().toISOString().split('T')[0],
-            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            clientId: 'c1',
+            id: "i1",
+            type: "invoice",
+            number: "FAC-2024-001",
+            date: new Date().toISOString().split("T")[0],
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+            clientId: "c1",
             items: [
               {
-                id: 'it1',
-                description: 'Consulting IT',
+                id: "it1",
+                description: "Consulting IT",
                 quantity: 5,
                 unitPrice: 650,
-                unit: 'jour',
+                unit: "jour",
               },
             ],
-            status: 'paid' as InvoiceStatus,
+            status: "paid" as InvoiceStatus,
             total: 3250,
           },
         ];
@@ -568,8 +622,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         setAllData.setClients([...allData.clients, ...sampleClients]);
         setAllData.setProducts([...allData.products, ...sampleProducts]);
         setAllData.setInvoices([...allData.invoices, ...sampleInvoices]);
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
-        toast.success('Données de test générées');
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
+        toast.success("Données de test générées");
       },
     });
   };
@@ -577,9 +631,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   const handleResetData = () => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Réinitialiser toutes les données ?',
+      title: "Réinitialiser toutes les données ?",
       description:
-        'Cette action est irréversible. Toutes les factures, clients, fournisseurs, produits et dépenses seront supprimés définitivement. Votre profil sera conservé.',
+        "Cette action est irréversible. Toutes les factures, clients, fournisseurs, produits et dépenses seront supprimés définitivement. Votre profil sera conservé.",
       isDangerous: true,
       onConfirm: () => {
         setAllData.setInvoices([]);
@@ -587,9 +641,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         setAllData.setSuppliers([]);
         setAllData.setProducts([]);
         setAllData.setExpenses([]);
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
-        addLog('Réinitialisation complète des données effectuée', 'DATA', 'WARNING');
-        toast.success('Données réinitialisées');
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
+        addLog(
+          "Réinitialisation complète des données effectuée",
+          "DATA",
+          "WARNING",
+        );
+        toast.success("Données réinitialisées");
       },
     });
   };
@@ -616,11 +674,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         >
           {(
             [
-              { id: 'profile', label: 'Profil' },
-              { id: 'billing', label: 'Facturation' },
-              { id: 'preferences', label: 'Style' },
-              { id: 'security', label: 'Sécurité' },
-              { id: 'data', label: 'Données' },
+              { id: "profile", label: "Profil" },
+              { id: "billing", label: "Facturation" },
+              { id: "preferences", label: "Style" },
+              { id: "security", label: "Sécurité" },
+              { id: "data", label: "Données" },
             ] as { id: typeof activeTab; label: string }[]
           ).map(({ id: tabId, label }) => {
             const isTabSelected = activeTab === tabId;
@@ -631,12 +689,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 aria-controls={`panel-${tabId}`}
                 onClick={() => setActiveTab(tabId)}
                 role="tab"
-                aria-selected={isTabSelected ? 'true' : 'false'}
+                aria-selected={isTabSelected ? "true" : "false"}
                 tabIndex={isTabSelected ? 0 : -1}
                 className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
                   isTabSelected
-                    ? 'bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm'
-                    : 'bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300'
+                    ? "bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
+                    : "bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
                 }`}
               >
                 {label}
@@ -650,7 +708,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         {/* MAIN CONTENT */}
         <div className="xl:col-span-2 space-y-8">
           {/* PROFILE TAB */}
-          {activeTab === 'profile' && (
+          {activeTab === "profile" && (
             <div
               id="panel-profile"
               role="tabpanel"
@@ -669,8 +727,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
                 <LogoUploader
                   logoUrl={userProfile.logoUrl}
-                  onChange={(url) => handleChange('logoUrl', url)}
-                  onRemove={() => handleChange('logoUrl', '')}
+                  onChange={(url) => handleChange("logoUrl", url)}
+                  onRemove={() => handleChange("logoUrl", "")}
                 />
               </div>
 
@@ -690,22 +748,22 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <FormField
                       label="Nom commercial / Raison sociale"
                       value={userProfile.companyName}
-                      onChange={(val) => handleChange('companyName', val)}
+                      onChange={(val) => handleChange("companyName", val)}
                       placeholder="Ex: Mon Entreprise Digitale"
                       required
                     />
                   </div>
                   <FormField
                     label="Titre Professionnel"
-                    value={userProfile.professionalTitle || ''}
-                    onChange={(val) => handleChange('professionalTitle', val)}
+                    value={userProfile.professionalTitle || ""}
+                    onChange={(val) => handleChange("professionalTitle", val)}
                     placeholder="Ex: Consultant IT, Photographe..."
                     icon={Briefcase}
                   />
                   <FormField
                     label="SIRET"
                     value={userProfile.siret}
-                    onChange={(val) => handleChange('siret', val)}
+                    onChange={(val) => handleChange("siret", val)}
                     placeholder="123 456 789 00012"
                     icon={Hash}
                     error={validationErrors.siret}
@@ -729,7 +787,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <TextAreaField
                     label="Adresse du siège"
                     value={userProfile.address}
-                    onChange={(val) => handleChange('address', val)}
+                    onChange={(val) => handleChange("address", val)}
                     placeholder="123 Avenue de la République, 75001 Paris"
                     icon={MapPin}
                     rows={2}
@@ -740,7 +798,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="Email Professionnel"
                       type="email"
                       value={userProfile.email}
-                      onChange={(val) => handleChange('email', val)}
+                      onChange={(val) => handleChange("email", val)}
                       icon={MailIcon}
                       error={validationErrors.email}
                     />
@@ -748,21 +806,21 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="Téléphone"
                       type="tel"
                       value={userProfile.phone}
-                      onChange={(val) => handleChange('phone', val)}
+                      onChange={(val) => handleChange("phone", val)}
                       icon={PhoneIcon}
                     />
                     <FormField
                       label="Site Web"
                       type="url"
-                      value={userProfile.website || ''}
-                      onChange={(val) => handleChange('website', val)}
+                      value={userProfile.website || ""}
+                      onChange={(val) => handleChange("website", val)}
                       placeholder="www.mon-site.fr"
                       icon={Globe}
                     />
                     <FormField
                       label="LinkedIn"
-                      value={userProfile.linkedin || ''}
-                      onChange={(val) => handleChange('linkedin', val)}
+                      value={userProfile.linkedin || ""}
+                      onChange={(val) => handleChange("linkedin", val)}
                       placeholder="linkedin.com/in/profil"
                       icon={Briefcase}
                     />
@@ -773,7 +831,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           )}
 
           {/* BILLING TAB */}
-          {activeTab === 'billing' && (
+          {activeTab === "billing" && (
             <div
               id="panel-billing"
               role="tabpanel"
@@ -793,23 +851,38 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Régime d'imposition"
-                      value={userProfile.taxSystem || 'MICRO-BNC'}
-                      onChange={(val) => handleChange('taxSystem', val)}
+                      value={userProfile.taxSystem || "MICRO-BNC"}
+                      onChange={(val) => handleChange("taxSystem", val)}
                       options={[
-                        { value: 'MICRO-BNC', label: 'Micro-BNC (Services libéraux)' },
-                        { value: 'MICRO-BIC', label: 'Micro-BIC (Artisanat / Vente)' },
-                        { value: 'LIBERAL', label: 'Profession libérale' },
+                        {
+                          value: "MICRO-BNC",
+                          label: "Micro-BNC (Services libéraux)",
+                        },
+                        {
+                          value: "MICRO-BIC",
+                          label: "Micro-BIC (Artisanat / Vente)",
+                        },
+                        { value: "LIBERAL", label: "Profession libérale" },
                       ]}
                     />
                     <SelectField
                       label="Type d'activité URSSAF"
-                      value={userProfile.activityType || 'SERVICE_BNC'}
-                      onChange={(val) => handleChange('activityType', val)}
+                      value={userProfile.activityType || "SERVICE_BNC"}
+                      onChange={(val) => handleChange("activityType", val)}
                       options={[
-                        { value: 'SERVICE_BNC', label: 'Service BNC (Profession libérale)' },
-                        { value: 'SERVICE_BIC', label: 'Service BIC (Artisan / Commerçant)' },
-                        { value: 'SALE', label: 'Vente de marchandises' },
-                        { value: 'LIBERAL', label: 'Profession libérale réglementée' },
+                        {
+                          value: "SERVICE_BNC",
+                          label: "Service BNC (Profession libérale)",
+                        },
+                        {
+                          value: "SERVICE_BIC",
+                          label: "Service BIC (Artisan / Commerçant)",
+                        },
+                        { value: "SALE", label: "Vente de marchandises" },
+                        {
+                          value: "LIBERAL",
+                          label: "Profession libérale réglementée",
+                        },
                       ]}
                       description="Détermine les taux de cotisations URSSAF applicables"
                     />
@@ -818,31 +891,35 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     label="Franchise en base de TVA"
                     description="Active la mention automatique 'TVA non applicable, art. 293 B du CGI' sur vos documents"
                     checked={userProfile.isVatExempt || false}
-                    onChange={(val) => handleChange('isVatExempt', val)}
+                    onChange={(val) => handleChange("isVatExempt", val)}
                   />
                   <ToggleSwitch
                     label="Bénéficiaire de l'ACRE"
                     description="Aide à la Création et Reprise d'Entreprise — réduction de 50 % des cotisations la 1ère année (art. L. 5141-1 Code du Travail)"
                     checked={userProfile.isAcreBeneficiary || false}
-                    onChange={(val) => handleChange('isAcreBeneficiary', val)}
+                    onChange={(val) => handleChange("isAcreBeneficiary", val)}
                   />
                   <ToggleSwitch
                     label="Alerte seuil de TVA"
                     description="Vous avertir à l'approche du seuil de franchise TVA (37 500 € services / 85 000 € ventes)"
                     checked={userProfile.vatThresholdAlert || false}
-                    onChange={(val) => handleChange('vatThresholdAlert', val)}
+                    onChange={(val) => handleChange("vatThresholdAlert", val)}
                   />
                   {userProfile.vatThresholdAlert && (
                     <div className="ml-14 animate-fade-in">
                       <FormField
                         label="Seuil d'alerte TVA (%)"
                         type="number"
-                        value={String(userProfile.customVatThresholdPercentage ?? 80)}
+                        value={String(
+                          userProfile.customVatThresholdPercentage ?? 80,
+                        )}
                         onChange={(val) => {
                           const parsed = Number.parseFloat(val);
                           handleChange(
-                            'customVatThresholdPercentage',
-                            Number.isNaN(parsed) ? 80 : Math.min(100, Math.max(1, parsed))
+                            "customVatThresholdPercentage",
+                            Number.isNaN(parsed)
+                              ? 80
+                              : Math.min(100, Math.max(1, parsed)),
                           );
                         }}
                         min={1}
@@ -855,19 +932,25 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     label="Alerte plafond de revenus"
                     description="Vous alerter à l'approche du plafond de CA de la micro-entreprise"
                     checked={userProfile.revenueThresholdAlert || false}
-                    onChange={(val) => handleChange('revenueThresholdAlert', val)}
+                    onChange={(val) =>
+                      handleChange("revenueThresholdAlert", val)
+                    }
                   />
                   {userProfile.revenueThresholdAlert && (
                     <div className="ml-14 animate-fade-in">
                       <FormField
                         label="Seuil d'alerte CA (%)"
                         type="number"
-                        value={String(userProfile.customRevenueThresholdPercentage ?? 90)}
+                        value={String(
+                          userProfile.customRevenueThresholdPercentage ?? 90,
+                        )}
                         onChange={(val) => {
                           const parsed = Number.parseFloat(val);
                           handleChange(
-                            'customRevenueThresholdPercentage',
-                            Number.isNaN(parsed) ? 90 : Math.min(100, Math.max(1, parsed))
+                            "customRevenueThresholdPercentage",
+                            Number.isNaN(parsed)
+                              ? 90
+                              : Math.min(100, Math.max(1, parsed)),
                           );
                         }}
                         min={1}
@@ -892,29 +975,29 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="IBAN"
-                      value={userProfile.bankAccount || ''}
-                      onChange={(val) => handleChange('bankAccount', val)}
+                      value={userProfile.bankAccount || ""}
+                      onChange={(val) => handleChange("bankAccount", val)}
                       placeholder="FR76 3000 6000 0112 3456 7890 189"
                       icon={CreditCard}
                       error={validationErrors.bankAccount}
                     />
                     <FormField
                       label="BIC / SWIFT"
-                      value={userProfile.bic || ''}
-                      onChange={(val) => handleChange('bic', val)}
+                      value={userProfile.bic || ""}
+                      onChange={(val) => handleChange("bic", val)}
                       placeholder="TRPUFRPPXXX"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Devise"
-                      value={userProfile.currency || '€'}
-                      onChange={(val) => handleChange('currency', val)}
+                      value={userProfile.currency || "€"}
+                      onChange={(val) => handleChange("currency", val)}
                       options={[
-                        { value: '€', label: 'Euro (€)' },
-                        { value: '$', label: 'Dollar ($)' },
-                        { value: '£', label: 'Livre (£)' },
-                        { value: 'CHF', label: 'Franc Suisse' },
+                        { value: "€", label: "Euro (€)" },
+                        { value: "$", label: "Dollar ($)" },
+                        { value: "£", label: "Livre (£)" },
+                        { value: "CHF", label: "Franc Suisse" },
                       ]}
                     />
                     <FormField
@@ -923,7 +1006,10 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       value={String(userProfile.defaultVatRate || 0)}
                       onChange={(val) => {
                         const parsed = Number.parseFloat(val);
-                        handleChange('defaultVatRate', Number.isNaN(parsed) ? 0 : parsed);
+                        handleChange(
+                          "defaultVatRate",
+                          Number.isNaN(parsed) ? 0 : parsed,
+                        );
                       }}
                     />
                   </div>
@@ -941,7 +1027,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       Numérotation des Documents
                     </h3>
                     <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
-                      Conformité fiscale française — art. L441-9 du Code de commerce
+                      Conformité fiscale française — art. L441-9 du Code de
+                      commerce
                     </p>
                   </div>
                 </div>
@@ -949,8 +1036,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="Préfixe des Factures"
-                      value={userProfile.invoicePrefix || 'FAC-'}
-                      onChange={(val) => handleChange('invoicePrefix', val)}
+                      value={userProfile.invoicePrefix || "FAC-"}
+                      onChange={(val) => handleChange("invoicePrefix", val)}
                       placeholder="FAC-2026-"
                       icon={Hash}
                       description="Préfixe auto-ajouté avant le numéro séquentiel"
@@ -962,8 +1049,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       onChange={(val) => {
                         const parsed = parseInt(val, 10);
                         handleChange(
-                          'invoiceStartNumber',
-                          Number.isNaN(parsed) ? 1 : Math.max(1, parsed)
+                          "invoiceStartNumber",
+                          Number.isNaN(parsed) ? 1 : Math.max(1, parsed),
                         );
                       }}
                       min={1}
@@ -974,15 +1061,15 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="Préfixe des Devis"
-                      value={userProfile.quotePrefix || 'DEV-'}
-                      onChange={(val) => handleChange('quotePrefix', val)}
+                      value={userProfile.quotePrefix || "DEV-"}
+                      onChange={(val) => handleChange("quotePrefix", val)}
                       placeholder="DEV-2026-"
                       icon={Hash}
                     />
                     <FormField
                       label="Préfixe des Avoirs"
-                      value={userProfile.creditNotePrefix || 'AV-'}
-                      onChange={(val) => handleChange('creditNotePrefix', val)}
+                      value={userProfile.creditNotePrefix || "AV-"}
+                      onChange={(val) => handleChange("creditNotePrefix", val)}
                       placeholder="AV-2026-"
                       icon={Hash}
                     />
@@ -992,8 +1079,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       Aperçu du numéro généré
                     </p>
                     <p className="text-base font-mono font-bold text-brand-700 dark:text-brand-300">
-                      {userProfile.invoicePrefix || 'FAC-'}
-                      {String(userProfile.invoiceStartNumber ?? 1).padStart(3, '0')}
+                      {userProfile.invoicePrefix || "FAC-"}
+                      {String(userProfile.invoiceStartNumber ?? 1).padStart(
+                        3,
+                        "0",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1018,27 +1108,35 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="N° TVA Intracommunautaire"
-                      value={userProfile.tvaNumber || ''}
-                      onChange={(val) => handleChange('tvaNumber', val)}
+                      value={userProfile.tvaNumber || ""}
+                      onChange={(val) => handleChange("tvaNumber", val)}
                       placeholder="FR12 123456789"
                       description="Obligatoire pour les échanges UE (art. 289 CGI)"
                     />
                     <SelectField
                       label="Format e-Facture par défaut"
-                      value={userProfile.defaultEInvoiceFormat || 'Factur-X'}
-                      onChange={(val) => handleChange('defaultEInvoiceFormat', val)}
+                      value={userProfile.defaultEInvoiceFormat || "Factur-X"}
+                      onChange={(val) =>
+                        handleChange("defaultEInvoiceFormat", val)
+                      }
                       options={[
-                        { value: 'Factur-X', label: 'Factur-X (PDF/A-3 embarqué)' },
-                        { value: 'UBL', label: 'UBL 2.1 (Universal Business Language)' },
-                        { value: 'CII', label: 'CII (Cross Industry Invoice)' },
+                        {
+                          value: "Factur-X",
+                          label: "Factur-X (PDF/A-3 embarqué)",
+                        },
+                        {
+                          value: "UBL",
+                          label: "UBL 2.1 (Universal Business Language)",
+                        },
+                        { value: "CII", label: "CII (Cross Industry Invoice)" },
                       ]}
                       description="Obligatoire pour la facturation électronique 2026"
                     />
                   </div>
                   <TextAreaField
                     label="Mentions légales (pied de facture)"
-                    value={userProfile.legalMentions || ''}
-                    onChange={(val) => handleChange('legalMentions', val)}
+                    value={userProfile.legalMentions || ""}
+                    onChange={(val) => handleChange("legalMentions", val)}
                     placeholder="Ex : Dispensé d'immatriculation — art. L123-1-1 Code de commerce. TVA non applicable, art. 293 B du CGI."
                     rows={3}
                     description="Texte affiché en bas de chaque facture"
@@ -1049,7 +1147,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           )}
 
           {/* PREFERENCES TAB */}
-          {activeTab === 'preferences' && (
+          {activeTab === "preferences" && (
             <div
               id="panel-preferences"
               role="tabpanel"
@@ -1070,24 +1168,36 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Thème"
-                      value={userProfile.theme || 'auto'}
-                      onChange={(val) => handleChange('theme', val)}
+                      value={userProfile.theme || "auto"}
+                      onChange={(val) => handleChange("theme", val)}
                       options={[
-                        { value: 'light', label: '☀️ Clair (Light)' },
-                        { value: 'dark', label: '🌙 Sombre (Dark)' },
-                        { value: 'auto', label: '🔄 Auto (selon système)' },
+                        { value: "light", label: "☀️ Clair (Light)" },
+                        { value: "dark", label: "🌙 Sombre (Dark)" },
+                        { value: "auto", label: "🔄 Auto (selon système)" },
                       ]}
                     />
                     <SelectField
                       label="Police de caractères (factures)"
-                      value={userProfile.fontFamily || 'Inter'}
-                      onChange={(val) => handleChange('fontFamily', val)}
+                      value={userProfile.fontFamily || "Inter"}
+                      onChange={(val) => handleChange("fontFamily", val)}
                       options={[
-                        { value: 'Inter', label: 'Inter (moderne, lisible)' },
-                        { value: 'Georgia', label: 'Georgia (serif, classique)' },
-                        { value: 'Helvetica Neue', label: 'Helvetica (neutre, professionnel)' },
-                        { value: 'Palatino', label: 'Palatino (élégant, premium)' },
-                        { value: 'Courier New', label: 'Courier New (monospace, technique)' },
+                        { value: "Inter", label: "Inter (moderne, lisible)" },
+                        {
+                          value: "Georgia",
+                          label: "Georgia (serif, classique)",
+                        },
+                        {
+                          value: "Helvetica Neue",
+                          label: "Helvetica (neutre, professionnel)",
+                        },
+                        {
+                          value: "Palatino",
+                          label: "Palatino (élégant, premium)",
+                        },
+                        {
+                          value: "Courier New",
+                          label: "Courier New (monospace, technique)",
+                        },
                       ]}
                       description="Appliquée sur les PDF et aperçus de facture"
                     />
@@ -1112,7 +1222,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         max="24"
                         step="1"
                         value={fontSize}
-                        onChange={(e) => setFontSize(Number.parseInt(e.target.value, 10))}
+                        onChange={(e) =>
+                          setFontSize(Number.parseInt(e.target.value, 10))
+                        }
                         className="w-full h-2 bg-brand-100 dark:bg-brand-800 rounded-lg appearance-none cursor-pointer accent-brand-600 dark:accent-brand-400"
                         aria-valuemin={12}
                         aria-valuemax={24}
@@ -1126,8 +1238,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     </div>
                     <div className="p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-800/20 border border-brand-100/50 dark:border-brand-700/30">
                       <p className="text-xs text-brand-500 dark:text-brand-400 italic">
-                        L'aperçu de la taille s'applique instantanément à toute l'interface.
-                        Choisissez une taille confortable pour votre usage quotidien.
+                        L'aperçu de la taille s'applique instantanément à toute
+                        l'interface. Choisissez une taille confortable pour
+                        votre usage quotidien.
                       </p>
                     </div>
                   </div>
@@ -1135,22 +1248,26 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ColorPicker
                       label="Couleur Primaire (en-tête facture)"
-                      value={userProfile.primaryColor || userProfile.logoColor || '#102a43'}
-                      onChange={(val) => handleChange('primaryColor', val)}
+                      value={
+                        userProfile.primaryColor ||
+                        userProfile.logoColor ||
+                        "#102a43"
+                      }
+                      onChange={(val) => handleChange("primaryColor", val)}
                     />
                     <ColorPicker
                       label="Couleur Secondaire (accentuation)"
-                      value={userProfile.secondaryColor || '#059669'}
-                      onChange={(val) => handleChange('secondaryColor', val)}
+                      value={userProfile.secondaryColor || "#059669"}
+                      onChange={(val) => handleChange("secondaryColor", val)}
                       presets={[
-                        '#059669',
-                        '#0891b2',
-                        '#f59e0b',
-                        '#ef4444',
-                        '#8b5cf6',
-                        '#ec4899',
-                        '#14b8a6',
-                        '#f97316',
+                        "#059669",
+                        "#0891b2",
+                        "#f59e0b",
+                        "#ef4444",
+                        "#8b5cf6",
+                        "#ec4899",
+                        "#14b8a6",
+                        "#f97316",
                       ]}
                     />
                   </div>
@@ -1174,37 +1291,43 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {INVOICE_TEMPLATES.map((tpl) => {
-                    const isSelected = (userProfile.invoiceTemplate || 'modern') === tpl.id;
+                    const isSelected =
+                      (userProfile.invoiceTemplate || "modern") === tpl.id;
                     return (
                       <button
                         key={tpl.id}
-                        onClick={() => handleChange('invoiceTemplate', tpl.id)}
+                        onClick={() => handleChange("invoiceTemplate", tpl.id)}
                         className={`relative rounded-2xl border-2 p-3 transition-all text-left ${
                           isSelected
-                            ? 'border-brand-900 dark:border-white shadow-md'
-                            : 'border-brand-100 dark:border-brand-700 hover:border-brand-300 dark:hover:border-brand-500'
+                            ? "border-brand-900 dark:border-white shadow-md"
+                            : "border-brand-100 dark:border-brand-700 hover:border-brand-300 dark:hover:border-brand-500"
                         }`}
-                        aria-pressed={isSelected ? 'true' : 'false'}
+                        aria-pressed={isSelected ? "true" : "false"}
                         title={`Sélectionner le gabarit ${tpl.label}`}
                       >
                         <InvoiceTemplateThumbnail
                           template={tpl.id}
-                          primaryColor={userProfile.primaryColor ?? '#102a43'}
-                          secondaryColor={userProfile.secondaryColor || '#059669'}
-                          fontFamily={userProfile.fontFamily || 'Inter'}
+                          primaryColor={userProfile.primaryColor ?? "#102a43"}
+                          secondaryColor={
+                            userProfile.secondaryColor || "#059669"
+                          }
+                          fontFamily={userProfile.fontFamily || "Inter"}
                         />
                         <p
                           className={`mt-2 text-[10px] font-bold uppercase tracking-wider text-center ${
                             isSelected
-                              ? 'text-brand-900 dark:text-white'
-                              : 'text-brand-500 dark:text-brand-400'
+                              ? "text-brand-900 dark:text-white"
+                              : "text-brand-500 dark:text-brand-400"
                           }`}
                         >
                           {tpl.label}
                         </p>
                         {isSelected && (
                           <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-brand-900 dark:bg-white flex items-center justify-center">
-                            <Check size={10} className="text-white dark:text-brand-900" />
+                            <Check
+                              size={10}
+                              className="text-white dark:text-brand-900"
+                            />
                           </div>
                         )}
                       </button>
@@ -1217,24 +1340,24 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     type="button"
                     onClick={async () => {
                       const sampleInvoice: Invoice = {
-                        id: 'test-preview',
-                        number: 'TEST-' + new Date().getFullYear() + '-0001',
-                        date: new Date().toISOString().split('T')[0],
+                        id: "test-preview",
+                        number: "TEST-" + new Date().getFullYear() + "-0001",
+                        date: new Date().toISOString().split("T")[0],
                         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
                           .toISOString()
-                          .split('T')[0],
-                        type: 'invoice',
-                        status: 'draft',
+                          .split("T")[0],
+                        type: "invoice",
+                        status: "draft",
                         items: [
                           {
-                            id: 'item-1',
-                            description: 'Prestation de service (Exemple)',
+                            id: "item-1",
+                            description: "Prestation de service (Exemple)",
                             quantity: 1,
                             unitPrice: 1500,
                           },
                           {
-                            id: 'item-2',
-                            description: 'Frais de déplacement',
+                            id: "item-2",
+                            description: "Frais de déplacement",
                             quantity: 1,
                             unitPrice: 45,
                           },
@@ -1242,27 +1365,28 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         total: 1545,
                         subtotal: 1545,
                         vatAmount: 0,
-                        clientId: 'client-test',
+                        clientId: "client-test",
                       };
 
                       const sampleClient: Client = {
-                        id: 'client-test',
-                        name: 'Client Démo SARL',
-                        address: '123 Avenue du Test, 75000 Paris',
-                        email: 'contact@client-demo.fr',
+                        id: "client-test",
+                        name: "Client Démo SARL",
+                        address: "123 Avenue du Test, 75000 Paris",
+                        email: "contact@client-demo.fr",
                       };
 
                       try {
-                        const { generatePDFWithFacturX } = await import('../lib/facturX');
+                        const { generatePDFWithFacturX } =
+                          await import("../lib/facturX");
                         const doc = await generatePDFWithFacturX(
                           sampleInvoice,
                           sampleClient,
-                          userProfile
+                          userProfile,
                         );
-                        const pdfUrl = doc.output('bloburl');
-                        window.open(pdfUrl, '_blank');
+                        const pdfUrl = doc.output("bloburl");
+                        window.open(pdfUrl, "_blank");
                       } catch (error) {
-                        console.error('Erreur génération PDF:', error);
+                        console.error("Erreur génération PDF:", error);
                         toast.error("Erreur lors de la génération de l'aperçu");
                       }
                     }}
@@ -1271,7 +1395,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <ExternalLink size={20} /> Aperçu PDF plein écran
                   </button>
                   <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-3 text-center">
-                    Génère un PDF de test avec vos informations réelles pour valider le rendu final.
+                    Génère un PDF de test avec vos informations réelles pour
+                    valider le rendu final.
                   </p>
                 </div>
               </div>
@@ -1290,8 +1415,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
                 <SignatureUploader
                   signatureUrl={userProfile.signatureUrl}
-                  onChange={(url) => handleChange('signatureUrl', url)}
-                  onRemove={() => handleChange('signatureUrl', '')}
+                  onChange={(url) => handleChange("signatureUrl", url)}
+                  onRemove={() => handleChange("signatureUrl", "")}
                 />
               </div>
 
@@ -1309,43 +1434,49 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Taille de Police"
-                      value={userProfile.fontSize || 'normal'}
-                      onChange={(val) => handleChange('fontSize', val)}
+                      value={userProfile.fontSize || "normal"}
+                      onChange={(val) => handleChange("fontSize", val)}
                       options={[
-                        { value: 'small', label: '🔤 Petite' },
-                        { value: 'normal', label: '🔤 Normale' },
-                        { value: 'large', label: '🔤 Grande' },
+                        { value: "small", label: "🔤 Petite" },
+                        { value: "normal", label: "🔤 Normale" },
+                        { value: "large", label: "🔤 Grande" },
                       ]}
                     />
                     <SelectField
                       label="Densité de l'interface"
-                      value={userProfile.uiDensity || 'normal'}
-                      onChange={(val) => handleChange('uiDensity', val)}
+                      value={userProfile.uiDensity || "normal"}
+                      onChange={(val) => handleChange("uiDensity", val)}
                       options={[
-                        { value: 'compact', label: '📦 Compacte' },
-                        { value: 'normal', label: '📑 Normale' },
-                        { value: 'spacious', label: '🌬️ Spacieuse' },
+                        { value: "compact", label: "📦 Compacte" },
+                        { value: "normal", label: "📑 Normale" },
+                        { value: "spacious", label: "🌬️ Spacieuse" },
                       ]}
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Format de date"
-                      value={userProfile.dateFormat || 'DD/MM/YYYY'}
-                      onChange={(val) => handleChange('dateFormat', val)}
+                      value={userProfile.dateFormat || "DD/MM/YYYY"}
+                      onChange={(val) => handleChange("dateFormat", val)}
                       options={[
-                        { value: 'DD/MM/YYYY', label: '📅 DD/MM/YYYY (Français)' },
-                        { value: 'MM/DD/YYYY', label: '📅 MM/DD/YYYY (International)' },
-                        { value: 'YYYY-MM-DD', label: '📅 YYYY-MM-DD (ISO)' },
+                        {
+                          value: "DD/MM/YYYY",
+                          label: "📅 DD/MM/YYYY (Français)",
+                        },
+                        {
+                          value: "MM/DD/YYYY",
+                          label: "📅 MM/DD/YYYY (International)",
+                        },
+                        { value: "YYYY-MM-DD", label: "📅 YYYY-MM-DD (ISO)" },
                       ]}
                     />
                     <SelectField
                       label="Format de l'heure"
-                      value={userProfile.timeFormat || '24h'}
-                      onChange={(val) => handleChange('timeFormat', val)}
+                      value={userProfile.timeFormat || "24h"}
+                      onChange={(val) => handleChange("timeFormat", val)}
                       options={[
-                        { value: '24h', label: '🕐 24h (00:00-23:59)' },
-                        { value: '12h', label: '🕐 12h (12:00 AM-11:59 PM)' },
+                        { value: "24h", label: "🕐 24h (00:00-23:59)" },
+                        { value: "12h", label: "🕐 12h (12:00 AM-11:59 PM)" },
                       ]}
                     />
                   </div>
@@ -1367,7 +1498,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     label="Activer les notifications"
                     description="Notifications dans l'app et push"
                     checked={userProfile.enableNotifications !== false}
-                    onChange={(val) => handleChange('enableNotifications', val)}
+                    onChange={(val) => handleChange("enableNotifications", val)}
                   />
 
                   {userProfile.enableNotifications !== false && (
@@ -1375,9 +1506,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <ToggleSwitch
                         label="Rappels d'échéances"
                         description="Vous alerter avant la date d'exigibilité des factures"
-                        checked={userProfile.notificationTypes?.invoiceReminders !== false}
+                        checked={
+                          userProfile.notificationTypes?.invoiceReminders !==
+                          false
+                        }
                         onChange={(val) =>
-                          handleChange('notificationTypes', {
+                          handleChange("notificationTypes", {
                             ...userProfile.notificationTypes,
                             invoiceReminders: val,
                           })
@@ -1387,9 +1521,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <ToggleSwitch
                         label="Rappels de paiement"
                         description="Vous notifier des paiements en attente"
-                        checked={userProfile.notificationTypes?.paymentReminders !== false}
+                        checked={
+                          userProfile.notificationTypes?.paymentReminders !==
+                          false
+                        }
                         onChange={(val) =>
-                          handleChange('notificationTypes', {
+                          handleChange("notificationTypes", {
                             ...userProfile.notificationTypes,
                             paymentReminders: val,
                           })
@@ -1399,9 +1536,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <ToggleSwitch
                         label="Alertes de dépenses"
                         description="Vous avertir des seuils de dépenses dépassés"
-                        checked={userProfile.notificationTypes?.expenseAlerts !== false}
+                        checked={
+                          userProfile.notificationTypes?.expenseAlerts !== false
+                        }
                         onChange={(val) =>
-                          handleChange('notificationTypes', {
+                          handleChange("notificationTypes", {
                             ...userProfile.notificationTypes,
                             expenseAlerts: val,
                           })
@@ -1411,9 +1550,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <ToggleSwitch
                         label="Mises à jour système"
                         description="Informations sur les nouvelles fonctionnalités"
-                        checked={userProfile.notificationTypes?.systemUpdates !== false}
+                        checked={
+                          userProfile.notificationTypes?.systemUpdates !== false
+                        }
                         onChange={(val) =>
-                          handleChange('notificationTypes', {
+                          handleChange("notificationTypes", {
                             ...userProfile.notificationTypes,
                             systemUpdates: val,
                           })
@@ -1427,7 +1568,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="Notifications par email"
                       description="Recevoir un résumé hebdomadaire par email"
                       checked={userProfile.enableEmailNotifications || false}
-                      onChange={(val) => handleChange('enableEmailNotifications', val)}
+                      onChange={(val) =>
+                        handleChange("enableEmailNotifications", val)
+                      }
                     />
                   </div>
                 </div>
@@ -1458,30 +1601,36 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <SelectField
                         label="Délai appliqué aux nouvelles factures"
-                        value={userProfile.automation?.defaultPaymentDelay || '30_DAYS'}
+                        value={
+                          userProfile.automation?.defaultPaymentDelay ||
+                          "30_DAYS"
+                        }
                         onChange={(val) =>
-                          handleChange('automation', {
+                          handleChange("automation", {
                             ...userProfile.automation,
                             defaultPaymentDelay: val,
                           })
                         }
                         options={[
-                          { value: 'RECEIPT', label: '🚀 À réception' },
-                          { value: '30_DAYS', label: '📅 30 jours' },
-                          { value: '45_DAYS', label: '📅 45 jours' },
-                          { value: '60_DAYS', label: '📅 60 jours' },
-                          { value: 'CUSTOM', label: '⚙️ Personnalisé' },
+                          { value: "RECEIPT", label: "🚀 À réception" },
+                          { value: "30_DAYS", label: "📅 30 jours" },
+                          { value: "45_DAYS", label: "📅 45 jours" },
+                          { value: "60_DAYS", label: "📅 60 jours" },
+                          { value: "CUSTOM", label: "⚙️ Personnalisé" },
                         ]}
                         description="Calcule automatiquement la date d'échéance."
                       />
-                      {userProfile.automation?.defaultPaymentDelay === 'CUSTOM' && (
+                      {userProfile.automation?.defaultPaymentDelay ===
+                        "CUSTOM" && (
                         <FormField
                           label="Nombre de jours"
                           type="number"
                           min="0"
-                          value={userProfile.automation?.customPaymentDelayDays || 0}
+                          value={
+                            userProfile.automation?.customPaymentDelayDays || 0
+                          }
                           onChange={(val) =>
-                            handleChange('automation', {
+                            handleChange("automation", {
                               ...userProfile.automation,
                               customPaymentDelayDays: Number.parseInt(val, 10),
                             })
@@ -1499,9 +1648,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <ToggleSwitch
                       label="Activer les relances automatiques"
                       description="Envoyer un mail de rappel si la facture est impayée"
-                      checked={userProfile.automation?.autoReminders?.enabled || false}
+                      checked={
+                        userProfile.automation?.autoReminders?.enabled || false
+                      }
                       onChange={(val) =>
-                        handleChange('automation', {
+                        handleChange("automation", {
                           ...userProfile.automation,
                           autoReminders: {
                             ...(userProfile.automation?.autoReminders || {
@@ -1519,12 +1670,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         <ToggleSwitch
                           label="Relance à J+3"
                           description="3 jours après l'échéance"
-                          checked={userProfile.automation?.autoReminders?.after3Days !== false}
+                          checked={
+                            userProfile.automation?.autoReminders
+                              ?.after3Days !== false
+                          }
                           onChange={(val) =>
-                            handleChange('automation', {
+                            handleChange("automation", {
                               ...userProfile.automation,
                               autoReminders: {
-                                ...(userProfile.automation?.autoReminders ?? {}),
+                                ...(userProfile.automation?.autoReminders ??
+                                  {}),
                                 after3Days: val,
                               },
                             })
@@ -1533,12 +1688,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         <ToggleSwitch
                           label="Relance à J+7"
                           description="7 jours après l'échéance"
-                          checked={userProfile.automation?.autoReminders?.after7Days !== false}
+                          checked={
+                            userProfile.automation?.autoReminders
+                              ?.after7Days !== false
+                          }
                           onChange={(val) =>
-                            handleChange('automation', {
+                            handleChange("automation", {
                               ...userProfile.automation,
                               autoReminders: {
-                                ...(userProfile.automation?.autoReminders ?? {}),
+                                ...(userProfile.automation?.autoReminders ??
+                                  {}),
                                 after7Days: val,
                               },
                             })
@@ -1553,7 +1712,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           )}
 
           {/* SECURITY TAB */}
-          {activeTab === 'security' && (
+          {activeTab === "security" && (
             <SecurityTab
               userProfile={userProfile}
               setUserProfile={setUserProfile}
@@ -1562,7 +1721,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
           )}
 
           {/* DATA TAB */}
-          {activeTab === 'data' && (
+          {activeTab === "data" && (
             <div
               id="panel-data"
               role="tabpanel"
@@ -1577,27 +1736,34 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {(
                     [
-                      { label: 'Factures', count: allData.invoices.length },
-                      { label: 'Clients', count: allData.clients.length },
-                      { label: 'Fournisseurs', count: allData.suppliers.length },
-                      { label: 'Produits', count: allData.products.length },
-                      { label: 'Dépenses', count: allData.expenses.length },
+                      { label: "Factures", count: allData.invoices.length },
+                      { label: "Clients", count: allData.clients.length },
+                      {
+                        label: "Fournisseurs",
+                        count: allData.suppliers.length,
+                      },
+                      { label: "Produits", count: allData.products.length },
+                      { label: "Dépenses", count: allData.expenses.length },
                     ] as { label: string; count: number }[]
                   ).map(({ label, count }) => (
                     <div
                       key={label}
                       className="p-4 bg-brand-50/50 dark:bg-brand-800/30 rounded-2xl text-center"
                     >
-                      <p className="text-2xl font-bold text-brand-900 dark:text-white">{count}</p>
-                      <p className="text-[10px] uppercase font-bold text-brand-400 mt-1">{label}</p>
+                      <p className="text-2xl font-bold text-brand-900 dark:text-white">
+                        {count}
+                      </p>
+                      <p className="text-[10px] uppercase font-bold text-brand-400 mt-1">
+                        {label}
+                      </p>
                     </div>
                   ))}
                 </div>
                 {lastBackupDate && (
                   <p className="text-[11px] text-brand-400 mt-5 text-center">
-                    Dernier export :{' '}
+                    Dernier export :{" "}
                     <span className="font-semibold">
-                      {new Date(lastBackupDate).toLocaleString('fr-FR')}
+                      {new Date(lastBackupDate).toLocaleString("fr-FR")}
                     </span>
                   </p>
                 )}
@@ -1642,7 +1808,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <Trash2 size={16} /> Réinitialiser toutes les données
                 </button>
                 <p className="text-[11px] text-brand-400 text-center">
-                  Supprime définitivement toutes les factures, clients, fournisseurs et produits.
+                  Supprime définitivement toutes les factures, clients,
+                  fournisseurs et produits.
                 </p>
               </div>
 
@@ -1658,7 +1825,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
                 <div className="space-y-3">
                   <button
-                    onClick={() => handleCleanData('clients')}
+                    onClick={() => handleCleanData("clients")}
                     className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
                   >
                     <div className="text-left">
@@ -1675,7 +1842,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                   </button>
                   <button
-                    onClick={() => handleCleanData('products')}
+                    onClick={() => handleCleanData("products")}
                     className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
                   >
                     <div className="text-left">
@@ -1712,7 +1879,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         className="flex items-center gap-3 p-3 bg-brand-50/30 dark:bg-brand-800/20 rounded-xl"
                       >
                         <div className="w-8 h-8 rounded-lg bg-white dark:bg-brand-800 flex items-center justify-center text-brand-400">
-                          {log.action.includes('Export') ? (
+                          {log.action.includes("Export") ? (
                             <Download size={14} />
                           ) : (
                             <Upload size={14} />
@@ -1724,16 +1891,17 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[9px] text-brand-400">
-                              {new Date(log.timestamp).toLocaleString('fr-FR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
+                              {new Date(log.timestamp).toLocaleString("fr-FR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
                               })}
                             </span>
                             <span className="text-[9px] text-brand-300">•</span>
                             <span className="text-[9px] text-brand-400 flex items-center gap-1">
-                              <User size={8} /> {userProfile.companyName || 'Utilisateur'}
+                              <User size={8} />{" "}
+                              {userProfile.companyName || "Utilisateur"}
                             </span>
                           </div>
                         </div>
@@ -1752,11 +1920,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
             <div
               style={
                 {
-                  '--preview-primary': userProfile.primaryColor ?? '#102a43',
-                  '--preview-secondary': userProfile.secondaryColor || '#059669',
+                  "--preview-primary": userProfile.primaryColor ?? "#102a43",
+                  "--preview-secondary":
+                    userProfile.secondaryColor || "#059669",
                 } as React.CSSProperties
               }
-              className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 [border-top-color:var(--preview-primary)] min-h-125 flex flex-col relative overflow-hidden"
+              className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 border-t-(--preview-primary) min-h-125 flex flex-col relative overflow-hidden"
             >
               <div className="border-b border-brand-100 dark:border-brand-800 pb-8 mb-8">
                 {userProfile.logoUrl ? (
@@ -1767,43 +1936,51 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   />
                 ) : (
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3 [background-color:var(--preview-primary)]"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3 bg-(--preview-primary)"
                     aria-hidden="true"
                   >
-                    {(userProfile.companyName || 'E').charAt(0).toUpperCase()}
+                    {(userProfile.companyName || "E").charAt(0).toUpperCase()}
                   </div>
                 )}
                 <h2 className="font-bold text-brand-900 dark:text-white text-xl">
-                  {userProfile.companyName || 'Votre Entreprise'}
+                  {userProfile.companyName || "Votre Entreprise"}
                 </h2>
 
                 {/* Contenu contextuel selon l'onglet actif */}
-                {activeTab === 'profile' && (
+                {activeTab === "profile" && (
                   <div className="mt-4 space-y-1 text-[11px] text-brand-500">
                     {userProfile.email && <p>{userProfile.email}</p>}
                     {userProfile.phone && <p>{userProfile.phone}</p>}
-                    {userProfile.address && <p className="line-clamp-2">{userProfile.address}</p>}
+                    {userProfile.address && (
+                      <p className="line-clamp-2">{userProfile.address}</p>
+                    )}
                   </div>
                 )}
-                {activeTab === 'billing' && (
+                {activeTab === "billing" && (
                   <div className="mt-4 space-y-1.5 text-[11px] text-brand-500">
                     <p>
-                      Régime :{' '}
-                      <span className="font-semibold">{userProfile.taxSystem || 'MICRO-BNC'}</span>
+                      Régime :{" "}
+                      <span className="font-semibold">
+                        {userProfile.taxSystem || "MICRO-BNC"}
+                      </span>
                     </p>
                     {userProfile.bankAccount && (
                       <p>
-                        IBAN :{' '}
+                        IBAN :{" "}
                         <span className="font-mono">
-                          ···· {userProfile.bankAccount.replace(/\s/g, '').slice(-4)}
+                          ····{" "}
+                          {userProfile.bankAccount.replace(/\s/g, "").slice(-4)}
                         </span>
                       </p>
                     )}
                     <p>
-                      N° facture :{' '}
+                      N° facture :{" "}
                       <span className="font-mono font-semibold">
-                        {userProfile.invoicePrefix || 'FAC-'}
-                        {String(userProfile.invoiceStartNumber ?? 1).padStart(3, '0')}
+                        {userProfile.invoicePrefix || "FAC-"}
+                        {String(userProfile.invoiceStartNumber ?? 1).padStart(
+                          3,
+                          "0",
+                        )}
                       </span>
                     </p>
                     {userProfile.isVatExempt && (
@@ -1813,77 +1990,85 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     )}
                   </div>
                 )}
-                {activeTab === 'preferences' && (
+                {activeTab === "preferences" && (
                   <div className="mt-4 space-y-3">
                     {/* Mini-aperçu de facture en temps réel — affiche le gabarit sélectionné */}
                     <InvoiceTemplateThumbnail
-                      template={(userProfile.invoiceTemplate || 'modern') as InvoiceTemplateId}
-                      primaryColor={userProfile.primaryColor ?? '#102a43'}
-                      secondaryColor={userProfile.secondaryColor || '#059669'}
-                      fontFamily={userProfile.fontFamily || 'Inter, sans-serif'}
-                      companyName={userProfile.companyName || 'Votre Entreprise'}
-                      invoiceNumber={`${userProfile.invoicePrefix || 'FAC-'}001`}
+                      template={
+                        (userProfile.invoiceTemplate ||
+                          "modern") as InvoiceTemplateId
+                      }
+                      primaryColor={userProfile.primaryColor ?? "#102a43"}
+                      secondaryColor={userProfile.secondaryColor || "#059669"}
+                      fontFamily={userProfile.fontFamily || "Inter, sans-serif"}
+                      companyName={
+                        userProfile.companyName || "Votre Entreprise"
+                      }
+                      invoiceNumber={`${userProfile.invoicePrefix || "FAC-"}001`}
                       size="preview"
                     />
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0 [background-color:var(--preview-primary)]"
+                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0 bg-(--preview-primary)"
                         aria-hidden="true"
                       />
                       <div
-                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0 [background-color:var(--preview-secondary)]"
+                        className="w-4 h-4 rounded border border-brand-100 dark:border-brand-700 shrink-0 bg-(--preview-secondary)"
                         aria-hidden="true"
                       />
                       <p className="text-[11px] text-brand-500 font-mono truncate">
-                        {userProfile.primaryColor ?? '#102a43'}
+                        {userProfile.primaryColor ?? "#102a43"}
                       </p>
                     </div>
                     <p className="text-[11px] text-brand-500">
-                      Police :{' '}
-                      <span className="font-semibold">{userProfile.fontFamily || 'Inter'}</span>
-                    </p>
-                    <p className="text-[11px] text-brand-500">
-                      Gabarit :{' '}
+                      Police :{" "}
                       <span className="font-semibold">
-                        {INVOICE_TEMPLATES.find(
-                          (t) => t.id === (userProfile.invoiceTemplate || 'modern')
-                        )?.label ?? 'Moderne'}
+                        {userProfile.fontFamily || "Inter"}
                       </span>
                     </p>
                     <p className="text-[11px] text-brand-500">
-                      Thème :{' '}
+                      Gabarit :{" "}
+                      <span className="font-semibold">
+                        {INVOICE_TEMPLATES.find(
+                          (t) =>
+                            t.id === (userProfile.invoiceTemplate || "modern"),
+                        )?.label ?? "Moderne"}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-brand-500">
+                      Thème :{" "}
                       <span className="font-semibold capitalize">
-                        {userProfile.theme || 'auto'}
+                        {userProfile.theme || "auto"}
                       </span>
                     </p>
                   </div>
                 )}
-                {activeTab === 'data' && (
+                {activeTab === "data" && (
                   <div className="mt-4 space-y-1 text-[11px] text-brand-500">
                     <p>
                       {allData.invoices.length} facture
-                      {allData.invoices.length !== 1 ? 's' : ''}
+                      {allData.invoices.length !== 1 ? "s" : ""}
                     </p>
                     <p>
                       {allData.clients.length} client
-                      {allData.clients.length !== 1 ? 's' : ''}
+                      {allData.clients.length !== 1 ? "s" : ""}
                     </p>
                     <p>
                       {allData.suppliers.length} fournisseur
-                      {allData.suppliers.length !== 1 ? 's' : ''}
+                      {allData.suppliers.length !== 1 ? "s" : ""}
                     </p>
                     <p>
                       {allData.products.length} produit
-                      {allData.products.length !== 1 ? 's' : ''}
+                      {allData.products.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 )}
-                {activeTab === 'security' && (
+                {activeTab === "security" && (
                   <div className="mt-4 text-[11px] text-brand-500">
                     <p>
                       {userProfile.securitySettings?.isTwoFactorEnabled
-                        ? '🔒 Authentification 2FA activée'
-                        : '🔓 2FA non configuré'}
+                        ? "🔒 Authentification 2FA activée"
+                        : "🔓 2FA non configuré"}
                     </p>
                   </div>
                 )}
@@ -1891,7 +2076,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               <div className="mt-auto pt-6 text-[9px] text-center text-brand-400">
                 <p className="font-bold uppercase">{userProfile.companyName}</p>
                 {userProfile.address && <p>{userProfile.address}</p>}
-                {userProfile.siret && <p className="mt-2">SIRET : {userProfile.siret}</p>}
+                {userProfile.siret && (
+                  <p className="mt-2">SIRET : {userProfile.siret}</p>
+                )}
               </div>
             </div>
 
@@ -1900,7 +2087,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 <button
                   onClick={handleSave}
                   className={`btn-primary w-full py-4 rounded-2xl transition-all ${
-                    isDirty ? 'ring-2 ring-amber-400 ring-offset-2' : ''
+                    isDirty ? "ring-2 ring-amber-400 ring-offset-2" : ""
                   }`}
                 >
                   {isDirty && (
@@ -1923,7 +2110,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         data={{
-          version: '1.0',
+          version: "1.0",
           exportedAt: new Date().toISOString(),
           userProfile,
           invoices: allData.invoices,
