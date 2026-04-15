@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Post coverage summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const lcovPath = 'coverage/lcov.info';
+            if (!fs.existsSync(lcovPath)) {
+              console.log('No coverage file found, skipping comment.');
+              return;
+            }
+            const lines = fs.readFileSync(lcovPath, 'utf8').split('\n');
+            let found = 0, hit = 0;
+            for (const line of lines) {
+              if (line.startsWith('LF:')) found += parseInt(line.slice(3), 10);
+              if (line.startsWith('LH:')) hit += parseInt(line.slice(3), 10);
+            }
+            const pct = found > 0 ? ((hit / found) * 100).toFixed(1) : '0.0';
+            const status = parseFloat(pct) >= 70 ? '✅' : '⚠️';
+            const body = `## ${status} Couverture de tests : ${pct}%\n\n`
+              + `| Lignes couvertes | Lignes totales | Pourcentage |\n`
+              + `|-----------------|----------------|-------------|\n`
+              + `| ${hit} | ${found} | **${pct}%** |\n\n`
+              + `> Seuil minimum requis : **70%**`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Build
+        run: npm run build
