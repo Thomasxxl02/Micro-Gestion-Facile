@@ -557,6 +557,8 @@ const App: React.FC = () => {
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2.5 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-xl shadow-lg hover:bg-brand-800 transition-all active:scale-90"
+              title="Ouvrir le menu"
+              aria-label="Ouvrir la navigation"
             >
               <Menu size={20} />
             </button>
