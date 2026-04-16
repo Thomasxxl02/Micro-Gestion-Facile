@@ -477,20 +477,20 @@ const App: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] p-6 transition-colors duration-500">
+      <div className="min-h-screen flex items-center justify-center bg-(--bg-main) p-6 transition-colors duration-500">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-200/30 dark:bg-brand-800/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-200/30 dark:bg-accent-800/20 rounded-full blur-3xl animate-pulse delay-700" />
         </div>
 
-        <div className="max-w-md w-full bg-[var(--card-bg)] p-10 rounded-[2.5rem] shadow-2xl text-center border border-[var(--card-border)] relative z-10 animate-fade-in">
+        <div className="max-w-md w-full bg-(--card-bg) p-10 rounded-[2.5rem] shadow-2xl text-center border border-(--card-border) relative z-10 animate-fade-in">
           <div className="w-24 h-24 bg-brand-900 dark:bg-brand-800 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-500">
             <LogIn className="text-white" size={48} />
           </div>
-          <h1 className="text-4xl font-bold text-[var(--text-main)] mb-4 tracking-tight">
+          <h1 className="text-4xl font-bold text-(--text-main) mb-4 tracking-tight">
             Micro Gestion
           </h1>
-          <p className="text-[var(--text-muted)] mb-12 text-lg">
+          <p className="text-(--text-muted) mb-12 text-lg">
             Votre allié quotidien pour une gestion simplifiée et intelligente.
           </p>
 
@@ -505,7 +505,7 @@ const App: React.FC = () => {
             Se connecter avec Google
           </button>
 
-          <p className="mt-10 text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold">
+          <p className="mt-10 text-xs text-(--text-muted) uppercase tracking-widest font-semibold">
             Sécurisé par Google Auth
           </p>
         </div>
@@ -514,7 +514,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-main)] font-sans text-[var(--text-main)] selection:bg-brand-200 dark:selection:bg-brand-800 selection:text-brand-900 transition-colors duration-500 relative overflow-hidden">
+    <div className="flex min-h-screen bg-(--bg-main) font-sans text-(--text-main) selection:bg-brand-200 dark:selection:bg-brand-800 selection:text-brand-900 transition-colors duration-500 relative overflow-hidden">
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-pink-300/30 dark:bg-blue-900/10 rounded-full blur-[120px] animate-pulse" />
@@ -537,19 +537,19 @@ const App: React.FC = () => {
 
       <main className="flex-1 lg:ml-64 p-4 lg:p-8 xl:p-12 overflow-x-hidden relative z-10">
         {/* Mobile Header */}
-        <div className="lg:hidden flex justify-between items-center mb-8 sticky top-0 bg-[var(--bg-main)]/60 backdrop-blur-xl z-30 py-4 border-b border-[var(--card-border)] px-4 -mx-4">
+        <div className="lg:hidden flex justify-between items-center mb-8 sticky top-0 bg-(--bg-main)/60 backdrop-blur-xl z-30 py-4 border-b border-(--card-border) px-4 -mx-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-brand-900 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-brand-900 shadow-lg">
               <Menu size={20} />
             </div>
-            <h1 className="text-xl font-black text-[var(--text-main)] tracking-tighter">
+            <h1 className="text-xl font-black text-(--text-main) tracking-tighter">
               MICRO<span className="text-brand-500">GESTION</span>
             </h1>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 bg-[var(--card-bg)] rounded-xl shadow-sm border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--bg-main)] transition-all active:scale-90"
+              className="p-2.5 bg-(--card-bg) rounded-xl shadow-sm border border-(--card-border) text-(--text-muted) hover:bg-(--bg-main) transition-all active:scale-90"
               title="Changer de thème"
             >
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
@@ -567,16 +567,16 @@ const App: React.FC = () => {
 
         {/* Desktop Header / Top Bar */}
         <div className="hidden lg:flex justify-end items-center gap-6 mb-10 animate-fade-in">
-          <div className="flex items-center gap-4 px-4 py-2 bg-[var(--card-bg)]/50 backdrop-blur-sm rounded-2xl border border-[var(--card-border)] shadow-sm">
+          <div className="flex items-center gap-4 px-4 py-2 bg-(--card-bg)/50 backdrop-blur-sm rounded-2xl border border-(--card-border) shadow-sm">
             <div className="flex flex-col items-end">
-              <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-(--text-muted) uppercase tracking-wider">
                 Connecté en tant que
               </span>
-              <span className="text-sm font-bold text-[var(--text-main)]">
+              <span className="text-sm font-bold text-(--text-main)">
                 {user.displayName || user.email}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-[var(--bg-main)] flex items-center justify-center overflow-hidden border border-[var(--card-border)]">
+            <div className="w-10 h-10 rounded-xl bg-(--bg-main) flex items-center justify-center overflow-hidden border border-(--card-border)">
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
@@ -585,15 +585,15 @@ const App: React.FC = () => {
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <span className="text-[var(--text-main)] font-bold">
+                <span className="text-(--text-main) font-bold">
                   {user.email?.[0].toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="w-px h-8 bg-[var(--card-border)] mx-1" />
+            <div className="w-px h-8 bg-(--card-border) mx-1" />
             <button
               onClick={logout}
-              className="p-2 text-[var(--text-muted)] hover:text-red-500 dark:hover:text-red-400 transition-all hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
+              className="p-2 text-(--text-muted) hover:text-red-500 dark:hover:text-red-400 transition-all hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
               title="Déconnexion"
             >
               <LogOut size={20} />
