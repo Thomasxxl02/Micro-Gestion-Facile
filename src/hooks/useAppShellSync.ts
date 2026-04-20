@@ -9,11 +9,11 @@
  * const { invoices, clients, products, ... } = useAppShellSync(userId)
  */
 
-import { deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { useEffect } from 'react';
-import { db, handleFirestoreError, OperationType } from '../firebase';
-import { uploadToCloud } from '../services/cloudSyncService';
-import { useAppStore } from '../store/appStore';
+import { deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { useEffect, useRef } from "react";
+import { db, handleFirestoreError, OperationType } from "../firebase";
+import { uploadToCloud } from "../services/cloudSyncService";
+import { useAppStore } from "../store/appStore";
 import {
   type CalendarEvent,
   type Client,
@@ -24,8 +24,9 @@ import {
   type Product,
   type Supplier,
   type UserProfile,
-} from '../types';
-import { useOfflineSync } from './useOfflineSync';
+} from "../types";
+import useNotificationsSound from "./useNotificationsSound";
+import { useOfflineSync } from "./useOfflineSync";
 
 export interface AppShellSyncResult {
   // Collections synchronisées
@@ -40,30 +41,30 @@ export interface AppShellSyncResult {
   userProfile: UserProfile | null;
 
   // Callbacks pour CRUD
-  saveInvoice: (invoice: Invoice) => void;
-  deleteInvoice: (id: string) => void;
-  saveClient: (client: Client) => void;
-  deleteClient: (id: string) => void;
-  saveProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  saveSupplier: (supplier: Supplier) => void;
-  deleteSupplier: (id: string) => void;
-  saveExpense: (expense: Expense) => void;
-  deleteExpense: (id: string) => void;
-  saveEmail: (email: Email) => void;
-  deleteEmail: (id: string) => void;
-  saveEmailTemplate: (template: EmailTemplate) => void;
-  deleteEmailTemplate: (id: string) => void;
-  saveCalendarEvent: (event: CalendarEvent) => void;
-  deleteCalendarEvent: (id: string) => void;
-  saveUserProfile: (profile: UserProfile) => void;
+  saveInvoice: (_invoice: Invoice) => void;
+  deleteInvoice: (_id: string) => void;
+  saveClient: (_client: Client) => void;
+  deleteClient: (_id: string) => void;
+  saveProduct: (_product: Product) => void;
+  deleteProduct: (_id: string) => void;
+  saveSupplier: (_supplier: Supplier) => void;
+  deleteSupplier: (_id: string) => void;
+  saveExpense: (_expense: Expense) => void;
+  deleteExpense: (_id: string) => void;
+  saveEmail: (_email: Email) => void;
+  deleteEmail: (_id: string) => void;
+  saveEmailTemplate: (_template: EmailTemplate) => void;
+  deleteEmailTemplate: (_id: string) => void;
+  saveCalendarEvent: (_event: CalendarEvent) => void;
+  deleteCalendarEvent: (_id: string) => void;
+  saveUserProfile: (_profile: UserProfile) => void;
 }
 
 // Callbacks génériques pour Firestore
 const useFirestoreCRUD = (userId: string) => {
   const saveDoc = async <T extends { id: string }>(
     collectionName: string,
-    data: T
+    data: T,
   ): Promise<void> => {
     if (!userId) {
       return;
@@ -71,18 +72,29 @@ const useFirestoreCRUD = (userId: string) => {
     try {
       await setDoc(doc(db, collectionName, data.id), { ...data, uid: userId });
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `${collectionName}/${data.id}`);
+      handleFirestoreError(
+        err,
+        OperationType.WRITE,
+        `${collectionName}/${data.id}`,
+      );
     }
   };
 
-  const deleteDocFromFirestore = async (collectionName: string, id: string): Promise<void> => {
+  const deleteDocFromFirestore = async (
+    collectionName: string,
+    id: string,
+  ): Promise<void> => {
     if (!userId) {
       return;
     }
     try {
       await deleteDoc(doc(db, collectionName, id));
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `${collectionName}/${id}`);
+      handleFirestoreError(
+        err,
+        OperationType.DELETE,
+        `${collectionName}/${id}`,
+      );
     }
   };
 
@@ -104,18 +116,38 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
   } = useAppStore();
 
   // ─── FIRESTORE CRUD HELPERS ───
-  const { saveDoc, deleteDocFromFirestore: _deleteDocFromFirestore } = useFirestoreCRUD(userId);
+  const { saveDoc, deleteDocFromFirestore: _deleteDocFromFirestore } =
+    useFirestoreCRUD(userId);
+
+  const { playSound } = useNotificationsSound();
 
   // ─── PHASE 1 : OFFLINE-FIRST (invoices, clients, products) ───
   const {
     data: invoices,
+    status: invoicesStatus,
+    isFromLocalCache: invoicesFromCache,
     upsert: saveInvoice,
     remove: deleteInvoice,
   } = useOfflineSync<Invoice>({
     userId,
-    collectionName: 'invoices',
-    dexieTableName: 'invoices',
+    collectionName: "invoices",
+    dexieTableName: "invoices",
   });
+
+  // ─── NOTIFICATION SONORE : SYNCHRONISATION CLOUD TERMINÉE ───
+  // Joue le son "syncCompleted" lorsque les données passent du cache local
+  // (offline/Dexie) vers les données Firestore fraîches (transition cache → live).
+  const prevInvoicesFromCache = useRef<boolean>(true);
+  useEffect(() => {
+    if (
+      prevInvoicesFromCache.current &&
+      !invoicesFromCache &&
+      invoicesStatus === "SUCCESS"
+    ) {
+      void playSound("syncCompleted");
+    }
+    prevInvoicesFromCache.current = invoicesFromCache;
+  }, [invoicesFromCache, invoicesStatus, playSound]);
 
   const {
     data: clients,
@@ -123,8 +155,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteClient,
   } = useOfflineSync<Client>({
     userId,
-    collectionName: 'clients',
-    dexieTableName: 'clients',
+    collectionName: "clients",
+    dexieTableName: "clients",
   });
 
   const {
@@ -133,8 +165,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteProduct,
   } = useOfflineSync<Product>({
     userId,
-    collectionName: 'products',
-    dexieTableName: 'products',
+    collectionName: "products",
+    dexieTableName: "products",
   });
 
   // ─── PHASE 2/3 : OFFLINE-FIRST (suppliers, expenses, emails, etc.) ───
@@ -144,8 +176,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteSupplier,
   } = useOfflineSync<Supplier>({
     userId,
-    collectionName: 'suppliers',
-    dexieTableName: 'suppliers',
+    collectionName: "suppliers",
+    dexieTableName: "suppliers",
   });
 
   const {
@@ -154,8 +186,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteExpense,
   } = useOfflineSync<Expense>({
     userId,
-    collectionName: 'expenses',
-    dexieTableName: 'expenses',
+    collectionName: "expenses",
+    dexieTableName: "expenses",
   });
 
   const {
@@ -164,8 +196,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteEmail,
   } = useOfflineSync<Email>({
     userId,
-    collectionName: 'emails',
-    dexieTableName: 'emails',
+    collectionName: "emails",
+    dexieTableName: "emails",
   });
 
   const {
@@ -174,8 +206,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteEmailTemplate,
   } = useOfflineSync<EmailTemplate>({
     userId,
-    collectionName: 'emailTemplates',
-    dexieTableName: 'emailTemplates',
+    collectionName: "emailTemplates",
+    dexieTableName: "emailTemplates",
   });
 
   const {
@@ -184,8 +216,8 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     remove: deleteCalendarEvent,
   } = useOfflineSync<CalendarEvent>({
     userId,
-    collectionName: 'calendarEvents',
-    dexieTableName: 'calendarEvents',
+    collectionName: "calendarEvents",
+    dexieTableName: "calendarEvents",
   });
 
   // ─── PROPAGATION VERS ZUSTAND (CENTRALISÉE) ───
@@ -241,11 +273,11 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
   useEffect(() => {
     if (
       userProfile.integrations?.cloudSync?.autoSyncExports &&
-      userProfile.integrations.cloudSync.provider !== 'none'
+      userProfile.integrations.cloudSync.provider !== "none"
     ) {
       const provider = userProfile.integrations.cloudSync.provider;
       const dataToSync = {
-        version: '1.0',
+        version: "1.0",
         exportedAt: new Date().toISOString(),
         userProfile,
         invoices,
@@ -259,11 +291,11 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
         try {
           await uploadToCloud(
             provider,
-            `mgf-backup-${new Date().toISOString().split('T')[0]}.json`,
-            JSON.stringify(dataToSync)
+            `mgf-backup-${new Date().toISOString().split("T")[0]}.json`,
+            JSON.stringify(dataToSync),
           );
         } catch (e) {
-          console.error('[CloudSync] Auto-sync failed:', e);
+          console.error("[CloudSync] Auto-sync failed:", e);
         }
       }, 5000); // Délai de 5s pour éviter de spammer si plusieurs modifs rapides
 
@@ -274,7 +306,9 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
   // ─── SAVE WRAPPER POUR FIRESTORE ───
   const saveUserProfile = (profile: UserProfile) => {
     if (userId) {
-      saveDoc('profiles', { ...profile, id: userId } as UserProfile & { id: string });
+      saveDoc("profiles", { ...profile, id: userId } as UserProfile & {
+        id: string;
+      });
     }
   };
 
@@ -321,14 +355,14 @@ const useUserProfileSync = (userId: string): void => {
     }
 
     const unsubProfile = onSnapshot(
-      doc(db, 'profiles', userId),
+      doc(db, "profiles", userId),
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as UserProfile;
           setStoreUserProfile(data);
         }
       },
-      () => handleFirestoreError(null, OperationType.GET, `profiles/${userId}`)
+      () => handleFirestoreError(null, OperationType.GET, `profiles/${userId}`),
     );
 
     return () => unsubProfile();

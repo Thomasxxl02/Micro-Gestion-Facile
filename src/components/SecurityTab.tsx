@@ -20,12 +20,13 @@ import {
   Lock,
   LogOut,
   MapPin,
+  Monitor,
   Plus,
   Smartphone,
   Trash2,
   Zap,
-} from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import {
   APIKeyService,
   DataEncryptionService,
@@ -36,15 +37,18 @@ import {
   type APIKey,
   type LoginHistoryEntry,
   type Session,
-} from '../services/securityService';
-import type { UserProfile } from '../types';
-import { AlertDialog, ConfirmDialog } from './Dialogs';
-import { FormField, SelectField } from './FormFields';
+} from "../services/securityService";
+import useLogStore from "../store/useLogStore";
+import type { UserProfile } from "../types";
+import { AlertDialog, ConfirmDialog } from "./Dialogs";
+import { FormField, SelectField } from "./FormFields";
 
 interface SecurityTabProps {
   userProfile: UserProfile;
-  setUserProfile: (profile: UserProfile) => void;
-  onSaveProfile?: (profile: UserProfile) => void;
+   
+  setUserProfile: (_profile: UserProfile) => void;
+   
+  onSaveProfile?: (_profile: UserProfile) => void;
 }
 
 /**
@@ -56,7 +60,10 @@ interface PasswordStrengthBarProps {
 }
 
 // Component wrapper that contains the progress bar with CSS variable
-const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({ score, colorClass }) => {
+const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({
+  score,
+  colorClass,
+}) => {
   const percentage = (score / 5) * 100;
 
   return (
@@ -73,86 +80,146 @@ const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({ score, colorC
   );
 };
 
+// ─── HELPER FUNCTIONS ───
+const SECURITY_TABS = [
+  "2fa",
+  "api-keys",
+  "password",
+  "audit",
+  "sessions",
+  "encryption",
+] as const;
+
+type SecurityTabType = (typeof SECURITY_TABS)[number];
+
+/**
+ * Handle keyboard navigation for security tabs (ARIA tablist pattern)
+ */
+const handleSecurityTabKeyDown = (
+  e: React.KeyboardEvent<HTMLDivElement>,
+  activeTab: SecurityTabType,
+   
+  setActiveTab: (_tab: SecurityTabType) => void,
+) => {
+  const idx = SECURITY_TABS.indexOf(activeTab);
+  let next: number = idx;
+
+  const keyActions: Record<string, () => void> = {
+    ArrowRight: () => {
+      next = (idx + 1) % SECURITY_TABS.length;
+    },
+    ArrowDown: () => {
+      next = (idx + 1) % SECURITY_TABS.length;
+    },
+    ArrowLeft: () => {
+      next = (idx - 1 + SECURITY_TABS.length) % SECURITY_TABS.length;
+    },
+    ArrowUp: () => {
+      next = (idx - 1 + SECURITY_TABS.length) % SECURITY_TABS.length;
+    },
+    Home: () => {
+      next = 0;
+    },
+    End: () => {
+      next = SECURITY_TABS.length - 1;
+    },
+  };
+
+  const action = keyActions[e.key];
+  if (action) {
+    e.preventDefault();
+    action();
+    setActiveTab(SECURITY_TABS[next]);
+    const buttons =
+      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    buttons[next]?.focus();
+  }
+};
+
+/**
+ * Get CSS classes for log severity container
+ */
+const getLogSeverityClass = (severity: string): string => {
+  const severityClasses: Record<string, string> = {
+    CRITICAL:
+      "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30",
+    ERROR: "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30",
+    WARNING:
+      "bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-900/30",
+  };
+  return (
+    severityClasses[severity] ||
+    "bg-brand-50 dark:bg-brand-800/50 border-brand-100 dark:border-brand-800"
+  );
+};
+
+/**
+ * Get CSS classes for log severity badge
+ */
+const getLogSeverityBadgeClass = (severity: string): string => {
+  const badgeClasses: Record<string, string> = {
+    CRITICAL: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+    ERROR: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+    WARNING:
+      "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
+  };
+  return (
+    badgeClasses[severity] ||
+    "bg-brand-100 dark:bg-brand-800 text-brand-600 dark:text-brand-300"
+  );
+};
+
+/**
+ * Get CSS class for password strength indicator
+ */
+const getPasswordStrengthColor = (score: number): string => {
+  const colorClasses = [
+    "bg-red-500",
+    "bg-red-500",
+    "bg-orange-500",
+    "bg-yellow-500",
+    "bg-lime-500",
+    "bg-green-500",
+  ];
+  return colorClasses[score] || "bg-brand-500";
+};
+
 const SecurityTab: React.FC<SecurityTabProps> = ({
   userProfile,
   setUserProfile,
   onSaveProfile,
+  // eslint-disable-next-line complexity
 }) => {
   // ─── STATES ───
-  const [activeSecurityTab, setActiveSecurityTab] = useState<
-    '2fa' | 'api-keys' | 'password' | 'sessions' | 'encryption'
-  >('2fa');
-
-  // ─── KEYBOARD NAVIGATION (ARIA tablist pattern) ───
-  const SECURITY_TABS = ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const;
-  const handleSecurityTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const idx = SECURITY_TABS.indexOf(activeSecurityTab as (typeof SECURITY_TABS)[number]);
-    let next: number;
-    switch (e.key) {
-      case 'ArrowRight':
-      case 'ArrowDown':
-        e.preventDefault();
-        next = (idx + 1) % SECURITY_TABS.length;
-        break;
-      case 'ArrowLeft':
-      case 'ArrowUp':
-        e.preventDefault();
-        next = (idx - 1 + SECURITY_TABS.length) % SECURITY_TABS.length;
-        break;
-      case 'Home':
-        e.preventDefault();
-        next = 0;
-        break;
-      case 'End':
-        e.preventDefault();
-        next = SECURITY_TABS.length - 1;
-        break;
-      default:
-        return;
-    }
-    setActiveSecurityTab(SECURITY_TABS[next]);
-    const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-    buttons[next]?.focus();
-  };
+  const [activeSecurityTab, setActiveSecurityTab] =
+    useState<SecurityTabType>("2fa");
+  const { activityLogs } = useLogStore();
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([]);
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
 
-  const [totpSecret, setTotpSecret] = useState('');
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [totpVerificationCode, setTotpVerificationCode] = useState('');
+  const [totpSecret, setTotpSecret] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [totpVerificationCode, setTotpVerificationCode] = useState("");
 
-  const [newAPIKeyName, setNewAPIKeyName] = useState('');
-  const [newAPIKeyService, setNewAPIKeyService] = useState<'GEMINI' | 'FIREBASE' | 'CUSTOM'>(
-    'GEMINI'
-  );
-  const [newAPIKeyValue, setNewAPIKeyValue] = useState('');
+  const [newAPIKeyName, setNewAPIKeyName] = useState("");
+  const [newAPIKeyService, setNewAPIKeyService] = useState<
+    "GEMINI" | "FIREBASE" | "CUSTOM"
+  >("GEMINI");
+  const [newAPIKeyValue, setNewAPIKeyValue] = useState("");
   const [showAPIKeyValue, setShowAPIKeyValue] = useState(false);
 
-  const [newPassword, setNewPassword] = useState('');
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] as string[] });
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: [] as string[],
+  });
 
-  const [encryptionPassword, setEncryptionPassword] = useState('');
-  const [_setSensibleDataPassword] = useState('');
-
-  // Helper: get password strength color
-  const getPasswordStrengthColor = (score: number): string => {
-    if (score <= 1) {
-      return 'bg-red-500';
-    }
-    if (score === 2) {
-      return 'bg-orange-500';
-    }
-    if (score === 3) {
-      return 'bg-yellow-500';
-    }
-    if (score === 4) {
-      return 'bg-lime-500';
-    }
-    return 'bg-green-500';
-  };
+  const [encryptionPassword, setEncryptionPassword] = useState("");
+  // Intentionally unused - reserved for future encryption feature
+  // const [sensibleDataPassword, setSensibleDataPassword] = useState("");
 
   // ─── DIALOGS ───
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -161,13 +228,13 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     description: string;
     isDangerous?: boolean;
     onConfirm?: () => void;
-  }>({ isOpen: false, title: '', description: '' });
+  }>({ isOpen: false, title: "", description: "" });
   const [alertDialog, setAlertDialog] = useState<{
     isOpen: boolean;
     title: string;
     description: string;
-    type: 'success' | 'error' | 'info';
-  }>({ isOpen: false, title: '', description: '', type: 'info' });
+    type: "success" | "error" | "info";
+  }>({ isOpen: false, title: "", description: "", type: "info" });
 
   // ─── INITIALIZATION ───
   useEffect(() => {
@@ -177,7 +244,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     const history = SessionService.getLoginHistory();
     setLoginHistory(history);
 
-    const keys = userProfile.securitySettings?.apiKeys || [];
+    const keys = userProfile.securitySettings?.apiKeys ?? [];
     setApiKeys(keys);
   }, [userProfile]);
 
@@ -186,9 +253,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     const secret = TOTPService.generateSecret();
     setTotpSecret(secret);
     const qrUrl = TOTPService.generateQRCodeUrl(
-      userProfile.email || '',
+      userProfile.email ?? "",
       secret,
-      'Micro-Gestion-Facile'
+      "Micro-Gestion-Facile",
     );
     setQrCodeUrl(qrUrl);
   };
@@ -197,9 +264,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     if (!(await TOTPService.validateCode(totpSecret, totpVerificationCode))) {
       setAlertDialog({
         isOpen: true,
-        title: '❌ Code invalide',
-        description: 'Le code TOTP est incorrect. Veuillez réessayer.',
-        type: 'error',
+        title: "❌ Code invalide",
+        description: "Le code TOTP est incorrect. Veuillez réessayer.",
+        type: "error",
       });
       return;
     }
@@ -210,8 +277,11 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       securitySettings: {
         ...userProfile.securitySettings,
         isTwoFactorEnabled: true,
-        twoFactorMethod: 'TOTP' as const,
-        totpSecret: await DataEncryptionService.encryptData(totpSecret, userProfile.email || ''),
+        twoFactorMethod: "TOTP" as const,
+        totpSecret: await DataEncryptionService.encryptData(
+          totpSecret,
+          userProfile.email || "",
+        ),
       },
     };
 
@@ -222,22 +292,22 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
     setAlertDialog({
       isOpen: true,
-      title: '✅ 2FA activée',
-      description: 'Authentification à deux facteurs activée avec succès.',
-      type: 'success',
+      title: "✅ 2FA activée",
+      description: "Authentification à deux facteurs activée avec succès.",
+      type: "success",
     });
 
-    setTotpSecret('');
-    setQrCodeUrl('');
-    setTotpVerificationCode('');
+    setTotpSecret("");
+    setQrCodeUrl("");
+    setTotpVerificationCode("");
   };
 
   const handleDisable2FA = () => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Désactiver 2FA ?',
+      title: "Désactiver 2FA ?",
       description:
-        'Vous perdrez la protection supplémentaire. Cette action ne peut être annulée que par reset du profil.',
+        "Vous perdrez la protection supplémentaire. Cette action ne peut être annulée que par reset du profil.",
       isDangerous: true,
       onConfirm: () => {
         const updatedProfile = {
@@ -252,12 +322,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         if (onSaveProfile) {
           onSaveProfile(updatedProfile);
         }
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
         setAlertDialog({
           isOpen: true,
-          title: '✅ 2FA désactivée',
-          description: '',
-          type: 'success',
+          title: "✅ 2FA désactivée",
+          description: "",
+          type: "success",
         });
       },
     });
@@ -268,9 +338,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     if (!newAPIKeyName || !newAPIKeyValue) {
       setAlertDialog({
         isOpen: true,
-        title: '⚠️ Champs manquants',
-        description: 'Entrez le nom et la valeur de la clé API.',
-        type: 'error',
+        title: "⚠️ Champs manquants",
+        description: "Entrez le nom et la valeur de la clé API.",
+        type: "error",
       });
       return;
     }
@@ -278,7 +348,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     const newKey = await APIKeyService.createAPIKey(
       newAPIKeyName,
       newAPIKeyService,
-      newAPIKeyValue
+      newAPIKeyValue,
     );
     const updatedKeys = [...apiKeys, newKey];
     setApiKeys(updatedKeys);
@@ -298,25 +368,27 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
     setAlertDialog({
       isOpen: true,
-      title: '✅ Clé API ajoutée',
+      title: "✅ Clé API ajoutée",
       description: `La clé "${newAPIKeyName}" a été créée avec succès. Conservez-la en sécurité !`,
-      type: 'success',
+      type: "success",
     });
 
-    setNewAPIKeyName('');
-    setNewAPIKeyValue('');
+    setNewAPIKeyName("");
+    setNewAPIKeyValue("");
     setShowAPIKeyValue(false);
   };
 
   const handleRevokeAPIKey = (keyId: string) => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Révoquer la clé API ?',
+      title: "Révoquer la clé API ?",
       description:
-        'Cette action désactivera la clé immédiatement. Vous devrez en créer une nouvelle.',
+        "Cette action désactivera la clé immédiatement. Vous devrez en créer une nouvelle.",
       isDangerous: true,
       onConfirm: () => {
-        const updated = apiKeys.map((k) => (k.id === keyId ? APIKeyService.revokeAPIKey(k) : k));
+        const updated = apiKeys.map((k) =>
+          k.id === keyId ? APIKeyService.revokeAPIKey(k) : k,
+        );
         setApiKeys(updated);
 
         const updatedProfile = {
@@ -331,7 +403,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         if (onSaveProfile) {
           onSaveProfile(updatedProfile);
         }
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
       },
     });
   };
@@ -340,16 +412,19 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   const handlePasswordChange = (pwd: string) => {
     setNewPassword(pwd);
     const validation = PasswordValidator.validate(pwd);
-    setPasswordStrength({ score: validation.score, feedback: validation.feedback });
+    setPasswordStrength({
+      score: validation.score,
+      feedback: validation.feedback,
+    });
   };
 
   const handleResetPassword = () => {
     if (!newPassword || newPassword !== newPasswordConfirm) {
       setAlertDialog({
         isOpen: true,
-        title: '❌ Erreur',
-        description: 'Les mots de passe ne correspondent pas ou sont vides.',
-        type: 'error',
+        title: "❌ Erreur",
+        description: "Les mots de passe ne correspondent pas ou sont vides.",
+        type: "error",
       });
       return;
     }
@@ -358,28 +433,28 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     if (!validation.isValid) {
       setAlertDialog({
         isOpen: true,
-        title: '⚠️ Mot de passe trop faible',
-        description: validation.feedback.join('; '),
-        type: 'error',
+        title: "⚠️ Mot de passe trop faible",
+        description: validation.feedback.join("; "),
+        type: "error",
       });
       return;
     }
 
     setConfirmDialog({
       isOpen: true,
-      title: 'Confirmer le changement de mot de passe',
-      description: 'Le mot de passe sera mis à jour immédiatement.',
+      title: "Confirmer le changement de mot de passe",
+      description: "Le mot de passe sera mis à jour immédiatement.",
       onConfirm: () => {
-        PasswordResetService.generateResetToken(userProfile.email || '');
+        PasswordResetService.generateResetToken(userProfile.email || "");
         setAlertDialog({
           isOpen: true,
-          title: '✅ Mot de passe réinitialisé',
-          description: 'Votre mot de passe a été mis à jour avec succès.',
-          type: 'success',
+          title: "✅ Mot de passe réinitialisé",
+          description: "Votre mot de passe a été mis à jour avec succès.",
+          type: "success",
         });
-        setNewPassword('');
-        setNewPasswordConfirm('');
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        setNewPassword("");
+        setNewPasswordConfirm("");
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
       },
     });
   };
@@ -388,12 +463,12 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   const handleRevokeSession = (sessionId: string) => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Terminer cette session ?',
-      description: 'Vous serez déconnecté de cet appareil.',
+      title: "Terminer cette session ?",
+      description: "Vous serez déconnecté de cet appareil.",
       onConfirm: () => {
         SessionService.revokeSession(sessionId);
         setSessions(SessionService.getSessions());
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
       },
     });
   };
@@ -401,8 +476,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   const handleRevokeAllOtherSessions = () => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Déconnecter toutes les autres sessions ?',
-      description: 'Vous ne resterez connecté que sur cet appareil.',
+      title: "Déconnecter toutes les autres sessions ?",
+      description: "Vous ne resterez connecté que sur cet appareil.",
       isDangerous: true,
       onConfirm: () => {
         const currentSessions = SessionService.getSessions();
@@ -410,7 +485,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
           SessionService.revokeAllOtherSessions(currentSessions[0].id);
           setSessions([currentSessions[0]]);
         }
-        setConfirmDialog({ isOpen: false, title: '', description: '' });
+        setConfirmDialog({ isOpen: false, title: "", description: "" });
       },
     });
   };
@@ -420,23 +495,27 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     if (!encryptionPassword) {
       setAlertDialog({
         isOpen: true,
-        title: '⚠️ Mot de passe requis',
-        description: 'Entrez un mot de passe pour chiffrer vos données sensibles.',
-        type: 'error',
+        title: "⚠️ Mot de passe requis",
+        description:
+          "Entrez un mot de passe pour chiffrer vos données sensibles.",
+        type: "error",
       });
       return;
     }
 
     try {
       const sensitiveData = JSON.stringify({
-        iban: userProfile.bankAccount || '',
-        bic: userProfile.bic || '',
-        siret: userProfile.siret || '',
-        siren: userProfile.siren || '',
-        tvaNumber: userProfile.tvaNumber || '',
+        iban: userProfile.bankAccount ?? "",
+        bic: userProfile.bic ?? "",
+        siret: userProfile.siret ?? "",
+        siren: userProfile.siren ?? "",
+        tvaNumber: userProfile.tvaNumber ?? "",
       });
 
-      const _encrypted = await DataEncryptionService.encryptData(sensitiveData, encryptionPassword);
+      await DataEncryptionService.encryptData(
+        sensitiveData,
+        encryptionPassword,
+      );
 
       const updatedProfile = {
         ...userProfile,
@@ -453,18 +532,19 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       setAlertDialog({
         isOpen: true,
-        title: '✅ Données chiffrées',
-        description: 'Vos données sensibles (IBAN, SIRET) sont maintenant chiffrées.',
-        type: 'success',
+        title: "✅ Données chiffrées",
+        description:
+          "Vos données sensibles (IBAN, SIRET) sont maintenant chiffrées.",
+        type: "success",
       });
-      setEncryptionPassword('');
+      setEncryptionPassword("");
     } catch (error) {
-      console.error('Encryption error:', error);
+      console.error("Encryption error:", error);
       setAlertDialog({
         isOpen: true,
-        title: '❌ Erreur de chiffrement',
-        description: 'Une erreur est survenue lors du chiffrement.',
-        type: 'error',
+        title: "❌ Erreur de chiffrement",
+        description: "Une erreur est survenue lors du chiffrement.",
+        type: "error",
       });
     }
   };
@@ -480,40 +560,56 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       <div
         role="tablist"
         aria-label="Paramètres de sécurité"
-        onKeyDown={handleSecurityTabKeyDown}
+        onKeyDown={(e) =>
+          handleSecurityTabKeyDown(e, activeSecurityTab, setActiveSecurityTab)
+        }
         className="flex flex-wrap gap-2 bg-brand-50 dark:bg-brand-900/30 p-3 rounded-2xl border border-brand-100 dark:border-brand-800"
       >
-        {(['2FA', 'API Keys', 'Mot de passe', 'Sessions', 'Chiffrement'] as const).map(
-          (label, idx) => {
-            const currentTabKey = (
-              ['2fa', 'api-keys', 'password', 'sessions', 'encryption'] as const
-            )[idx];
+        {(
+          [
+            "2FA",
+            "API Keys",
+            "Mot de passe",
+            "Journal d'Audit",
+            "Sessions",
+            "Chiffrement",
+          ] as const
+        ).map((label, idx) => {
+          const currentTabKey = (
+            [
+              "2fa",
+              "api-keys",
+              "password",
+              "audit",
+              "sessions",
+              "encryption",
+            ] as const
+          )[idx];
 
-            const isActive = activeSecurityTab === currentTabKey;
-            return (
-              <button
-                key={currentTabKey}
-                id={`sec-tab-${currentTabKey}`}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`sec-panel-${currentTabKey}`}
-                tabIndex={isActive ? 0 : -1}
-                onClick={() => setActiveSecurityTab(currentTabKey)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm'
-                    : 'text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50'
-                }`}
-              >
-                {label}
-              </button>
-            );
-          }
-        )}
+          const isActive = activeSecurityTab === currentTabKey;
+          return (
+            <button
+              key={currentTabKey}
+              id={`sec-tab-${currentTabKey}`}
+              role="tab"
+              aria-selected={isActive ? "true" : "false"}
+              aria-controls={`sec-panel-${currentTabKey}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActiveSecurityTab(currentTabKey)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                isActive
+                  ? "bg-white dark:bg-brand-800 text-brand-600 dark:text-brand-300 shadow-sm"
+                  : "text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800/50"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* 2FA TAB */}
-      {activeSecurityTab === '2fa' && (
+      {activeSecurityTab === "2fa" && (
         <div
           id="sec-panel-2fa"
           role="tabpanel"
@@ -529,7 +625,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                 🔐 Authentification 2FA
               </h3>
               <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
-                Protégez votre compte avec Google Authenticator, Microsoft Authenticator ou Authy
+                Protégez votre compte avec Google Authenticator, Microsoft
+                Authenticator ou Authy
               </p>
             </div>
           </div>
@@ -537,13 +634,17 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
           {userProfile.securitySettings?.isTwoFactorEnabled ? (
             <div className="space-y-6">
               <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl">
-                <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
+                <CheckCircle
+                  className="text-green-600 dark:text-green-400"
+                  size={24}
+                />
                 <div className="flex-1">
                   <p className="font-semibold text-green-900 dark:text-green-300">
                     ✅ 2FA est activée
                   </p>
                   <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                    Votre compte est protégé par authentification à deux facteurs
+                    Votre compte est protégé par authentification à deux
+                    facteurs
                   </p>
                 </div>
               </div>
@@ -565,7 +666,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                     📱 Générer un secret TOTP
                   </button>
                   <p className="text-sm text-brand-600 dark:text-brand-400 mt-4 text-center">
-                    Cliquez pour générer un code QR à scanner avec votre application authenticateur
+                    Cliquez pour générer un code QR à scanner avec votre
+                    application authenticateur
                   </p>
                 </div>
               ) : (
@@ -585,7 +687,10 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                         {totpSecret}
                       </code>
                       <button
-                        onClick={() => navigator.clipboard.writeText(totpSecret)}
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(totpSecret);
+                        }}
                         className="mt-3 text-xs text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 flex items-center justify-center gap-2 mx-auto"
                       >
                         <Copy size={14} /> Copier
@@ -606,7 +711,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                   />
 
                   <button
-                    onClick={handleVerifyTOTPCode}
+                    type="button"
+                    onClick={() => void handleVerifyTOTPCode()}
                     className="w-full px-6 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl transition-all"
                   >
                     ✅ Valider et activer 2FA
@@ -619,7 +725,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       )}
 
       {/* API KEYS TAB */}
-      {activeSecurityTab === 'api-keys' && (
+      {activeSecurityTab === "api-keys" && (
         <div
           id="sec-panel-api-keys"
           role="tabpanel"
@@ -653,11 +759,13 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                 <SelectField
                   label="Service"
                   value={newAPIKeyService}
-                  onChange={(val) => setNewAPIKeyService(val as 'GEMINI' | 'FIREBASE' | 'CUSTOM')}
+                  onChange={(val) =>
+                    setNewAPIKeyService(val as "GEMINI" | "FIREBASE" | "CUSTOM")
+                  }
                   options={[
-                    { label: 'Gemini', value: 'GEMINI' },
-                    { label: 'Firebase', value: 'FIREBASE' },
-                    { label: 'Personnalisée', value: 'CUSTOM' },
+                    { label: "Gemini", value: "GEMINI" },
+                    { label: "Firebase", value: "FIREBASE" },
+                    { label: "Personnalisée", value: "CUSTOM" },
                   ]}
                 />
               </div>
@@ -665,7 +773,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               <div className="relative">
                 <FormField
                   label="Valeur de la clé"
-                  type={showAPIKeyValue ? 'text' : 'password'}
+                  type={showAPIKeyValue ? "text" : "password"}
                   placeholder="sk_live_..."
                   value={newAPIKeyValue}
                   onChange={setNewAPIKeyValue}
@@ -680,7 +788,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               </div>
 
               <button
-                onClick={handleCreateAPIKey}
+                onClick={() => void handleCreateAPIKey()}
                 className="w-full px-6 py-3 bg-linear-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-semibold rounded-2xl transition-all flex items-center justify-center gap-2"
               >
                 <Plus size={20} /> Ajouter une clé
@@ -703,15 +811,17 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <p className="font-semibold text-brand-900 dark:text-white">{key.name}</p>
+                          <p className="font-semibold text-brand-900 dark:text-white">
+                            {key.name}
+                          </p>
                           <div className="flex items-center gap-2 mt-2 text-sm text-brand-600 dark:text-brand-400">
                             <code className="font-mono bg-white dark:bg-brand-900 px-2 py-1 rounded">
                               {key.prefix}
                             </code>
                             <span className="text-xs">
-                              {key.service === 'GEMINI' && '🤖'}
-                              {key.service === 'FIREBASE' && '🔥'}
-                              {key.service === 'CUSTOM' && '⚙️'}
+                              {key.service === "GEMINI" && "🤖"}
+                              {key.service === "FIREBASE" && "🔥"}
+                              {key.service === "CUSTOM" && "⚙️"}
                             </span>
                             {APIKeyService.shouldRotate(key) && (
                               <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400 text-xs font-semibold">
@@ -722,18 +832,19 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                         </div>
                       </div>
                       <div className="text-xs text-brand-500 dark:text-brand-500 mt-3">
-                        Créée: {new Date(key.createdAt).toLocaleDateString('fr-FR')}
+                        Créée:{" "}
+                        {new Date(key.createdAt).toLocaleDateString("fr-FR")}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
                       <div
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           key.isActive
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                         }`}
                       >
-                        {key.isActive ? '✅ Actif' : '❌ Revoquée'}
+                        {key.isActive ? "✅ Actif" : "❌ Revoquée"}
                       </div>
                       {key.isActive && (
                         <button
@@ -754,7 +865,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       )}
 
       {/* PASSWORD RESET TAB */}
-      {activeSecurityTab === 'password' && (
+      {activeSecurityTab === "password" && (
         <div
           id="sec-panel-password"
           role="tabpanel"
@@ -786,7 +897,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               <input
                 id="confirmationEmail"
                 type="email"
-                value={userProfile.email || ''}
+                value={userProfile.email || ""}
                 disabled
                 className="w-full px-4 py-3 bg-brand-100 dark:bg-brand-900 text-brand-500 dark:text-brand-400 rounded-xl border border-brand-200 dark:border-brand-700 opacity-60 cursor-not-allowed"
               />
@@ -809,10 +920,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                   <div className="flex items-center gap-3">
                     <PasswordStrengthBar
                       score={passwordStrength.score}
-                      colorClass={getPasswordStrengthColor(passwordStrength.score)}
+                      colorClass={getPasswordStrengthColor(
+                        passwordStrength.score,
+                      )}
                     />
                     <span className="text-sm font-semibold">
-                      {PasswordValidator.getStrengthLabel(passwordStrength.score)}
+                      {PasswordValidator.getStrengthLabel(
+                        passwordStrength.score,
+                      )}
                     </span>
                   </div>
 
@@ -836,9 +951,13 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
             />
 
             <button
-              onClick={handleResetPassword}
+              onClick={() => void handleResetPassword()}
               className="w-full px-6 py-4 bg-linear-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-semibold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!newPassword || !newPasswordConfirm || passwordStrength.score < 3}
+              disabled={
+                !newPassword ||
+                !newPasswordConfirm ||
+                passwordStrength.score < 3
+              }
             >
               🔄 Mettre à jour le mot de passe
             </button>
@@ -846,8 +965,84 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         </div>
       )}
 
+      {/* AUDIT LOG TAB */}
+      {activeSecurityTab === "audit" && (
+        <div
+          id="sec-panel-audit"
+          role="tabpanel"
+          aria-labelledby="sec-tab-audit"
+          className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
+        >
+          <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+            <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+              <History size={28} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                📜 Journal d'Audit Sécurisé
+              </h3>
+              <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
+                Historique des modifications critiques et connexions
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
+            {activityLogs
+              .filter(
+                (log) => log.category === "SECURITY" || log.category === "AUTH",
+              )
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .map((log) => (
+                <div
+                  key={log.id}
+                  className={`p-4 rounded-2xl border ${getLogSeverityClass(log.severity)}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${getLogSeverityBadgeClass(log.severity)}`}
+                      >
+                        {log.severity}
+                      </span>
+                      <span className="text-sm font-bold text-brand-900 dark:text-white">
+                        {log.action}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-medium text-brand-400 dark:text-brand-500">
+                      {new Date(log.timestamp).toLocaleString("fr-FR")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-brand-600 dark:text-brand-400 mb-2">
+                    {log.details}
+                  </p>
+                  <div className="flex gap-4 text-[10px] text-brand-400 dark:text-brand-500">
+                    {log.device && (
+                      <span className="flex items-center gap-1">
+                        <Monitor size={10} /> {log.device}
+                      </span>
+                    )}
+                    {log.ip && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={10} /> {log.ip}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            {activityLogs.filter(
+              (log) => log.category === "SECURITY" || log.category === "AUTH",
+            ).length === 0 && (
+              <div className="text-center py-12 text-brand-400 dark:text-brand-500 italic">
+                Aucun événement de sécurité enregistré.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* SESSIONS TAB */}
-      {activeSecurityTab === 'sessions' && (
+      {activeSecurityTab === "sessions" && (
         <div
           id="sec-panel-sessions"
           role="tabpanel"
@@ -891,8 +1086,10 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                           <MapPin size={12} /> {session.ipAddress}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock size={12} />{' '}
-                          {new Date(session.createdAt).toLocaleDateString('fr-FR')}
+                          <Clock size={12} />{" "}
+                          {new Date(session.createdAt).toLocaleDateString(
+                            "fr-FR",
+                          )}
                         </span>
                       </div>
                     </div>
@@ -937,20 +1134,23 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                     <div
                       key={entry.id}
                       className={`p-3 rounded-lg text-sm ${
-                        entry.status === 'success'
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                          : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                        entry.status === "success"
+                          ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                          : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">
-                          {entry.status === 'success' ? '✅' : '❌'} {entry.deviceName}
+                          {entry.status === "success" ? "✅" : "❌"}{" "}
+                          {entry.deviceName}
                         </span>
                         <span className="text-xs opacity-75">
-                          {new Date(entry.timestamp).toLocaleString('fr-FR')}
+                          {new Date(entry.timestamp).toLocaleString("fr-FR")}
                         </span>
                       </div>
-                      {entry.failureReason && <p className="text-xs mt-1">{entry.failureReason}</p>}
+                      {entry.failureReason && (
+                        <p className="text-xs mt-1">{entry.failureReason}</p>
+                      )}
                     </div>
                   ))}
               </div>
@@ -960,7 +1160,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
       )}
 
       {/* ENCRYPTION TAB */}
-      {activeSecurityTab === 'encryption' && (
+      {activeSecurityTab === "encryption" && (
         <div
           id="sec-panel-encryption"
           role="tabpanel"
@@ -976,7 +1176,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                 🔒 Chiffrement des données
               </h3>
               <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
-                Chiffrez vos données sensibles: IBAN, SIRET, etc. (AES-256 côté client)
+                Chiffrez vos données sensibles: IBAN, SIRET, etc. (AES-256 côté
+                client)
               </p>
             </div>
           </div>
@@ -984,7 +1185,10 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
           {userProfile.securitySettings?.encryptedDataPassword ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl">
-                <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
+                <CheckCircle
+                  className="text-green-600 dark:text-green-400"
+                  size={24}
+                />
                 <p className="text-green-900 dark:text-green-300">
                   ✅ Vos données sensibles sont chiffrées (AES-256-GCM)
                 </p>
@@ -998,8 +1202,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                   size={20}
                 />
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Vos données IBAN, SIRET et autres informations sensibles ne sont pas encore
-                  chiffrées. Activez le chiffrement pour une sécurité maximale.
+                  Vos données IBAN, SIRET et autres informations sensibles ne
+                  sont pas encore chiffrées. Activez le chiffrement pour une
+                  sécurité maximale.
                 </p>
               </div>
 
@@ -1012,7 +1217,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
               />
 
               <button
-                onClick={handleEncryptIBANSIRET}
+                onClick={() => void handleEncryptIBANSIRET()}
                 className="w-full px-6 py-4 bg-linear-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-semibold rounded-2xl transition-all disabled:opacity-50"
                 disabled={!encryptionPassword}
               >
@@ -1044,7 +1249,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         onConfirm={() => {
           confirmDialog.onConfirm?.();
         }}
-        onCancel={() => setConfirmDialog({ isOpen: false, title: '', description: '' })}
+        onCancel={() =>
+          setConfirmDialog({ isOpen: false, title: "", description: "" })
+        }
       />
 
       <AlertDialog
@@ -1052,7 +1259,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         title={alertDialog.title}
         description={alertDialog.description}
         type={alertDialog.type}
-        onClose={() => setAlertDialog({ isOpen: false, title: '', description: '', type: 'info' })}
+        onClose={() =>
+          setAlertDialog({
+            isOpen: false,
+            title: "",
+            description: "",
+            type: "info",
+          })
+        }
       />
     </div>
   );

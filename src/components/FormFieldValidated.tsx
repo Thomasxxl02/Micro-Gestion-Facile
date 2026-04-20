@@ -26,8 +26,8 @@ import {
   CircleAlert as AlertCircle,
   CircleCheck as CheckCircle2,
   type LucideIcon,
-} from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import {
   validateAddressForm,
   validateAmount,
@@ -43,35 +43,38 @@ import {
   validateTVANumberForm,
   validateWebsiteForm,
   type ValidationResult,
-} from '../lib/zod-schemas';
+} from "../lib/zod-schemas";
 
 // Aliases for validator map keys
 const validateFrenchPhone = validatePhoneForm;
 const validateVATNumber = validateTVANumberForm;
 
 type ValidationType =
-  | 'siret'
-  | 'siren'
-  | 'iban'
-  | 'email'
-  | 'postal-code'
-  | 'phone'
-  | 'vat'
-  | 'website'
-  | 'name'
-  | 'amount'
-  | 'date'
-  | 'required'
-  | 'address'
-  | 'none';
+  | "siret"
+  | "siren"
+  | "iban"
+  | "email"
+  | "postal-code"
+  | "phone"
+  | "vat"
+  | "website"
+  | "name"
+  | "amount"
+  | "date"
+  | "required"
+  | "address"
+  | "none";
 
 // Map des validateurs - accepte any pour les différentes signatures de validateurs
-const validatorsMap: Record<ValidationType, (value: unknown) => ValidationResult> = {
+const validatorsMap: Record<
+  ValidationType,
+  (value: unknown) => ValidationResult
+> = {
   siret: validateSIRETForm,
   siren: validateSIREN,
   iban: validateIBAN,
   email: validateEmailForm,
-  'postal-code': validateFrenchPostalCode,
+  "postal-code": validateFrenchPostalCode,
   phone: validateFrenchPhone,
   vat: validateVATNumber,
   website: validateWebsiteForm,
@@ -85,22 +88,22 @@ const validatorsMap: Record<ValidationType, (value: unknown) => ValidationResult
 
 // Suggestions d'auto-détection sur type HTML
 const htmlTypeToValidation: Record<string, ValidationType> = {
-  email: 'email',
-  tel: 'phone',
-  date: 'date',
-  url: 'website',
-  number: 'amount',
-  text: 'none',
+  email: "email",
+  tel: "phone",
+  date: "date",
+  url: "website",
+  number: "amount",
+  text: "none",
 };
 
 const getFieldBorderClass = (hasErr: boolean, hasSuc: boolean): string => {
   if (hasErr) {
-    return 'border-red-500 focus:ring-red-500/10 focus:border-red-600';
+    return "border-red-500 focus:ring-red-500/10 focus:border-red-600";
   }
   if (hasSuc) {
-    return 'border-green-500 focus:ring-green-500/10 focus:border-green-600';
+    return "border-green-500 focus:ring-green-500/10 focus:border-green-600";
   }
-  return '';
+  return "";
 };
 
 interface FormFieldValidatedProps {
@@ -112,16 +115,16 @@ interface FormFieldValidatedProps {
    * Type HTML standard ou custom pour auto-détection
    */
   type?:
-    | 'text'
-    | 'email'
-    | 'number'
-    | 'password'
-    | 'url'
-    | 'tel'
-    | 'search'
-    | 'date'
-    | 'checkbox'
-    | 'textarea';
+    | "text"
+    | "email"
+    | "number"
+    | "password"
+    | "url"
+    | "tel"
+    | "search"
+    | "date"
+    | "checkbox"
+    | "textarea";
   value: string | number;
   onChange: (value: string) => void;
   /**
@@ -143,7 +146,7 @@ interface FormFieldValidatedProps {
   validateOnBlur?: boolean;
   showErrorsImmediate?: boolean;
   showValidationIcon?: boolean;
-  'aria-label'?: string;
+  "aria-label"?: string;
   autoComplete?: string;
   maxLength?: number;
   error?: ValidationResult | null;
@@ -155,15 +158,15 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   label,
   description,
   required = false,
-  type = 'text',
+  type = "text",
   value,
   onChange,
   validator,
   validationType,
   placeholder,
   icon: Icon,
-  className = '',
-  inputClassName = '',
+  className = "",
+  inputClassName = "",
   min,
   max,
   step,
@@ -171,17 +174,19 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   validateOnBlur = true,
   showErrorsImmediate = true,
   showValidationIcon = true,
-  'aria-label': ariaLabel,
+  "aria-label": ariaLabel,
   maxLength,
+  autoComplete: _autoComplete,
   // Propriétés optionnelles pour intégration avec useFormValidation
   error: externalError,
   touched: externalTouched,
-  autoComplete: _autoComplete, // Capture pour éviter warning ESLint
 }) => {
-  const isTextarea = type === 'textarea';
+  const isTextarea = type === "textarea";
 
   // Déterminer le validateur à utiliser
-  const determineValidator = (): ((value: string | number) => ValidationResult) => {
+  const determineValidator = (): ((
+    value: string | number,
+  ) => ValidationResult) => {
     // Si validationType est fourni, utiliser ça
     if (validationType) {
       return validatorsMap[validationType];
@@ -193,14 +198,16 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
     }
 
     // Auto-détection basée sur type HTML
-    const autoDetectedValidation = htmlTypeToValidation[type] || 'none';
+    const autoDetectedValidation = htmlTypeToValidation[type] || "none";
     return validatorsMap[autoDetectedValidation];
   };
 
   const finalValidator = determineValidator();
 
   // État de validation interne (fallback si pas d'error externe)
-  const [internalError, setInternalError] = useState<ValidationResult | null>(null);
+  const [internalError, setInternalError] = useState<ValidationResult | null>(
+    null,
+  );
   const [internalTouched, setInternalTouched] = useState(false);
 
   // Validation au changement
@@ -212,20 +219,27 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   }, [value, finalValidator, validateOnChange]);
 
   // Déterminer l'erreur et le statut touché final
-  const currentError = externalError !== undefined ? externalError : internalError;
-  const isTouched = externalTouched !== undefined ? externalTouched : internalTouched;
+  const currentError =
+    externalError !== undefined ? externalError : internalError;
+  const isTouched =
+    externalTouched !== undefined ? externalTouched : internalTouched;
 
   // Afficher l'erreur si on a une erreur ET (soit on affiche tout de suite, soit le champ a été touché)
-  const shouldShowError = currentError && !currentError.valid && (showErrorsImmediate || isTouched);
+  const shouldShowError =
+    currentError && !currentError.valid && (showErrorsImmediate || isTouched);
   const isValid = currentError?.valid === true;
 
   // Handler combiné pour onChange
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const newValue = e.target.value;
     onChange(newValue);
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setInternalTouched(true);
     if (validateOnBlur) {
       const result = finalValidator(e.target.value);
@@ -233,7 +247,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
     }
   };
 
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   let describedByValue: string | undefined;
   if (shouldShowError) {
@@ -243,8 +257,9 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   }
 
   const ariaAttrs = {
-    'aria-required': required ? ('true' as const) : ('false' as const),
-    'aria-invalid': !isValid && isTouched ? ('true' as const) : ('false' as const),
+    "aria-required": required ? ("true" as const) : ("false" as const),
+    "aria-invalid":
+      !isValid && isTouched ? ("true" as const) : ("false" as const),
   };
 
   const hasError = shouldShowError;
@@ -292,12 +307,12 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder={placeholder}
-            autoComplete={_autoComplete}
+            {...(_autoComplete && { autoComplete: _autoComplete })}
             {...ariaAttrs}
             aria-label={ariaLabel}
             aria-describedby={describedByValue}
             maxLength={maxLength}
-            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
           />
         ) : (
           <input
@@ -308,7 +323,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder={placeholder}
-            autoComplete={_autoComplete}
+            {...(_autoComplete && { autoComplete: _autoComplete })}
             {...ariaAttrs}
             aria-label={ariaLabel}
             aria-describedby={describedByValue}
@@ -316,7 +331,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
             max={max}
             step={step}
             maxLength={maxLength}
-            className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
           />
         )}
 
@@ -366,7 +381,9 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
  * Preset pour champs courants (avec le bon type de validation pré-configuré)
  */
 
-export const SIRETField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>> = (props) => (
+export const SIRETField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType">
+> = (props) => (
   <FormFieldValidated
     {...props}
     validationType="siret"
@@ -375,11 +392,20 @@ export const SIRETField: React.FC<Omit<FormFieldValidatedProps, 'validationType'
   />
 );
 
-export const SIRENField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>> = (props) => (
-  <FormFieldValidated {...props} validationType="siren" placeholder="123456789" maxLength={9} />
+export const SIRENField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType">
+> = (props) => (
+  <FormFieldValidated
+    {...props}
+    validationType="siren"
+    placeholder="123456789"
+    maxLength={9}
+  />
 );
 
-export const IBANField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>> = (props) => (
+export const IBANField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType">
+> = (props) => (
   <FormFieldValidated
     {...props}
     validationType="iban"
@@ -389,27 +415,48 @@ export const IBANField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>
   />
 );
 
-export const EmailField: React.FC<Omit<FormFieldValidatedProps, 'validationType' | 'type'>> = (
-  props
-) => <FormFieldValidated {...props} type="email" validationType="email" />;
-
-export const PhoneField: React.FC<Omit<FormFieldValidatedProps, 'validationType' | 'type'>> = (
-  props
-) => <FormFieldValidated {...props} type="tel" validationType="phone" placeholder="0123456789" />;
-
-export const PostalCodeField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>> = (
-  props
-) => (
-  <FormFieldValidated {...props} validationType="postal-code" placeholder="75001" maxLength={5} />
+export const EmailField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType" | "type">
+> = (props) => (
+  <FormFieldValidated {...props} type="email" validationType="email" />
 );
 
-export const VATField: React.FC<Omit<FormFieldValidatedProps, 'validationType'>> = (props) => (
-  <FormFieldValidated {...props} validationType="vat" placeholder="FR12345678901" maxLength={15} />
+export const PhoneField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType" | "type">
+> = (props) => (
+  <FormFieldValidated
+    {...props}
+    type="tel"
+    validationType="phone"
+    placeholder="0123456789"
+  />
 );
 
-export const WebsiteField: React.FC<Omit<FormFieldValidatedProps, 'validationType' | 'type'>> = (
-  props
-) => (
+export const PostalCodeField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType">
+> = (props) => (
+  <FormFieldValidated
+    {...props}
+    validationType="postal-code"
+    placeholder="75001"
+    maxLength={5}
+  />
+);
+
+export const VATField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType">
+> = (props) => (
+  <FormFieldValidated
+    {...props}
+    validationType="vat"
+    placeholder="FR12345678901"
+    maxLength={15}
+  />
+);
+
+export const WebsiteField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType" | "type">
+> = (props) => (
   <FormFieldValidated
     {...props}
     type="url"
@@ -419,9 +466,9 @@ export const WebsiteField: React.FC<Omit<FormFieldValidatedProps, 'validationTyp
   />
 );
 
-export const AmountField: React.FC<Omit<FormFieldValidatedProps, 'validationType' | 'type'>> = (
-  props
-) => (
+export const AmountField: React.FC<
+  Omit<FormFieldValidatedProps, "validationType" | "type">
+> = (props) => (
   <FormFieldValidated
     {...props}
     type="number"

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import { getApp, getApps, initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from "firebase/app";
 import {
   browserLocalPersistence,
   browserSessionPersistence,
@@ -14,7 +14,7 @@ import {
   signInWithEmailLink,
   signInWithPopup,
   signOut,
-} from 'firebase/auth';
+} from "firebase/auth";
 import {
   connectFirestoreEmulator,
   doc,
@@ -25,9 +25,9 @@ import {
   serverTimestamp,
   setDoc,
   Timestamp,
-} from 'firebase/firestore';
-import { connectStorageEmulator, getStorage } from 'firebase/storage';
-import firebaseConfig from '../config/firebase-applet-config.json';
+} from "firebase/firestore";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
+import firebaseConfig from "../config/firebase-applet-config.json";
 
 /**
  * 🚀 Singleton Firebase Initialization
@@ -45,30 +45,33 @@ export const db = initializeFirestore(
       tabManager: persistentMultipleTabManager(),
     }),
   },
-  firebaseConfig.firestoreDatabaseId
+  firebaseConfig.firestoreDatabaseId,
 );
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
 // Emulateurs local (développement uniquement)
-if (import.meta.env?.DEV && import.meta.env?.VITE_USE_FIREBASE_EMULATOR === 'true') {
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  connectAuthEmulator(auth, 'http://localhost:9099');
-  connectStorageEmulator(storage, 'localhost', 9199);
-  console.info('🔌 Connecté aux émulateurs Firebase');
+if (
+  import.meta.env?.DEV &&
+  import.meta.env?.VITE_USE_FIREBASE_EMULATOR === "true"
+) {
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectAuthEmulator(auth, "http://localhost:9099");
+  connectStorageEmulator(storage, "localhost", 9199);
+  console.warn("🔌 Connecté aux émulateurs Firebase");
 }
 
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+googleProvider.setCustomParameters({ prompt: "select_account" });
 
 // GitHub OAuth Provider - Améliorations sécurité 2026
 export const githubProvider = new GithubAuthProvider();
-githubProvider.addScope('user:email');
-githubProvider.addScope('read:user');
+githubProvider.addScope("user:email");
+githubProvider.addScope("read:user");
 githubProvider.setCustomParameters({
-  prompt: 'consent' as const,
-  allow_signup: 'true',
+  prompt: "consent" as const,
+  allow_signup: "true",
 });
 
 /**
@@ -79,23 +82,25 @@ async function testConnection() {
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const testDoc = doc(db, 'test', 'connection');
+    const testDoc = doc(db, "test", "connection");
     await getDocFromServer(testDoc);
     clearTimeout(timeoutId);
     if (import.meta.env.DEV) {
-      console.info('✅ Firebase: Connexion établie');
+      console.warn("✅ Firebase: Connexion établie");
     }
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        console.warn('⚠️ Firebase: Timeout lors du test de connexion (Lenteur réseau)');
-      } else if (error.message.includes('the client is offline')) {
+      if (error.name === "AbortError") {
+        console.warn(
+          "⚠️ Firebase: Timeout lors du test de connexion (Lenteur réseau)",
+        );
+      } else if (error.message.includes("the client is offline")) {
         if (import.meta.env.DEV) {
-          console.info('ℹ️ Firebase: Travailler en mode hors ligne');
+          console.warn("ℹ️ Firebase: Travailler en mode hors ligne");
         }
       } else {
-        console.error('❌ Firebase: Erreur de configuration', error.message);
+        console.error("❌ Firebase: Erreur de configuration", error.message);
       }
     }
   }
@@ -110,7 +115,7 @@ if (import.meta.env?.DEV) {
 export const loginWithGoogle = async (rememberMe = true) => {
   await setPersistence(
     auth,
-    rememberMe ? browserLocalPersistence : browserSessionPersistence
+    rememberMe ? browserLocalPersistence : browserSessionPersistence,
   );
   return signInWithPopup(auth, googleProvider);
 };
@@ -118,7 +123,7 @@ export const loginWithGoogle = async (rememberMe = true) => {
 export const loginWithGitHub = async (rememberMe = true) => {
   await setPersistence(
     auth,
-    rememberMe ? browserLocalPersistence : browserSessionPersistence
+    rememberMe ? browserLocalPersistence : browserSessionPersistence,
   );
   return signInWithPopup(auth, githubProvider);
 };
@@ -130,16 +135,16 @@ export const logout = () => signOut(auth);
  */
 async function hashIpAddress(): Promise<string> {
   try {
-    const response = await fetch('https://api.ipify.org?format=json');
+    const response = await fetch("https://api.ipify.org?format=json");
     const data = await response.json();
     const encoder = new TextEncoder();
-    const data_uint8 = encoder.encode(data.ip + 'salt-micro-gestion');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data_uint8);
+    const data_uint8 = encoder.encode(data.ip + "salt-micro-gestion");
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data_uint8);
     return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   } catch {
-    return 'anonymous';
+    return "anonymous";
   }
 }
 
@@ -153,8 +158,8 @@ function generateNonce(): string {
   const nonce = new Uint8Array(16);
   crypto.getRandomValues(nonce);
   return Array.from(nonce)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
@@ -180,7 +185,7 @@ export const sendEmailLink = async (email: string, rememberMe = true) => {
   // Configurer la persistance avant l'envoi (pour le callback)
   await setPersistence(
     auth,
-    rememberMe ? browserLocalPersistence : browserSessionPersistence
+    rememberMe ? browserLocalPersistence : browserSessionPersistence,
   );
 
   // 1. Générer nonce unique
@@ -201,7 +206,7 @@ export const sendEmailLink = async (email: string, rememberMe = true) => {
     // Sécurité: ipHash optionnel pour aide au throttle (Optionnel Cloud Function)
     const ipHash = await hashIpAddress();
 
-    await setDoc(doc(db, 'emailLoginRequests', nonce), {
+    await setDoc(doc(db, "emailLoginRequests", nonce), {
       email,
       createdAt: serverTimestamp(),
       expiryTTL: expiryDate.getTime(), // Legacy field (numeric ms)
@@ -213,18 +218,20 @@ export const sendEmailLink = async (email: string, rememberMe = true) => {
     });
 
     // 5. Sauvegarder email localement pour multi-device flow
-    globalThis.localStorage.setItem('emailForSignIn', email);
-    globalThis.localStorage.setItem('nonceForSignIn', nonce);
-    globalThis.localStorage.setItem('rememberMeForSignIn', String(rememberMe));
+    globalThis.localStorage.setItem("emailForSignIn", email);
+    globalThis.localStorage.setItem("nonceForSignIn", nonce);
+    globalThis.localStorage.setItem("rememberMeForSignIn", String(rememberMe));
 
     if (import.meta.env.DEV) {
-      console.info(`✅ Email lien envoyé à ${email} (nonce: ${nonce.slice(0, 8)})...`);
+      console.warn(
+        `✅ Email lien envoyé à ${email} (nonce: ${nonce.slice(0, 8)})...`,
+      );
     }
     return { success: true, nonce };
   } catch (error) {
     console.error(
       "❌ Erreur d'envoi du lien e-mail :",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
     throw error;
   }
@@ -245,44 +252,48 @@ export const sendEmailLink = async (email: string, rememberMe = true) => {
  * 4. Marquer comme utilisé après validation
  */
 export const validateEmailNonce = async (nonce: string): Promise<boolean> => {
-  if (!nonce || nonce.length !== 32) {
-    throw new Error('Nonce invalide ou manquant');
+  if (nonce?.length !== 32) {
+    throw new Error("Nonce invalide ou manquant");
   }
 
   try {
     // 1. Récupérer le document nonce
-    const nonceDoc = doc(db, 'emailLoginRequests', nonce);
+    const nonceDoc = doc(db, "emailLoginRequests", nonce);
     const nonceSnapshot = await getDocFromServer(nonceDoc);
 
     if (!nonceSnapshot.exists()) {
-      throw new Error('Lien de connexion introuvable');
+      throw new Error("Lien de connexion introuvable");
     }
 
     const nonceData = nonceSnapshot.data();
 
     // 2. Vérifier expiration TTL
     if (Date.now() > nonceData.expiryTTL) {
-      throw new Error('Lien expiré (15 minutes maximum)');
+      throw new Error("Lien expiré (15 minutes maximum)");
     }
 
     // 3. Vérifier si déjà utilisé
     if (nonceData.used === true) {
-      throw new Error('Lien déjà utilisé');
+      throw new Error("Lien déjà utilisé");
     }
 
     // 4. Vérifier nombre de tentatives (max 5)
     if (nonceData.attempts >= 5) {
-      throw new Error('Trop de tentatives - lien invalidé');
+      throw new Error("Trop de tentatives - lien invalidé");
     }
 
     // 5. Incrémenter tentatives
-    await setDoc(nonceDoc, { attempts: nonceData.attempts + 1 }, { merge: true });
+    await setDoc(
+      nonceDoc,
+      { attempts: nonceData.attempts + 1 },
+      { merge: true },
+    );
 
-    console.info(`✅ Nonce valide (${nonceData.attempts + 1} tentative(s))`);
+    console.warn(`✅ Nonce valide (${nonceData.attempts + 1} tentative(s))`);
     return true;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('❌ Validation nonce échouée:', msg);
+    console.error("❌ Validation nonce échouée:", msg);
     throw error;
   }
 };
@@ -290,52 +301,62 @@ export const validateEmailNonce = async (nonce: string): Promise<boolean> => {
 export const completeEmailLinkSignIn = async () => {
   if (isSignInWithEmailLink(auth, globalThis.location.href)) {
     const url = new URL(globalThis.location.href);
-    const nonce = url.searchParams.get('nonce');
+    const nonce = url.searchParams.get("nonce");
 
     // Valider nonce si présent
     if (nonce) {
       try {
         await validateEmailNonce(nonce);
       } catch (error) {
-        console.error('Validation nonce échouée:', error);
+        console.error("Validation nonce échouée:", error);
         throw error;
       }
     }
 
-    let email = globalThis.localStorage.getItem('emailForSignIn');
+    let email = globalThis.localStorage.getItem("emailForSignIn");
 
     if (!email) {
       // Si l'utilisateur a ouvert le lien sur un autre appareil/navigateur
       // ⚠️ Amélioration UX : On suggère à l'utilisateur de fournir l'email
       // utilisé lors de l'envoi du lien pour confirmer l'identité.
       email = globalThis.prompt(
-        "Sécurité : Veuillez confirmer l'adresse e-mail avec laquelle vous avez demandé ce lien pour finaliser la connexion :"
+        "Sécurité : Veuillez confirmer l'adresse e-mail avec laquelle vous avez demandé ce lien pour finaliser la connexion :",
       );
     }
 
     if (email) {
       try {
-        const result = await signInWithEmailLink(auth, email.trim(), globalThis.location.href);
+        const result = await signInWithEmailLink(
+          auth,
+          email.trim(),
+          globalThis.location.href,
+        );
 
         // Marquer nonce comme utilisé après succès
         if (nonce) {
-          await setDoc(doc(db, 'emailLoginRequests', nonce), { used: true }, { merge: true });
+          await setDoc(
+            doc(db, "emailLoginRequests", nonce),
+            { used: true },
+            { merge: true },
+          );
         }
 
         // Nettoyer localStorage
-        globalThis.localStorage.removeItem('emailForSignIn');
-        globalThis.localStorage.removeItem('nonceForSignIn');
-        globalThis.localStorage.removeItem('rememberMeForSignIn');
+        globalThis.localStorage.removeItem("emailForSignIn");
+        globalThis.localStorage.removeItem("nonceForSignIn");
+        globalThis.localStorage.removeItem("rememberMeForSignIn");
 
-        console.info('✅ Connexion par email finalisée');
+        console.warn("✅ Connexion par email finalisée");
         return result;
       } catch (error) {
-        console.error('Erreur de finalisation de connexion :', error);
+        console.error("Erreur de finalisation de connexion :", error);
         throw error;
       }
     } else {
       // Si l'utilisateur annule le prompt
-      throw new Error("L'adresse e-mail est requise pour finaliser la connexion.");
+      throw new Error(
+        "L'adresse e-mail est requise pour finaliser la connexion.",
+      );
     }
   }
   return null;
@@ -343,12 +364,12 @@ export const completeEmailLinkSignIn = async () => {
 
 // Error handling helper
 export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+  LIST = "list",
+  GET = "get",
+  WRITE = "write",
 }
 
 export interface FirestoreErrorInfo {
@@ -373,14 +394,14 @@ export interface FirestoreErrorInfo {
 export function handleFirestoreError(
   error: unknown,
   operationType: OperationType,
-  path: string | null
+  path: string | null,
 ) {
-  let errorMessage = 'Unknown error';
+  let errorMessage = "Unknown error";
   if (error instanceof Error) {
     errorMessage = error.message;
-  } else if (typeof error === 'string') {
+  } else if (typeof error === "string") {
     errorMessage = error;
-  } else if (typeof error === 'object' && error !== null) {
+  } else if (typeof error === "object" && error !== null) {
     errorMessage = JSON.stringify(error);
   }
 
@@ -403,6 +424,6 @@ export function handleFirestoreError(
     operationType,
     path,
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  console.error("Firestore Error: ", JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }

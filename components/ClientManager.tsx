@@ -317,14 +317,14 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
       <div className="bento-grid">
           <div className="bento-item">
               <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-[var(--bg-main)] rounded-2xl text-[var(--text-main)]">
+                  <div className="p-3 bg-(--bg-main) rounded-2xl text-(--text-main)">
                       <Users size={24} />
                   </div>
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Clients Actifs</span>
+                  <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">Clients Actifs</span>
               </div>
               <div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] font-display">{globalStats.count}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">Portefeuille client actuel</p>
+                  <h3 className="text-2xl font-bold text-(--text-main) font-display">{globalStats.count}</h3>
+                  <p className="text-xs text-(--text-muted) mt-1">Portefeuille client actuel</p>
               </div>
           </div>
           <div className="bento-item">
@@ -332,23 +332,23 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
                   <div className="p-3 bg-accent-100 dark:bg-accent-900/30 rounded-2xl text-accent-600 dark:text-accent-400">
                       <TrendingUp size={24} />
                   </div>
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">CA Total Encaissé</span>
+                  <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">CA Total Encaissé</span>
               </div>
               <div>
                   <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400 font-display">{globalStats.totalRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">Revenu cumulé</p>
+                  <p className="text-xs text-(--text-muted) mt-1">Revenu cumulé</p>
               </div>
           </div>
           <div className="bento-item">
               <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-[var(--bg-main)] rounded-2xl text-[var(--text-main)]">
+                  <div className="p-3 bg-(--bg-main) rounded-2xl text-(--text-main)">
                       <Archive size={24} />
                   </div>
-                  <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Clients Archivés</span>
+                  <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">Clients Archivés</span>
               </div>
               <div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] font-display">{globalStats.archivedCount}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">Clients inactifs</p>
+                  <h3 className="text-2xl font-bold text-(--text-main) font-display">{globalStats.archivedCount}</h3>
+                  <p className="text-xs text-(--text-muted) mt-1">Clients inactifs</p>
               </div>
           </div>
           <div className="bento-item bg-brand-900 dark:bg-white text-white dark:text-brand-900">
@@ -368,27 +368,27 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, setClients, invo
       </div>
 
       {/* Side Panel Form */}
-      <div className={`fixed inset-y-0 right-0 w-full sm:w-[500px] bg-[var(--card-bg)] shadow-2xl transform transition-transform duration-500 ease-in-out z-50 border-l border-[var(--card-border)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed inset-y-0 right-0 w-full sm:w-[500px] bg-(--card-bg) shadow-2xl transform transition-transform duration-500 ease-in-out z-50 border-l border-(--card-border) ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col">
-            <div className="p-8 border-b border-[var(--card-border)] flex justify-between items-center bg-[var(--bg-main)]/30">
+            <div className="p-8 border-b border-(--card-border) flex justify-between items-center bg-(--bg-main)/30">
                 <div>
-                    <h3 className="text-xl font-bold text-[var(--text-main)] font-display">{editingId ? 'Modifier le client' : 'Nouveau client'}</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Remplissez les informations détaillées ci-dessous.</p>
+                    <h3 className="text-xl font-bold text-(--text-main) font-display">{editingId ? 'Modifier le client' : 'Nouveau client'}</h3>
+                    <p className="text-xs text-(--text-muted) mt-1">Remplissez les informations détaillées ci-dessous.</p>
                 </div>
-                <button onClick={() => setIsPanelOpen(false)} className="p-2.5 hover:bg-[var(--bg-main)] rounded-xl text-[var(--text-muted)] transition-all">
+                <button onClick={() => setIsPanelOpen(false)} className="p-2.5 hover:bg-(--bg-main) rounded-xl text-(--text-muted) transition-all">
                     <X size={20} />
                 </button>
             </div>
             
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
                 <div className="space-y-6">
-                    <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] border-b border-[var(--card-border)] pb-2">Informations Générales</div>
+                    <div className="text-[10px] font-bold text-(--text-muted) uppercase tracking-[0.2em] border-b border-(--card-border) pb-2">Informations Générales</div>
                     <div>
-                        <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Nom / Société <span className="text-red-500">*</span></label>
+                        <label className="block text-[10px] font-bold text-(--text-muted) uppercase tracking-wider mb-2">Nom / Société <span className="text-red-500">*</span></label>
                         <input 
                             type="text" 
                             required
-                            className="w-full p-4 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-medium text-[var(--text-main)] placeholder:text-[var(--text-muted)]"
+                            className="w-full p-4 bg-(--input-bg) border border-(--input-border) rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-medium text-(--text-main) placeholder:text-(--text-muted)"
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
                             placeholder="Ex: Entreprise SAS"

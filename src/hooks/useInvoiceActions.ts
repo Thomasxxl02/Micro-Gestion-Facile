@@ -13,34 +13,43 @@
  * ```
  */
 
-import { useCallback } from 'react';
-import { calculateDueDate } from '../lib/invoiceDates';
-import { generateInvoiceNumber } from '../lib/invoiceNumbering';
-import type { Client, DocumentType, Invoice, InvoiceStatus, UserProfile } from '../types';
+import { useCallback } from "react";
+import { calculateDueDate } from "../lib/invoiceDates";
+import { generateInvoiceNumber } from "../lib/invoiceNumbering";
+import type {
+  Client,
+  DocumentType,
+  Invoice,
+  InvoiceStatus,
+  UserProfile,
+} from "../types";
 
 export interface UseInvoiceActionsProps {
   invoices: Invoice[];
-  setInvoices: (invoices: Invoice[]) => void;
+  setInvoices: (_invoices: Invoice[]) => void;
   clients: Client[];
   userProfile: UserProfile;
-  onSave?: (invoice: Invoice) => void;
-  onDelete?: (id: string) => void;
+  onSave?: (_invoice: Invoice) => void;
+  onDelete?: (_id: string) => void;
 }
 
 export interface UseInvoiceActionsState {
-  getDocumentLabel: (type: DocumentType) => string;
-  duplicateInvoice: (invoice: Invoice) => Promise<void>;
-  sendByEmail: (invoice: Invoice) => Promise<void>;
-  convertQuoteToInvoice: (quote: Invoice) => Promise<void>;
-  convertOrderToInvoice: (order: Invoice) => Promise<void>;
-  createCreditNote: (invoice: Invoice) => Promise<void>;
-  transmitPPF: (invoice: Invoice) => Promise<void>;
-  updateInvoiceStatus: (id: string, status: InvoiceStatus | string) => void;
-  updateReminderDate: (id: string, date: string) => void;
-  deleteInvoice: (id: string) => void;
-  bulkUpdateStatus: (ids: Set<string>, status: InvoiceStatus | string) => void;
-  exportToCSV: (docs: Invoice[], type: DocumentType) => void;
-  sendReminderByEmail: (invoice: Invoice) => void;
+  getDocumentLabel: (_type: DocumentType) => string;
+  duplicateInvoice: (_invoice: Invoice) => Promise<void>;
+  sendByEmail: (_invoice: Invoice) => Promise<void>;
+  convertQuoteToInvoice: (_quote: Invoice) => Promise<void>;
+  convertOrderToInvoice: (_order: Invoice) => Promise<void>;
+  createCreditNote: (_invoice: Invoice) => Promise<void>;
+  transmitPPF: (_invoice: Invoice) => Promise<void>;
+  updateInvoiceStatus: (_id: string, _status: InvoiceStatus | string) => void;
+  updateReminderDate: (_id: string, _date: string) => void;
+  deleteInvoice: (_id: string) => void;
+  bulkUpdateStatus: (
+    _ids: Set<string>,
+    _status: InvoiceStatus | string,
+  ) => void;
+  exportToCSV: (_docs: Invoice[], _type: DocumentType) => void;
+  sendReminderByEmail: (_invoice: Invoice) => void;
 }
 
 /**
@@ -58,16 +67,16 @@ export function useInvoiceActions({
 }: UseInvoiceActionsProps): UseInvoiceActionsState {
   const getDocumentLabel = useCallback((type: DocumentType): string => {
     switch (type) {
-      case 'invoice':
-        return 'Facture';
-      case 'quote':
-        return 'Devis';
-      case 'order':
-        return 'Commande';
-      case 'credit_note':
-        return 'Avoir';
+      case "invoice":
+        return "Facture";
+      case "quote":
+        return "Devis";
+      case "order":
+        return "Commande";
+      case "credit_note":
+        return "Avoir";
       default:
-        return 'Document';
+        return "Document";
     }
   }, []);
 
@@ -75,15 +84,15 @@ export function useInvoiceActions({
 
   const duplicateInvoice = useCallback(
     async (invoice: Invoice) => {
-      if (!confirm('Dupliquer ce document ?')) {
+      if (!confirm("Dupliquer ce document ?")) {
         return;
       }
 
       try {
         // Récupère le prochain numéro de manière ATOMIQUE
         const nextNumber = await generateInvoiceNumber(
-          invoice.type !== 'deposit_invoice' ? invoice.type : 'invoice',
-          userProfile
+          invoice.type !== "deposit_invoice" ? invoice.type : "invoice",
+          userProfile,
         );
 
         // Create new items with new IDs
@@ -92,7 +101,7 @@ export function useInvoiceActions({
           id: crypto.randomUUID(),
         }));
 
-        const issueDate = new Date().toISOString().split('T')[0];
+        const issueDate = new Date().toISOString().split("T")[0];
         const dueDate = calculateDueDate(issueDate, userProfile);
 
         const newInvoice: Invoice = {
@@ -102,7 +111,7 @@ export function useInvoiceActions({
           items: newItems,
           date: issueDate,
           dueDate: dueDate,
-          status: 'DRAFT',
+          status: "DRAFT",
           deposit: 0,
         };
 
@@ -111,11 +120,11 @@ export function useInvoiceActions({
           onSave(newInvoice);
         }
       } catch (error) {
-        console.error('Erreur lors de la duplication:', error);
-        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+        console.error("Erreur lors de la duplication:", error);
+        alert("Erreur lors de la génération du numéro. Veuillez réessayer.");
       }
     },
-    [invoices, setInvoices, userProfile, onSave]
+    [invoices, setInvoices, userProfile, onSave],
   );
 
   const sendByEmail = useCallback(
@@ -128,43 +137,45 @@ export function useInvoiceActions({
 
       // TODO: Implémenter l'envoi d'email (Resend, SendGrid, etc)
       if (import.meta.env.DEV) {
-        console.info(`Envoi de la facture ${invoice.number} à ${client.email}`);
+        console.warn(`Envoi de la facture ${invoice.number} à ${client.email}`);
       }
       alert(`Email envoyé à ${client.email}`);
     },
-    [clients]
+    [clients],
   );
 
   const convertQuoteToInvoice = useCallback(
     async (quote: Invoice) => {
-      if (!confirm('Convertir ce devis en facture ?')) {
+      if (!confirm("Convertir ce devis en facture ?")) {
         return;
       }
 
       try {
         // Récupère le prochain numéro de facture (atomique)
-        const nextNumber = await generateInvoiceNumber('invoice', userProfile);
+        const nextNumber = await generateInvoiceNumber("invoice", userProfile);
 
         // Mark quote as accepted if not already
         let updatedInvoices = invoices;
-        if (quote.status !== ('ACCEPTED' as InvoiceStatus)) {
+        if (quote.status !== ("ACCEPTED" as InvoiceStatus)) {
           updatedInvoices = invoices.map((i) =>
-            i.id === quote.id ? { ...i, status: 'ACCEPTED' as InvoiceStatus } : i
+            i.id === quote.id
+              ? { ...i, status: "ACCEPTED" as InvoiceStatus }
+              : i,
           );
         }
 
-        const issueDate = new Date().toISOString().split('T')[0];
+        const issueDate = new Date().toISOString().split("T")[0];
         const dueDate = calculateDueDate(issueDate, userProfile);
 
         const newInvoice: Invoice = {
           ...quote,
           id: Date.now().toString(),
-          type: 'invoice',
+          type: "invoice",
           linkedDocumentId: quote.id,
           number: nextNumber,
           date: issueDate,
           dueDate: dueDate,
-          status: 'DRAFT' as InvoiceStatus,
+          status: "DRAFT" as InvoiceStatus,
           notes: `Facture suite au devis ${quote.number}`,
         };
 
@@ -173,35 +184,35 @@ export function useInvoiceActions({
           onSave(newInvoice);
         }
       } catch (error) {
-        console.error('Erreur lors de la conversion:', error);
-        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+        console.error("Erreur lors de la conversion:", error);
+        alert("Erreur lors de la génération du numéro. Veuillez réessayer.");
       }
     },
-    [invoices, setInvoices, userProfile, onSave]
+    [invoices, setInvoices, userProfile, onSave],
   );
 
   const convertOrderToInvoice = useCallback(
     async (order: Invoice) => {
-      if (!confirm('Facturer cette commande ?')) {
+      if (!confirm("Facturer cette commande ?")) {
         return;
       }
 
       try {
         // Récupère le prochain numéro de facture
-        const nextNumber = await generateInvoiceNumber('invoice', userProfile);
+        const nextNumber = await generateInvoiceNumber("invoice", userProfile);
 
-        const issueDate = new Date().toISOString().split('T')[0];
+        const issueDate = new Date().toISOString().split("T")[0];
         const dueDate = calculateDueDate(issueDate, userProfile);
 
         const newInvoice: Invoice = {
           ...order,
           id: Date.now().toString(),
-          type: 'invoice',
+          type: "invoice",
           linkedDocumentId: order.id,
           number: nextNumber,
           date: issueDate,
           dueDate: dueDate,
-          status: 'DRAFT' as InvoiceStatus,
+          status: "DRAFT" as InvoiceStatus,
           notes: `Facture pour la commande ${order.number}`,
         };
 
@@ -210,31 +221,34 @@ export function useInvoiceActions({
           onSave(newInvoice);
         }
       } catch (error) {
-        console.error('Erreur lors de la conversion:', error);
-        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+        console.error("Erreur lors de la conversion:", error);
+        alert("Erreur lors de la génération du numéro. Veuillez réessayer.");
       }
     },
-    [invoices, setInvoices, userProfile, onSave]
+    [invoices, setInvoices, userProfile, onSave],
   );
 
   const createCreditNote = useCallback(
     async (invoice: Invoice) => {
-      if (!confirm('Créer un avoir pour cette facture ?')) {
+      if (!confirm("Créer un avoir pour cette facture ?")) {
         return;
       }
 
       try {
         // Récupère le prochain numéro d'avoir
-        const nextNumber = await generateInvoiceNumber('credit_note', userProfile);
+        const nextNumber = await generateInvoiceNumber(
+          "credit_note",
+          userProfile,
+        );
 
         const newCreditNote: Invoice = {
           ...invoice,
           id: Date.now().toString(),
-          type: 'credit_note',
+          type: "credit_note",
           linkedDocumentId: invoice.id,
           number: nextNumber,
-          date: new Date().toISOString().split('T')[0],
-          status: 'DRAFT' as InvoiceStatus,
+          date: new Date().toISOString().split("T")[0],
+          status: "DRAFT" as InvoiceStatus,
           notes: `Avoir suite à la facture ${invoice.number}`,
         };
 
@@ -244,15 +258,15 @@ export function useInvoiceActions({
         }
       } catch (error) {
         console.error("Erreur lors de la création d'avoir:", error);
-        alert('Erreur lors de la génération du numéro. Veuillez réessayer.');
+        alert("Erreur lors de la génération du numéro. Veuillez réessayer.");
       }
     },
-    [invoices, setInvoices, userProfile, onSave]
+    [invoices, setInvoices, userProfile, onSave],
   );
 
   const transmitPPF = useCallback(async (invoice: Invoice) => {
     if (import.meta.env.DEV) {
-      console.info('Transmission PPF de la facture:', invoice.number);
+      console.warn("Transmission PPF de la facture:", invoice.number);
     }
     // TODO: Implémenter la transmission PPF (Chorus Pro, Factur-X, etc)
     alert(`Facture ${invoice.number} marquée pour transmission PPF`);
@@ -275,29 +289,29 @@ export function useInvoiceActions({
 
       // Webhook notification on payment
       if (
-        status === 'paid' &&
+        status === "paid" &&
         userProfile.integrations?.webhooks?.isEnabled &&
         userProfile.integrations?.webhooks?.paymentUrl
       ) {
         try {
           await fetch(userProfile.integrations.webhooks.paymentUrl, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'X-Source': 'Micro-Gestion-Facile',
+              "Content-Type": "application/json",
+              "X-Source": "Micro-Gestion-Facile",
             },
             body: JSON.stringify({
-              event: 'invoice.paid',
+              event: "invoice.paid",
               timestamp: new Date().toISOString(),
               invoice: updated,
             }),
           });
         } catch (error) {
-          console.error('[Webhook] Failed to notify payment:', error);
+          console.error("[Webhook] Failed to notify payment:", error);
         }
       }
     },
-    [invoices, setInvoices, onSave, userProfile.integrations]
+    [invoices, setInvoices, onSave, userProfile.integrations],
   );
 
   const sendReminderByEmail = useCallback(
@@ -309,23 +323,23 @@ export function useInvoiceActions({
       }
 
       const subject = encodeURIComponent(
-        `Relance : Facture ${invoice.number} - ${userProfile.companyName}`
+        `Relance : Facture ${invoice.number} - ${userProfile.companyName}`,
       );
-      const bizName = userProfile.companyName || '';
-      const fullName = userProfile.professionalTitle || 'Votre prestataire';
+      const bizName = userProfile.companyName || "";
+      const fullName = userProfile.professionalTitle || "Votre prestataire";
       const body = encodeURIComponent(
-        `Bonjour ${client.name || 'Madame, Monsieur'},\n\n` +
+        `Bonjour ${client.name || "Madame, Monsieur"},\n\n` +
           `Sauf erreur de notre part, le paiement de la facture n°${invoice.number} d'un montant de ${invoice.total.toFixed(2)}€, ` +
-          `émise le ${new Date(invoice.date).toLocaleDateString('fr-FR')}, ne nous est pas encore parvenu.\n\n` +
+          `émise le ${new Date(invoice.date).toLocaleDateString("fr-FR")}, ne nous est pas encore parvenu.\n\n` +
           `Nous vous prions de bien vouloir régulariser cette situation dans les meilleurs délais.\n\n` +
           `Si votre règlement a été envoyé entre-temps, nous vous prions de ne pas tenir compte de la présente relance.\n\n` +
           `Cordialement,\n\n` +
-          `${fullName}\n${bizName}`
+          `${fullName}\n${bizName}`,
       );
 
       window.location.href = `mailto:${client.email}?subject=${subject}&body=${body}`;
     },
-    [clients, userProfile]
+    [clients, userProfile],
   );
 
   const updateReminderDate = useCallback(
@@ -341,12 +355,12 @@ export function useInvoiceActions({
         onSave(updated);
       }
     },
-    [invoices, setInvoices, onSave]
+    [invoices, setInvoices, onSave],
   );
 
   const deleteInvoice = useCallback(
     (id: string) => {
-      if (!confirm('Supprimer ce document définitivement ?')) {
+      if (!confirm("Supprimer ce document définitivement ?")) {
         return;
       }
 
@@ -356,7 +370,7 @@ export function useInvoiceActions({
         onDelete(id);
       }
     },
-    [invoices, setInvoices, onDelete]
+    [invoices, setInvoices, onDelete],
   );
 
   const bulkUpdateStatus = useCallback(
@@ -378,25 +392,29 @@ export function useInvoiceActions({
 
       setInvoices(updated);
     },
-    [invoices, setInvoices, onSave]
+    [invoices, setInvoices, onSave],
   );
 
   const exportToCSV = useCallback(
     (docs: Invoice[], type: DocumentType) => {
       const headers = [
-        'Numéro',
-        'Date (AAAA-MM-JJ)',
-        'Client',
-        'Statut',
-        'Sous-Total HT',
-        'Remise',
-        'Total TTC',
+        "Numéro",
+        "Date (AAAA-MM-JJ)",
+        "Client",
+        "Statut",
+        "Sous-Total HT",
+        "Remise",
+        "Total TTC",
       ];
 
       const rows = docs.map((doc) => {
-        const clientName = clients.find((c) => c.id === doc.clientId)?.name || 'Client Inconnu';
-        const formattedDate = new Date(doc.date).toISOString().split('T')[0];
-        const subtotal = doc.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+        const clientName =
+          clients.find((c) => c.id === doc.clientId)?.name || "Client Inconnu";
+        const formattedDate = new Date(doc.date).toISOString().split("T")[0];
+        const subtotal = doc.items.reduce(
+          (s, i) => s + i.quantity * i.unitPrice,
+          0,
+        );
         const discountVal = subtotal * ((doc.discount || 0) / 100);
 
         return [
@@ -407,32 +425,33 @@ export function useInvoiceActions({
           subtotal.toFixed(2),
           discountVal.toFixed(2),
           doc.total.toFixed(2),
-        ].join(',');
+        ].join(",");
       });
 
       const typeLabels: Record<DocumentType, string> = {
-        invoice: 'factures',
-        quote: 'devis',
-        order: 'commandes',
-        credit_note: 'avoirs',
-        deposit_invoice: 'acomptes',
+        invoice: "factures",
+        quote: "devis",
+        order: "commandes",
+        credit_note: "avoirs",
+        deposit_invoice: "acomptes",
       };
 
-      const filename = typeLabels[type] || 'documents';
+      const filename = typeLabels[type] || "documents";
       const csvContent =
-        'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
+        "data:text/csv;charset=utf-8,\uFEFF" +
+        [headers.join(","), ...rows].join("\n");
       const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
       link.setAttribute(
-        'download',
-        `${filename}_export_${new Date().toISOString().split('T')[0]}.csv`
+        "download",
+        `${filename}_export_${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(link);
       link.click();
       link.remove();
     },
-    [clients]
+    [clients],
   );
 
   return {

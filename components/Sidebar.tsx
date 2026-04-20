@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isMobileMenuOpe
 
       {/* Sidebar Container */}
       <aside className={`
-        fixed top-0 left-0 z-30 h-screen w-72 bg-[var(--bg-sidebar)] text-[var(--text-main)] transition-transform duration-500 ease-in-out border-r border-[var(--card-border)] flex flex-col shadow-2xl lg:shadow-none
+        fixed top-0 left-0 z-30 h-screen w-72 bg-(--bg-sidebar) text-(--text-main) transition-transform duration-500 ease-in-out border-r border-(--card-border) flex flex-col shadow-2xl lg:shadow-none
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo Area */}
@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isMobileMenuOpe
           </button>
 
           <div className="flex items-center gap-4 p-4 bg-white dark:bg-brand-900/30 rounded-[2rem] border border-brand-100 dark:border-brand-800/50 shadow-sm group hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-900 to-brand-700 dark:from-white dark:to-brand-200 flex items-center justify-center text-lg font-black text-white dark:text-brand-900 shadow-lg group-hover:rotate-3 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-900 to-brand-700 dark:from-white dark:to-brand-200 flex items-center justify-center text-lg font-black text-white dark:text-brand-900 shadow-lg group-hover:rotate-3 transition-transform">
               MG
             </div>
             <div className="overflow-hidden flex-1">

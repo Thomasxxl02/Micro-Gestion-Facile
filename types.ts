@@ -1,22 +1,23 @@
+import type { SecuritySettings } from "./src/types/user";
 
-export type DocumentType = 'invoice' | 'quote' | 'order' | 'credit_note';
+export type DocumentType = "invoice" | "quote" | "order" | "credit_note";
 
 export enum InvoiceStatus {
-  DRAFT = 'Brouillon',
-  SENT = 'Envoyée',
-  PAID = 'Payée',
-  CANCELLED = 'Annulée',
+  DRAFT = "Brouillon",
+  SENT = "Envoyée",
+  PAID = "Payée",
+  CANCELLED = "Annulée",
   // Status spécifiques aux devis
-  ACCEPTED = 'Accepté',
-  REJECTED = 'Refusé',
+  ACCEPTED = "Accepté",
+  REJECTED = "Refusé",
   // Status spécifiques à la facturation électronique 2026
-  DEPOSITED = 'Déposée',
-  REJECTED_BY_PLATFORM = 'Rejetée par plateforme',
-  ACCEPTED_BY_CLIENT = 'Acceptée par client',
-  PENDING_PAYMENT = 'En attente de paiement'
+  DEPOSITED = "Déposée",
+  REJECTED_BY_PLATFORM = "Rejetée par plateforme",
+  ACCEPTED_BY_CLIENT = "Acceptée par client",
+  PENDING_PAYMENT = "En attente de paiement",
 }
 
-export type EInvoiceFormat = 'Factur-X' | 'UBL' | 'CII';
+export type EInvoiceFormat = "Factur-X" | "UBL" | "CII";
 
 export interface Client {
   id: string;
@@ -32,7 +33,7 @@ export interface Client {
   website?: string;
   tvaNumber?: string;
   paymentTerms?: string;
-  category?: 'Particulier' | 'Entreprise' | 'Association' | 'Public';
+  category?: "Particulier" | "Entreprise" | "Association" | "Public";
   isPublicEntity?: boolean; // Pour Chorus Pro
   createdAt?: string;
 }
@@ -60,7 +61,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  type: 'service' | 'product';
+  type: "service" | "product";
   category?: string;
   sku?: string;
   unit?: string; // ex: "heure", "jour", "unité", "km"
@@ -92,7 +93,7 @@ export interface InvoiceItem {
 
 export interface Invoice {
   id: string;
-  type: DocumentType; 
+  type: DocumentType;
   number: string;
   linkedDocumentId?: string; // ID du document parent (ex: Facture pour un Avoir)
   date: string;
@@ -103,7 +104,7 @@ export interface Invoice {
   notes?: string;
   total: number;
   reminderDate?: string; // Nouveau champ pour les rappels
-  
+
   // Nouveaux champs logiques métiers
   discount?: number; // Pourcentage de remise globale (0-100)
   shipping?: number; // Frais de port / déplacement
@@ -115,49 +116,174 @@ export interface Invoice {
   eInvoiceFormat?: EInvoiceFormat;
   eInvoiceStatus?: string;
   transmissionDate?: string;
-  operationCategory?: 'BIENS' | 'SERVICES' | 'MIXTE';
+  operationCategory?: "BIENS" | "SERVICES" | "MIXTE";
   deliveryAddress?: string;
 }
 
-export type ActivityType = 'SERVICE_BNC' | 'SERVICE_BIC' | 'SALE' | 'LIBERAL';
+export type ActivityType = "SERVICE_BNC" | "SERVICE_BIC" | "SALE" | "LIBERAL";
 
 export interface UserProfile {
   companyName: string;
-  professionalTitle?: string; // Ex: Consultant IT, Photographe...
+  professionalTitle?: string;
   siret: string;
   siren?: string;
   defaultEInvoiceFormat?: EInvoiceFormat;
-  defaultOperationCategory?: 'BIENS' | 'SERVICES' | 'MIXTE';
+  defaultOperationCategory?: "BIENS" | "SERVICES" | "MIXTE";
   address: string;
   email: string;
   phone: string;
   website?: string;
   linkedin?: string;
-  bankAccount?: string; // IBAN
-  bic?: string; // BIC/SWIFT
-  tvaNumber?: string; // Numéro TVA Intracom
-  legalMentions?: string; // Mentions spécifiques bas de page
+  bankAccount?: string;
+  bic?: string;
+  tvaNumber?: string;
+  legalMentions?: string;
   currency?: string;
   invoicePrefix?: string;
+  invoiceStartNumber?: number;
   quotePrefix?: string;
   orderPrefix?: string;
   creditNotePrefix?: string;
   defaultVatRate?: number;
   logoColor?: string;
-  logoUrl?: string; // URL ou Base64 du logo
-  socialContributionRate?: number; // Taux de cotisations sociales (ex: 21.1)
-  geminiApiKey?: string; // Clé API pour l'assistant IA
-  
-  // Nouveaux champs métiers
   activityType?: ActivityType;
   isAcreBeneficiary?: boolean;
   vatThresholdAlert?: boolean;
+  customVatThresholdPercentage?: number;
   revenueThresholdAlert?: boolean;
-  preferences?: UserPreferences;
+  customRevenueThresholdPercentage?: number;
+  isVatExempt?: boolean;
+  vatExemptionReason?: string;
+  taxDeclarationPeriod?: "MONTHLY" | "QUARTERLY";
+  logoUrl?: string;
+  signatureUrl?: string;
+  stampUrl?: string;
+  taxSystem?: string;
+  vatNumber?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  paymentTermsDefault?:
+    | "A_RECEPTION"
+    | "30_DAYS"
+    | "30_EOM"
+    | "45_DAYS"
+    | "45_EOM"
+    | "60_DAYS"
+    | "60_EOM";
+  latePenaltyRate?: string;
+  recoveryIndemnityAmount?: number;
+  numberingFormat?: string;
+  resetNumberingYearly?: boolean;
+  isMixedActivity?: boolean;
+  activityTypeSecondary?: ActivityType;
+  hasTaxVersantLiberatoire?: boolean;
+  socialContributionRate?: number;
+  geminiApiKey?: string;
+  fontFamily?: string;
+  invoiceTemplate?: "modern" | "classic" | "minimal" | "corporate";
+  theme?: "light" | "dark" | "auto";
+  dateFormat?: "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD";
+  timeFormat?: "24h" | "12h";
+  uiDensity?: "compact" | "normal" | "spacious";
+  fontSize?: "small" | "normal" | "large";
+  enableNotifications?: boolean;
+  enableEmailNotifications?: boolean;
+  notificationTypes?: {
+    invoiceReminders?: boolean;
+    paymentReminders?: boolean;
+    expenseAlerts?: boolean;
+    systemUpdates?: boolean;
+  };
+  automation?: {
+    defaultPaymentDelay?:
+      | "RECEIPT"
+      | "30_DAYS"
+      | "45_DAYS"
+      | "60_DAYS"
+      | "CUSTOM";
+    customPaymentDelayDays?: number;
+    autoReminders?: {
+      enabled: boolean;
+      after3Days: boolean;
+      after7Days: boolean;
+    };
+  };
+  securitySettings?: SecuritySettings;
+  preferences?: {
+    language?: "fr" | "en";
+    theme?: Theme;
+    dateFormat?: string;
+    currencySymbol?: string;
+    currencyPosition?: "before" | "after";
+    roundingMode?: "none" | "up" | "down" | "nearest";
+    autoSave?: boolean;
+    notificationsEnabled?: boolean;
+    defaultDueDateDays?: number;
+    emailSignature?: string;
+    invoiceEmailSubject?: string;
+    invoiceEmailTemplate?: string;
+    quoteEmailSubject?: string;
+    quoteEmailTemplate?: string;
+    reminderEmailSubject?: string;
+    reminderEmailTemplate?: string;
+  };
+  integrations?: {
+    cloudSync?: {
+      provider: "google_drive" | "dropbox" | "onedrive" | "none";
+      autoSyncExports: boolean;
+      lastSyncDate?: string;
+    };
+    webhooks?: {
+      isEnabled: boolean;
+      endpoint: string;
+      events: string[];
+    };
+    autoBackup?: {
+      enabled: boolean;
+      provider: string;
+      lastBackup?: string;
+    };
+    expenseImport?: {
+      dropboxWatchEnabled: boolean;
+      dropboxFolder?: string;
+    };
+    calendarSync?: {
+      googleCalendarEnabled: boolean;
+      outlookCalendarEnabled: boolean;
+      syncFrequency: "realtime" | "daily";
+    };
+    crmImport?: {
+      linkedinEnabled: boolean;
+      salesforceEnabled: boolean;
+    };
+    aiAssistant?: {
+      provider: "google_gemini" | "openai" | "anthropic" | "ollama" | "none";
+      apiKey?: string;
+      model?: string;
+      customEndpoint?: string;
+      isEnabled: boolean;
+    };
+    emailSettings?: {
+      senderName?: string;
+      senderEmail?: string;
+      replyTo?: string;
+      bccEmail?: string;
+      smtpConfig?: {
+        host: string;
+        port: number;
+        secure: boolean;
+        auth: {
+          user: string;
+          pass: string;
+        };
+      };
+      provider: "internal" | "gmail" | "outlook" | "custom_smtp";
+    };
+  };
 }
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: "user" | "model";
   content: string;
   timestamp: number;
 }
@@ -168,8 +294,8 @@ export interface Email {
   subject: string;
   body: string;
   sentAt: string;
-  status: 'sent' | 'failed' | 'draft';
-  type: 'invoice' | 'quote' | 'reminder' | 'custom';
+  status: "sent" | "failed" | "draft";
+  type: "invoice" | "quote" | "reminder" | "custom";
   relatedId?: string;
 }
 
@@ -178,7 +304,7 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   body: string;
-  type: 'invoice' | 'quote' | 'reminder' | 'custom';
+  type: "invoice" | "quote" | "reminder" | "custom";
 }
 
 export interface CalendarEvent {
@@ -187,23 +313,33 @@ export interface CalendarEvent {
   description?: string;
   start: string; // ISO string
   end: string; // ISO string
-  type: 'meeting' | 'task' | 'deadline' | 'other';
+  type: "meeting" | "task" | "deadline" | "other";
   clientId?: string;
   invoiceId?: string;
   color?: string;
 }
 
-export type ViewState = 'dashboard' | 'invoices' | 'clients' | 'suppliers' | 'products' | 'accounting' | 'emails' | 'calendar' | 'settings' | 'ai_assistant';
+export type ViewState =
+  | "dashboard"
+  | "invoices"
+  | "clients"
+  | "suppliers"
+  | "products"
+  | "accounting"
+  | "emails"
+  | "calendar"
+  | "settings"
+  | "ai_assistant";
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = "light" | "dark" | "system";
 
 export interface UserPreferences {
   theme: Theme;
-  language: 'fr' | 'en';
+  language: "fr" | "en";
   dateFormat: string;
   currencySymbol: string;
-  currencyPosition: 'before' | 'after';
-  roundingMode: 'none' | 'up' | 'down' | 'nearest';
+  currencyPosition: "before" | "after";
+  roundingMode: "none" | "up" | "down" | "nearest";
   autoSave: boolean;
   notificationsEnabled: boolean;
   defaultDueDateDays: number;

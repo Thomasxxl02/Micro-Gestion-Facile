@@ -7,21 +7,29 @@
  *   - useViewRouter → routage par vue
  *   - Sidebar → navigation latérale
  */
-import React from 'react';
-import { useAppShellSync } from '../hooks/useAppShellSync';
-import { useViewRouter, type ViewType } from '../hooks/useViewRouter';
-import { useAppStore } from '../store/appStore';
-import { useUIStore } from '../store/useUIStore';
-import Sidebar from './Sidebar';
+import React from "react";
+import { useAppShellSync } from "../hooks/useAppShellSync";
+import { useViewRouter, type ViewType } from "../hooks/useViewRouter";
+import { useAppStore } from "../store/appStore";
+import { useUIStore } from "../store/useUIStore";
+import Sidebar from "./Sidebar";
 
 const AppShell: React.FC = () => {
   const user = useAppStore((s) => s.user);
-  const { currentView, setCurrentView, isMobileMenuOpen, setIsMobileMenuOpen, isDarkMode, setIsDarkMode } =
-    useUIStore();
+  const {
+    currentView,
+    setCurrentView,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+    isDarkMode,
+    setIsDarkMode,
+    reducedMotion,
+  } = useUIStore();
 
-  const syncData = useAppShellSync(user?.uid ?? '');
+  const syncData = useAppShellSync(user?.uid ?? "");
 
-  const handleNavigate = (view: ViewType) => setCurrentView(view as Parameters<typeof setCurrentView>[0]);
+  const handleNavigate = (view: ViewType) =>
+    setCurrentView(view as Parameters<typeof setCurrentView>[0]);
 
   const viewContent = useViewRouter({
     currentView: currentView as ViewType,
@@ -30,7 +38,9 @@ const AppShell: React.FC = () => {
   });
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-brand-950 text-brand-900 dark:text-brand-50">
+    <div
+      className={`flex min-h-screen bg-gray-50 dark:bg-brand-950 text-brand-900 dark:text-brand-50 ${reducedMotion ? "reduced-motion" : ""}`}
+    >
       <Sidebar
         currentView={currentView}
         setView={setCurrentView}
@@ -50,7 +60,9 @@ const AppShell: React.FC = () => {
       )}
 
       <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 max-w-7xl">{viewContent}</div>
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          {viewContent}
+        </div>
       </main>
     </div>
   );

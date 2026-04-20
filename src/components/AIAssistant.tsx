@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   TriangleAlert as AlertTriangle,
   Bot,
@@ -10,56 +10,56 @@ import {
   Sparkles,
   TrendingUp,
   User,
-} from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   checkInvoiceCompliance,
   generateAssistantResponse,
   predictCashflowJ30,
   saveMessage,
-} from '../services/geminiService';
-import { useAppStore } from '../store/appStore';
-import type { ChatMessage } from '../types';
+} from "../services/geminiService";
+import { useAppStore } from "../store/appStore";
+import type { ChatMessage } from "../types";
 
 const AIAssistant: React.FC = () => {
   const { invoices, clients, userProfile } = useAppStore();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 'msg-0',
-      role: 'model',
+      id: "msg-0",
+      role: "model",
       content:
         "Bonjour ! Je suis votre assistant administratif virtuel. Je peux vous aider avec vos questions sur le statut auto-entrepreneur, les déclarations URSSAF, ou la rédaction de courriers. Comment puis-je vous aider aujourd'hui ?",
       timestamp: Date.now(),
     },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   // État de chargement et données gérés par React Query ci-dessous
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Helper functions to reduce complexity
   const getRiskLevelColor = (riskLevel: string): string => {
-    if (riskLevel === 'low') {
-      return 'bg-green-100 text-green-700';
+    if (riskLevel === "low") {
+      return "bg-green-100 text-green-700";
     }
-    if (riskLevel === 'medium') {
-      return 'bg-amber-100 text-amber-700';
+    if (riskLevel === "medium") {
+      return "bg-amber-100 text-amber-700";
     }
-    return 'bg-red-100 text-red-700';
+    return "bg-red-100 text-red-700";
   };
 
   const getRiskLevelLabel = (riskLevel: string): string => {
-    if (riskLevel === 'low') {
-      return 'Faible';
+    if (riskLevel === "low") {
+      return "Faible";
     }
-    if (riskLevel === 'medium') {
-      return 'Modéré';
+    if (riskLevel === "medium") {
+      return "Modéré";
     }
-    return 'Élevé';
+    return "Élevé";
   };
 
   useEffect(() => {
@@ -70,28 +70,21 @@ const AIAssistant: React.FC = () => {
   // La clé inclut les IDs des factures pour invalider le cache si les données changent
   const analysisQuery = useQuery({
     queryKey: [
-      'gemini-analysis',
+      "gemini-analysis",
       invoices
         .map((i) => i.id)
         .sort()
-        .join(','),
+        .join(","),
     ],
     queryFn: async () => {
-      const prediction = await predictCashflowJ30(
-        invoices,
-        userProfile as unknown as Record<string, unknown>
-      );
+      const prediction = await predictCashflowJ30(invoices, userProfile);
       const lastInvoice = [...invoices].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       )[0];
       const client = clients.find((c) => c.id === lastInvoice.clientId);
       const compliance =
         lastInvoice && client
-          ? await checkInvoiceCompliance(
-              lastInvoice,
-              userProfile as unknown as Record<string, unknown>,
-              client as unknown as Record<string, unknown>
-            )
+          ? await checkInvoiceCompliance(lastInvoice, userProfile, client)
           : null;
       return { prediction, compliance };
     },
@@ -109,13 +102,13 @@ const AIAssistant: React.FC = () => {
       const context = messages
         .slice(-3)
         .map((m) => `${m.role}: ${m.content}`)
-        .join('\n');
+        .join("\n");
       return generateAssistantResponse(userContent, context);
     },
     onSuccess: (responseText: string) => {
       const modelMsg: ChatMessage = {
         id: `msg-model-${Date.now()}`,
-        role: 'model',
+        role: "model",
         content: responseText,
         timestamp: Date.now(),
       };
@@ -125,8 +118,9 @@ const AIAssistant: React.FC = () => {
     onError: () => {
       const errorMsg: ChatMessage = {
         id: `msg-error-${Date.now()}`,
-        role: 'model',
-        content: "Désolé, je n'ai pas pu traiter votre requête. Veuillez réessayer.",
+        role: "model",
+        content:
+          "Désolé, je n'ai pas pu traiter votre requête. Veuillez réessayer.",
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -141,13 +135,13 @@ const AIAssistant: React.FC = () => {
     }
     const userMsg: ChatMessage = {
       id: `msg-user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: input,
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, userMsg]);
     void saveMessage(userMsg);
-    setInput('');
+    setInput("");
     sendMutation.mutate(input);
   };
 
@@ -164,10 +158,12 @@ const AIAssistant: React.FC = () => {
       return (
         <div>
           <p className="text-2xl font-black text-brand-900">
-            {cashflowPrediction.predictedBalance >= 0 ? '+' : ''}
+            {cashflowPrediction.predictedBalance >= 0 ? "+" : ""}
             {cashflowPrediction.predictedBalance.toLocaleString()}€
           </p>
-          <p className="text-xs text-brand-500 mt-1 mb-3">{cashflowPrediction.analysis}</p>
+          <p className="text-xs text-brand-500 mt-1 mb-3">
+            {cashflowPrediction.analysis}
+          </p>
           <div className="flex items-center gap-2">
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${getRiskLevelColor(cashflowPrediction.riskLevel)}`}
@@ -181,7 +177,11 @@ const AIAssistant: React.FC = () => {
         </div>
       );
     }
-    return <p className="text-sm text-brand-400">Aucune donnée de prédiction disponible.</p>;
+    return (
+      <p className="text-sm text-brand-400">
+        Aucune donnée de prédiction disponible.
+      </p>
+    );
   };
 
   const renderComplianceCard = () => {
@@ -203,10 +203,10 @@ const AIAssistant: React.FC = () => {
               <AlertTriangle size={18} className="text-amber-500" />
             )}
             <span
-              className={`font-bold text-sm ${complianceResults.isCompliant ? 'text-green-600' : 'text-amber-600'}`}
+              className={`font-bold text-sm ${complianceResults.isCompliant ? "text-green-600" : "text-amber-600"}`}
             >
               {complianceResults.isCompliant
-                ? 'Dernière facture conforme'
+                ? "Dernière facture conforme"
                 : `${complianceResults.issues.length} points à vérifier`}
             </span>
           </div>
@@ -220,11 +220,17 @@ const AIAssistant: React.FC = () => {
               ))}
             </ul>
           )}
-          <p className="text-[10px] text-brand-400 italic">Basé sur la dernière facture émise.</p>
+          <p className="text-[10px] text-brand-400 italic">
+            Basé sur la dernière facture émise.
+          </p>
         </div>
       );
     }
-    return <p className="text-sm text-brand-400">Pas encore de factures à analyser.</p>;
+    return (
+      <p className="text-sm text-brand-400">
+        Pas encore de factures à analyser.
+      </p>
+    );
   };
 
   return (
@@ -235,7 +241,9 @@ const AIAssistant: React.FC = () => {
             <Sparkles className="text-white" size={24} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg">Assistant Administratif</h1>
+            <h1 className="text-white font-bold text-lg">
+              Assistant Administratif
+            </h1>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
@@ -261,7 +269,9 @@ const AIAssistant: React.FC = () => {
               <div className="p-2 bg-brand-100 text-brand-900 rounded-lg">
                 <TrendingUp size={20} />
               </div>
-              <h3 className="font-bold text-brand-900">Prédiction Trésorerie (30j)</h3>
+              <h3 className="font-bold text-brand-900">
+                Prédiction Trésorerie (30j)
+              </h3>
             </div>
             {renderCashflowCard()}
           </div>
@@ -275,7 +285,9 @@ const AIAssistant: React.FC = () => {
               <div className="p-2 bg-brand-100 text-brand-900 rounded-lg">
                 <Shield size={20} />
               </div>
-              <h3 className="font-bold text-brand-900">Conformité Légale (Auto-Audit)</h3>
+              <h3 className="font-bold text-brand-900">
+                Conformité Légale (Auto-Audit)
+              </h3>
             </div>
             {renderComplianceCard()}
           </div>
@@ -284,25 +296,27 @@ const AIAssistant: React.FC = () => {
         {messages.map((msg) => (
           <div
             key={msg.id || `msg-${msg.timestamp}`}
-            className={`flex items-start gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+            className={`flex items-start gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
           >
             <div
               className={`
               w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm border
-              ${msg.role === 'user' ? 'bg-brand-900 border-brand-800 text-white' : 'bg-white border-brand-200 text-brand-600'}
+              ${msg.role === "user" ? "bg-brand-900 border-brand-800 text-white" : "bg-white border-brand-200 text-brand-600"}
             `}
             >
-              {msg.role === 'user' ? <User size={18} /> : <Bot size={20} />}
+              {msg.role === "user" ? <User size={18} /> : <Bot size={20} />}
             </div>
 
-            <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div
+              className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+            >
               <div
                 className={`
                 max-w-[85%] px-5 py-3.5 text-sm leading-relaxed whitespace-pre-wrap shadow-sm
                 ${
-                  msg.role === 'user'
-                    ? 'bg-brand-900 text-white rounded-4xl rounded-tr-sm'
-                    : 'bg-white text-brand-800 rounded-4xl rounded-tl-sm border border-brand-100'
+                  msg.role === "user"
+                    ? "bg-brand-900 text-white rounded-4xl rounded-tr-sm"
+                    : "bg-white text-brand-800 rounded-4xl rounded-tl-sm border border-brand-100"
                 }
                 `}
               >
@@ -310,8 +324,8 @@ const AIAssistant: React.FC = () => {
               </div>
               <span className="text-[10px] text-brand-400 mt-1 px-1">
                 {new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
+                  hour: "2-digit",
+                  minute: "2-digit",
                 })}
               </span>
             </div>
@@ -334,7 +348,10 @@ const AIAssistant: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSend} className="p-6 bg-white border-t border-brand-100">
+      <form
+        onSubmit={handleSend}
+        className="p-6 bg-white border-t border-brand-100"
+      >
         <div className="relative flex gap-3">
           <input
             type="text"
@@ -356,7 +373,8 @@ const AIAssistant: React.FC = () => {
         <div className="text-center mt-3">
           <p className="text-[10px] text-brand-400 flex items-center justify-center gap-1.5">
             <MessageSquare size={10} />
-            L&apos;IA peut commettre des erreurs. Vérifiez toujours les informations légales.
+            L&apos;IA peut commettre des erreurs. Vérifiez toujours les
+            informations légales.
           </p>
         </div>
       </form>

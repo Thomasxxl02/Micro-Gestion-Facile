@@ -1,0 +1,69 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond avec gradient professionnel -->
+  <rect width="512" height="512" rx="128" fill="url(#gradient)" />
+  
+  <!-- Définition du gradient -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1e40af" />
+    </linearGradient>
+    
+    <!-- Ombre portée pour le symbole euro -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Icône de facture stylisée -->
+  <g filter="url(#shadow)">
+    <!-- Rectangle de la facture -->
+    <rect x="128" y="96" width="256" height="320" rx="16" fill="white" opacity="0.95" />
+    
+    <!-- Lignes de texte de la facture -->
+    <rect x="160" y="136" width="192" height="12" rx="6" fill="#2563eb" opacity="0.3" />
+    <rect x="160" y="168" width="144" height="12" rx="6" fill="#2563eb" opacity="0.2" />
+    <rect x="160" y="200" width="168" height="12" rx="6" fill="#2563eb" opacity="0.2" />
+    
+    <!-- Ligne de séparation -->
+    <line x1="160" y1="240" x2="352" y2="240" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 4" opacity="0.4" />
+    
+    <!-- Montants -->
+    <rect x="160" y="264" width="96" height="10" rx="5" fill="#2563eb" opacity="0.2" />
+    <rect x="160" y="288" width="80" height="10" rx="5" fill="#2563eb" opacity="0.2" />
+    
+    <!-- Total en gras -->
+    <rect x="160" y="328" width="120" height="16" rx="8" fill="#059669" opacity="0.4" />
+  </g>
+  
+  <!-- Symbole Euro en grand (élément principal) -->
+  <g filter="url(#shadow)">
+    <text x="256" y="480" font-family="Arial, sans-serif" font-size="160" font-weight="bold" fill="white" text-anchor="middle">€</text>
+  </g>
+  
+  <!-- Badge "Micro" dans le coin -->
+  <g transform="translate(360, 80)">
+    <rect x="0" y="0" width="120" height="36" rx="18" fill="#059669" />
+    <text x="60" y="24" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">MICRO</text>
+  </g>
+  
+  <!-- Petite icône calculatrice (optionnelle, dans le coin) -->
+  <g transform="translate(48, 48)" opacity="0.9">
+    <rect width="48" height="48" rx="8" fill="white" />
+    <rect x="8" y="8" width="32" height="12" rx="4" fill="#2563eb" />
+    <circle cx="16" cy="28" r="3" fill="#2563eb" opacity="0.6" />
+    <circle cx="24" cy="28" r="3" fill="#2563eb" opacity="0.6" />
+    <circle cx="32" cy="28" r="3" fill="#2563eb" opacity="0.6" />
+    <circle cx="16" cy="36" r="3" fill="#2563eb" opacity="0.6" />
+    <circle cx="24" cy="36" r="3" fill="#2563eb" opacity="0.6" />
+    <circle cx="32" cy="36" r="3" fill="#059669" />
+  </g>
+</svg>

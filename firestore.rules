@@ -175,58 +175,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-<<<<<<< Updated upstream:firestore.rules
-=======
-    // ===============================================================
-    // Email Login Security - Nonce + TTL
-    // ===============================================================
-    // Collection: emailLoginRequests
-    // Document ID: {nonce} (32-char hex, base16 of crypto.getRandomValues)
-    //
-    // Data structure:
-    // {
-    //   email: string (user's email)
-    //   createdAt: timestamp (server-set)
-    //   expiryTTL: number (unix timestamp ms, 15 min from creation)
-    //   used: boolean (marked true after successful signin)
-    //   attempts: number (incremented on each validation attempt, max 5)
-    // }
-    //
-    // Security:
-    // - Unauthenticated users can only READ their own nonce (to validate)
-    // - Only backend Cloud Function can WRITE
-    // - TTL enforcement via Cloud Tasks (optional)
-    // - XSS/CSRF protected: nonce in URL param only, not cookie
-    // ===============================================================
-
-    match /emailLoginRequests/{nonce} {
-      // Unauthenticated users can READ their nonce to validate it
-      // (nonce is already in URL, this is just for validation)
-      allow read: if request.resource.data.email == request.auth.token.email ||
-                      (request.auth == null && request.query.double_check == 'true');
-
-      // Unauthenticated: Cannot create directly (backend only)
-      // Note: In production without Cloud Functions, this would need specific rules
-      allow create: if false;
-
-      // Unauthenticated: Cannot update directly (backend only)
-      allow update: if false;
-
-      // Cannot delete (backend + TTL cleanup only)
-      allow delete: if false;
-
-      // ⏱️ TTL Enforcement (RGPD)
-      // Firestore automatic deletion: This field must exist and be a Timestamp
-      // Cloud console setup required:
-      // 1. Go to "Time-to-live" tab
-      // 2. Add rule for "emailLoginRequests" on field "expiresAt"
-      // Note: Data is kept until deletion but rules block access
-      function isExpired() {
-        return request.time > resource.data.expiresAt;
-      }
-    }
-
->>>>>>> Stashed changes:config/firestore.rules
     // Default deny
     match /{document=**} {
       allow read, write: if false;

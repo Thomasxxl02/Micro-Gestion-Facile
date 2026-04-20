@@ -13,10 +13,14 @@ import {
   signInWithPopup,
   signOut,
   type User,
-} from 'firebase/auth';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { auth, db, githubProvider } from '../firebase';
-import { AuthErrorHandler, GitHubAuthService, type UserProfile } from '../services/authService';
+} from "firebase/auth";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { auth, db, githubProvider } from "../firebase";
+import {
+  AuthErrorHandler,
+  GitHubAuthService,
+  type UserProfile,
+} from "../services/authService";
 
 export interface UseGitHubAuthState {
   user: User | null;
@@ -54,15 +58,19 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
 
         if (firebaseUser) {
           // Récupérer le profil utilisateur depuis Firestore
-          const userProfile = await authService.getUserProfile(firebaseUser.uid);
+          const userProfile = await authService.getUserProfile(
+            firebaseUser.uid,
+          );
           setProfile(userProfile);
           setError(null);
         } else {
           setProfile(null);
         }
       } catch (err) {
-        console.error('Erreur récupération profil:', err);
-        setError(err instanceof Error ? err : new Error('Erreur authentification'));
+        console.error("Erreur récupération profil:", err);
+        setError(
+          err instanceof Error ? err : new Error("Erreur authentification"),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -81,7 +89,7 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
         // Appliquer la persistance
         await setPersistence(
           auth,
-          rememberMe ? browserLocalPersistence : browserSessionPersistence
+          rememberMe ? browserLocalPersistence : browserSessionPersistence,
         );
 
         const result = await signInWithPopup(auth, githubProvider);
@@ -90,24 +98,29 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
         // Récupérer le profil
         const userProfile = await authService.getUserProfile(result.user.uid);
         setProfile(userProfile);
-      } catch (err: any) {
-        const error = err instanceof Error ? err : new Error('Erreur connexion');
+      } catch (err: unknown) {
+        const error =
+          err instanceof Error ? err : new Error("Erreur connexion");
 
         // Gestion spécifique des erreurs
         if (AuthErrorHandler.isNetworkError(error)) {
-          setError(new Error('Erreur réseau. Vérifiez votre connexion Internet.'));
+          setError(
+            new Error("Erreur réseau. Vérifiez votre connexion Internet."),
+          );
         } else if (AuthErrorHandler.isAccountConflictError(error)) {
-          setError(new Error('Ce compte GitHub est déjà associé à un autre compte.'));
+          setError(
+            new Error("Ce compte GitHub est déjà associé à un autre compte."),
+          );
         } else {
           setError(error);
         }
 
-        console.error('Erreur connexion GitHub:', err);
+        console.error("Erreur connexion GitHub:", err);
       } finally {
         setIsLoading(false);
       }
     },
-    [authService]
+    [authService],
   );
 
   // Déconnexion
@@ -119,9 +132,10 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
       setProfile(null);
       setError(null);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erreur déconnexion');
+      const error =
+        err instanceof Error ? err : new Error("Erreur déconnexion");
       setError(error);
-      console.error('Erreur déconnexion:', err);
+      console.error("Erreur déconnexion:", err);
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +157,8 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
       const userProfile = await authService.getUserProfile(user.uid);
       setProfile(userProfile);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Erreur rafraîchissement');
+      const error =
+        err instanceof Error ? err : new Error("Erreur rafraîchissement");
       setError(error);
     } finally {
       setIsLoading(false);
@@ -168,7 +183,8 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
  * Version allégée de useGitHubAuth
  */
 export function useSimpleGitHubAuth() {
-  const { user, isLoading, error, isAuthenticated, loginWithGitHub, logout } = useGitHubAuth();
+  const { user, isLoading, error, isAuthenticated, loginWithGitHub, logout } =
+    useGitHubAuth();
 
   return {
     user,

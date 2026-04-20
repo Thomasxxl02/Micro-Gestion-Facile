@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // useEntityForm<T>
@@ -10,7 +10,7 @@ interface EntityFormState<T> {
   editingId: string | undefined;
   isPanelOpen: boolean;
   openCreate: () => void;
-  openEdit: (entity: T & { id: string }) => void;
+  openEdit: (_entity: T & { id: string }) => void;
   closePanel: () => void;
 }
 
@@ -41,7 +41,15 @@ export function useEntityForm<T>(): EntityFormState<T> {
     setIsPanelOpen(false);
   };
 
-  return { formData, isEditing, editingId, isPanelOpen, openCreate, openEdit, closePanel };
+  return {
+    formData,
+    isEditing,
+    editingId,
+    isPanelOpen,
+    openCreate,
+    openEdit,
+    closePanel,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -57,17 +65,21 @@ interface UseEntityFiltersOptions {
 interface EntityFiltersState<T> {
   filteredEntities: T[];
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: (_term: string) => void;
   showArchived: boolean;
-  setShowArchived: (show: boolean) => void;
+  setShowArchived: (_show: boolean) => void;
 }
 
 export function useEntityFilters<T extends Record<string, unknown>>(
   entities: T[],
-  options: UseEntityFiltersOptions
+  options: UseEntityFiltersOptions,
 ): EntityFiltersState<T> {
-  const { searchField, hasArchive = false, archiveField = 'archived' } = options;
-  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    searchField,
+    hasArchive = false,
+    archiveField = "archived",
+  } = options;
+  const [searchTerm, setSearchTerm] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
   const filteredEntities = useMemo(() => {
@@ -75,7 +87,7 @@ export function useEntityFilters<T extends Record<string, unknown>>(
 
     if (hasArchive) {
       result = result.filter((e) =>
-        showArchived ? e[archiveField] === true : e[archiveField] !== true
+        showArchived ? e[archiveField] === true : e[archiveField] !== true,
       );
     }
 
@@ -83,12 +95,25 @@ export function useEntityFilters<T extends Record<string, unknown>>(
       const lower = searchTerm.toLowerCase();
       result = result.filter((e) => {
         const val = e[searchField];
-        return typeof val === 'string' && val.toLowerCase().includes(lower);
+        return typeof val === "string" && val.toLowerCase().includes(lower);
       });
     }
 
     return result;
-  }, [entities, searchField, hasArchive, archiveField, searchTerm, showArchived]);
+  }, [
+    entities,
+    searchField,
+    hasArchive,
+    archiveField,
+    searchTerm,
+    showArchived,
+  ]);
 
-  return { filteredEntities, searchTerm, setSearchTerm, showArchived, setShowArchived };
+  return {
+    filteredEntities,
+    searchTerm,
+    setSearchTerm,
+    showArchived,
+    setShowArchived,
+  };
 }

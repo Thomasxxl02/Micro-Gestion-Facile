@@ -1,5 +1,12 @@
-import { Image as ImageIcon, type LucideIcon, Upload, X } from 'lucide-react';
-import React, { useRef } from 'react';
+import {
+  Image as ImageIcon,
+  type LucideIcon,
+  RotateCcw,
+  Upload,
+  X,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 /**
  * Composant FormField réutilisable avec accessibilité intégrée
@@ -11,7 +18,7 @@ interface FormFieldProps {
   description?: string;
   error?: string;
   required?: boolean;
-  type?: 'text' | 'email' | 'number' | 'password' | 'url' | 'tel' | 'search';
+  type?: "text" | "email" | "number" | "password" | "url" | "tel" | "search";
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -21,7 +28,7 @@ interface FormFieldProps {
   min?: string | number;
   max?: string | number;
   step?: string | number;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -30,19 +37,19 @@ export const FormField: React.FC<FormFieldProps> = ({
   description,
   error,
   required,
-  type = 'text',
+  type = "text",
   value,
   onChange,
   placeholder,
   icon: Icon,
-  className = '',
-  inputClassName = '',
+  className = "",
+  inputClassName = "",
   min,
   max,
   step,
-  'aria-label': ariaLabel,
+  "aria-label": ariaLabel,
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -51,8 +58,8 @@ export const FormField: React.FC<FormFieldProps> = ({
   }
 
   const ariaAttrs = {
-    'aria-required': required ? ('true' as const) : ('false' as const),
-    'aria-invalid': error ? ('true' as const) : ('false' as const),
+    "aria-required": required ? ("true" as const) : ("false" as const),
+    "aria-invalid": error ? ("true" as const) : ("false" as const),
   };
 
   return (
@@ -92,7 +99,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           min={min}
           max={max}
           step={step}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''} ${inputClassName}`}
+          className={`w-full ${Icon ? "pl-12" : "pl-4"} pr-4 py-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${error ? "border-red-500 dark:border-red-500/70 focus:ring-red-500/10" : ""} ${inputClassName}`}
         />
       </div>
 
@@ -144,9 +151,9 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   placeholder,
   icon: Icon,
   rows = 3,
-  className = '',
+  className = "",
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -155,8 +162,8 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   }
 
   const ariaAttrs = {
-    'aria-required': required ? ('true' as const) : ('false' as const),
-    'aria-invalid': error ? ('true' as const) : ('false' as const),
+    "aria-required": required ? ("true" as const) : ("false" as const),
+    "aria-invalid": error ? ("true" as const) : ("false" as const),
   };
 
   return (
@@ -189,7 +196,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
           rows={rows}
           {...ariaAttrs}
           aria-describedby={describedByValue}
-          className={`w-full ${Icon ? 'pl-12' : 'pl-4'} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-none ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''}`}
+          className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-none ${error ? "border-red-500 dark:border-red-500/70 focus:ring-red-500/10" : ""} ${className}`}
         />
       </div>
 
@@ -237,9 +244,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   value,
   onChange,
   options,
-  className = '',
+  className = "",
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -248,8 +255,8 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   }
 
   const ariaAttrs = {
-    'aria-required': required ? ('true' as const) : ('false' as const),
-    'aria-invalid': error ? ('true' as const) : ('false' as const),
+    "aria-required": required ? ("true" as const) : ("false" as const),
+    "aria-invalid": error ? ("true" as const) : ("false" as const),
   };
 
   return (
@@ -273,7 +280,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         onChange={(e) => onChange(e.target.value)}
         {...ariaAttrs}
         aria-describedby={describedByValue}
-        className={`w-full p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) transition-all font-bold cursor-pointer appearance-none ${error ? 'border-red-500 dark:border-red-500/70 focus:ring-red-500/10' : ''}`}
+        className={`w-full p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) transition-all font-bold cursor-pointer appearance-none ${error ? "border-red-500 dark:border-red-500/70 focus:ring-red-500/10" : ""} ${className}`}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -320,10 +327,13 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   onChange,
   description,
 }) => {
-  const switchId = id || `toggle-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const switchId =
+    id || `toggle-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-white dark:bg-(--input-bg) rounded-2xl border border-(--input-border) transition-colors">
+    <div
+      className={`flex items-center gap-4 p-4 bg-white dark:bg-(--input-bg) rounded-2xl border border-(--input-border) transition-colors ${id ? "" : ""}`}
+    >
       <div className="flex-1">
         <label
           htmlFor={switchId}
@@ -332,7 +342,9 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           {label}
         </label>
         {description && (
-          <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-0.5">{description}</p>
+          <p className="text-[10px] text-brand-400 dark:text-brand-500 mt-0.5">
+            {description}
+          </p>
         )}
       </div>
       {checked ? (
@@ -345,7 +357,9 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           onClick={() => onChange(!checked)}
           className={`w-12 h-6 rounded-full relative transition-all focus:outline-none focus:ring-4 focus:ring-brand-900/20 bg-brand-900`}
         >
-          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all right-1`} />
+          <div
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all right-1`}
+          />
         </button>
       ) : (
         <button
@@ -357,7 +371,9 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           onClick={() => onChange(!checked)}
           className={`w-12 h-6 rounded-full relative transition-all focus:outline-none focus:ring-4 focus:ring-brand-900/20 bg-brand-200`}
         >
-          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all left-1`} />
+          <div
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all left-1`}
+          />
         </button>
       )}
     </div>
@@ -381,20 +397,20 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   value,
   onChange,
   presets = [
-    '#102a43',
-    '#0f172a',
-    '#1e293b',
-    '#334155',
-    '#059669',
-    '#0891b2',
-    '#4f46e5',
-    '#7c3aed',
+    "#102a43",
+    "#0f172a",
+    "#1e293b",
+    "#334155",
+    "#059669",
+    "#0891b2",
+    "#4f46e5",
+    "#7c3aed",
   ],
 }) => {
-  const pickerId = id || `color-${label.toLowerCase().replaceAll(/\s+/g, '-')}`;
+  const pickerId = id || `color-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   return (
-    <div className="space-y-3">
+    <div className={`space-y-3 ${id ? "" : ""}`}>
       <label
         htmlFor={pickerId}
         className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
@@ -412,8 +428,12 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           className="w-20 h-20 rounded-2xl cursor-pointer border-none shadow-lg"
         />
         <div>
-          <p className="text-sm font-bold text-brand-900 uppercase font-mono mb-1">{value}</p>
-          <p className="text-[10px] text-brand-400 font-medium">Couleur personnalisée</p>
+          <p className="text-sm font-bold text-brand-900 uppercase font-mono mb-1">
+            {value}
+          </p>
+          <p className="text-[10px] text-brand-400 font-medium">
+            Couleur personnalisée
+          </p>
         </div>
       </div>
 
@@ -423,14 +443,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            style={{ backgroundColor: color }}
+            title={`Choisir la couleur ${color}`}
+            aria-label={`Choisir la couleur ${color}`}
+            aria-pressed={value === color}
             className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
               value === color
-                ? 'border-brand-900 scale-110 shadow-md'
-                : 'border-transparent hover:scale-105'
+                ? "border-brand-900 scale-110 shadow-md"
+                : "border-transparent hover:scale-105"
             }`}
-            aria-label={`Choisir la couleur ${color}`}
-            {...(value === color ? { 'aria-pressed': 'true' } : { 'aria-pressed': 'false' })}
+            style={{ backgroundColor: color } as React.CSSProperties}
           />
         ))}
       </div>
@@ -458,14 +479,15 @@ export const ColorCirclePicker: React.FC<{
             key={color}
             type="button"
             onClick={() => onChange(color)}
-            style={{ backgroundColor: color }}
-            className={`w-10 h-10 rounded-full border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
-              value === color
-                ? 'border-brand-900 scale-110 shadow-lg'
-                : 'border-transparent hover:scale-105'
-            }`}
+            title={`Choisir la couleur ${color}`}
             aria-label={`Choisir la couleur ${color}`}
-            {...(value === color ? { 'aria-pressed': 'true' } : { 'aria-pressed': 'false' })}
+            aria-pressed={value === color}
+            className={`w-full aspect-square rounded-xl border-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-900 ${
+              value === color
+                ? "border-brand-900 scale-110 shadow-md"
+                : "border-transparent hover:scale-105"
+            }`}
+            style={{ backgroundColor: color } as React.CSSProperties}
           />
         ))}
       </div>
@@ -482,9 +504,13 @@ interface LogoUploaderProps {
   onRemove: () => void;
 }
 
-export const LogoUploader: React.FC<LogoUploaderProps> = ({ logoUrl, onChange, onRemove }) => {
+export const LogoUploader: React.FC<LogoUploaderProps> = ({
+  logoUrl,
+  onChange,
+  onRemove,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const id = 'logo-upload-input';
+  const id = "logo-upload-input";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -516,7 +542,11 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ logoUrl, onChange, o
       <div className="flex flex-col sm:flex-row items-center gap-6 p-8 bg-brand-50/50 border-2 border-dashed border-brand-200 rounded-4xl transition-all hover:border-brand-400 group">
         <div className="relative w-32 h-32 bg-white rounded-4xl shadow-xl flex items-center justify-center overflow-hidden border border-brand-100 group-hover:scale-105 transition-transform">
           {logoUrl ? (
-            <img src={logoUrl} alt="Logo entreprise" className="w-full h-full object-contain p-4" />
+            <img
+              src={logoUrl}
+              alt="Logo entreprise"
+              className="w-full h-full object-contain p-4"
+            />
           ) : (
             <div className="text-brand-200">
               <ImageIcon size={48} aria-hidden="true" />
@@ -535,7 +565,9 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ logoUrl, onChange, o
 
         <div className="flex-1 text-center sm:text-left space-y-4">
           <div>
-            <h4 className="font-bold text-brand-900 leading-tight">Identité visuelle</h4>
+            <h4 className="font-bold text-brand-900 leading-tight">
+              Identité visuelle
+            </h4>
             <p className="text-xs text-brand-500 mt-1">
               Format JPG, PNG ou SVG (max 1Mo). Recommandé : 400x400px.
             </p>
@@ -555,7 +587,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ logoUrl, onChange, o
             className="inline-flex items-center gap-2 px-6 py-3 bg-brand-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/10"
           >
             <Upload size={16} aria-hidden="true" />
-            {logoUrl ? 'Changer le logo' : 'Importer un logo'}
+            {logoUrl ? "Changer le logo" : "Importer un logo"}
           </button>
         </div>
       </div>
@@ -564,33 +596,107 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ logoUrl, onChange, o
 };
 
 /**
- * Composant SignatureUploader
+ * Composant SignatureUploader amélioré avec Canvas de dessin
  */
 interface SignatureUploaderProps {
   signatureUrl?: string;
   onChange: (url: string) => void;
   onRemove: () => void;
+  label?: string;
+  description?: string;
 }
 
 export const SignatureUploader: React.FC<SignatureUploaderProps> = ({
   signatureUrl,
   onChange,
   onRemove,
+  label = "Signature Numérique",
+  description = "Format PNG transparent recommandé (max 512Ko). Apposée en bas de vos factures.",
 }) => {
+  const [mode, setMode] = useState<"upload" | "draw">("upload");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const id = 'signature-upload-input';
+  const id = `signature-input-${label.toLowerCase().replace(/\s+/g, "-")}`;
+
+  // Initialisation du canvas
+  useEffect(() => {
+    if (mode === "draw" && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#000000";
+      }
+    }
+  }, [mode]);
+
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDrawing(true);
+    draw(e);
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      ctx?.beginPath();
+    }
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x =
+      "touches" in e
+        ? e.touches[0].clientX - rect.left
+        : (e as React.MouseEvent).clientX - rect.left;
+    const y =
+      "touches" in e
+        ? e.touches[0].clientY - rect.top
+        : (e as React.MouseEvent).clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const clearCanvas = () => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  };
+
+  const saveCanvas = () => {
+    if (canvasRef.current) {
+      // On vérifie si le canvas est vide (optionnel mais recommandé)
+      const dataUrl = canvasRef.current.toDataURL("image/png");
+      onChange(dataUrl);
+      setMode("upload");
+      toast.success("Signature enregistrée");
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 512 * 1024) {
-        alert("L'image est trop lourde (max 512Ko)");
+        toast.error("L'image est trop lourde (max 512Ko)");
         return;
       }
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
         onChange(base64);
+        toast.success("Image chargée");
       };
       reader.readAsDataURL(file);
     }
@@ -598,67 +704,140 @@ export const SignatureUploader: React.FC<SignatureUploaderProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <label
-          htmlFor={id}
-          className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest cursor-pointer"
-        >
-          Signature Numérique
+      <div className="flex items-center justify-between">
+        <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest">
+          {label}
         </label>
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center gap-6 p-8 bg-brand-50/50 dark:bg-brand-800/30 border-2 border-dashed border-brand-200 dark:border-brand-700 rounded-4xl transition-all hover:border-brand-400 dark:hover:border-brand-500 group">
-        <div className="relative w-48 h-24 bg-white dark:bg-brand-900 rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-brand-100 dark:border-brand-800 group-hover:scale-105 transition-transform">
-          {signatureUrl ? (
-            <img
-              src={signatureUrl}
-              alt="Signature numérique"
-              className="w-full h-full object-contain p-2 grayscale dark:invert"
-            />
-          ) : (
-            <div className="text-brand-200 dark:text-brand-700">
-              <ImageIcon size={32} aria-hidden="true" />
-            </div>
-          )}
-          {signatureUrl && (
-            <button
-              type="button"
-              onClick={onRemove}
-              className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
-              aria-label="Supprimer la signature"
-            >
-              <X size={14} aria-hidden="true" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex-1 text-center sm:text-left space-y-4">
-          <div>
-            <h4 className="font-bold text-brand-900 dark:text-white leading-tight">
-              Signature manuscrite
-            </h4>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
-              Format PNG transparent recommandé (max 512Ko). Apposée en bas de vos factures.
-            </p>
-          </div>
-          <input
-            id={id}
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/png"
-            className="hidden"
-            title="Importer une signature"
-          />
+        <div className="flex bg-brand-100 dark:bg-brand-800 p-1 rounded-lg">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-brand-800 border-2 border-brand-200 dark:border-brand-700 text-brand-900 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:border-brand-400 dark:hover:border-brand-500 transition-all"
+            onClick={() => setMode("upload")}
+            className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+              mode === "upload"
+                ? "bg-white dark:bg-brand-700 text-brand-600 dark:text-brand-300 shadow-sm"
+                : "text-brand-400 hover:text-brand-600"
+            }`}
           >
-            <Upload size={16} aria-hidden="true" />
-            {signatureUrl ? 'Changer la signature' : 'Importer ma signature'}
+            IMPORT
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("draw")}
+            className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+              mode === "draw"
+                ? "bg-white dark:bg-brand-700 text-brand-600 dark:text-brand-300 shadow-sm"
+                : "text-brand-400 hover:text-brand-600"
+            }`}
+          >
+            DESSIN
           </button>
         </div>
+      </div>
+
+      <div className="relative group">
+        {mode === "upload" ? (
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-brand-50/50 dark:bg-brand-800/20 border-2 border-dashed border-brand-200 dark:border-brand-700 rounded-3xl transition-all hover:border-brand-400">
+            <div className="relative w-48 h-24 bg-white dark:bg-brand-900 rounded-xl shadow-inner flex items-center justify-center overflow-hidden border border-brand-100 dark:border-brand-800">
+              {signatureUrl ? (
+                <img
+                  src={signatureUrl}
+                  alt={label}
+                  className="w-full h-full object-contain p-2 grayscale dark:font-white"
+                />
+              ) : (
+                <div className="text-brand-100 dark:text-brand-800">
+                  <ImageIcon size={48} />
+                </div>
+              )}
+              {signatureUrl && (
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
+                  aria-label="Supprimer le fichier"
+                  title="Supprimer le fichier"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 text-center sm:text-left">
+              <h4 className="font-bold text-brand-900 dark:text-white text-sm">
+                Fichier image
+              </h4>
+              <p className="text-[11px] text-brand-500 dark:text-brand-400 mb-4 whitespace-pre-line">
+                {description}
+              </p>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+              >
+                <Upload size={14} />
+                Parcourir
+              </button>
+              <input
+                id={id}
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/png,image/jpeg"
+                className="hidden"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 bg-white dark:bg-brand-900 border-2 border-brand-100 dark:border-brand-800 rounded-3xl shadow-xl">
+            <div className="relative bg-brand-50 dark:bg-brand-950 rounded-2xl overflow-hidden border border-brand-100 dark:border-brand-800 cursor-crosshair">
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={150}
+                onMouseDown={startDrawing}
+                onMouseUp={stopDrawing}
+                onMouseMove={draw}
+                onMouseOut={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchEnd={stopDrawing}
+                onTouchMove={draw}
+                className="w-full touch-none"
+              />
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={clearCanvas}
+                  className="p-2 bg-white/80 dark:bg-brand-800/80 backdrop-blur-sm text-brand-600 rounded-lg hover:bg-white transition-colors shadow-sm"
+                  title="Effacer"
+                >
+                  <RotateCcw size={16} />
+                </button>
+              </div>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-900/10 dark:bg-brand-100/10 backdrop-blur-[2px] rounded-full">
+                <p className="text-[10px] text-brand-400 font-medium">
+                  Zone de signature
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
+                onClick={saveCanvas}
+                className="flex-1 py-2 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition-all shadow-md active:scale-95"
+              >
+                Valider le tracé
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("upload")}
+                className="px-4 py-2 border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-400 text-xs font-bold rounded-xl hover:bg-brand-50 transition-all"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

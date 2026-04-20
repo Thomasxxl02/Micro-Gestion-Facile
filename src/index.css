@@ -1,13 +1,13 @@
 /* --- Importation des polices Google Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
 /* --- Importation de Tailwind CSS --- */
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* --- Configuration du thème Tailwind v4 --- */
 @theme {
-  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   /* --- Palette Slate Brand (Épuré Professionnel) --- */
   --color-brand-50: #f8fafc;
@@ -99,6 +99,11 @@
   --text-muted: #475569;
   --text-disabled: #94a3b8;
 
+  /* --- Variables de Personnalisation Visuelle --- */
+  --app-border-radius: 12px;
+  --app-density-padding: 1rem;
+  --app-density-gap: 1.5rem;
+
   /* Composants Glassmorphic (Effet de verre) */
   --card-bg: rgba(255, 255, 255, 0.75);
   --card-border: rgba(255, 255, 255, 0.6);
@@ -131,6 +136,24 @@
   --financial-pending: #f59e0b; /* amber-500 (pour visibilité) */
   --financial-pending-bg: rgba(245, 158, 11, 0.1);
   --financial-pending-border: rgba(245, 158, 11, 0.3);
+}
+
+/* --- Support Reduced Motion (Accessibilité) --- */
+:root.reduced-motion {
+  --animate-fade-in: none !important;
+  --animate-slide-up: none !important;
+  --animate-pulse-slow: none !important;
+}
+
+:root.reduced-motion *,
+:root.reduced-motion *::before,
+:root.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0 !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0 !important;
+  scroll-behavior: auto !important;
 }
 
 /* --- Mode Sombre (Dark Mode Customization) --- */
@@ -186,7 +209,11 @@ body {
   background-image:
     radial-gradient(circle at 15% 15%, var(--bg-glow1) 0%, transparent 40%),
     radial-gradient(circle at 85% 85%, var(--bg-glow2) 0%, transparent 40%),
-    linear-gradient(135deg, var(--bg-color-stop1) 0%, var(--bg-color-stop2) 100%);
+    linear-gradient(
+      135deg,
+      var(--bg-color-stop1) 0%,
+      var(--bg-color-stop2) 100%
+    );
   background-attachment: fixed;
   color: var(--text-main);
   transition:
@@ -234,8 +261,12 @@ h4 {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Scrollbar styling — moderne browsers supportent scrollbar-width/color depuis 2021+ */
+/* Fallback: anciennes versions Safari, iOS, Samsung Internet utiliseront webkit */
 .custom-scrollbar {
-  scrollbar-width: thin;
+  /* @supports (scrollbar-width: thin) */
+  scrollbar-width: thin; /* Chrome 121+, Firefox, Edge 121+ */
   scrollbar-color: var(--input-border) transparent;
 }
 
@@ -246,7 +277,7 @@ h4 {
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-md);
-  border-radius: 1.5rem;
+  border-radius: var(--app-border-radius);
 }
 
 .glass-strong {
@@ -255,7 +286,7 @@ h4 {
   backdrop-filter: blur(48px) saturate(100%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-lg);
-  border-radius: 2rem;
+  border-radius: calc(var(--app-border-radius) * 1.5);
 }
 
 .glass-card {
@@ -337,7 +368,7 @@ h4 {
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--card-border);
-  border-radius: 1.5rem;
+  border-radius: var(--app-border-radius);
   box-shadow: var(--card-shadow);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -346,13 +377,18 @@ h4 {
 
 /* Ligne brillante sur le dessus des cartes pour la profondeur */
 .card-modern::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
   opacity: 0.5;
 }
 
@@ -360,7 +396,12 @@ h4 {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 .dark .card-modern::before {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
 }
 
 .card-modern:hover {
@@ -586,16 +627,20 @@ h4 {
 }
 
 /* États de la barre de progression fiscale */
-.vat-progress-bar[data-state='normal']::-webkit-progress-value {
-  background-image: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-500));
+.vat-progress-bar[data-state="normal"]::-webkit-progress-value {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-primary-400),
+    var(--color-primary-500)
+  );
 }
-.vat-progress-bar[data-state='warning']::-webkit-progress-value {
+.vat-progress-bar[data-state="warning"]::-webkit-progress-value {
   background-image: linear-gradient(90deg, #fde047, #eab308);
 }
-.vat-progress-bar[data-state='exceeded']::-webkit-progress-value {
+.vat-progress-bar[data-state="exceeded"]::-webkit-progress-value {
   background-image: linear-gradient(90deg, #fcd34d, #f59e0b);
 }
-.vat-progress-bar[data-state='critical']::-webkit-progress-value {
+.vat-progress-bar[data-state="critical"]::-webkit-progress-value {
   background-image: linear-gradient(90deg, #fca5a5, #ef4444);
 }
 
@@ -665,13 +710,18 @@ h4 {
   color: #4ade80;
 }
 .certified-badge::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -100%;
   left: -100%;
   width: 300%;
   height: 300%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
   animation: shine 3s infinite;
 }
 

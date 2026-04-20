@@ -166,7 +166,9 @@ const InvoicePaper: React.FC<InvoicePaperProps> = ({
                   })}
                 </span>
               </div>
-              {invoice.vatAmount != null && invoice.vatAmount > 0 ? (
+              {invoice.vatAmount !== null &&
+              invoice.vatAmount !== undefined &&
+              invoice.vatAmount > 0 ? (
                 <>
                   <div className="flex justify-between text-sm text-brand-600">
                     <span>TVA</span>

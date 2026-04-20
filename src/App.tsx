@@ -1,11 +1,16 @@
-﻿import { LoaderCircle as Loader2 } from 'lucide-react';
-import React, { useEffect } from 'react';
-import AppShell from './components/AppShell';
-import AuthPage from './components/AuthPage';
-import { Toaster } from './components/Toaster';
-import { useAuth } from './hooks/useAuth';
-import { useAppStore } from './store/appStore';
-import { useUIStore } from './store/useUIStore';
+import { LoaderCircle as Loader2 } from "lucide-react";
+import React, { useEffect } from "react";
+import AppShell from "./components/AppShell";
+import AuthPage from "./components/AuthPage";
+import ErrorBoundary from "./components/ErrorBoundary";
+import OfflineIndicator from "./components/OfflineIndicator";
+import PerformanceDashboard from "./components/PerformanceDashboard";
+import { Toaster } from "./components/Toaster";
+import { useAuth } from "./hooks/useAuth";
+import { performanceMonitor } from "./lib/performanceMonitor";
+import { initializeServiceWorker } from "./lib/serviceWorkerManager";
+import { useAppStore } from "./store/appStore";
+import { useUIStore } from "./store/useUIStore";
 
 const App: React.FC = () => {
   useAuth();
@@ -14,8 +19,18 @@ const App: React.FC = () => {
   const user = useAppStore((s) => s.user);
   const fontSize = useUIStore((s) => s.fontSize);
 
+  // Initialize Service Worker for offline support
   useEffect(() => {
-    document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
+    initializeServiceWorker();
+    // Initialize performance monitoring
+    performanceMonitor.initialize(process.env.NODE_ENV === 'production');
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--app-font-size",
+      `${fontSize}px`,
+    );
   }, [fontSize]);
 
   if (!isAuthReady) {
@@ -31,10 +46,14 @@ const App: React.FC = () => {
   }
 
   return (
-    <>
-      <AppShell />
-      <Toaster />
-    </>
+    <ErrorBoundary>
+      <>
+        <OfflineIndicator />
+        <AppShell />
+        <Toaster />
+        {process.env.NODE_ENV === 'development' && <PerformanceDashboard />}
+      </>
+    </ErrorBoundary>
   );
 };
 

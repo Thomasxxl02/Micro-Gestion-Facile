@@ -901,7 +901,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
             {/* Colonne Gauche : Config & Client */}
             <div className="lg:col-span-2 space-y-6">
                  {/* Card Client & Dates */}
-                <div className="bg-[var(--card-bg)] rounded-[2rem] shadow-sm border border-[var(--card-border)] p-8">
+                <div className="bg-(--card-bg) rounded-[2rem] shadow-sm border border-(--card-border) p-8">
                     {newDocData.linkedDocumentId && (
                         <div className="mb-6 inline-flex items-center gap-2 bg-brand-100 dark:bg-brand-800 text-brand-600 dark:text-brand-400 px-3 py-1.5 rounded-full text-xs font-semibold">
                             <LinkIcon size={12} />
@@ -911,9 +911,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Client</label>
+                            <label className="block text-xs font-bold text-(--text-muted) uppercase tracking-wider mb-2">Client</label>
                             <select 
-                                className={`w-full p-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-[var(--text-main)]`}
+                                className={`w-full p-3 bg-(--input-bg) border border-(--input-border) rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all font-semibold text-(--text-main)`}
                                 value={selectedClientId}
                                 onChange={(e) => {
                                     const clientId = e.target.value;
@@ -940,28 +940,28 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                             {selectedClient && (
-                                <div className="mt-4 p-4 bg-[var(--bg-main)] rounded-xl border border-[var(--card-border)] text-sm">
-                                    <p className="font-bold text-[var(--text-main)] font-display">{selectedClient.name}</p>
-                                    <p className="text-[var(--text-muted)] whitespace-pre-line mt-1">{selectedClient.address}</p>
-                                    {selectedClient.siret && <p className="text-xs text-[var(--text-muted)] mt-2 font-mono">SIRET: {selectedClient.siret}</p>}
+                                <div className="mt-4 p-4 bg-(--bg-main) rounded-xl border border-(--card-border) text-sm">
+                                    <p className="font-bold text-(--text-main) font-display">{selectedClient.name}</p>
+                                    <p className="text-(--text-muted) whitespace-pre-line mt-1">{selectedClient.address}</p>
+                                    {selectedClient.siret && <p className="text-xs text-(--text-muted) mt-2 font-mono">SIRET: {selectedClient.siret}</p>}
                                 </div>
                             )}
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Date d'émission</label>
+                                <label className="block text-xs font-bold text-(--text-muted) uppercase tracking-wider mb-2">Date d'émission</label>
                                 <input 
                                 type="date" 
-                                className={`w-full p-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-[var(--text-main)] font-medium`}
+                                className={`w-full p-3 bg-(--input-bg) border border-(--input-border) rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-(--text-main) font-medium`}
                                 value={newDocData.date}
                                 onChange={(e) => setNewDocData({...newDocData, date: e.target.value})}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Date d'échéance</label>
+                                <label className="block text-xs font-bold text-(--text-muted) uppercase tracking-wider mb-2">Date d'échéance</label>
                                 <input 
                                 type="date" 
-                                className={`w-full p-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-[var(--text-main)] font-medium`}
+                                className={`w-full p-3 bg-(--input-bg) border border-(--input-border) rounded-xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-(--text-main) font-medium`}
                                 value={newDocData.dueDate}
                                 onChange={(e) => setNewDocData({...newDocData, dueDate: e.target.value})}
                                 />
@@ -971,22 +971,22 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                 </div>
 
                 {/* Card Items */}
-                <div className="bg-[var(--card-bg)] rounded-[2rem] shadow-sm border border-[var(--card-border)] p-8">
+                <div className="bg-(--card-bg) rounded-[2rem] shadow-sm border border-(--card-border) p-8">
                      <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-[var(--text-main)] font-display">Prestations & Produits</h3>
+                        <h3 className="text-lg font-bold text-(--text-main) font-display">Prestations & Produits</h3>
                      </div>
 
                      <div className="space-y-4">
                         {newDocData.items?.map((item, index) => (
-                            <div key={item.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-[var(--bg-main)]/50 p-4 rounded-xl border border-[var(--card-border)] group hover:border-accent-200 transition-colors">
-                                <span className="bg-[var(--card-bg)] w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-[var(--text-muted)] border border-[var(--card-border)] shadow-sm shrink-0">
+                            <div key={item.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-(--bg-main)/50 p-4 rounded-xl border border-(--card-border) group hover:border-accent-200 transition-colors">
+                                <span className="bg-(--card-bg) w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-(--text-muted) border border-(--card-border) shadow-sm shrink-0">
                                     {index + 1}
                                 </span>
                                 <div className="flex-1 w-full relative">
                                     <input 
                                         type="text" 
                                         placeholder="Description..."
-                                        className="w-full bg-transparent border-b border-[var(--card-border)] focus:border-brand-900 outline-none py-1 text-[var(--text-main)] font-medium placeholder:text-[var(--text-muted)]"
+                                        className="w-full bg-transparent border-b border-(--card-border) focus:border-brand-900 outline-none py-1 text-(--text-main) font-medium placeholder:text-(--text-muted)"
                                         value={item.description}
                                         onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                     />
@@ -1000,50 +1000,50 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                 </div>
                                 <div className="flex gap-4 w-full md:w-auto">
                                     <div className="flex flex-col w-20">
-                                        <label className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Qté</label>
+                                        <label className="text-[10px] uppercase font-bold text-(--text-muted)">Qté</label>
                                         <input 
                                             type="number" min="0" step="0.5"
-                                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-[var(--text-main)] font-bold"
+                                            className="bg-(--card-bg) border border-(--card-border) rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-(--text-main) font-bold"
                                             value={item.quantity}
                                             onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value))}
                                         />
                                     </div>
                                     <div className="flex flex-col w-16">
-                                        <label className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Unité</label>
+                                        <label className="text-[10px] uppercase font-bold text-(--text-muted)">Unité</label>
                                         <input 
                                             type="text"
                                             placeholder="u"
-                                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-[var(--text-main)] font-medium"
+                                            className="bg-(--card-bg) border border-(--card-border) rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-(--text-main) font-medium"
                                             value={item.unit || ''}
                                             onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
                                         />
                                     </div>
                                     <div className="flex flex-col w-24">
-                                        <label className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Prix Uni.</label>
+                                        <label className="text-[10px] uppercase font-bold text-(--text-muted)">Prix Uni.</label>
                                         <input 
                                             type="number" min="0" step="0.01"
-                                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-[var(--text-main)] font-bold"
+                                            className="bg-(--card-bg) border border-(--card-border) rounded-lg p-1.5 text-right outline-none focus:border-brand-900 text-(--text-main) font-bold"
                                             value={item.unitPrice}
                                             onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value))}
                                         />
                                     </div>
                                     {!newDocData.taxExempt && (
                                         <div className="flex flex-col w-16">
-                                            <label className="text-[10px] uppercase font-bold text-[var(--text-muted)]">TVA %</label>
+                                            <label className="text-[10px] uppercase font-bold text-(--text-muted)">TVA %</label>
                                             <input 
                                                 type="number" min="0" max="100" step="0.1"
-                                                className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-[var(--text-main)] font-medium"
+                                                className="bg-(--card-bg) border border-(--card-border) rounded-lg p-1.5 text-center outline-none focus:border-brand-900 text-(--text-main) font-medium"
                                                 value={item.vatRate || 0}
                                                 onChange={(e) => updateItem(item.id, 'vatRate', parseFloat(e.target.value))}
                                             />
                                         </div>
                                     )}
                                     <div className="flex flex-col w-24 justify-end">
-                                        <div className="text-right font-bold text-[var(--text-main)] py-2 font-display">
+                                        <div className="text-right font-bold text-(--text-main) py-2 font-display">
                                             {(item.quantity * item.unitPrice).toFixed(2)} €
                                         </div>
                                     </div>
-                                    <button onClick={() => removeItem(item.id)} className="self-end mb-2 text-[var(--text-muted)] hover:text-red-500 transition-colors">
+                                    <button onClick={() => removeItem(item.id)} className="self-end mb-2 text-(--text-muted) hover:text-red-500 transition-colors">
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
@@ -1051,27 +1051,27 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                         ))}
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button onClick={addItem} className={`flex-1 py-3 border-2 border-dashed border-[var(--card-border)] rounded-xl text-[var(--text-muted)] hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2`}>
+                            <button onClick={addItem} className={`flex-1 py-3 border-2 border-dashed border-(--card-border) rounded-xl text-(--text-muted) hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2`}>
                                 <Plus size={18} /> Ajouter une ligne vide
                             </button>
                             
                             <div className="relative flex-1">
                                 <button 
                                     onClick={() => setIsProductSearchOpen(!isProductSearchOpen)}
-                                    className={`w-full py-3 pl-10 pr-4 border-2 border-dashed border-[var(--card-border)] rounded-xl text-[var(--text-muted)] hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 bg-transparent outline-none`}
+                                    className={`w-full py-3 pl-10 pr-4 border-2 border-dashed border-(--card-border) rounded-xl text-(--text-muted) hover:border-brand-400 hover:text-brand-600 transition-all font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 bg-transparent outline-none`}
                                 >
                                     <Package size={18} /> + Ajouter depuis le catalogue
                                 </button>
                                 
                                 {isProductSearchOpen && (
-                                    <div className="absolute bottom-full mb-2 left-0 right-0 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-2xl z-20 overflow-hidden animate-slide-up max-h-64 flex flex-col">
-                                        <div className="p-3 border-b border-[var(--card-border)] bg-[var(--bg-main)]">
+                                    <div className="absolute bottom-full mb-2 left-0 right-0 bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-2xl z-20 overflow-hidden animate-slide-up max-h-64 flex flex-col">
+                                        <div className="p-3 border-b border-(--card-border) bg-(--bg-main)">
                                             <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" size={14} />
                                                 <input 
                                                     type="text" 
                                                     placeholder="Rechercher un produit..."
-                                                    className="w-full pl-9 pr-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-xs outline-none focus:border-brand-900"
+                                                    className="w-full pl-9 pr-3 py-2 bg-(--card-bg) border border-(--card-border) rounded-xl text-xs outline-none focus:border-brand-900"
                                                     value={productSearch}
                                                     onChange={e => setProductSearch(e.target.value)}
                                                     autoFocus
@@ -1089,20 +1089,20 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                                                             setIsProductSearchOpen(false);
                                                             setProductSearch('');
                                                         }}
-                                                        className="w-full p-3 text-left hover:bg-[var(--bg-main)] border-b border-[var(--card-border)] last:border-0 flex justify-between items-center group transition-colors"
+                                                        className="w-full p-3 text-left hover:bg-(--bg-main) border-b border-(--card-border) last:border-0 flex justify-between items-center group transition-colors"
                                                     >
                                                         <div>
-                                                            <div className="text-xs font-bold text-[var(--text-main)] group-hover:text-accent-600">{p.name}</div>
-                                                            <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold">{p.category || 'Sans catégorie'}</div>
+                                                            <div className="text-xs font-bold text-(--text-main) group-hover:text-accent-600">{p.name}</div>
+                                                            <div className="text-[10px] text-(--text-muted) uppercase font-bold">{p.category || 'Sans catégorie'}</div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <div className="text-xs font-bold text-[var(--text-main)]">{p.price.toFixed(2)}€</div>
-                                                            {p.type === 'product' && <div className="text-[10px] text-[var(--text-muted)]">Stock: {p.stock}</div>}
+                                                            <div className="text-xs font-bold text-(--text-main)">{p.price.toFixed(2)}€</div>
+                                                            {p.type === 'product' && <div className="text-[10px] text-(--text-muted)">Stock: {p.stock}</div>}
                                                         </div>
                                                     </button>
                                                 ))
                                             }
-                                            {products.length === 0 && <div className="p-4 text-center text-xs text-[var(--text-muted)] italic">Catalogue vide</div>}
+                                            {products.length === 0 && <div className="p-4 text-center text-xs text-(--text-muted) italic">Catalogue vide</div>}
                                         </div>
                                     </div>
                                 )}
@@ -1119,10 +1119,10 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
                      </div>
                 </div>
 
-                <div className="bg-[var(--card-bg)] rounded-[2rem] shadow-sm border border-[var(--card-border)] p-8">
-                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Notes & Conditions</label>
+                <div className="bg-(--card-bg) rounded-[2rem] shadow-sm border border-(--card-border) p-8">
+                    <label className="block text-xs font-bold text-(--text-muted) uppercase tracking-wider mb-2">Notes & Conditions</label>
                     <textarea 
-                        className="w-full p-4 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all resize-none text-[var(--text-main)] font-medium"
+                        className="w-full p-4 bg-(--input-bg) border border-(--input-border) rounded-xl text-sm focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all resize-none text-(--text-main) font-medium"
                         rows={3}
                         placeholder="Conditions de paiement, mentions légales spécifiques..."
                         value={newDocData.notes || ''}
@@ -1555,18 +1555,18 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
       {/* Stats Cards (Bento Style) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group">
-              <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-[var(--text-main)]">
+              <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-(--text-main)">
                   <Calculator size={120} />
               </div>
               <div className="flex justify-between items-start mb-4">
-                  <div className="p-2.5 bg-[var(--bg-main)] text-[var(--text-main)] rounded-xl">
+                  <div className="p-2.5 bg-(--bg-main) text-(--text-main) rounded-xl">
                       <Calculator size={20} />
                   </div>
-                  <span className="badge bg-[var(--bg-main)] text-[var(--text-muted)]">Total {getDocumentLabel(activeTab)}s</span>
+                  <span className="badge bg-(--bg-main) text-(--text-muted)">Total {getDocumentLabel(activeTab)}s</span>
               </div>
               <div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] font-display tracking-tight">{stats.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">{stats.count} documents au total</p>
+                  <h3 className="text-2xl font-bold text-(--text-main) font-display tracking-tight">{stats.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
+                  <p className="text-xs text-(--text-muted) mt-1 font-medium">{stats.count} documents au total</p>
               </div>
           </div>
           <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group">
@@ -1581,7 +1581,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
               </div>
               <div>
                   <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400 font-display tracking-tight">{stats.paid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">Revenus sécurisés</p>
+                  <p className="text-xs text-(--text-muted) mt-1 font-medium">Revenus sécurisés</p>
               </div>
           </div>
           <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group">
@@ -1596,7 +1596,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
               </div>
               <div>
                   <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 font-display tracking-tight">{stats.pending.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">À encaisser</p>
+                  <p className="text-xs text-(--text-muted) mt-1 font-medium">À encaisser</p>
               </div>
           </div>
           <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group border-red-100 dark:border-red-900/30">
@@ -1611,7 +1611,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({ invoices, setInvoices, 
               </div>
               <div>
                   <h3 className="text-2xl font-bold text-red-600 dark:text-red-400 font-display tracking-tight">{stats.overdue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">Action requise</p>
+                  <p className="text-xs text-(--text-muted) mt-1 font-medium">Action requise</p>
               </div>
           </div>
       </div>

@@ -44,7 +44,7 @@ const AIAssistant: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-6rem)] max-w-5xl mx-auto flex flex-col bg-white rounded-[2rem] shadow-xl border border-brand-200 overflow-hidden animate-fade-in">
-      <div className="bg-gradient-to-r from-brand-900 to-brand-800 p-6 flex items-center justify-between">
+      <div className="bg-linear-to-r from-brand-900 to-brand-800 p-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
             <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl shadow-inner">
                 <Sparkles className="text-white" size={24} />

@@ -16,6 +16,7 @@ import { GitHubLoginButton } from "./GitHubLoginButton";
 /**
  * Page de connexion : Google, GitHub, lien magique e-mail.
  */
+// eslint-disable-next-line complexity
 const AuthPage: React.FC = () => {
   const {
     email: emailLink,
@@ -33,13 +34,63 @@ const AuthPage: React.FC = () => {
   >(null);
   const [loginError, setLoginError] = React.useState<string | null>(null);
   const [rememberMe, setRememberMe] = React.useState(true);
+  const [lastEmailSentTime, setLastEmailSentTime] = React.useState<number>(0);
+
+  // Charger le cooldown et l'email au montage
+  React.useEffect(() => {
+    const savedTime = localStorage.getItem("auth_last_email_sent");
+    if (savedTime) setLastEmailSentTime(parseInt(savedTime, 10));
+
+    const lastEmail = localStorage.getItem("last_auth_email");
+    if (lastEmail && !emailLink) {
+      void setEmailLink(lastEmail);
+    }
+
+    const timer = window.setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGoogleLogin = async () => {
     setLoadingService("google");
     try {
       await loginWithGoogle(rememberMe);
-    } catch (err: any) {
-      setLoginError(getFriendlyAuthErrorMessage(err?.code || ""));
+    } catch (err: unknown) {
+      const errorCode =
+        err && typeof err === "object" && "code" in err ? String(err.code) : "";
+      setLoginError(getFriendlyAuthErrorMessage(errorCode));
+    } finally {
+      setLoadingService(null);
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailLink || loadingService !== null || !isEmailValid) return;
+
+    // Protection anti-spam locale (60s)
+    const now = Date.now();
+    const cooldown = 60000;
+    if (now - lastEmailSentTime < cooldown) {
+      const wait = Math.ceil((cooldown - (now - lastEmailSentTime)) / 1000);
+      setLoginError(`Veuillez patienter ${wait}s avant de renvoyer un lien.`);
+      return;
+    }
+
+    setLoadingService("email");
+    try {
+      await sendEmailLink(emailLink, rememberMe);
+      setIsEmailSent(true);
+      setLastEmailSentTime(now);
+      localStorage.setItem("auth_last_email_sent", now.toString());
+      localStorage.setItem("last_auth_email", emailLink);
+    } catch (err: unknown) {
+      const errorCode =
+        err && typeof err === "object" && "code" in err ? String(err.code) : "";
+      setLoginError(getFriendlyAuthErrorMessage(errorCode));
     } finally {
       setLoadingService(null);
     }
@@ -57,6 +108,8 @@ const AuthPage: React.FC = () => {
         return "Chargement...";
     }
   };
+
+  const emailInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 transition-colors duration-500">
@@ -104,87 +157,75 @@ const AuthPage: React.FC = () => {
             showDismiss={true}
           />
 
-          {/* Connexion Google */}
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => void handleGoogleLogin()}
             disabled={loadingService !== null}
             aria-label={
               loadingService === "google"
                 ? "Communication avec Google..."
                 : "Se connecter avec votre compte Google"
             }
-            title="Authentification sécurisée via Google Sign-In"
             className={`
-              w-full
-              min-h-11 sm:min-h-12.5
-              py-3 sm:py-4
-              px-4 sm:px-8
-              bg-white dark:bg-white
-              text-gray-900 dark:text-gray-900
-              border-2 border-gray-300 dark:border-gray-200
-              rounded-2xl
-              font-bold
-              flex items-center justify-center gap-3 sm:gap-4
-              hover:scale-100 sm:hover:scale-[1.02]
-              active:scale-95
-              transition-all
-              shadow-lg
-              hover:shadow-xl hover:border-gray-400
-              group
-              disabled:opacity-60
-              disabled:cursor-not-allowed
-              disabled:scale-100
+              w-full min-h-11 sm:min-h-12.5 py-3 sm:py-4 px-4 sm:px-8
+              bg-brand-600 hover:bg-brand-700 text-white border-2 border-brand-500 hover:border-brand-600 rounded-2xl font-bold
+              flex items-center justify-center gap-3 sm:gap-4 hover:scale-100 sm:hover:scale-[1.02] active:scale-95 transition-all
+              shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 group disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100
             `}
           >
-            {loadingService === "google" ? (
-              <>
-                <Loader2 size={20} className="animate-spin text-gray-900" />
-                <span className="animate-pulse text-gray-900">
-                  {getLoadingMessage()}
-                </span>
-              </>
-            ) : (
-              <>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                <span className="hidden sm:inline">
-                  Se connecter avec Google
-                </span>
-                <span className="sm:hidden">Google</span>
-              </>
-            )}
+            <div className="flex items-center gap-3 h-6">
+              {loadingService === "google" ? (
+                <>
+                  <Loader2 size={20} className="animate-spin text-white" />
+                  <span className="animate-pulse text-white">
+                    {getLoadingMessage()}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="bg-white p-1 rounded-lg">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                  </div>
+                  <span className="hidden sm:inline">
+                    Se connecter avec Google
+                  </span>
+                  <span className="sm:hidden">Google</span>
+                </>
+              )}
+            </div>
           </button>
 
-          {/* Connexion GitHub */}
           <GitHubLoginButton
-            onSuccess={() => {
-              // Réussite : La redirection sera gérée par l'observateur global onAuthStateChanged
-            }}
-            onError={(err: any) => {
-              setLoginError(getFriendlyAuthErrorMessage(err?.code || ""));
+            onSuccess={() => {}}
+            onError={(err: unknown) => {
+              const errorCode =
+                err && typeof err === "object" && "code" in err
+                  ? String(err.code)
+                  : "";
+              setLoginError(getFriendlyAuthErrorMessage(errorCode));
             }}
             label="Se connecter avec GitHub"
             showText={true}
@@ -192,72 +233,42 @@ const AuthPage: React.FC = () => {
             disabled={loadingService !== null}
           />
 
-          {/* Option de session */}
-          <fieldset className="border border-brand-200 dark:border-brand-800 rounded-2xl p-4 mb-6">
-            <legend className="text-xs uppercase font-bold text-brand-600 dark:text-brand-400 ml-2 px-2 tracking-widest">
-              📌 Préférences
-            </legend>
-            <label className="flex items-center gap-3 cursor-pointer group select-none">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="peer sr-only"
-                  aria-describedby="remember-me-hint"
-                />
-                <div className="w-5 h-5 border-2 border-brand-300 dark:border-brand-700 rounded-md bg-white dark:bg-brand-900 transition-all group-hover:border-brand-500 peer-checked:bg-brand-600 peer-checked:border-brand-600" />
-                <CheckCircle2
-                  size={12}
-                  className="absolute top-1 left-1 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
-                />
-              </div>
-              <div className="flex-1">
-                <span className="text-sm font-medium text-brand-900 dark:text-white group-hover:text-brand-900 dark:group-hover:text-brand-100 transition-colors">
-                  Rester connecté
-                </span>
-                <p
-                  id="remember-me-hint"
-                  className="text-xs text-brand-500 dark:text-brand-400 mt-0.5"
-                >
-                  S'applique à Google, GitHub et email
-                </p>
-              </div>
-            </label>
-          </fieldset>
-
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-brand-200 dark:border-brand-800"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-brand-50 dark:bg-brand-950 px-4 text-brand-400 font-bold tracking-widest">
-                OU
+                Lien magique par e-mail
               </span>
             </div>
           </div>
 
-          {/* Connexion par lien magique */}
           {!isEmailSent ? (
             <form
               aria-label="Connexion par lien magique"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!emailLink || loadingService !== null || !isEmailValid) {
-                  return;
-                }
-                setLoadingService("email");
-                try {
-                  await sendEmailLink(emailLink, rememberMe);
-                  setIsEmailSent(true);
-                } catch (err: any) {
-                  setLoginError(getFriendlyAuthErrorMessage(err?.code || ""));
-                } finally {
-                  setLoadingService(null);
-                }
-              }}
-              className="space-y-3 text-left"
+              onSubmit={handleEmailLogin}
+              className="space-y-4 text-left"
             >
+              <label className="flex items-center gap-3 cursor-pointer group select-none ml-1">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 border-2 border-brand-200 dark:border-brand-800 rounded-md bg-white dark:bg-brand-900 transition-all group-hover:border-brand-400 peer-checked:bg-brand-600 peer-checked:border-brand-600" />
+                  <CheckCircle2
+                    size={12}
+                    className="absolute top-1 left-1 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                  />
+                </div>
+                <span className="text-sm font-medium text-brand-700 dark:text-brand-300 group-hover:text-brand-900 dark:group-hover:text-brand-100 transition-colors">
+                  Rester connecté
+                </span>
+              </label>
+
               <label htmlFor="email-login" className="sr-only">
                 Adresse email
               </label>
@@ -276,12 +287,13 @@ const AuthPage: React.FC = () => {
                 />
                 <input
                   id="email-login"
+                  ref={emailInputRef}
                   type="email"
                   autoComplete="email"
                   placeholder="votre@email.com"
                   required
                   value={emailLink}
-                  onChange={(e) => setEmailLink(e.target.value)}
+                  onChange={(e) => void setEmailLink(e.target.value)}
                   disabled={loadingService !== null}
                   className={`w-full pl-12 pr-12 py-4 bg-white dark:bg-brand-900/50 border rounded-2xl focus:ring-4 outline-none transition-all dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
                     emailValidationError
@@ -293,95 +305,76 @@ const AuthPage: React.FC = () => {
                           : "border-brand-200 dark:border-brand-800 focus:ring-brand-500/10 focus:border-brand-500"
                   }`}
                 />
-                {isEmailValidating && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {isEmailValidating && (
                     <Loader2
                       size={16}
                       className="animate-spin text-brand-400"
                     />
-                  </div>
-                )}
-                {isEmailValid && !isEmailValidating && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  )}
+                  {isEmailValid && !isEmailValidating && (
                     <CheckCircle2
                       size={16}
-                      className="text-green-500 animate-in zoom-in duration-300"
+                      className="text-green-500 animate-in zoom-in"
                     />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
-              {emailValidationError && (
-                <p className="text-xs text-red-600 dark:text-red-400 px-2 flex items-center gap-1 animate-fade-in">
-                  <AlertCircle size={12} /> {emailValidationError}
-                </p>
-              )}
-              {emailValidationWarning && (
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 px-2 flex items-center gap-1 animate-fade-in">
-                  <AlertCircle size={12} /> {emailValidationWarning}
-                </p>
-              )}
               {emailSuggestion && (
-                <div className="px-2 py-1.5 bg-brand-50/50 dark:bg-brand-900/30 rounded-xl border border-brand-100 dark:border-brand-800 animate-fade-in">
-                  <p className="text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
-                    <AlertCircle size={12} className="text-brand-500" />
-                    <span>Vouliez-vous dire </span>
-                    <button
-                      type="button"
-                      onClick={() => setEmailLink(emailSuggestion)}
-                      className="font-bold underline hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                    >
-                      {emailSuggestion}
-                    </button>
-                    <span> ?</span>
+                <div className="flex flex-col gap-2 mt-2 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-brand-600 dark:text-brand-400 ml-1">
+                    Vouliez-vous dire :
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => void setEmailLink(emailSuggestion)}
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 rounded-xl hover:bg-brand-200 dark:hover:bg-brand-800 transition-colors border border-brand-200 dark:border-brand-800 w-fit group"
+                  >
+                    <CheckCircle2 size={16} className="text-brand-500" />
+                    <span className="font-medium">{emailSuggestion}</span>
+                    <ArrowRight
+                      size={14}
+                      className="ml-auto opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"
+                    />
+                  </button>
                 </div>
               )}
-              {isEmailValid && !emailValidationWarning && !emailSuggestion && (
-                <p className="text-xs text-green-600 dark:text-green-400 px-2 flex items-center gap-1 animate-fade-in">
-                  <CheckCircle2 size={12} /> Email valide ✓
-                </p>
+
+              {emailValidationError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl text-sm border border-red-100 dark:border-red-900/30 animate-in shake-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{emailValidationError}</span>
+                </div>
+              )}
+              {emailValidationWarning && (
+                <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-xl text-sm border border-orange-100 dark:border-orange-900/30">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{emailValidationWarning}</span>
+                </div>
               )}
 
               <button
                 type="submit"
                 disabled={loadingService !== null || !isEmailValid}
-                className={`
-                  w-full
-                  min-h-11
-                  py-3 sm:py-4
-                  px-4 sm:px-6
-                  bg-brand-50 dark:bg-brand-800
-                  text-brand-900 dark:text-white
-                  rounded-2xl
-                  font-bold
-                  flex items-center justify-center gap-2 sm:gap-3
-                  hover:bg-brand-100 dark:hover:bg-brand-700
-                  transition-all
-                  border border-brand-200 dark:border-brand-700
-                  group
-                  disabled:opacity-50
-                  disabled:cursor-not-allowed
-                  active:scale-95
-                `}
+                className="w-full py-4 px-8 rounded-2xl font-bold bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 hover:scale-100 sm:hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
-                {loadingService === "email" ? (
-                  <>
-                    <Loader2 size={16} className="sm:size-4.5 animate-spin" />
-                    <span className="animate-pulse">{getLoadingMessage()}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">
-                      Recevoir un lien magique
-                    </span>
-                    <span className="sm:hidden">Lien magique</span>
-                    <ArrowRight
-                      size={16}
-                      className="sm:size-4.5 group-hover:translate-x-1 transition-transform"
-                    />
-                  </>
-                )}
+                <div className="flex items-center gap-3 h-6">
+                  {loadingService === "email" ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      <span className="animate-pulse">
+                        {getLoadingMessage()}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={20} />
+                      <span>M'envoyer le lien magique</span>
+                      <ArrowRight size={20} className="ml-1" />
+                    </>
+                  )}
+                </div>
               </button>
             </form>
           ) : (
@@ -391,21 +384,23 @@ const AuthPage: React.FC = () => {
                 setLoadingService("email");
                 try {
                   await sendEmailLink(emailLink, rememberMe);
-                } catch (err: any) {
-                  setLoginError(getFriendlyAuthErrorMessage(err?.code || ""));
+                  setLastEmailSentTime(Date.now());
+                  localStorage.setItem(
+                    "auth_last_email_sent",
+                    Date.now().toString(),
+                  );
                 } finally {
                   setLoadingService(null);
                 }
               }}
               onEdit={() => {
                 setIsEmailSent(false);
-                setEmailLink("");
+                void setEmailLink("");
               }}
               isResending={loadingService === "email"}
             />
           )}
         </div>
-
         <p className="mt-10 text-xs text-brand-400 dark:text-brand-500 uppercase tracking-widest font-semibold">
           Sécurisé par Google Auth
         </p>

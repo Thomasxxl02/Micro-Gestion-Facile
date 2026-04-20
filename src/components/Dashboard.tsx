@@ -8,17 +8,17 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import type { LucideIcon } from 'lucide-react';
-// eslint-disable-next-line no-duplicate-imports
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { LucideIcon } from "lucide-react";
+
 import {
   CircleAlert as AlertCircle,
   ArrowDownRight,
@@ -39,8 +39,8 @@ import {
   Users,
   Wallet,
   Zap,
-} from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+} from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -52,15 +52,17 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
+import type { ViewType } from "../hooks/useViewRouter";
+import { checkCompliance2026 } from "../lib/complianceUtils";
 import {
   calculateSocialContributions,
   calculateThresholdStatus,
   getThresholds,
-} from '../lib/fiscalCalculations';
-import { projectRevenue, type MonthlyRevenue } from '../lib/revenueProjection';
-import { predictRevenue } from '../services/geminiService';
-import { useAppStore } from '../store/appStore';
+} from "../lib/fiscalCalculations";
+import { projectRevenue, type MonthlyRevenue } from "../lib/revenueProjection";
+import { predictRevenue } from "../services/geminiService";
+import { useAppStore } from "../store/appStore";
 import {
   InvoiceStatus,
   type CalendarEvent,
@@ -68,33 +70,32 @@ import {
   type Invoice,
   type Product,
   type UserProfile,
-  type ViewState,
-} from '../types';
-import { ChartSkeleton, StatCardSkeleton } from './Skeleton';
+} from "../types";
+import { ChartSkeleton, StatCardSkeleton } from "./Skeleton";
 
 interface DashboardProps {
   invoices: Invoice[];
   products: Product[];
   expenses: Expense[];
   events?: CalendarEvent[];
-  onNavigate: (page: ViewState) => void;
+  onNavigate: (view: ViewType) => void;
   userProfile: UserProfile;
   onSaveInvoice?: (invoice: Invoice) => void;
 }
 
 type WidgetId =
-  | 'stats'
-  | 'performance'
-  | 'expenses'
-  | 'activity'
-  | 'reminders'
-  | 'stock'
-  | 'prediction'
-  | 'stats-revenue'
-  | 'stats-profit'
-  | 'stats-net'
-  | 'stats-micro'
-  | 'stats-vat';
+  | "stats"
+  | "performance"
+  | "expenses"
+  | "activity"
+  | "reminders"
+  | "stock"
+  | "prediction"
+  | "stats-revenue"
+  | "stats-profit"
+  | "stats-net"
+  | "stats-micro"
+  | "stats-vat";
 
 interface SortableWidgetProps {
   id: WidgetId;
@@ -102,8 +103,19 @@ interface SortableWidgetProps {
   className?: string;
 }
 
-const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+const SortableWidget: React.FC<SortableWidgetProps> = ({
+  id,
+  children,
+  className,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id,
   });
 
@@ -113,13 +125,13 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
     <div
       ref={setNodeRef}
       className={`dnd-sortable ${className} relative group transition-shadow duration-300 ${
-        isDragging ? 'shadow-2xl opacity-50' : 'opacity-100'
+        isDragging ? "shadow-2xl opacity-50" : "opacity-100"
       }`}
       {...{
         style: {
-          ['--dnd-transform' as string]: transformValue,
-          ['--dnd-transition' as string]: transition,
-          ['--dnd-z-index' as string]: isDragging ? 50 : 'auto',
+          ["--dnd-transform" as string]: transformValue,
+          ["--dnd-transition" as string]: transition,
+          ["--dnd-z-index" as string]: isDragging ? 50 : "auto",
         } as React.CSSProperties,
       }}
     >
@@ -139,7 +151,13 @@ const SortableWidget: React.FC<SortableWidgetProps> = ({ id, children, className
 
 // Droppable Action Component
 const DroppableAction: React.FC<{
-  action: { id: string; icon?: LucideIcon; label?: string; onClick?: () => void; color?: string };
+  action: {
+    id: string;
+    icon?: LucideIcon;
+    label?: string;
+    onClick?: () => void;
+    color?: string;
+  };
 }> = ({ action }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: action.id,
@@ -149,17 +167,17 @@ const DroppableAction: React.FC<{
     <button
       ref={setNodeRef}
       onClick={action.onClick}
-      aria-label={action.label ? `${action.label}` : 'Action non nommée'}
-      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color || 'bg-brand-700'} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? 'scale-110 bg-[#3ebd93]!' : 'scale-100'}`}
+      aria-label={action.label ? `${action.label}` : "Action non nommée"}
+      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color || "bg-brand-700"} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? "scale-110 bg-[#3ebd93]!" : "scale-100"}`}
     >
       {action.icon &&
         React.createElement(action.icon, {
-          className: 'w-4 h-4',
+          className: "w-4 h-4",
           strokeWidth: 2,
-          'aria-hidden': 'true',
+          "aria-hidden": "true",
         })}
       {action.label}
-      {isOver && action.id === 'quick-action-invoice' && (
+      {isOver && action.id === "quick-action-invoice" && (
         <span className="absolute -bottom-6 left-0 right-0 text-center text-[8px] text-accent-600 font-bold whitespace-nowrap">
           Relâcher pour convertir
         </span>
@@ -173,9 +191,10 @@ const DraggableQuote: React.FC<{
   quote: Invoice;
   onKeyDown?: (e: React.KeyboardEvent, quote: Invoice) => void;
 }> = ({ quote, onKeyDown }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
-    id: `quote-${quote.id}`,
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useSortable({
+      id: `quote-${quote.id}`,
+    });
 
   const transformValue = CSS.Transform.toString(transform);
 
@@ -184,12 +203,12 @@ const DraggableQuote: React.FC<{
       ref={setNodeRef}
       className={`dnd-quote flex items-center justify-between p-3 rounded-xl border border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-grab active:cursor-grabbing ${
         isDragging
-          ? 'bg-brand-50 shadow-lg scale-95 opacity-50'
-          : 'bg-white dark:bg-brand-900/50 opacity-100'
+          ? "bg-brand-50 shadow-lg scale-95 opacity-50"
+          : "bg-white dark:bg-brand-900/50 opacity-100"
       }`}
       {...{
         style: {
-          ['--dnd-transform' as string]: transformValue,
+          ["--dnd-transform" as string]: transformValue,
         } as React.CSSProperties,
       }}
       {...attributes}
@@ -204,8 +223,12 @@ const DraggableQuote: React.FC<{
           <FileText size={14} aria-hidden="true" />
         </div>
         <div>
-          <p className="text-xs font-bold text-brand-900 dark:text-brand-50">{quote.number}</p>
-          <p className="text-[10px] text-brand-400">{quote.total.toLocaleString()} €</p>
+          <p className="text-xs font-bold text-brand-900 dark:text-brand-50">
+            {quote.number}
+          </p>
+          <p className="text-[10px] text-brand-400">
+            {quote.total.toLocaleString()} €
+          </p>
         </div>
       </div>
       <ArrowRight size={14} className="text-brand-200" aria-hidden="true" />
@@ -214,22 +237,36 @@ const DraggableQuote: React.FC<{
 };
 
 const Dashboard: React.FC<DashboardProps> = (props) => {
-  const { invoices, products, expenses, onNavigate, userProfile, onSaveInvoice } = props;
+  const {
+    invoices,
+    expenses,
+    onNavigate,
+    userProfile,
+    products,
+    onSaveInvoice,
+  } = props;
 
   const isSyncing = useAppStore((state) => state.isSyncing);
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [, setActiveId] = useState<string | null>(null);
   const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
-    const saved = localStorage.getItem('dashboard_widgets');
+    const saved = localStorage.getItem("dashboard_widgets");
     return saved
       ? JSON.parse(saved)
-      : ['stats', 'performance', 'expenses', 'activity', 'reminders', 'stock', 'prediction'];
+      : [
+          "stats",
+          "performance",
+          "expenses",
+          "activity",
+          "reminders",
+          "stock",
+          "prediction",
+        ];
   });
 
   useEffect(() => {
-    localStorage.setItem('dashboard_widgets', JSON.stringify(widgetOrder));
+    localStorage.setItem("dashboard_widgets", JSON.stringify(widgetOrder));
   }, [widgetOrder]);
 
   const sensors = useSensors(
@@ -240,47 +277,52 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+  const handleDragStart = (_event: DragStartEvent) => {
+    // setActiveId removed as unused
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, quote: Invoice) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       // In a real dnd scenario, this would trigger the dnd action
       // Here we can at least navigate or show a menu
       e.preventDefault();
-      alert(`Sélectionné : Devis ${quote.number}. Utilisez le glisser-déposer pour convertir.`);
+      alert(
+        `Sélectionné : Devis ${quote.number}. Utilisez le glisser-déposer pour convertir.`,
+      );
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // setActiveId removed as unused
     const { active, over } = event;
-    setActiveId(null);
 
     if (!over) {
       return;
     }
 
     // Handle Drop of Quote on Invoices (Transform)
-    if (active.id.toString().startsWith('quote-') && over.id === 'quick-action-invoice') {
-      const quoteId = active.id.toString().replace('quote-', '');
+    if (
+      active.id.toString().startsWith("quote-") &&
+      over.id === "quick-action-invoice"
+    ) {
+      const quoteId = active.id.toString().replace("quote-", "");
       const quote = invoices.find((inv) => inv.id === quoteId);
       if (quote && onSaveInvoice) {
         const newInvoice: Invoice = {
           ...quote,
           id: Date.now().toString(),
-          type: 'invoice',
+          type: "invoice",
           number: `F${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toISOString().split("T")[0],
           status: InvoiceStatus.DRAFT,
           linkedDocumentId: quote.id,
         };
         onSaveInvoice(newInvoice);
         alert(`Devis ${quote.number} transformé en facture brouillon !`);
-        onNavigate('invoices');
+        onNavigate("invoices");
       }
       return;
     }
@@ -300,11 +342,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     return invoices
       .filter((inv) => inv.status === InvoiceStatus.PAID)
       .reduce((sum, inv) => {
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') {
+        const type = inv.type || "invoice";
+        if (type === "invoice") {
           return sum + inv.total;
         }
-        if (type === 'credit_note') {
+        if (type === "credit_note") {
           return sum - inv.total;
         }
         return sum;
@@ -330,39 +372,49 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const netAfterTax = netProfit - estimatedTax;
 
   const vatProgress = fiscalStatus.tva.percentage;
-  const currentThresholds = getThresholds(userProfile.activityType || 'SERVICE_BNC');
+  const currentThresholds = getThresholds(
+    userProfile.activityType || "SERVICE_BNC",
+  );
 
   // ── Projection de CA (régression linéaire locale) ──────────────────────────
   const revenueProjection = useMemo(() => {
     const monthsMap: Record<string, number> = {};
     invoices
-      .filter((inv) => inv.status === InvoiceStatus.PAID && inv.type === 'invoice')
+      .filter(
+        (inv) => inv.status === InvoiceStatus.PAID && inv.type === "invoice",
+      )
       .forEach((inv) => {
         const key = inv.date.slice(0, 7); // YYYY-MM
         monthsMap[key] = (monthsMap[key] || 0) + inv.total;
       });
-    const history: MonthlyRevenue[] = Object.entries(monthsMap).map(([month, revenue]) => ({
-      month,
-      revenue,
-    }));
-    return projectRevenue(history, 6, userProfile.activityType || 'SERVICE_BNC');
+    const history: MonthlyRevenue[] = Object.entries(monthsMap).map(
+      ([month, revenue]) => ({
+        month,
+        revenue,
+      }),
+    );
+    return projectRevenue(
+      history,
+      6,
+      userProfile.activityType || "SERVICE_BNC",
+    );
   }, [invoices, userProfile.activityType]);
 
   const monthlyData = useMemo(() => {
     const data: Record<string, { income: number; expense: number }> = {};
     const months = [
-      'Jan',
-      'Fév',
-      'Mar',
-      'Avr',
-      'Mai',
-      'Juin',
-      'Juil',
-      'Août',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Déc',
+      "Jan",
+      "Fév",
+      "Mar",
+      "Avr",
+      "Mai",
+      "Juin",
+      "Juil",
+      "Août",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Déc",
     ];
 
     months.forEach((m) => (data[m] = { income: 0, expense: 0 }));
@@ -371,10 +423,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       if (inv.status === InvoiceStatus.PAID) {
         const date = new Date(inv.date);
         const monthName = months[date.getMonth()];
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') {
+        const type = inv.type || "invoice";
+        if (type === "invoice") {
           data[monthName].income += inv.total;
-        } else if (type === 'credit_note') {
+        } else if (type === "credit_note") {
           data[monthName].income -= inv.total;
         }
       }
@@ -434,12 +486,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const handlePredict = async () => {
     setIsPredicting(true);
     const paidInvoices = invoices.filter(
-      (inv) => inv.status === InvoiceStatus.PAID && inv.type === 'invoice'
+      (inv) => inv.status === InvoiceStatus.PAID && inv.type === "invoice",
     );
     const pendingQuotes = invoices.filter(
       (inv) =>
-        (inv.status === InvoiceStatus.SENT || inv.status === InvoiceStatus.ACCEPTED) &&
-        inv.type === 'quote'
+        (inv.status === InvoiceStatus.SENT ||
+          inv.status === InvoiceStatus.ACCEPTED) &&
+        inv.type === "quote",
     );
     const result = await predictRevenue(paidInvoices, pendingQuotes);
     setPrediction(result);
@@ -450,7 +503,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const expensesByCategory = useMemo(() => {
     const data: Record<string, number> = {};
     expenses.forEach((exp) => {
-      const cat = exp.category || 'Autre';
+      const cat = exp.category || "Autre";
       data[cat] = (data[cat] || 0) + exp.amount;
     });
     return Object.entries(data)
@@ -459,13 +512,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       .slice(0, 5);
   }, [expenses]);
 
-  const COLORS = ['#102a43', '#2cb1bc', '#486581', '#3ebd93', '#627d98'];
+  const COLORS = ["#102a43", "#2cb1bc", "#486581", "#3ebd93", "#627d98"];
 
   // Combined Activity
   const recentActivity = useMemo(() => {
     const combined = [
-      ...invoices.map((inv) => ({ ...inv, activityType: 'invoice' as const })),
-      ...expenses.map((exp) => ({ ...exp, activityType: 'expense' as const })),
+      ...invoices.map((inv) => ({ ...inv, activityType: "invoice" as const })),
+      ...expenses.map((exp) => ({ ...exp, activityType: "expense" as const })),
     ];
     return [...combined]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -475,45 +528,48 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const lowStockProducts = useMemo(() => {
     return products.filter(
       (p) =>
-        p.type === 'product' && p.stock !== undefined && p.stock <= (p.minStock || 0) && !p.archived
+        p.type === "product" &&
+        p.stock !== undefined &&
+        p.stock <= (p.minStock || 0) &&
+        !p.archived,
     );
   }, [products]);
 
   const quickActions = [
     {
-      id: 'quick-action-invoice',
-      label: 'Facture',
+      id: "quick-action-invoice",
+      label: "Facture",
       icon: FileText,
-      onClick: () => onNavigate('invoices'),
-      color: 'bg-brand-900 text-white',
+      onClick: () => onNavigate("invoices"),
+      color: "bg-brand-900 text-white",
     },
     {
-      id: 'quick-action-expense',
-      label: 'Dépense',
+      id: "quick-action-expense",
+      label: "Dépense",
       icon: TrendingDown,
-      onClick: () => onNavigate('accounting'),
-      color: 'bg-white text-brand-900 border border-brand-100',
+      onClick: () => onNavigate("accounting"),
+      color: "bg-white text-brand-900 border border-brand-100",
     },
     {
-      id: 'quick-action-client',
-      label: 'Client',
+      id: "quick-action-client",
+      label: "Client",
       icon: Users,
-      onClick: () => onNavigate('clients'),
-      color: 'bg-white text-brand-900 border border-brand-100',
+      onClick: () => onNavigate("clients"),
+      color: "bg-white text-brand-900 border border-brand-100",
     },
     {
-      id: 'quick-action-email',
-      label: 'Email',
+      id: "quick-action-email",
+      label: "Email",
       icon: Mail,
-      onClick: () => onNavigate('emails'),
-      color: 'bg-white text-brand-900 border border-brand-100',
+      onClick: () => onNavigate("emails"),
+      color: "bg-white text-brand-900 border border-brand-100",
     },
     {
-      id: 'quick-action-product',
-      label: 'Produit',
+      id: "quick-action-product",
+      label: "Produit",
       icon: Package,
-      onClick: () => onNavigate('products'),
-      color: 'bg-white text-brand-900 border border-brand-100',
+      onClick: () => onNavigate("products"),
+      color: "bg-white text-brand-900 border border-brand-100",
     },
   ];
 
@@ -527,8 +583,33 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
+            <h1 className="text-3xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display flex items-center gap-3">
               Tableau de bord
+              {(() => {
+                const comp = checkCompliance2026(userProfile);
+                return (
+                  <button
+                    onClick={() => onNavigate("settings")}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
+                      comp.isCompliant
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200"
+                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 animate-pulse"
+                    }`}
+                  >
+                    {comp.isCompliant ? (
+                      <>
+                        <CheckCircle2 size={12} />
+                        Conforme 2026
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle size={12} />
+                        Action Requise : Conformité 2026
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
             </h1>
             <p className="text-brand-500 dark:text-brand-400 mt-1 text-sm">
               Aperçu de votre activité et de vos revenus.
@@ -541,11 +622,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           </div>
         </div>
 
-        <SortableContext items={widgetOrder} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={widgetOrder}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-auto">
             {widgetOrder.map((id) => {
               if (isSyncing) {
-                if (id === 'stats') {
+                if (id === "stats") {
                   return (
                     <React.Fragment key={id}>
                       <StatCardSkeleton />
@@ -554,10 +638,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     </React.Fragment>
                   );
                 }
-                if (id === 'performance') {
+                if (id === "performance") {
                   return <ChartSkeleton key={id} />;
                 }
-                if (id === 'activity') {
+                if (id === "activity") {
                   return (
                     <div
                       key={id}
@@ -568,11 +652,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 return null;
               }
 
-              if (id === 'stats') {
+              if (id === "stats") {
                 return (
                   <React.Fragment key={id}>
                     {/* Total Revenue Card */}
-                    <SortableWidget id="stats-revenue" className="lg:col-span-1">
+                    <SortableWidget
+                      id="stats-revenue"
+                      className="lg:col-span-1"
+                    >
                       <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-brand-900 dark:text-brand-50">
                           <TrendingUp size={120} />
@@ -591,10 +678,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </p>
                           <div className="flex items-baseline gap-2 mt-1">
                             <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
-                              {totalRevenue.toLocaleString('fr-FR')} €
+                              {totalRevenue.toLocaleString("fr-FR")} €
                             </h3>
                             <div
-                              className={`flex items-center text-[10px] font-bold ${cashFlowStats.percent >= 0 ? 'text-accent-600' : 'text-red-500'}`}
+                              className={`flex items-center text-[10px] font-bold ${cashFlowStats.percent >= 0 ? "text-accent-600" : "text-red-500"}`}
                             >
                               {cashFlowStats.percent >= 0 ? (
                                 <ArrowUpRight size={12} />
@@ -627,7 +714,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             Résultat Brut
                           </p>
                           <h3 className="text-2xl font-bold mt-1 tracking-tight font-display">
-                            {netProfit.toLocaleString('fr-FR')} €
+                            {netProfit.toLocaleString("fr-FR")} €
                           </h3>
                         </div>
                       </div>
@@ -641,13 +728,20 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             <Calculator size={20} />
                           </div>
                           <div className="group relative">
-                            <AlertCircle size={14} className="text-brand-300 cursor-help" />
+                            <AlertCircle
+                              size={14}
+                              className="text-brand-300 cursor-help"
+                            />
                             <div className="absolute bottom-full right-0 mb-2 w-56 p-3 bg-brand-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl border border-brand-700">
-                              <p className="font-bold mb-1 underline">Calculateur de cotisations</p>
-                              <p>Type : {userProfile.activityType || 'BNC'}</p>
+                              <p className="font-bold mb-1 underline">
+                                Calculateur de cotisations
+                              </p>
+                              <p>Type : {userProfile.activityType || "BNC"}</p>
                               <p>Taux URSSAF : {socialContributions.rate}%</p>
                               {userProfile.isAcreBeneficiary && (
-                                <p className="text-accent-400">Bénéficiaire ACRE appliqué</p>
+                                <p className="text-accent-400">
+                                  Bénéficiaire ACRE appliqué
+                                </p>
                               )}
                               <p className="mt-1 opacity-70 italic text-[8.5px]">
                                 Basé sur les taux officiels 2026.
@@ -660,7 +754,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             Revenu Net Est.
                           </p>
                           <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 mt-1 tracking-tight font-display">
-                            {netAfterTax.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+                            {netAfterTax.toLocaleString("fr-FR", {
+                              maximumFractionDigits: 0,
+                            })}{" "}
+                            €
                           </h3>
                         </div>
                       </div>
@@ -683,12 +780,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </div>
                           <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(fiscalStatus.micro.percentage, 100)}%] ${fiscalStatus.micro.isNear ? 'bg-orange-500' : 'bg-brand-900 dark:bg-brand-50'}`}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(fiscalStatus.micro.percentage, 100)}%] ${fiscalStatus.micro.isNear ? "bg-orange-500" : "bg-brand-900 dark:bg-brand-50"}`}
                             ></div>
                           </div>
                           {fiscalStatus.micro.isNear && (
                             <p className="text-[8px] text-orange-500 font-bold mt-1.5">
-                              Plafond proche : {fiscalStatus.micro.remaining.toLocaleString()} €
+                              Plafond proche :{" "}
+                              {fiscalStatus.micro.remaining.toLocaleString()} €
                               restants
                             </p>
                           )}
@@ -718,13 +816,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </div>
                           <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(vatProgress, 100)}%] ${fiscalStatus.tva.isNear ? 'bg-red-500' : 'bg-brand-900 dark:bg-brand-50'}`}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(vatProgress, 100)}%] ${fiscalStatus.tva.isNear ? "bg-red-500" : "bg-brand-900 dark:bg-brand-50"}`}
                             ></div>
                           </div>
                           {fiscalStatus.tva.isNear && (
                             <p className="text-[8px] text-red-500 font-bold mt-1.5 animate-pulse">
                               Attention : Seuil de franchise proche (
-                              {fiscalStatus.tva.remaining.toLocaleString()} € restants)
+                              {fiscalStatus.tva.remaining.toLocaleString()} €
+                              restants)
                             </p>
                           )}
                           {fiscalStatus.tva.isExceeded && (
@@ -739,7 +838,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'performance') {
+              if (id === "performance") {
                 return (
                   <SortableWidget
                     key={id}
@@ -776,16 +875,49 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart
                             data={monthlyData}
-                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            margin={{
+                              top: 10,
+                              right: 10,
+                              left: -20,
+                              bottom: 0,
+                            }}
                           >
                             <defs>
-                              <linearGradient id="colorRecettes" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#0f172a" stopOpacity={0.1} />
-                                <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
+                              <linearGradient
+                                id="colorRecettes"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="#0f172a"
+                                  stopOpacity={0.1}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="#0f172a"
+                                  stopOpacity={0}
+                                />
                               </linearGradient>
-                              <linearGradient id="colorDepenses" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f87171" stopOpacity={0.1} />
-                                <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
+                              <linearGradient
+                                id="colorDepenses"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="#f87171"
+                                  stopOpacity={0.1}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="#f87171"
+                                  stopOpacity={0}
+                                />
                               </linearGradient>
                             </defs>
                             <CartesianGrid
@@ -797,31 +929,39 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                               dataKey="name"
                               axisLine={false}
                               tickLine={false}
-                              tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                              tick={{
+                                fill: "#94a3b8",
+                                fontSize: 10,
+                                fontWeight: 600,
+                              }}
                               dy={15}
                             />
                             <YAxis
                               axisLine={false}
                               tickLine={false}
-                              tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                              tick={{
+                                fill: "#94a3b8",
+                                fontSize: 10,
+                                fontWeight: 600,
+                              }}
                               tickFormatter={(value) => `${value / 1000}k`}
                             />
                             <Tooltip
                               contentStyle={{
-                                borderRadius: '1.25rem',
-                                border: 'none',
+                                borderRadius: "1.25rem",
+                                border: "none",
                                 boxShadow:
-                                  '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-                                padding: '16px',
-                                backgroundColor: 'var(--card-bg)',
-                                color: 'var(--text-main)',
-                                fontSize: '11px',
-                                fontWeight: '600',
+                                  "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+                                padding: "16px",
+                                backgroundColor: "var(--card-bg)",
+                                color: "var(--text-main)",
+                                fontSize: "11px",
+                                fontWeight: "600",
                               }}
                               formatter={(value) =>
-                                typeof value === 'number'
-                                  ? `${value.toLocaleString('fr-FR')} €`
-                                  : ''
+                                typeof value === "number"
+                                  ? `${value.toLocaleString("fr-FR")} €`
+                                  : ""
                               }
                             />
                             <Area
@@ -848,9 +988,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'expenses') {
+              if (id === "expenses") {
                 return (
-                  <SortableWidget key={id} id={id} className="lg:col-span-1 row-span-2">
+                  <SortableWidget
+                    key={id}
+                    id={id}
+                    className="lg:col-span-1 row-span-2"
+                  >
                     <div className="card-modern p-8 flex flex-col h-full">
                       <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 mb-8 font-display">
                         Répartition Dépenses
@@ -873,21 +1017,26 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     <Cell
                                       key={entry.name}
                                       fill={
-                                        COLORS[expensesByCategory.indexOf(entry) % COLORS.length]
+                                        COLORS[
+                                          expensesByCategory.indexOf(entry) %
+                                            COLORS.length
+                                        ]
                                       }
                                     />
                                   ))}
                                 </Pie>
                                 <Tooltip
                                   formatter={(value) =>
-                                    typeof value === 'number' ? `${value.toFixed(2)} €` : ''
+                                    typeof value === "number"
+                                      ? `${value.toFixed(2)} €`
+                                      : ""
                                   }
                                   contentStyle={{
-                                    borderRadius: '12px',
-                                    border: 'none',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                    backgroundColor: 'var(--card-bg)',
-                                    color: 'var(--text-main)',
+                                    borderRadius: "12px",
+                                    border: "none",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                    backgroundColor: "var(--card-bg)",
+                                    color: "var(--text-main)",
                                   }}
                                 />
                               </PieChart>
@@ -929,7 +1078,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'activity') {
+              if (id === "activity") {
                 return (
                   <SortableWidget
                     key={id}
@@ -947,11 +1096,16 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </p>
                         </div>
                         <button
-                          onClick={() => onNavigate('invoices')}
+                          onClick={() => onNavigate("invoices")}
                           aria-label="Afficher toutes les factures"
                           className="text-[10px] font-bold text-brand-600 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-50 transition-colors flex items-center uppercase tracking-widest"
                         >
-                          Tout voir <ArrowRight size={14} className="ml-1.5" aria-hidden="true" />
+                          Tout voir{" "}
+                          <ArrowRight
+                            size={14}
+                            className="ml-1.5"
+                            aria-hidden="true"
+                          />
                         </button>
                       </div>
 
@@ -959,10 +1113,15 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                         <div className="space-y-2">
                           {recentActivity.map(
                             (
-                              item: Invoice | (Expense & { activityType: 'invoice' | 'expense' })
+                              item:
+                                | Invoice
+                                | (Expense & {
+                                    activityType: "invoice" | "expense";
+                                  }),
                             ) => {
                               const isExpense =
-                                'activityType' in item && item.activityType === 'expense';
+                                "activityType" in item &&
+                                item.activityType === "expense";
                               return (
                                 <div
                                   key={item.id}
@@ -971,18 +1130,20 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                   aria-label={`Détails ${isExpense ? `de la dépense: ${(item as Expense).description}` : `de la facture: ${(item as Invoice).number}`} - ${item.date}`}
                                   onClick={() =>
                                     onNavigate(
-                                      'activityType' in item && item.activityType === 'expense'
-                                        ? 'accounting'
-                                        : 'invoices'
+                                      "activityType" in item &&
+                                        item.activityType === "expense"
+                                        ? "accounting"
+                                        : "invoices",
                                     )
                                   }
                                   onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
+                                    if (e.key === "Enter" || e.key === " ") {
                                       e.preventDefault();
                                       onNavigate(
-                                        'activityType' in item && item.activityType === 'expense'
-                                          ? 'accounting'
-                                          : 'invoices'
+                                        "activityType" in item &&
+                                          item.activityType === "expense"
+                                          ? "accounting"
+                                          : "invoices",
                                       );
                                     }
                                   }}
@@ -992,16 +1153,20 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     <div
                                       className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
                                 ${
-                                  'activityType' in item && item.activityType === 'invoice'
-                                    ? (item as unknown as Invoice).status === InvoiceStatus.PAID
-                                      ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400'
-                                      : (item as unknown as Invoice).status === InvoiceStatus.SENT
-                                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
-                                        : 'bg-brand-50 dark:bg-brand-800/50 text-brand-500'
-                                    : 'bg-red-50 dark:bg-red-900/20 text-red-500'
+                                  "activityType" in item &&
+                                  item.activityType === "invoice"
+                                    ? (item as unknown as Invoice).status ===
+                                      InvoiceStatus.PAID
+                                      ? "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400"
+                                      : (item as unknown as Invoice).status ===
+                                          InvoiceStatus.SENT
+                                        ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                                        : "bg-brand-50 dark:bg-brand-800/50 text-brand-500"
+                                    : "bg-red-50 dark:bg-red-900/20 text-red-500"
                                 }`}
                                     >
-                                      {'activityType' in item && item.activityType === 'invoice' ? (
+                                      {"activityType" in item &&
+                                      item.activityType === "invoice" ? (
                                         <FileText className="w-4.5 h-4.5" />
                                       ) : (
                                         <ShoppingCart className="w-4.5 h-4.5" />
@@ -1009,54 +1174,61 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     </div>
                                     <div>
                                       <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
-                                        {'activityType' in item && item.activityType === 'invoice'
+                                        {"activityType" in item &&
+                                        item.activityType === "invoice"
                                           ? (item as unknown as Invoice).number
-                                          : 'activityType' in item &&
-                                              item.activityType === 'expense'
+                                          : "activityType" in item &&
+                                              item.activityType === "expense"
                                             ? (item as Expense).description
                                             : (item as Invoice).number}
                                       </p>
                                       <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
-                                        {new Date(item.date).toLocaleDateString()}
+                                        {new Date(
+                                          item.date,
+                                        ).toLocaleDateString()}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p
-                                      className={`text-sm font-bold ${('activityType' in item && item.activityType === 'expense') || (item as unknown as Invoice).type === 'credit_note' ? 'text-red-500' : 'text-brand-900 dark:text-brand-50'}`}
+                                      className={`text-sm font-bold ${("activityType" in item && item.activityType === "expense") || (item as unknown as Invoice).type === "credit_note" ? "text-red-500" : "text-brand-900 dark:text-brand-50"}`}
                                     >
-                                      {('activityType' in item &&
-                                        item.activityType === 'expense') ||
-                                      (item as unknown as Invoice).type === 'credit_note'
-                                        ? '-'
-                                        : ''}
-                                      {('total' in item
+                                      {("activityType" in item &&
+                                        item.activityType === "expense") ||
+                                      (item as unknown as Invoice).type ===
+                                        "credit_note"
+                                        ? "-"
+                                        : ""}
+                                      {("total" in item
                                         ? item.total
                                         : (item as unknown as Expense).amount
-                                      )?.toLocaleString('fr-FR')}{' '}
+                                      )?.toLocaleString("fr-FR")}{" "}
                                       €
                                     </p>
                                     <span
                                       className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
                                    ${
-                                     'activityType' in item && item.activityType === 'invoice'
-                                       ? (item as unknown as Invoice).status === InvoiceStatus.PAID
-                                         ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400'
-                                         : (item as unknown as Invoice).status ===
-                                             InvoiceStatus.SENT
-                                           ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                                           : 'bg-brand-50 dark:bg-brand-800/50 text-brand-600'
-                                       : 'bg-red-50 dark:bg-red-900/20 text-red-700'
+                                     "activityType" in item &&
+                                     item.activityType === "invoice"
+                                       ? (item as unknown as Invoice).status ===
+                                         InvoiceStatus.PAID
+                                         ? "bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400"
+                                         : (item as unknown as Invoice)
+                                               .status === InvoiceStatus.SENT
+                                           ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                                           : "bg-brand-50 dark:bg-brand-800/50 text-brand-600"
+                                       : "bg-red-50 dark:bg-red-900/20 text-red-700"
                                    }`}
                                     >
-                                      {'activityType' in item && item.activityType === 'invoice'
+                                      {"activityType" in item &&
+                                      item.activityType === "invoice"
                                         ? (item as unknown as Invoice).status
-                                        : 'Dépense'}
+                                        : "Dépense"}
                                     </span>
                                   </div>
                                 </div>
                               );
-                            }
+                            },
                           )}
                         </div>
                       </div>
@@ -1065,7 +1237,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'reminders') {
+              if (id === "reminders") {
                 return (
                   <SortableWidget
                     key={id}
@@ -1083,19 +1255,25 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                       </div>
                       <div className="space-y-3 flex-1 overflow-y-auto max-h-75 pr-2 custom-scrollbar">
                         {invoices.some(
-                          (i) => i.type === 'quote' && i.status === InvoiceStatus.ACCEPTED
+                          (i) =>
+                            i.type === "quote" &&
+                            i.status === InvoiceStatus.ACCEPTED,
                         ) ? (
                           <SortableContext
                             items={invoices
                               .filter(
-                                (i) => i.type === 'quote' && i.status === InvoiceStatus.ACCEPTED
+                                (i) =>
+                                  i.type === "quote" &&
+                                  i.status === InvoiceStatus.ACCEPTED,
                               )
                               .map((q) => `quote-${q.id}`)}
                             strategy={verticalListSortingStrategy}
                           >
                             {invoices
                               .filter(
-                                (i) => i.type === 'quote' && i.status === InvoiceStatus.ACCEPTED
+                                (i) =>
+                                  i.type === "quote" &&
+                                  i.status === InvoiceStatus.ACCEPTED,
                               )
                               .map((quote) => (
                                 <DraggableQuote
@@ -1107,7 +1285,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </SortableContext>
                         ) : (
                           <div className="flex flex-col items-center justify-center h-full text-brand-300 py-10 opacity-50">
-                            <CheckCircle2 size={32} strokeWidth={1} className="mb-2" />
+                            <CheckCircle2
+                              size={32}
+                              strokeWidth={1}
+                              className="mb-2"
+                            />
                             <p className="text-[10px] uppercase font-bold tracking-widest text-center">
                               Aucun devis accepté en attente
                             </p>
@@ -1116,7 +1298,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                       </div>
                       <div className="mt-4 pt-4 border-t border-brand-50 dark:border-brand-800">
                         <p className="text-[9px] text-brand-400 italic">
-                          Glissez un devis sur &quot;Facture&quot; pour le convertir.
+                          Glissez un devis sur &quot;Facture&quot; pour le
+                          convertir.
                         </p>
                       </div>
                     </div>
@@ -1124,9 +1307,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'stock') {
+              if (id === "stock") {
                 return (
-                  <SortableWidget key={id} id={id} className="lg:col-span-1 row-span-2">
+                  <SortableWidget
+                    key={id}
+                    id={id}
+                    className="lg:col-span-1 row-span-2"
+                  >
                     <div className="card-modern p-8 flex flex-col h-full">
                       <div className="flex justify-between items-center mb-8">
                         <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 flex items-center gap-3 font-display">
@@ -1142,7 +1329,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             >
                               <div className="flex justify-between items-start">
                                 <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-                                  {product.sku || 'SANS SKU'}
+                                  {product.sku || "SANS SKU"}
                                 </span>
                                 <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 uppercase tracking-widest">
                                   Stock bas
@@ -1153,17 +1340,21 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                   {product.name}
                                 </p>
                                 <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                                  {product.stock} {product.unit || 'u.'}
+                                  {product.stock} {product.unit || "u."}
                                 </p>
                               </div>
                               <p className="text-[9px] text-red-400 font-bold uppercase tracking-widest">
-                                Seuil : {product.minStock} {product.unit || 'u.'}
+                                Seuil : {product.minStock}{" "}
+                                {product.unit || "u."}
                               </p>
                             </div>
                           ))
                         ) : (
                           <div className="h-full flex flex-col items-center justify-center text-brand-300">
-                            <Package size={36} className="mb-3 opacity-20 text-brand-500" />
+                            <Package
+                              size={36}
+                              className="mb-3 opacity-20 text-brand-500"
+                            />
                             <p className="text-[10px] font-bold uppercase tracking-widest">
                               Stocks OK
                             </p>
@@ -1175,12 +1366,12 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === 'prediction') {
+              if (id === "prediction") {
                 return (
                   <SortableWidget
                     key={id}
                     id={id}
-                    className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-4"
+                    className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-4 zen-hidden"
                   >
                     <div className="card-modern p-6 relative overflow-hidden">
                       {/* Alertes seuils dynamiques */}
@@ -1191,9 +1382,9 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                               key={i}
                               role="alert"
                               className={`flex items-start gap-3 p-3 rounded-xl text-[11px] font-semibold ${
-                                alert.severity === 'danger'
-                                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/30'
-                                  : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30'
+                                alert.severity === "danger"
+                                  ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/30"
+                                  : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30"
                               }`}
                             >
                               <AlertCircle
@@ -1210,7 +1401,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
                         <div>
                           <div className="flex items-center gap-2">
-                            <TrendingUp size={16} className="text-accent-600" aria-hidden="true" />
+                            <TrendingUp
+                              size={16}
+                              className="text-accent-600"
+                              aria-hidden="true"
+                            />
                             <p className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.15em]">
                               Projection CA — 6 mois
                             </p>
@@ -1218,8 +1413,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           <div className="flex items-baseline gap-3 mt-1">
                             <span className="text-xl font-bold text-brand-900 dark:text-brand-50 font-display">
                               {revenueProjection.forecast[0]
-                                ? `~${revenueProjection.forecast[0].projected.toLocaleString('fr-FR')} €`
-                                : '—'}
+                                ? `~${revenueProjection.forecast[0].projected.toLocaleString("fr-FR")} €`
+                                : "—"}
                             </span>
                             <span className="text-[10px] text-brand-400 font-medium">
                               prochain mois estimé
@@ -1228,16 +1423,22 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                               <span
                                 className={`flex items-center text-[10px] font-bold ${
                                   revenueProjection.monthlyTrend >= 0
-                                    ? 'text-accent-600'
-                                    : 'text-red-500'
+                                    ? "text-accent-600"
+                                    : "text-red-500"
                                 }`}
                               >
                                 {revenueProjection.monthlyTrend >= 0 ? (
                                   <ArrowUpRight size={12} aria-hidden="true" />
                                 ) : (
-                                  <ArrowDownRight size={12} aria-hidden="true" />
+                                  <ArrowDownRight
+                                    size={12}
+                                    aria-hidden="true"
+                                  />
                                 )}
-                                {Math.abs(revenueProjection.monthlyTrend).toFixed(0)} €/mois
+                                {Math.abs(
+                                  revenueProjection.monthlyTrend,
+                                ).toFixed(0)}{" "}
+                                €/mois
                               </span>
                             )}
                           </div>
@@ -1246,19 +1447,26 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                         <div className="flex items-center gap-3">
                           {revenueProjection.confidence > 0 && (
                             <span className="text-[9px] font-bold text-brand-300 uppercase tracking-wider">
-                              Fiabilité : {Math.round(revenueProjection.confidence * 100)}%
+                              Fiabilité :{" "}
+                              {Math.round(revenueProjection.confidence * 100)}%
                             </span>
                           )}
                           <button
                             onClick={handlePredict}
                             disabled={isPredicting}
                             aria-label={
-                              isPredicting ? 'Analyse IA en cours...' : 'Analyse IA du CA'
+                              isPredicting
+                                ? "Analyse IA en cours..."
+                                : "Analyse IA du CA"
                             }
                             className="flex items-center gap-2 bg-brand-600 dark:bg-white text-white dark:text-brand-900 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all hover:bg-brand-700 dark:hover:bg-brand-50 shadow-lg shadow-brand-600/20"
                           >
                             {isPredicting ? (
-                              <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                              <Loader2
+                                size={12}
+                                className="animate-spin"
+                                aria-hidden="true"
+                              />
                             ) : (
                               <Sparkles size={12} aria-hidden="true" />
                             )}
@@ -1272,11 +1480,13 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                         <ResponsiveContainer width="100%" height={180}>
                           <AreaChart
                             data={[
-                              ...revenueProjection.history.slice(-3).map((h) => ({
-                                name: h.month.slice(5),
-                                Historique: h.revenue,
-                                Projection: null as number | null,
-                              })),
+                              ...revenueProjection.history
+                                .slice(-3)
+                                .map((h) => ({
+                                  name: h.month.slice(5),
+                                  Historique: h.revenue,
+                                  Projection: null as number | null,
+                                })),
                               ...revenueProjection.forecast.map((f) => ({
                                 name: f.month.slice(5),
                                 Historique: null as number | null,
@@ -1286,13 +1496,41 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
                           >
                             <defs>
-                              <linearGradient id="grad-hist" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#0f172a" stopOpacity={0.15} />
-                                <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
+                              <linearGradient
+                                id="grad-hist"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="#0f172a"
+                                  stopOpacity={0.15}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="#0f172a"
+                                  stopOpacity={0}
+                                />
                               </linearGradient>
-                              <linearGradient id="grad-proj" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                              <linearGradient
+                                id="grad-proj"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="#22c55e"
+                                  stopOpacity={0.2}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="#22c55e"
+                                  stopOpacity={0}
+                                />
                               </linearGradient>
                             </defs>
                             <CartesianGrid
@@ -1314,9 +1552,12 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             />
                             <Tooltip
                               formatter={(value, name) =>
-                                value != null
-                                  ? [`${Number(value).toLocaleString('fr-FR')} €`, String(name)]
-                                  : ['-', String(name)]
+                                value !== null
+                                  ? [
+                                      `${Number(value).toLocaleString("fr-FR")} €`,
+                                      String(name),
+                                    ]
+                                  : ["-", String(name)]
                               }
                               contentStyle={{ fontSize: 10, borderRadius: 12 }}
                             />

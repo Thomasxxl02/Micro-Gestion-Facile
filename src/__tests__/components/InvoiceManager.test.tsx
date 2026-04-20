@@ -1,1093 +1,442 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import InvoiceManager from '../../components/InvoiceManager';
-import type { Client, Invoice, Product, UserProfile } from '../../types';
+﻿import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import InvoiceManager from "../../components/InvoiceManager";
+import type { Client, Invoice, Product, UserProfile } from "../../types";
 
-// Mock Lucide icons - import many as the component uses a lot
-vi.mock('lucide-react', () => ({
-  Plus: () => <span>PlusIcon</span>,
-  Trash2: () => <span>Trash2Icon</span>,
-  Wand2: () => <span>Wand2Icon</span>,
-  ArrowLeft: () => <span>ArrowLeftIcon</span>,
-  FileText: () => <span>FileTextIcon</span>,
-  Repeat: () => <span>RepeatIcon</span>,
-  FileCheck: () => <span>FileCheckIcon</span>,
-  ShoppingBag: () => <span>ShoppingBagIcon</span>,
-  Receipt: () => <span>ReceiptIcon</span>,
-  Link: () => <span>LinkIcon</span>,
-  ArrowRightCircle: () => <span>ArrowRightCircleIcon</span>,
-  Download: () => <span>DownloadIcon</span>,
+// -- Références hoistées (disponibles dans les factories vi.mock) ------------
+const {
+  mockDeleteInvoice,
+  mockDuplicateInvoice,
+  mockSendByEmail,
+  isSyncingRef,
+} = vi.hoisted(() => ({
+  mockDeleteInvoice: vi.fn(),
+  mockDuplicateInvoice: vi.fn(),
+  mockSendByEmail: vi.fn(),
+  isSyncingRef: { value: false },
+}));
+
+// -- Mocks icônes Lucide (uniquement celles utilisées par InvoiceManager) ----
+vi.mock("lucide-react", () => ({
+  ArrowRightLeft: () => <span>ArrowRightLeftIcon</span>,
   Calendar: () => <span>CalendarIcon</span>,
-  Search: () => <span>SearchIcon</span>,
-  AlertCircle: () => <span>AlertCircleIcon</span>,
-  CircleAlert: () => <span>AlertCircleIcon</span>,
-  CircleCheck: () => <span>CheckCircle2Icon</span>,
-  TrendingUp: () => <span>TrendingUpIcon</span>,
-  LoaderCircle: () => <span>Loader2Icon</span>,
-  CircleArrowRight: () => <span>ArrowRightCircleIcon</span>,
-  CheckCircle2: () => <span>CheckCircle2Icon</span>,
-  CheckSquare: () => <span>CheckSquareIcon</span>,
-  Square: () => <span>SquareIcon</span>,
-  Package: () => <span>PackageIcon</span>,
-  ChevronUp: () => <span>ChevronUpIcon</span>,
-  ChevronDown: () => <span>ChevronDownIcon</span>,
-  X: () => <span>XIcon</span>,
-  Eye: () => <span>EyeIcon</span>,
-  Zap: () => <span>ZapIcon</span>,
-  Printer: () => <span>PrinterIcon</span>,
-  Mail: () => <span>MailIcon</span>,
-  Bell: () => <span>BellIcon</span>,
   Copy: () => <span>CopyIcon</span>,
-  ThumbsUp: () => <span>ThumbsUpIcon</span>,
-  ThumbsDown: () => <span>ThumbsDownIcon</span>,
+  Lock: () => <span>LockIcon</span>,
+  Mail: () => <span>MailIcon</span>,
+  MailWarning: () => <span>MailWarningIcon</span>,
+  Plus: () => <span>PlusIcon</span>,
+  Printer: () => <span>PrinterIcon</span>,
   ShieldCheck: () => <span>ShieldCheckIcon</span>,
-  Calculator: () => <span>CalculatorIcon</span>,
-  Percent: () => <span>PercentIcon</span>,
-  Truck: () => <span>TruckIcon</span>,
-  Coins: () => <span>CoinsIcon</span>,
-  Clock: () => <span>ClockIcon</span>,
-  ExternalLink: () => <span>ExternalLinkIcon</span>,
+  Trash2: () => <span>Trash2Icon</span>,
+  TrendingUp: () => <span>TrendingUpIcon</span>,
 }));
 
-// Mock geminiService
-vi.mock('../../services/geminiService', () => ({
-  suggestInvoiceDescription: vi.fn().mockResolvedValue('Description générée'),
-  generateInvoiceItemsFromPrompt: vi.fn().mockResolvedValue([]),
+// -- Mock useInvoiceActions ---------------------------------------------------
+vi.mock("../../hooks/useInvoiceActions", () => ({
+  useInvoiceActions: () => ({
+    getDocumentLabel: (type: string) =>
+      (
+        ({
+          invoice: "Facture",
+          quote: "Devis",
+          order: "Commande",
+          credit_note: "Avoir",
+        }) as Record<string, string>
+      )[type] ?? type,
+    deleteInvoice: mockDeleteInvoice,
+    duplicateInvoice: mockDuplicateInvoice,
+    sendByEmail: mockSendByEmail,
+    updateInvoiceStatus: vi.fn(),
+    exportToCSV: vi.fn(),
+    convertQuoteToInvoice: vi.fn(),
+    sendReminderByEmail: vi.fn(),
+  }),
 }));
 
-describe('InvoiceManager Component', () => {
-  const mockUserProfile: UserProfile = {
-    companyName: 'Ma Micro-Entreprise',
-    siret: '12345678901234',
-    address: '123 Rue de Paris',
-    email: 'contact@example.fr',
-    phone: '0102030405',
-    activityType: 'SERVICE_BNC',
-    isAcreBeneficiary: false,
-  };
+// -- Mock appStore ------------------------------------------------------------
+vi.mock("../../store/appStore", () => ({
+  useAppStore: (selector: (s: { isSyncing: boolean }) => unknown) =>
+    selector({ isSyncing: isSyncingRef.value }),
+}));
 
-  const mockClients: Client[] = [
-    {
-      id: 'cli-1',
-      name: 'Client A',
-      email: 'clienta@test.fr',
-      phone: '0102030405',
-      address: '123 Rue de Paris',
-      siret: '12345678901234',
-      archived: false,
-    },
-    {
-      id: 'cli-2',
-      name: 'Client B',
-      email: 'clientb@test.fr',
-      phone: '0605040302',
-      address: '456 Rue de Lyon',
-      siret: '98765432109876',
-      archived: false,
-    },
-  ];
+// -- Mock electronicSignature -------------------------------------------------
+vi.mock("../../lib/electronicSignature", () => ({
+  signInvoice: vi.fn(),
+}));
 
-  const mockInvoices: Invoice[] = [
-    {
-      id: 'inv-1',
-      number: 'FAC-001',
-      date: '2026-03-10',
-      dueDate: '2026-04-10',
-      clientId: 'cli-1',
-      items: [
-        {
-          id: 'itm-1',
-          description: 'Développement',
-          quantity: 10,
-          unitPrice: 100,
-          vatRate: 20,
-        },
-      ],
-      total: 1000,
-      status: 'draft',
-      type: 'invoice',
-    },
-    {
-      id: 'inv-2',
-      number: 'FAC-002',
-      date: '2026-03-15',
-      dueDate: '2026-04-15',
-      clientId: 'cli-2',
-      items: [],
-      total: 500,
-      status: 'sent',
-      type: 'invoice',
-    },
-  ];
+// -- Mock sonner --------------------------------------------------------------
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+  Toaster: () => null,
+}));
 
-  const mockProducts: Product[] = [
-    {
-      id: 'prod-1',
-      name: 'Service A',
-      description: 'Service A description',
-      price: 100,
-      type: 'service',
-      category: 'Services',
-    },
-    {
-      id: 'prod-2',
-      name: 'Service B',
-      description: 'Service B description',
-      price: 150,
-      type: 'service',
-      category: 'Services',
-    },
-  ];
+// -- Mock Skeleton ------------------------------------------------------------
+vi.mock("../../components/Skeleton", () => ({
+  TableRowSkeleton: () => <div data-testid="skeleton-row">loading</div>,
+}));
 
-  describe('Rendering & UI', () => {
-    it('affiche le gestionnaire de factures', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
+// -- Mock InvoicePaper (lazy) -------------------------------------------------
+vi.mock("../../components/InvoicePaper", () => ({
+  default: () => <div data-testid="invoice-paper">InvoicePaper</div>,
+}));
 
-      const invoiceElements = screen.queryAllByText(/Documents|Factures/i);
-      expect(invoiceElements.length).toBeGreaterThan(0);
+// -- Fixtures -----------------------------------------------------------------
+const mockUserProfile: UserProfile = {
+  companyName: "Test Business",
+  siret: "12345678901234",
+  address: "1 rue Test",
+  email: "test@example.com",
+  phone: "0123456789",
+  invoicePrefix: "FAC",
+  quotePrefix: "DEV",
+} as UserProfile;
+
+const mockClients: Client[] = [
+  {
+    id: "cli-1",
+    name: "Client A",
+    email: "clienta@example.com",
+    address: "1 rue Client A, 75001 Paris",
+    phone: "",
+    siret: "",
+    archived: false,
+  },
+  {
+    id: "cli-2",
+    name: "Client B",
+    email: "clientb@example.com",
+    address: "2 rue Client B, 75002 Paris",
+    phone: "",
+    siret: "",
+    archived: false,
+  },
+];
+
+const mockInvoices: Invoice[] = [
+  {
+    id: "inv-1",
+    number: "FAC-001",
+    date: "2026-03-01",
+    dueDate: "2099-01-01",
+    clientId: "cli-1",
+    items: [],
+    total: 1000,
+    status: "Brouillon",
+    type: "invoice",
+  },
+  {
+    id: "inv-2",
+    number: "FAC-002",
+    date: "2026-03-15",
+    dueDate: "2099-01-01",
+    clientId: "cli-2",
+    items: [],
+    total: 500,
+    status: "Envoyée",
+    type: "invoice",
+  },
+];
+
+const mockProducts: Product[] = [
+  {
+    id: "prod-1",
+    name: "Service A",
+    description: "Description A",
+    price: 100,
+    type: "service",
+    category: "Services",
+  },
+];
+
+/** Helpers pour normaliser le textContent (espaces JSX splits) */
+const textNorm = (el: Element | null) =>
+  el?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+
+const renderManager = (invoices = mockInvoices) => {
+  const setInvoices = vi.fn();
+  return render(
+    <InvoiceManager
+      invoices={invoices}
+      setInvoices={setInvoices}
+      clients={mockClients}
+      userProfile={mockUserProfile}
+      products={mockProducts}
+    />,
+  );
+};
+
+// -- Tests ---------------------------------------------------------------------
+describe("InvoiceManager", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    isSyncingRef.value = false;
+  });
+
+  // -- Rendu initial ------------------------------------------------------------
+  describe("Rendu initial", () => {
+    it('affiche le titre "Documents"', () => {
+      renderManager();
+      expect(screen.getByText("Documents")).toBeInTheDocument();
     });
 
-    it('affiche la liste des factures', () => {
-      const setInvoices = vi.fn();
-      // Le stub actuel ne rend pas encore la liste — vérifier le rendu sans crash
-      const { container } = render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      expect(container).toBeDefined();
+    it('affiche le bouton "Nouveau"', () => {
+      renderManager();
+      expect(
+        screen.getByRole("button", { name: /nouveau/i }),
+      ).toBeInTheDocument();
     });
 
-    it('affiche les statuts des factures', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
+    it("affiche les labels de statistiques", () => {
+      renderManager();
+      expect(screen.getByText("Total Facturé HT")).toBeInTheDocument();
+      expect(screen.getByText("En attente paiement")).toBeInTheDocument();
+      expect(screen.getByText("Factures en retard")).toBeInTheDocument();
+    });
 
-      const statuses = screen.queryAllByText(/draft|brouillon|Draft/i);
-      const sentStatuses = screen.queryAllByText(/sent|envoyé|Sent/i);
-      expect(statuses.length).toBeGreaterThanOrEqual(0);
-      expect(sentStatuses.length).toBeGreaterThanOrEqual(0);
+    it("affiche FAC-001 et FAC-002 dans la liste", () => {
+      renderManager();
+      expect(screen.getByText("FAC-001")).toBeInTheDocument();
+      expect(screen.getByText("FAC-002")).toBeInTheDocument();
+    });
+
+    it("affiche les noms des clients associés", () => {
+      renderManager();
+      expect(screen.getByText("Client A")).toBeInTheDocument();
+      expect(screen.getByText("Client B")).toBeInTheDocument();
+    });
+
+    it('affiche le label "Facture" pour les documents de type invoice', () => {
+      renderManager();
+      expect(screen.getAllByText("Facture").length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("affiche le compteur de résultats (2 documents)", () => {
+      renderManager();
+      expect(
+        screen.getByText((_, el) => textNorm(el) === "2 documents trouvés"),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Invoice List', () => {
-    it('affiche le numéro de facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Le stub ne rend pas encore les lignes de facture
-      expect(screen.queryByText('FAC-001')).toBeNull();
+  // -- État vide ----------------------------------------------------------------
+  describe("État vide", () => {
+    it('affiche "Aucun document trouvé" quand la liste est vide', () => {
+      renderManager([]);
+      expect(screen.getByText("Aucun document trouvé")).toBeInTheDocument();
     });
 
-    it('affiche le client de la facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const clients = screen.queryAllByText(/Client A/i);
-      const clientsB = screen.queryAllByText(/Client B/i);
-      expect(clients.length).toBeGreaterThanOrEqual(0);
-      expect(clientsB.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('affiche la date de facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const dates = screen.queryAllByText(/2026/i);
-      expect(dates.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('affiche les montants totaux', () => {
-      const setInvoices = vi.fn();
-      const { container } = render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Vérifier le rendu sans erreur
-      expect(container).toBeDefined();
-      // Les montants sont présents dans le DOM
-      const amounts = screen.queryAllByText(/1000|1.*000/);
-      expect(amounts.length).toBeGreaterThanOrEqual(0);
+    it("affiche le compteur é 0 quand la liste est vide", () => {
+      renderManager([]);
+      // 0 est pluriel dans la logique du composant : "0 documents trouvés"
+      expect(
+        screen.getByText((_, el) => textNorm(el) === "0 documents trouvés"),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Invoice Creation', () => {
-    it('ouvre le formulaire de création de facture', async () => {
+  // -- Filtrage par statut ------------------------------------------------------
+  describe("Filtrage par statut", () => {
+    it('filtre "Brouillon" : affiche FAC-001, masque FAC-002', async () => {
       const user = userEvent.setup();
-      const setInvoices = vi.fn();
-
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
+      renderManager();
+      await user.selectOptions(
+        screen.getByTitle("Filtrer par statut"),
+        "Brouillon",
       );
-
-      const createButton = screen.getByText('Nouveau');
-      await user.click(createButton);
-
-      // Devrait afficher un modal ou formulaire
-      await waitFor(() => {
-        const modals = screen.queryAllByRole('dialog');
-        expect(modals).toBeDefined(); // Modal may exist
-      });
+      expect(screen.getByText("FAC-001")).toBeInTheDocument();
+      expect(screen.queryByText("FAC-002")).not.toBeInTheDocument();
+      expect(
+        screen.getByText((_, el) => textNorm(el) === "1 document trouvé"),
+      ).toBeInTheDocument();
     });
-  });
 
-  describe('Invoice Filtering', () => {
-    it('filtre par statut', async () => {
+    it('filtre "Envoyée" : affiche FAC-002, masque FAC-001', async () => {
       const user = userEvent.setup();
-      const setInvoices = vi.fn();
-
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
+      renderManager();
+      await user.selectOptions(
+        screen.getByTitle("Filtrer par statut"),
+        "Envoyée",
       );
-
-      const filterButton = screen.queryByText(/Filter|Filtre|filter/i);
-      if (filterButton) {
-        await user.click(filterButton);
-      }
-    });
-
-    it('filtre par client', async () => {
-      const setInvoices = vi.fn();
-
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait avoir un champ de recherche/filtre
-      const clients = screen.queryAllByText(/Client/i);
-      expect(clients.length).toBeGreaterThanOrEqual(0);
+      expect(screen.getByText("FAC-002")).toBeInTheDocument();
+      expect(screen.queryByText("FAC-001")).not.toBeInTheDocument();
     });
   });
 
-  describe('Invoice Actions', () => {
-    it('affiche un bouton pour dupliquer une facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
+  // -- Recherche ----------------------------------------------------------------
+  describe("Recherche", () => {
+    it('recherche par numéro "FAC-001" : 1 résultat', async () => {
+      const user = userEvent.setup();
+      renderManager();
+      await user.type(
+        screen.getByPlaceholderText("Rechercher... (numéro ou client)"),
+        "FAC-001",
       );
-
-      const copyButtons = screen.queryAllByText('CopyIcon');
-      expect(copyButtons.length).toBeGreaterThanOrEqual(0);
+      expect(screen.getByText("FAC-001")).toBeInTheDocument();
+      expect(screen.queryByText("FAC-002")).not.toBeInTheDocument();
     });
 
-    it('affiche un bouton pour supprimer une facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
+    it('recherche par client "Client B" : affiche FAC-002', async () => {
+      const user = userEvent.setup();
+      renderManager();
+      await user.type(
+        screen.getByPlaceholderText("Rechercher... (numéro ou client)"),
+        "Client B",
       );
-
-      // Le stub n'affiche pas encore les boutons par ligne
-      const deleteButtons = screen.queryAllByText('Trash2Icon');
-      expect(deleteButtons.length).toBeGreaterThanOrEqual(0);
+      expect(screen.getByText("FAC-002")).toBeInTheDocument();
+      expect(screen.queryByText("FAC-001")).not.toBeInTheDocument();
     });
 
-    it('affiche un bouton pour télécharger une facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
+    it('recherche sans résultat : affiche "Aucun document trouvé"', async () => {
+      const user = userEvent.setup();
+      renderManager();
+      await user.type(
+        screen.getByPlaceholderText("Rechercher... (numéro ou client)"),
+        "INEXISTANT-999",
       );
-
-      // Le stub n'affiche pas encore les boutons par ligne
-      const downloadButtons = screen.queryAllByText('DownloadIcon');
-      expect(downloadButtons.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('affiche un bouton pour envoyer une facture', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const mailButtons = screen.queryAllByText('MailIcon');
-      expect(mailButtons.length).toBeGreaterThanOrEqual(0);
+      expect(screen.getByText("Aucun document trouvé")).toBeInTheDocument();
     });
   });
 
-  describe('Empty State', () => {
-    it('affiche un message si pas de factures', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={[]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
+  // -- Synchronisation (isSyncing) ----------------------------------------------
+  describe("État de synchronisation (isSyncing)", () => {
+    it("affiche 6 lignes squelettes quand isSyncing=true", () => {
+      isSyncingRef.value = true;
+      renderManager();
+      expect(screen.getAllByTestId("skeleton-row")).toHaveLength(6);
+    });
 
-      // Le stub ne gère pas encore l'état vide — le composant doit rendre sans erreur
-      expect(screen.queryAllByText(/Documents|Nouveau/i).length).toBeGreaterThan(0);
+    it("n'affiche pas la liste de factures quand isSyncing=true", () => {
+      isSyncingRef.value = true;
+      renderManager();
+      expect(screen.queryByText("FAC-001")).not.toBeInTheDocument();
     });
   });
 
-  describe('Different Invoice Types', () => {
-    it('gère les factures standards', () => {
-      const setInvoices = vi.fn();
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Le stub ne rend pas encore les lignes — vérifier rendu sans crash
-      expect(screen.queryByText('FAC-001')).toBeNull();
+  // -- Verrouillage des documents -----------------------------------------------
+  describe("Verrouillage des documents", () => {
+    it('le bouton Supprimer est désactivé pour une facture "Envoyée" (isLocked)', () => {
+      renderManager();
+      expect(
+        screen.getByLabelText("Supprimer le document FAC-002"),
+      ).toBeDisabled();
     });
 
-    it('gère les devis', () => {
-      const setInvoices = vi.fn();
+    it('le bouton Supprimer est actif pour une facture "Brouillon"', () => {
+      renderManager();
+      expect(
+        screen.getByLabelText("Supprimer le document FAC-001"),
+      ).not.toBeDisabled();
+    });
+  });
+
+  // -- Actions sur les documents ------------------------------------------------
+  describe("Actions sur les documents", () => {
+    it("appelle deleteInvoice avec l'id après confirmation", async () => {
+      vi.spyOn(window, "confirm").mockReturnValue(true);
+      const user = userEvent.setup();
+      renderManager();
+      await user.click(screen.getByLabelText("Supprimer le document FAC-001"));
+      expect(mockDeleteInvoice).toHaveBeenCalledWith("inv-1");
+    });
+
+    it("n'appelle pas deleteInvoice si la confirmation est annulée", async () => {
+      vi.spyOn(window, "confirm").mockReturnValue(false);
+      const user = userEvent.setup();
+      renderManager();
+      await user.click(screen.getByLabelText("Supprimer le document FAC-001"));
+      expect(mockDeleteInvoice).not.toHaveBeenCalled();
+    });
+
+    it("appelle duplicateInvoice au clic sur le bouton Dupliquer", async () => {
+      const user = userEvent.setup();
+      renderManager();
+      await user.click(screen.getByLabelText("Dupliquer le document FAC-001"));
+      expect(mockDuplicateInvoice).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "inv-1", number: "FAC-001" }),
+      );
+    });
+
+    it("appelle sendByEmail au clic sur le bouton Email", async () => {
+      const user = userEvent.setup();
+      renderManager();
+      await user.click(
+        screen.getByLabelText("Envoyer le document FAC-001 par email"),
+      );
+      expect(mockSendByEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "inv-1" }),
+      );
+    });
+  });
+
+  // -- Types de document --------------------------------------------------------
+  describe("Types de document", () => {
+    it('affiche le label "Devis" pour un document de type quote', () => {
       const quote: Invoice = {
-        ...mockInvoices[0],
-        id: 'quote-1',
-        number: 'DEV-001',
-        type: 'quote',
+        id: "q-1",
+        number: "DEV-001",
+        date: "2026-03-01",
+        dueDate: "2099-01-01",
+        clientId: "cli-1",
+        items: [],
+        total: 300,
+        status: "Brouillon",
+        type: "quote",
       };
-
       render(
         <InvoiceManager
           invoices={[quote]}
-          setInvoices={setInvoices}
+          setInvoices={vi.fn()}
           clients={mockClients}
           userProfile={mockUserProfile}
           products={mockProducts}
-        />
+        />,
       );
+      // "Devis" apparaît aussi dans le select de filtre ? getAllByText
+      expect(screen.getAllByText("Devis").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("DEV-001")).toBeInTheDocument();
+    });
 
-      const quotes = screen.queryAllByText(/DEV|devis|quote/i);
-      expect(quotes).toBeDefined(); // Quote type handled
+    it("gère plusieurs factures du même client", () => {
+      const two: Invoice[] = [
+        {
+          ...mockInvoices[0],
+          id: "x1",
+          number: "FAC-010",
+          status: "Brouillon",
+        },
+        {
+          ...mockInvoices[0],
+          id: "x2",
+          number: "FAC-011",
+          status: "Brouillon",
+        },
+      ];
+      renderManager(two);
+      expect(screen.getByText("FAC-010")).toBeInTheDocument();
+      expect(screen.getByText("FAC-011")).toBeInTheDocument();
+      expect(
+        screen.getByText((_, el) => textNorm(el) === "2 documents trouvés"),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Accessibility', () => {
-    it('les boutons sont accessibles au clavier', async () => {
-      const user = userEvent.setup();
-      const setInvoices = vi.fn();
-
-      render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
-
-      await user.tab();
-      expect(buttons[0]).toHaveFocus();
-    });
-  });
-
-  // ============================================================================
-  // BUSINESS LOGIC - CALCULATIONS
-  // ============================================================================
-
-  describe('Business Logic - Calculations', () => {
-    it('calcule correctement HT (Hors Taxes) avec items simples', () => {
-      const setInvoices = vi.fn();
-
-      const invoice: Invoice = {
+  // -- Performance --------------------------------------------------------------
+  describe("Performance", () => {
+    it("rend 100 factures en moins de 2 secondes", () => {
+      const many: Invoice[] = Array.from({ length: 100 }, (_, i) => ({
         ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        total: 1200, // 1000 HT + 200 TVA (20%)
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Vérifier que le total de 1200 est visible
-      const totals = screen.queryAllByText(/1200|1.200/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('calcule correctement la TVA à 20%', () => {
-      const setInvoices = vi.fn();
-
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-tva20',
-            description: 'Service TVA 20%',
-            quantity: 1,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        total: 120, // 100 + 20 TVA
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Total TTC doit être 120
-      const totals = screen.queryAllByText(/120|100/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('calcule correctement avec TVA réduite 5.5%', () => {
-      const setInvoices = vi.fn();
-
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-tva5_5',
-            description: 'Fournitures réduites',
-            quantity: 1,
-            unitPrice: 100,
-            vatRate: 5.5,
-          },
-        ],
-        total: 105.5, // 100 + 5.5 TVA
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const totals = screen.queryAllByText(/105|100/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('calcule correctement avec plusieurs items et TVA mixtes', () => {
-      const setInvoices = vi.fn();
-
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service Tva 20%',
-            quantity: 1,
-            unitPrice: 1000,
-            vatRate: 20,
-          },
-          {
-            id: 'itm-2',
-            description: 'Fournitures TVA 5.5%',
-            quantity: 1,
-            unitPrice: 500,
-            vatRate: 5.5,
-          },
-          {
-            id: 'itm-3',
-            description: 'Fourniture exonérée',
-            quantity: 1,
-            unitPrice: 200,
-            vatRate: 0,
-          },
-        ],
-        total: 1777.5, // 1700 HT + 200 TVA 20% + 27.5 TVA 5.5%
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const totals = screen.queryAllByText(/1777|1700/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('applique correctement une remise en pourcentage', () => {
-      const setInvoices = vi.fn();
-
-      // HT = 1000, Remise 10% = 100, Remise HT = 900
-      // TVA = 900 * 20% = 180, Total = 1080
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        discount: 10, // 10% remise
-        total: 1080, // 1000 - 100 remise + 200 TVA = 1100 (recalculation)
-        // ou correctement: (1000 - 100) * 1.20 = 1080
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      const totals = screen.queryAllByText(/1080|1100/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('ajoute correctement les frais de port (shipping)', () => {
-      const setInvoices = vi.fn();
-
-      // HT = 1000, Shipping = 15, Shipping TVA = 3, Total = 1018
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        shipping: 15,
-        total: 1218, // 1000 + 15 + 200 TVA + 3 TVA shipping
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      expect(container).toBeDefined(); // Shipping calculated correctly
-    });
-
-    it('gère les acomptes/dépôts correctement', () => {
-      const setInvoices = vi.fn();
-
-      // Total TTC = 1200, Acompte = 300, Solde = 900
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        deposit: 300,
-        total: 1200,
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Le total doit être affiché même avec acompte
-      expect(container).toBeDefined();
-      const totals = screen.queryAllByText(/1200|900/);
-      expect(totals.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('exonère correctement la TVA si taxExempt = true', () => {
-      const setInvoices = vi.fn();
-
-      // HT = 1000, Pas de TVA, Total = 1000
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service exonéré',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20, // Ignoré si taxExempt
-          },
-        ],
-        total: 1000, // Pas de TVA malgré le taux de 20%
-        taxExempt: true,
-      } as any;
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      expect(container).toBeDefined(); // Tax exempt render succeeds
-    });
-
-    it('gère les décimales correctement (precision Decimal.js)', () => {
-      const setInvoices = vi.fn();
-
-      // Prix tricky: 33.33 * 3 = 99.99
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-decimal',
-            description: 'Service avec décimales',
-            quantity: 3,
-            unitPrice: 33.33,
-            vatRate: 0, // Sans TVA pour focus sur décimale
-          },
-        ],
-        total: 99.99, // 33.33 * 3 = 99.99
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      expect(container).toBeDefined(); // Decimal precision handled
-    });
-
-    it('composition de calculs complexes: remise + port + TVA', () => {
-      const setInvoices = vi.fn();
-
-      // HT = 1000
-      // Remise 10% = -100
-      // HT après remise = 900
-      // TVA 20% sur 900 = 180
-      // Frais port = 50
-      // TVA port = 10
-      // Total = 900 + 180 + 50 + 10 = 1140
-      const invoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-1',
-            description: 'Service',
-            quantity: 10,
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-        discount: 10,
-        shipping: 50,
-        total: 1140,
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      expect(container).toBeDefined(); // Complex calculation handled
-    });
-  });
-
-  // ============================================================================
-  // VALIDATION ET RÈGLES MÉTIER
-  // ============================================================================
-
-  describe('Business Rules & Validation', () => {
-    it('empêche la création avec un client non sélectionné', () => {
-      const setInvoices = vi.fn();
-
-      const incompleteInvoice = {
-        ...mockInvoices[0],
-        clientId: '', // Pas de client
-      };
-
-      // Le composant devrait empêcher la sauvegarde ou afficher une erreur
-      const { container } = render(
-        <InvoiceManager
-          invoices={[incompleteInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Validation logic available
-      expect(container).toBeDefined();
-    });
-
-    it('empêche la création avec des items vides', () => {
-      const setInvoices = vi.fn();
-
-      const invoiceNoItems: Invoice = {
-        ...mockInvoices[0],
-        items: [], // Pas d'items
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[invoiceNoItems]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Items validation available
-      expect(container).toBeDefined();
-    });
-
-    it('valide les numéros de facture uniques', () => {
-      const setInvoices = vi.fn();
-
-      const duplicateNumberInvoice: Invoice = {
-        ...mockInvoices[0],
-        id: 'inv-dup',
-        number: 'FAC-001', // Même numéro que inv-1
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[...mockInvoices, duplicateNumberInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Le stub ne rend pas encore les lignes, les numéros ne seront pas visibles
-      expect(screen.queryAllByText('FAC-001').length).toBeGreaterThanOrEqual(0);
-    });
-
-    it("valide que la date d'échéance est après la date de facture", () => {
-      const setInvoices = vi.fn();
-
-      const invalidDueDateInvoice: Invoice = {
-        ...mockInvoices[0],
-        date: '2026-04-20',
-        dueDate: '2026-03-20', // Avant la date de facture
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[invalidDueDateInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Le stub ne valide pas encore les dates visuellement
-      expect(screen.queryAllByText(/Documents|Nouveau/i).length).toBeGreaterThan(0);
-    });
-
-    it('empêche les montants négatifs', () => {
-      const setInvoices = vi.fn();
-
-      const negativeInvoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-neg',
-            description: 'Item négatif',
-            quantity: -5, // Quantité négative
-            unitPrice: 100,
-            vatRate: 20,
-          },
-        ],
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[negativeInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait valider ou refuser les montants négatifs
-      expect(mockClients.length > 0).toBe(true);
-    });
-  });
-
-  // ============================================================================
-  // MULTI-LANGUAGE SUPPORT
-  // ============================================================================
-
-  describe('Multi-Language & Localization', () => {
-    it('affiche les dates en format français', () => {
-      const setInvoices = vi.fn();
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={mockInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait afficher les dates de façon lisible
-      expect(container).toBeDefined();
-      const dates = screen.queryAllByText(/2026|mars|03|10/i);
-      expect(dates.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('affiche les montants formatés avec séparateurs de milliers', () => {
-      const setInvoices = vi.fn();
-
-      const largeInvoice: Invoice = {
-        ...mockInvoices[0],
-        total: 1234567.89,
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[largeInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait formatter le grand nombre
-      expect(container).toBeDefined();
-      const amounts = screen.queryAllByText(/1.*234|1.234|1,234/i);
-      expect(amounts.length).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  // ============================================================================
-  // PERFORMANCE & EDGE CASES
-  // ============================================================================
-
-  describe('Performance & Edge Cases', () => {
-    it('gère 100 factures sans ralentissements', () => {
-      const setInvoices = vi.fn();
-
-      const manyInvoices: Invoice[] = Array.from({ length: 100 }, (_, i) => ({
-        ...mockInvoices[0],
-        id: `inv-${i}`,
-        number: `FAC-${String(i).padStart(6, '0')}`,
+        id: `inv-perf-${i}`,
+        number: `FAC-${String(i).padStart(4, "0")}`,
         clientId: mockClients[i % 2].id,
+        status: "Brouillon",
       }));
-
       const start = performance.now();
-      render(
-        <InvoiceManager
-          invoices={manyInvoices}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-      const duration = performance.now() - start;
-
-      // Devrait rendre rapidement
-      expect(duration).toBeLessThan(1000);
-    });
-
-    it('gère les montant extrêmement élevés', () => {
-      const setInvoices = vi.fn();
-
-      const maxInvoice: Invoice = {
-        ...mockInvoices[0],
-        items: [
-          {
-            id: 'itm-huge',
-            description: 'Grand projet',
-            quantity: 1000,
-            unitPrice: 99999.99,
-            vatRate: 20,
-          },
-        ],
-        total: 99999999.99,
-      };
-
-      render(
-        <InvoiceManager
-          invoices={[maxInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait afficher le grand nombre
-      expect(screen.queryAllByText(/99|9999/i).length).toBeGreaterThanOrEqual(0);
-    });
-
-    it("gère les factures avec pas d'items", () => {
-      const setInvoices = vi.fn();
-
-      const emptyItemsInvoice: Invoice = {
-        ...mockInvoices[0],
-        items: [],
-        total: 0,
-      };
-
-      const { container } = render(
-        <InvoiceManager
-          invoices={[emptyItemsInvoice]}
-          setInvoices={setInvoices}
-          clients={mockClients}
-          userProfile={mockUserProfile}
-          products={mockProducts}
-        />
-      );
-
-      // Devrait gérer gracieux sans crash
-      expect(container).toBeDefined();
+      renderManager(many);
+      expect(performance.now() - start).toBeLessThan(2000);
+      expect(
+        screen.getByText((_, el) => textNorm(el) === "100 documents trouvés"),
+      ).toBeInTheDocument();
     });
   });
 });

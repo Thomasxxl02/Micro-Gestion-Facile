@@ -44,7 +44,7 @@ export const initiateOAuthFlow = async (provider: CloudProvider): Promise<void> 
 
   const providerConfig = config[provider];
   const redirectUri = `${window.location.origin}/oauth-callback`;
-  const state = btoa(JSON.stringify({ provider, timestamp: Date.now() }));
+  const state = window.window.btoa(JSON.stringify({ provider, timestamp: Date.now() }));
 
   const url =
     `${providerConfig.authUrl}?` +

@@ -14,6 +14,7 @@ import {
 import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
+import useNotificationsSound from "../hooks/useNotificationsSound";
 import { signInvoice } from "../lib/electronicSignature";
 import { useAppStore } from "../store/appStore";
 import type {
@@ -58,6 +59,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [signingId, setSigningId] = useState<string | null>(null);
 
+  const { playSound } = useNotificationsSound();
   const isSyncing = useAppStore((state) => state.isSyncing);
 
   // ─── ACTIONS ───
@@ -193,10 +195,12 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
       setSigningId(inv.id);
       try {
         const sig = await signInvoice(inv, userProfile);
+        playSound("success");
         toast.success(`Facture ${inv.number} signée`, {
           description: `Empreinte : ${sig.signature.slice(0, 16)}…`,
         });
       } catch {
+        playSound("error");
         toast.error("Erreur lors de la signature numérique");
       } finally {
         setSigningId(null);
@@ -538,7 +542,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {new Date(inv.date).toLocaleDateString("fr-FR")}
+                      {userProfile.dateFormat === "YYYY-MM-DD"
+                        ? new Date(inv.date).toISOString().split("T")[0]
+                        : new Date(inv.date).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-1">

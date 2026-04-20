@@ -6,8 +6,8 @@
  * Consumed by: Managers, Dashboard, InvoiceForm, etc.
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   CalendarEvent,
   Client,
@@ -18,50 +18,56 @@ import type {
   Product,
   Supplier,
   UserProfile,
-} from '../types';
+} from "../types";
 
 export interface DataStoreState {
   // Entities
   invoices: Invoice[];
-  setInvoices: (invoices: Invoice[]) => void;
-  updateInvoices: (updater: (invoices: Invoice[]) => Invoice[]) => void;
+  setInvoices: (_invoices: Invoice[]) => void;
+  updateInvoices: (_updater: (_invoices: Invoice[]) => Invoice[]) => void;
 
   clients: Client[];
-  setClients: (clients: Client[]) => void;
-  updateClients: (updater: (clients: Client[]) => Client[]) => void;
+  setClients: (_clients: Client[]) => void;
+  updateClients: (_updater: (_clients: Client[]) => Client[]) => void;
 
   suppliers: Supplier[];
-  setSuppliers: (suppliers: Supplier[]) => void;
-  updateSuppliers: (updater: (suppliers: Supplier[]) => Supplier[]) => void;
+  setSuppliers: (_suppliers: Supplier[]) => void;
+  updateSuppliers: (_updater: (_suppliers: Supplier[]) => Supplier[]) => void;
 
   products: Product[];
-  setProducts: (products: Product[]) => void;
-  updateProducts: (updater: (products: Product[]) => Product[]) => void;
+  setProducts: (_products: Product[]) => void;
+  updateProducts: (_updater: (_products: Product[]) => Product[]) => void;
 
   expenses: Expense[];
-  setExpenses: (expenses: Expense[]) => void;
-  updateExpenses: (updater: (expenses: Expense[]) => Expense[]) => void;
+  setExpenses: (_expenses: Expense[]) => void;
+  updateExpenses: (_updater: (_expenses: Expense[]) => Expense[]) => void;
 
   emails: Email[];
-  setEmails: (emails: Email[]) => void;
-  updateEmails: (updater: (emails: Email[]) => Email[]) => void;
+  setEmails: (_emails: Email[]) => void;
+  updateEmails: (_updater: (_emails: Email[]) => Email[]) => void;
 
   emailTemplates: EmailTemplate[];
-  setEmailTemplates: (templates: EmailTemplate[]) => void;
-  updateEmailTemplates: (updater: (templates: EmailTemplate[]) => EmailTemplate[]) => void;
+  setEmailTemplates: (_templates: EmailTemplate[]) => void;
+  updateEmailTemplates: (
+    _updater: (_templates: EmailTemplate[]) => EmailTemplate[],
+  ) => void;
 
   calendarEvents: CalendarEvent[];
-  setCalendarEvents: (events: CalendarEvent[]) => void;
-  updateCalendarEvents: (updater: (events: CalendarEvent[]) => CalendarEvent[]) => void;
+  setCalendarEvents: (_events: CalendarEvent[]) => void;
+  updateCalendarEvents: (
+    _updater: (_events: CalendarEvent[]) => CalendarEvent[],
+  ) => void;
 
   // User Profile
   userProfile: UserProfile;
-  setUserProfile: (profile: UserProfile) => void;
-  updateUserProfile: (updater: (profile: UserProfile) => Partial<UserProfile>) => void;
+  setUserProfile: (_profile: UserProfile) => void;
+  updateUserProfile: (
+    _updater: (_profile: UserProfile) => Partial<UserProfile>,
+  ) => void;
 
   // Sync State
   isSyncing: boolean;
-  setIsSyncing: (isSyncing: boolean) => void;
+  setIsSyncing: (_isSyncing: boolean) => void;
 
   // Reset & Cleanup
   reset: () => void;
@@ -70,31 +76,36 @@ export interface DataStoreState {
 
 // Default user profile
 const defaultUserProfile: UserProfile = {
-  companyName: 'Ma Micro-Entreprise',
-  professionalTitle: 'Consultant Indépendant',
-  siret: '123 456 789 00012',
-  address: '123 Avenue de la République, 75001 Paris',
-  email: 'contact@mon-entreprise.fr',
-  phone: '01 02 03 04 05',
-  website: 'www.mon-entreprise.fr',
-  linkedin: 'linkedin.com/in/mon-profil',
-  bankAccount: 'FR76 1234 5678 9012 3456 7890 123',
-  bic: 'TRPUFRPPXXX',
-  currency: '€',
-  invoicePrefix: 'FAC-',
-  quotePrefix: 'DEV-',
-  orderPrefix: 'COM-',
-  creditNotePrefix: 'AVO-',
+  companyName: "Ma Micro-Entreprise",
+  professionalTitle: "Consultant Indépendant",
+  siret: "123 456 789 00012",
+  address: "123 Avenue de la République, 75001 Paris",
+  email: "contact@mon-entreprise.fr",
+  phone: "01 02 03 04 05",
+  website: "www.mon-entreprise.fr",
+  linkedin: "linkedin.com/in/mon-profil",
+  bankAccount: "FR76 1234 5678 9012 3456 7890 123",
+  bic: "TRPUFRPPXXX",
+  currency: "€",
+  invoicePrefix: "FAC-",
+  quotePrefix: "DEV-",
+  orderPrefix: "COM-",
+  creditNotePrefix: "AVO-",
   defaultVatRate: 0,
-  logoColor: '#102a43',
-  activityType: 'SERVICE_BNC',
+  logoColor: "#102a43",
+  activityType: "SERVICE_BNC",
   isAcreBeneficiary: false,
   vatThresholdAlert: true,
   customVatThresholdPercentage: 80, // Par défaut 80% comme demandé
   revenueThresholdAlert: true,
   customRevenueThresholdPercentage: 90, // Par défaut 90%
+  // Productivité & Automatisation (20/04/2026)
+  dateFormat: "DD/MM/YYYY",
+  autoOpenPdfPreview: false,
+  defaultServiceCategory: "SERVICE",
+  sidebarFavorites: ["dashboard", "invoices", "clients", "accounting"],
   automation: {
-    defaultPaymentDelay: '30_DAYS',
+    defaultPaymentDelay: "30_DAYS",
     autoReminders: {
       enabled: false,
       after3Days: true,
@@ -105,18 +116,18 @@ const defaultUserProfile: UserProfile = {
 
 const defaultEmailTemplates: EmailTemplate[] = [
   {
-    id: '1',
-    name: 'Envoi Facture',
-    subject: 'Votre facture {{invoice_number}}',
+    id: "1",
+    name: "Envoi Facture",
+    subject: "Votre facture {{invoice_number}}",
     body: "Bonjour {{client_name}},\n\nVeuillez trouver ci-joint votre facture {{invoice_number}} d'un montant de {{total}}.\n\nCordialement,\n{{company_name}}",
-    type: 'invoice',
+    type: "invoice",
   },
   {
-    id: '2',
-    name: 'Relance Paiement',
-    subject: 'Relance : Facture {{invoice_number}} impayée',
-    body: 'Bonjour {{client_name}},\n\nSauf erreur de notre part, le paiement de la facture {{invoice_number}} ne nous est pas parvenu.\n\nMerci de régulariser la situation au plus vite.\n\nCordialement,\n{{company_name}}',
-    type: 'reminder',
+    id: "2",
+    name: "Relance Paiement",
+    subject: "Relance : Facture {{invoice_number}} impayée",
+    body: "Bonjour {{client_name}},\n\nSauf erreur de notre part, le paiement de la facture {{invoice_number}} ne nous est pas parvenu.\n\nMerci de régulariser la situation au plus vite.\n\nCordialement,\n{{company_name}}",
+    type: "reminder",
   },
 ];
 
@@ -154,19 +165,25 @@ export const useDataStore = create<DataStoreState>()(
       set((state) => ({ emails: updater(state.emails) })),
 
     emailTemplates: defaultEmailTemplates,
-    setEmailTemplates: (templates: EmailTemplate[]) => set({ emailTemplates: templates }),
-    updateEmailTemplates: (updater: (templates: EmailTemplate[]) => EmailTemplate[]) =>
-      set((state) => ({ emailTemplates: updater(state.emailTemplates) })),
+    setEmailTemplates: (templates: EmailTemplate[]) =>
+      set({ emailTemplates: templates }),
+    updateEmailTemplates: (
+      updater: (templates: EmailTemplate[]) => EmailTemplate[],
+    ) => set((state) => ({ emailTemplates: updater(state.emailTemplates) })),
 
     calendarEvents: [],
-    setCalendarEvents: (events: CalendarEvent[]) => set({ calendarEvents: events }),
-    updateCalendarEvents: (updater: (events: CalendarEvent[]) => CalendarEvent[]) =>
-      set((state) => ({ calendarEvents: updater(state.calendarEvents) })),
+    setCalendarEvents: (events: CalendarEvent[]) =>
+      set({ calendarEvents: events }),
+    updateCalendarEvents: (
+      updater: (events: CalendarEvent[]) => CalendarEvent[],
+    ) => set((state) => ({ calendarEvents: updater(state.calendarEvents) })),
 
     // User Profile
     userProfile: defaultUserProfile,
     setUserProfile: (profile: UserProfile) => set({ userProfile: profile }),
-    updateUserProfile: (updater: (profile: UserProfile) => Partial<UserProfile>) =>
+    updateUserProfile: (
+      updater: (profile: UserProfile) => Partial<UserProfile>,
+    ) =>
       set((state) => ({
         userProfile: { ...state.userProfile, ...updater(state.userProfile) },
       })),
@@ -195,7 +212,7 @@ export const useDataStore = create<DataStoreState>()(
         clients: state.clients.filter((c) => !c.isTest),
         products: state.products.filter((p) => !p.isTest),
       })),
-  }))
+  })),
 );
 
 export default useDataStore;

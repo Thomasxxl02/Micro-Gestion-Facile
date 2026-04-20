@@ -19,9 +19,9 @@
  * New components should import specific stores directly.
  */
 
-import type { User } from 'firebase/auth';
-import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import type { User } from "firebase/auth";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import type {
   CalendarEvent,
   Client,
@@ -34,11 +34,11 @@ import type {
   Supplier,
   UserProfile,
   ViewState,
-} from '../types';
-import { useAuthStore } from './useAuthStore';
-import { useDataStore } from './useDataStore';
-import { useLogStore } from './useLogStore';
-import { useUIStore } from './useUIStore';
+} from "../types";
+import { useAuthStore } from "./useAuthStore";
+import { useDataStore } from "./useDataStore";
+import { useLogStore } from "./useLogStore";
+import { useUIStore } from "./useUIStore";
 
 /**
  * @deprecated Use individual stores instead
@@ -51,60 +51,66 @@ import { useUIStore } from './useUIStore';
 export interface AppStoreState {
   // UI
   currentView: ViewState;
-  setCurrentView: (view: ViewState) => void;
+  setCurrentView: (_view: ViewState) => void;
   isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (open: boolean) => void;
+  setIsMobileMenuOpen: (_open: boolean) => void;
   isDarkMode: boolean;
-  setIsDarkMode: (isDark: boolean) => void;
+  setIsDarkMode: (_isDark: boolean) => void;
   fontSize: number;
-  setFontSize: (size: number) => void;
+  setFontSize: (_size: number) => void;
 
   // Auth
   user: User | null;
-  setUser: (user: User | null) => void;
+  setUser: (_user: User | null) => void;
   isAuthReady: boolean;
-  setIsAuthReady: (ready: boolean) => void;
+  setIsAuthReady: (_ready: boolean) => void;
 
   // Data
   invoices: Invoice[];
-  setInvoices: (invoices: Invoice[]) => void;
-  updateInvoices: (updater: (invoices: Invoice[]) => Invoice[]) => void;
+  setInvoices: (_invoices: Invoice[]) => void;
+  updateInvoices: (_updater: (_invoices: Invoice[]) => Invoice[]) => void;
   clients: Client[];
-  setClients: (clients: Client[]) => void;
-  updateClients: (updater: (clients: Client[]) => Client[]) => void;
+  setClients: (_clients: Client[]) => void;
+  updateClients: (_updater: (_clients: Client[]) => Client[]) => void;
   suppliers: Supplier[];
-  setSuppliers: (suppliers: Supplier[]) => void;
-  updateSuppliers: (updater: (suppliers: Supplier[]) => Supplier[]) => void;
+  setSuppliers: (_suppliers: Supplier[]) => void;
+  updateSuppliers: (_updater: (_suppliers: Supplier[]) => Supplier[]) => void;
   products: Product[];
-  setProducts: (products: Product[]) => void;
-  updateProducts: (updater: (products: Product[]) => Product[]) => void;
+  setProducts: (_products: Product[]) => void;
+  updateProducts: (_updater: (_products: Product[]) => Product[]) => void;
   expenses: Expense[];
-  setExpenses: (expenses: Expense[]) => void;
-  updateExpenses: (updater: (expenses: Expense[]) => Expense[]) => void;
+  setExpenses: (_expenses: Expense[]) => void;
+  updateExpenses: (_updater: (_expenses: Expense[]) => Expense[]) => void;
   emails: Email[];
-  setEmails: (emails: Email[]) => void;
-  updateEmails: (updater: (emails: Email[]) => Email[]) => void;
+  setEmails: (_emails: Email[]) => void;
+  updateEmails: (_updater: (_emails: Email[]) => Email[]) => void;
   emailTemplates: EmailTemplate[];
-  setEmailTemplates: (templates: EmailTemplate[]) => void;
-  updateEmailTemplates: (updater: (templates: EmailTemplate[]) => EmailTemplate[]) => void;
+  setEmailTemplates: (_templates: EmailTemplate[]) => void;
+  updateEmailTemplates: (
+    _updater: (_templates: EmailTemplate[]) => EmailTemplate[],
+  ) => void;
   calendarEvents: CalendarEvent[];
-  setCalendarEvents: (events: CalendarEvent[]) => void;
-  updateCalendarEvents: (updater: (events: CalendarEvent[]) => CalendarEvent[]) => void;
+  setCalendarEvents: (_events: CalendarEvent[]) => void;
+  updateCalendarEvents: (
+    _updater: (_events: CalendarEvent[]) => CalendarEvent[],
+  ) => void;
   userProfile: UserProfile;
-  setUserProfile: (profile: UserProfile) => void;
-  updateUserProfile: (updater: (profile: UserProfile) => Partial<UserProfile>) => void;
+  setUserProfile: (_profile: UserProfile) => void;
+  updateUserProfile: (
+    _updater: (_profile: UserProfile) => Partial<UserProfile>,
+  ) => void;
 
   // Sync
   isSyncing: boolean;
-  setIsSyncing: (isSyncing: boolean) => void;
+  setIsSyncing: (_isSyncing: boolean) => void;
 
   // Logs
   activityLogs: LogEntry[];
   addLog: (
-    action: string,
-    category: LogEntry['category'],
-    severity: LogEntry['severity'],
-    details?: string
+    _action: string,
+    _category: LogEntry["category"],
+    _severity: LogEntry["severity"],
+    _details?: string,
   ) => void;
   clearLogs: () => void;
 
@@ -130,7 +136,8 @@ export const useAppStore = create<AppStoreState>()(
       currentView: useUIStore.getState().currentView,
       setCurrentView: (view) => useUIStore.getState().setCurrentView(view),
       isMobileMenuOpen: useUIStore.getState().isMobileMenuOpen,
-      setIsMobileMenuOpen: (open) => useUIStore.getState().setIsMobileMenuOpen(open),
+      setIsMobileMenuOpen: (open) =>
+        useUIStore.getState().setIsMobileMenuOpen(open),
       isDarkMode: useUIStore.getState().isDarkMode,
       setIsDarkMode: (isDark) => useUIStore.getState().setIsDarkMode(isDark),
       fontSize: useUIStore.getState().fontSize,
@@ -145,35 +152,48 @@ export const useAppStore = create<AppStoreState>()(
       // Data
       invoices: useDataStore.getState().invoices,
       setInvoices: (invoices) => useDataStore.getState().setInvoices(invoices),
-      updateInvoices: (updater) => useDataStore.getState().updateInvoices(updater),
+      updateInvoices: (updater) =>
+        useDataStore.getState().updateInvoices(updater),
       clients: useDataStore.getState().clients,
       setClients: (clients) => useDataStore.getState().setClients(clients),
-      updateClients: (updater) => useDataStore.getState().updateClients(updater),
+      updateClients: (updater) =>
+        useDataStore.getState().updateClients(updater),
       suppliers: useDataStore.getState().suppliers,
-      setSuppliers: (suppliers) => useDataStore.getState().setSuppliers(suppliers),
-      updateSuppliers: (updater) => useDataStore.getState().updateSuppliers(updater),
+      setSuppliers: (suppliers) =>
+        useDataStore.getState().setSuppliers(suppliers),
+      updateSuppliers: (updater) =>
+        useDataStore.getState().updateSuppliers(updater),
       products: useDataStore.getState().products,
       setProducts: (products) => useDataStore.getState().setProducts(products),
-      updateProducts: (updater) => useDataStore.getState().updateProducts(updater),
+      updateProducts: (updater) =>
+        useDataStore.getState().updateProducts(updater),
       expenses: useDataStore.getState().expenses,
       setExpenses: (expenses) => useDataStore.getState().setExpenses(expenses),
-      updateExpenses: (updater) => useDataStore.getState().updateExpenses(updater),
+      updateExpenses: (updater) =>
+        useDataStore.getState().updateExpenses(updater),
       emails: useDataStore.getState().emails,
       setEmails: (emails) => useDataStore.getState().setEmails(emails),
       updateEmails: (updater) => useDataStore.getState().updateEmails(updater),
       emailTemplates: useDataStore.getState().emailTemplates,
-      setEmailTemplates: (templates) => useDataStore.getState().setEmailTemplates(templates),
-      updateEmailTemplates: (updater) => useDataStore.getState().updateEmailTemplates(updater),
+      setEmailTemplates: (templates) =>
+        useDataStore.getState().setEmailTemplates(templates),
+      updateEmailTemplates: (updater) =>
+        useDataStore.getState().updateEmailTemplates(updater),
       calendarEvents: useDataStore.getState().calendarEvents,
-      setCalendarEvents: (events) => useDataStore.getState().setCalendarEvents(events),
-      updateCalendarEvents: (updater) => useDataStore.getState().updateCalendarEvents(updater),
+      setCalendarEvents: (events) =>
+        useDataStore.getState().setCalendarEvents(events),
+      updateCalendarEvents: (updater) =>
+        useDataStore.getState().updateCalendarEvents(updater),
       userProfile: useDataStore.getState().userProfile,
-      setUserProfile: (profile) => useDataStore.getState().setUserProfile(profile),
-      updateUserProfile: (updater) => useDataStore.getState().updateUserProfile(updater),
+      setUserProfile: (profile) =>
+        useDataStore.getState().setUserProfile(profile),
+      updateUserProfile: (updater) =>
+        useDataStore.getState().updateUserProfile(updater),
 
       // Sync
       isSyncing: useDataStore.getState().isSyncing,
-      setIsSyncing: (isSyncing) => useDataStore.getState().setIsSyncing(isSyncing),
+      setIsSyncing: (isSyncing) =>
+        useDataStore.getState().setIsSyncing(isSyncing),
 
       // Logs
       activityLogs: useLogStore.getState().activityLogs,
@@ -192,14 +212,14 @@ export const useAppStore = create<AppStoreState>()(
     });
 
     return getFullState();
-  })
+  }),
 );
 
 // Re-export individual stores for preferred usage
-export { useAuthStore } from './useAuthStore';
-export { useDataStore } from './useDataStore';
-export { useLogStore } from './useLogStore';
-export { useUIStore } from './useUIStore';
+export { useAuthStore } from "./useAuthStore";
+export { useDataStore } from "./useDataStore";
+export { useLogStore } from "./useLogStore";
+export { useUIStore } from "./useUIStore";
 
 // Keep facade in sync with domain stores (needed for getState() to reflect mutations)
 useUIStore.subscribe((ui) => {
