@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
+import useNotificationsSound from "../hooks/useNotificationsSound";
 import { draftEmail } from "../services/geminiService";
 import type {
   Client,
@@ -29,16 +31,16 @@ import type {
 
 interface EmailManagerProps {
   emails: Email[];
-  setEmails: (emails: Email[]) => void;
+  setEmails: (_emails: Email[]) => void;
   templates: EmailTemplate[];
-  setTemplates: (templates: EmailTemplate[]) => void;
+  setTemplates: (_templates: EmailTemplate[]) => void;
   clients: Client[];
   invoices: Invoice[];
   userProfile: UserProfile;
-  onSaveEmail?: (email: Email) => void;
-  onDeleteEmail?: (id: string) => void;
-  onSaveTemplate?: (template: EmailTemplate) => void;
-  onDeleteTemplate?: (id: string) => void;
+  onSaveEmail?: (_email: Email) => void;
+  onDeleteEmail?: (_id: string) => void;
+  onSaveTemplate?: (_template: EmailTemplate) => void;
+  onDeleteTemplate?: (_id: string) => void;
 }
 
 const EmailManager: React.FC<EmailManagerProps> = ({
@@ -65,6 +67,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   const [isDrafting, setIsDrafting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { playSound } = useNotificationsSound();
 
   const [composeData, setComposeData] = useState({
     to: "",
@@ -156,6 +159,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     };
     setEmails([...emails, newEmail]);
     if (onSaveEmail) onSaveEmail(newEmail);
+    playSound("success");
+    toast.success("Email envoyé avec succès");
     setIsComposeOpen(false);
     setComposeData({
       to: "",
@@ -221,6 +226,14 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
     setComposeData({ ...composeData, subject, body, type: template.type });
   };
+
+  const MAGIC_VARIABLES = [
+    { key: "{{company_name}}", label: "Votre Entreprise" },
+    { key: "{{client_name}}", label: "Nom du Client" },
+    { key: "{{invoice_number}}", label: "N° Facture" },
+    { key: "{{total}}", label: "Montant Total" },
+    { key: "{{due_date}}", label: "Date d'échéance" },
+  ];
 
   const deleteEmail = (id: string) => {
     if (confirm("Supprimer cet email de l'historique ?")) {
@@ -405,76 +418,230 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       )}
 
       {activeTab === "templates" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <button
-            onClick={() => {
-              setEditingTemplateId(null);
-              setTemplateFormData({
-                name: "",
-                subject: "",
-                body: "",
-                type: "custom",
-              });
-              setIsComposeOpen(true);
-            }}
-            className="border-2 border-dashed border-brand-200 rounded-4xl p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group"
-          >
-            <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plus size={32} />
-            </div>
-            <span className="font-bold uppercase tracking-wider text-xs">
-              Nouveau Template
-            </span>
-          </button>
+        <div className="space-y-8">
+          {/* Nouveau: Editeur de Template si ouvert */}
+          {editingTemplateId || (activeTab === "templates" && isComposeOpen) ? (
+            <div className="bg-white border-2 border-brand-900 rounded-4xl p-8 shadow-2xl animate-slide-up">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-brand-900 flex items-center gap-2">
+                  <Edit2 size={24} className="text-brand-600" />
+                  {editingTemplateId
+                    ? "Modifier le Template"
+                    : "Nouveau Template"}
+                </h3>
+                <button
+                  onClick={() => setIsComposeOpen(false)}
+                  className="p-2 hover:bg-brand-50 rounded-full transition-colors"
+                  title="Fermer"
+                  aria-label="Fermer"
+                >
+                  <X size={24} />
+                </button>
+              </div>
 
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className="bg-white border border-brand-100 rounded-4xl p-6 shadow-sm hover:shadow-md transition-all group relative"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600">
-                  <FileText size={24} />
+              <form onSubmit={handleSaveTemplate} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-2">
+                      Nom du Template
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 outline-none font-bold"
+                      value={templateFormData.name}
+                      onChange={(e) =>
+                        setTemplateFormData({
+                          ...templateFormData,
+                          name: e.target.value,
+                        })
+                      }
+                      placeholder="Ex: Facture - Premier Envoi"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-2">
+                      Type
+                    </label>
+                    <select
+                      className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl outline-none appearance-none"
+                      title="Type de template"
+                      value={templateFormData.type}
+                      onChange={(e) =>
+                        setTemplateFormData({
+                          ...templateFormData,
+                          type: e.target.value as EmailTemplate["type"],
+                        })
+                      }
+                    >
+                      <option value="invoice">Facturation</option>
+                      <option value="quote">Devis</option>
+                      <option value="reminder">Relance</option>
+                      <option value="custom">Autre</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-2">
+                    Sujet de l'Email
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full p-4 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 outline-none font-bold"
+                    value={templateFormData.subject}
+                    onChange={(e) =>
+                      setTemplateFormData({
+                        ...templateFormData,
+                        subject: e.target.value,
+                      })
+                    }
+                    placeholder="Sujet avec {{invoice_number}}..."
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest">
+                      Corps du Message
+                    </label>
+                    <div className="flex gap-1">
+                      {MAGIC_VARIABLES.map((v) => (
+                        <button
+                          key={v.key}
+                          type="button"
+                          onClick={() =>
+                            setTemplateFormData({
+                              ...templateFormData,
+                              body: (templateFormData.body || "") + v.key,
+                            })
+                          }
+                          className="text-[10px] bg-brand-900 text-white px-2 py-1 rounded-lg hover:bg-brand-700 transition-all font-bold"
+                          title={v.label}
+                        >
+                          {v.key}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    rows={8}
+                    required
+                    className="w-full p-6 bg-brand-50 border border-brand-200 rounded-3xl focus:ring-2 focus:ring-brand-500/20 outline-none resize-none font-medium leading-relaxed"
+                    value={templateFormData.body}
+                    onChange={(e) =>
+                      setTemplateFormData({
+                        ...templateFormData,
+                        body: e.target.value,
+                      })
+                    }
+                    placeholder="Contenu du message..."
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-brand-50">
                   <button
-                    onClick={() => {
-                      setEditingTemplateId(template.id);
-                      setTemplateFormData(template);
-                      setIsComposeOpen(true);
-                    }}
-                    title="Modifier le template"
-                    className="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+                    type="button"
+                    onClick={() => setIsComposeOpen(false)}
+                    className="px-8 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
                   >
-                    <Edit2 size={16} />
+                    Annuler
                   </button>
                   <button
-                    onClick={() => deleteTemplate(template.id)}
-                    title="Supprimer le template"
-                    className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    type="submit"
+                    className="bg-brand-900 text-white px-10 py-3 rounded-2xl hover:bg-brand-800 transition-all shadow-xl font-bold text-xs uppercase tracking-widest"
                   >
-                    <Trash2 size={16} />
+                    Enregistrer le Template
                   </button>
                 </div>
-              </div>
-              <h4 className="font-bold text-brand-900 mb-1">{template.name}</h4>
-              <p className="text-[10px] text-brand-400 uppercase font-bold mb-3">
-                {template.type}
-              </p>
-              <div className="text-sm text-brand-600 line-clamp-3 mb-4 bg-brand-50/50 p-3 rounded-xl italic">
-                {template.subject}
-              </div>
+              </form>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <button
                 onClick={() => {
-                  applyTemplate(template);
-                  setActiveTab("compose");
+                  setEditingTemplateId(null);
+                  setTemplateFormData({
+                    name: "",
+                    subject: "",
+                    body: "",
+                    type: "custom",
+                  });
+                  setIsComposeOpen(true);
                 }}
-                className="w-full py-2.5 bg-brand-50 text-brand-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-brand-900 hover:text-white transition-all"
+                className="border-2 border-dashed border-brand-200 rounded-4xl p-8 flex flex-col items-center justify-center gap-4 text-brand-400 hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all group min-h-75"
               >
-                Utiliser ce template
+                <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus size={32} />
+                </div>
+                <span className="font-bold uppercase tracking-wider text-xs">
+                  Nouveau Template
+                </span>
               </button>
+
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="bg-white border border-brand-100 rounded-4xl p-6 shadow-sm hover:shadow-md transition-all group relative flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600">
+                        <FileText size={24} />
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => {
+                            setEditingTemplateId(template.id);
+                            setTemplateFormData(template);
+                            setIsComposeOpen(true);
+                          }}
+                          title="Modifier le template"
+                          className="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteTemplate(template.id)}
+                          title="Supprimer le template"
+                          className="p-2 text-brand-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <h4 className="font-bold text-brand-900 mb-1">
+                      {template.name}
+                    </h4>
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider mb-3 ${
+                        template.type === "reminder"
+                          ? "bg-orange-50 text-orange-600"
+                          : template.type === "invoice"
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-brand-50 text-brand-600"
+                      }`}
+                    >
+                      {template.type}
+                    </span>
+                    <div className="text-sm text-brand-600 line-clamp-3 mb-4 bg-brand-50/50 p-3 rounded-xl italic">
+                      {template.subject}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      applyTemplate(template);
+                      setActiveTab("compose");
+                    }}
+                    className="w-full py-2.5 bg-brand-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg"
+                  >
+                    Utiliser ce template
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 

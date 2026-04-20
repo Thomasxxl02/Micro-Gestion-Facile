@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+.vite/
+
+# Env files
+.env
+.env.local
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files (preserve formatting)
+package-lock.json
+pnpm-lock.yaml
+
+# Archives
+docs/archive/
+migrated_prompt_history/

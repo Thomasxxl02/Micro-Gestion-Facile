@@ -360,18 +360,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
       <div className="bento-grid">
         <div className="bento-item">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-[var(--bg-main)] rounded-2xl text-[var(--text-main)]">
+            <div className="p-3 bg-(--bg-main) rounded-2xl text-(--text-main)">
               <Package size={24} />
             </div>
-            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">
               Total Catalogue
             </span>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-[var(--text-main)] font-display">
+            <h3 className="text-2xl font-bold text-(--text-main) font-display">
               {globalStats.total}
             </h3>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
+            <p className="text-xs text-(--text-muted) mt-1">
               Éléments actifs
             </p>
           </div>
@@ -381,7 +381,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <div className="p-3 bg-accent-100 dark:bg-accent-900/30 rounded-2xl text-accent-600 dark:text-accent-400">
               <Briefcase size={24} />
             </div>
-            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">
               Prestations
             </span>
           </div>
@@ -389,7 +389,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400 font-display">
               {globalStats.servicesCount}
             </h3>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
+            <p className="text-xs text-(--text-muted) mt-1">
               Services proposés
             </p>
           </div>
@@ -399,7 +399,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600 dark:text-amber-400">
               <AlertCircle size={24} />
             </div>
-            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-(--text-muted) uppercase tracking-widest">
               Stock Bas
             </span>
           </div>
@@ -407,7 +407,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 font-display">
               {globalStats.lowStockCount}
             </h3>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
+            <p className="text-xs text-(--text-muted) mt-1">
               Articles à réapprovisionner
             </p>
           </div>
@@ -434,16 +434,16 @@ const ProductManager: React.FC<ProductManagerProps> = ({
 
       {/* Side Panel Form */}
       <div
-        className={`fixed inset-y-0 right-0 w-full sm:w-[450px] bg-[var(--card-bg)] shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-[var(--card-border)] ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed inset-y-0 right-0 w-full sm:w-[450px] bg-(--card-bg) shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-(--card-border) ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="h-full flex flex-col">
-          <div className="p-6 border-b border-[var(--card-border)] flex justify-between items-center bg-[var(--bg-main)]/50">
-            <h3 className="text-xl font-bold text-[var(--text-main)]">
+          <div className="p-6 border-b border-(--card-border) flex justify-between items-center bg-(--bg-main)/50">
+            <h3 className="text-xl font-bold text-(--text-main)">
               {editingId ? "Modifier l'élément" : "Nouvel élément"}
             </h3>
             <button
               onClick={() => setIsPanelOpen(false)}
-              className="p-2 hover:bg-[var(--bg-main)] rounded-full text-[var(--text-muted)] transition-colors"
+              className="p-2 hover:bg-(--bg-main) rounded-full text-(--text-muted) transition-colors"
             >
               <X size={20} />
             </button>
@@ -455,13 +455,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           >
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-[var(--text-main)] mb-1.5">
+                <label className="block text-sm font-semibold text-(--text-main) mb-1.5">
                   Nom de l'élément <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full p-3 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all text-[var(--text-main)]"
+                  className="w-full p-3 bg-(--input-bg) border border-(--input-border) rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all text-(--text-main)"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })

@@ -1,36 +1,50 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
-// List of disposable email domains
+/**
+ * Domaines jetables bloqués pour éviter les abus de liens magiques.
+ */
 const DISPOSABLE_DOMAINS = new Set([
-  'tempmail.com',
-  'guerrillamail.com',
-  '10minutemail.com',
-  'maildrop.cc',
-  'temp-mail.org',
-  'throwaway.email',
-  'mailinator.com',
+  "tempmail.com",
+  "guerrillamail.com",
+  "10minutemail.com",
+  "maildrop.cc",
+  "temp-mail.org",
+  "throwaway.email",
+  "mailinator.com",
+  "yopmail.com",
+  "protonmail.ch", // Souvent utilisé pour le spam de masse sur les petits services (optionnel)
 ]);
 
-// Common typos in email domains
-const COMMON_TYPOS: Record<string, string> = {
-  'gmal.com': 'gmail.com',
-  'gmial.com': 'gmail.com',
-  'gamil.com': 'gmail.com',
-  'hotmal.com': 'hotmail.com',
-  'hotmial.com': 'hotmail.com',
-  'outlok.com': 'outlook.com',
-  'yaho.com': 'yahoo.com',
-  'wanado.fr': 'wanadoo.fr',
-  'orange.com': 'orange.fr', // Often orange.fr in France
-};
-
-// Allowed B2B domains (Optional refinement)
+/**
+ * Domaines génériques bloqués (Optionnel: pour forcer le B2B si nécessaire).
+ * Pour l'instant, on bloque juste les domaines de test/exemple.
+ */
 const BLOCKED_DOMAINS = new Set([
-  'test.com',
-  'example.com',
-  'invalid.com',
-  'domain.com',
+  "test.com",
+  "example.com",
+  "invalid.com",
+  "domain.com",
+  "localhost",
 ]);
+
+/**
+ * Suggestions intelligentes pour corriger les fautes de frappe courantes.
+ */
+const COMMON_TYPOS: Record<string, string> = {
+  "gmal.com": "gmail.com",
+  "gmial.com": "gmail.com",
+  "gamil.com": "gmail.com",
+  "hotmal.com": "hotmail.com",
+  "hotmial.com": "hotmail.com",
+  "outlok.com": "outlook.com",
+  "yaho.com": "yahoo.com",
+  "wanado.fr": "wanadoo.fr",
+  "orange.fr": "orange.fr",
+  "sfr.fr": "sfr.fr",
+  "free.fr": "free.fr",
+  "gnail.com": "gmail.com",
+  "gmaill.com": "gmail.com",
+};
 
 export interface EmailValidationState {
   email: string;
@@ -41,7 +55,10 @@ export interface EmailValidationState {
   suggestion: string | null;
 }
 
-export function useEmailValidation(initialEmail = '') {
+/**
+ * Hook de validation d'e-mail avec correction de fautes de frappe et détection de spam.
+ */
+export function useEmailValidation(initialEmail = "") {
   const [email, setEmail] = useState(initialEmail);
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,55 +73,54 @@ export function useEmailValidation(initialEmail = '') {
     setSuggestion(null);
     setIsValidating(true);
 
-    try {
-      // Simulate slight delay for visual feedback if needed,
-      // or keep it instant since it's local for now
-      if (!value) {
-        setIsValid(false);
-        return;
-      }
+    if (!value) {
+      setIsValid(false);
+      setIsValidating(false);
+      return;
+    }
 
-      // 1. Basic format check
+    try {
+      // 1. Format RFC basique
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(value)) {
-        setError("Format d'email invalide");
+        setError("Format d'e-mail incorrect.");
         setIsValid(false);
         return;
       }
 
-      // 2. Check for disposable email or typos
-      const parts = value.split('@');
+      const parts = value.split("@");
+      const user = parts[0];
       const domain = parts[1].toLowerCase();
 
+      // 2. Détection de domaines jetables
       if (DISPOSABLE_DOMAINS.has(domain)) {
-        setWarning("Email temporaire dÃ©tectÃ© - Il peut ne pas recevoir d'emails");
+        setError("Les adresses e-mails temporaires sont bloquées.");
         setIsValid(false);
         return;
       }
 
+      // 3. Détection de domaines de test/abus
       if (BLOCKED_DOMAINS.has(domain)) {
-        setError('Domaine non autorisÃ© pour un usage professionnel');
+        setError("Domaine non autorisé.");
         setIsValid(false);
         return;
       }
 
-      // Check for common typos
+      // 4. Suggestions de correction
       if (COMMON_TYPOS[domain]) {
-        setSuggestion(`${parts[0]}@${COMMON_TYPOS[domain]}`);
+        setSuggestion(`${user}@${COMMON_TYPOS[domain]}`);
       }
 
-      // 3. Check length
+      // 5. Longueur
       if (value.length > 254) {
-        setError('Email trop long (max 254 caractÃ¨res)');
+        setError("L'adresse est beaucoup trop longue.");
         setIsValid(false);
         return;
       }
 
-      // 4. If all checks pass
       setIsValid(true);
     } finally {
-      // Add a tiny artificial delay for the "isValidating" feedback to be visible
-      setTimeout(() => setIsValidating(false), 300);
+      setIsValidating(false);
     }
   }, []);
 
@@ -116,6 +132,5 @@ export function useEmailValidation(initialEmail = '') {
     error,
     warning,
     suggestion,
-    isSafeEmail: isValid && !warning,
   };
 }

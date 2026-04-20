@@ -4,10 +4,11 @@ import type { LogEntry } from "../types";
 interface LogStoreState {
   activityLogs: LogEntry[];
   addLog: (
-    action: string,
-    category: LogEntry["category"],
-    severity: LogEntry["severity"],
-    details?: string,
+    _action: string,
+    _category: LogEntry["category"],
+    _severity: LogEntry["severity"],
+    _details?: string,
+    _metadata?: Record<string, unknown>,
   ) => void;
   clearLogs: () => void;
   reset: () => void;
@@ -15,7 +16,7 @@ interface LogStoreState {
 
 export const useLogStore = create<LogStoreState>()((set) => ({
   activityLogs: [],
-  addLog: (action, category, severity, details = "") =>
+  addLog: (action, category, severity, details = "", metadata = {}) =>
     set((state) => ({
       activityLogs: [
         ...state.activityLogs,
@@ -26,6 +27,9 @@ export const useLogStore = create<LogStoreState>()((set) => ({
           severity,
           details,
           timestamp: Date.now(),
+          metadata,
+          device: navigator.userAgent.split(" ").slice(-2).join(" "), // Simple proxy for device
+          // En production, l'IP serait gérée côté serveur
         },
       ].slice(-500), // Garde les 500 derniers logs
     })),

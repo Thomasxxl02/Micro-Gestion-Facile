@@ -1,6 +1,6 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ClientManager from '../../components/ClientManager';
 import type { Client, Invoice } from '../../types';
 import { InvoiceStatus } from '../../types';
@@ -32,44 +32,39 @@ vi.mock('lucide-react', () => ({
 vi.mock('../../components/EntityModal', () => ({
   default: ({ isOpen, onClose, onSave, onDelete, children, title, isEditing }: any) =>
     isOpen ? (
-      <dialog data-testid="entity-modal">
+      <div role="dialog" data-testid="entity-modal">
         <h2>{title}</h2>
         {children}
-        <button onClick={onSave}>{isEditing ? 'Enregistrer' : 'Créer'}</button>
+        <button onClick={onSave}>{isEditing ? 'Enregistrer' : 'Cr\u00e9er'}</button>
         {isEditing && onDelete && (
           <button onClick={onDelete} className="text-red-600 font-semibold">
             Supprimer
           </button>
         )}
         <button onClick={onClose}>Fermer</button>
-      </dialog>
+      </div>
     ) : null,
 }));
 
 vi.mock('../../components/EntityFormFields', () => ({
-  ContactFields: ({ formData = {}, onChange = () => {} }: any) => (
+  ContactFields: ({ name, email, phone, onNameChange, onEmailChange, onPhoneChange }: any) => (
     <div data-testid="contact-fields">
       <input
         placeholder="Nom / Société *"
         required
-        value={formData?.name || ''}
-        onChange={(e) => onChange({ ...formData, name: e.target.value })}
+        value={name || ''}
+        onChange={(e) => onNameChange?.(e.target.value)}
       />
       <input
         placeholder="Email *"
         required
-        value={formData?.email || ''}
-        onChange={(e) => onChange({ ...formData, email: e.target.value })}
+        value={email || ''}
+        onChange={(e) => onEmailChange?.(e.target.value)}
       />
       <input
         placeholder="Téléphone"
-        value={formData?.phone || ''}
-        onChange={(e) => onChange({ ...formData, phone: e.target.value })}
-      />
-      <textarea
-        placeholder="Adresse de facturation"
-        value={formData?.address || ''}
-        onChange={(e) => onChange({ ...formData, address: e.target.value })}
+        value={phone || ''}
+        onChange={(e) => onPhoneChange?.(e.target.value)}
       />
     </div>
   ),
@@ -190,6 +185,8 @@ describe('ClientManager Component', () => {
       type: 'invoice',
     },
   ];
+
+  beforeEach(() => vi.clearAllMocks());
 
   describe('Rendering & UI', () => {
     it('affiche le titre et interface du gestionnaire de clients', () => {
@@ -316,22 +313,22 @@ describe('ClientManager Component', () => {
       const addButton = screen.getByText('PlusIcon');
       await user.click(addButton);
 
-      const modal = screen.getByTestId('entity-modal');
-      const nameInput = within(modal).getByPlaceholderText('Nom / Société *');
-      const emailInput = within(modal).getByPlaceholderText('Email *');
+      // Remplir les champs requis : nom, email (validateEmailForm), adresse (validateRequired)
+      fireEvent.change(screen.getByPlaceholderText('Nom / Société *'), {
+        target: { value: 'Nouveau Client Test' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Email *'), {
+        target: { value: 'nouveau@test.com' },
+      });
+      fireEvent.change(screen.getByPlaceholderText('Adresse'), {
+        target: { value: '123 Rue de la Paix' },
+      });
 
-      await user.type(nameInput, 'Nouveau Client');
-      await user.type(emailInput, 'nouveau@test.fr');
+      await user.click(
+        within(screen.getByTestId('entity-modal')).getByRole('button', { name: /cr\u00e9er/i }),
+      );
 
-      const submitButton = within(modal).getByText(/Créer|Enregistrer/);
-
-      if (submitButton) {
-        await user.click(submitButton);
-      }
-
-      // Vérifier que les inputs acceptent le typing
-      expect(nameInput).toBeInTheDocument();
-      expect(emailInput).toBeInTheDocument();
+      expect(onSave).toHaveBeenCalled();
     });
   });
 

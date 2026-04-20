@@ -6,28 +6,15 @@ import {
   FileSpreadsheet,
   File as Filter,
   LoaderCircle as Loader2,
-  ChartPie as PieChartIcon,
   Plus,
   Search,
   Trash2,
   TrendingDown,
   TrendingUp,
-} from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { useFormValidation } from '../hooks/useFormValidation';
-import { ExpenseSchema, schemaToRules } from '../lib/zod-schemas';
-import { analyzeReceipt } from '../services/geminiService';
+} from "lucide-react";
+import React, { Suspense, useMemo, useState } from "react";
+import { useFormValidation } from "../hooks/useFormValidation";
+import { ExpenseSchema, schemaToRules } from "../lib/zod-schemas";
 import {
   type Client,
   type Expense,
@@ -35,11 +22,17 @@ import {
   type Supplier,
   type UserProfile,
   InvoiceStatus,
-} from '../types';
-import Combobox from './Combobox';
-import { FormFieldValidated } from './FormFieldValidated';
+} from "../types";
+import Combobox from "./Combobox";
+import { FormFieldValidated } from "./FormFieldValidated";
 
-import { calculateIncomeTaxPFL, calculateSocialContributions } from '../lib/fiscalCalculations';
+// Lazy load des dépendances lourdes
+const AccountingCharts = React.lazy(() => import("./AccountingCharts"));
+
+import {
+  calculateIncomeTaxPFL,
+  calculateSocialContributions,
+} from "../lib/fiscalCalculations";
 
 interface AccountingManagerProps {
   expenses: Expense[];
@@ -62,13 +55,15 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   onSaveExpense,
   onDeleteExpense,
 }) => {
-  const [activeTab, setActiveTab] = useState<'journal' | 'bilan' | 'fiscal'>('journal');
+  const [activeTab, setActiveTab] = useState<"journal" | "bilan" | "fiscal">(
+    "journal",
+  );
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [minAmount, setMinAmount] = useState<string>('');
-  const [maxAmount, setMaxAmount] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [minAmount, setMinAmount] = useState<string>("");
+  const [maxAmount, setMaxAmount] = useState<string>("");
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
   const [taxRate] = useState(21.1); // Default for services
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -76,13 +71,13 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
 
   // Form handling logic
   const initialFormState = {
-    date: new Date().toISOString().split('T')[0],
-    description: '',
+    date: new Date().toISOString().split("T")[0],
+    description: "",
     amount: 0,
     vatAmount: 0,
     vatRate: 0,
-    category: 'Achats',
-    supplierId: '',
+    category: "Achats",
+    supplierId: "",
   };
 
   const {
@@ -92,7 +87,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     touched,
     handleChange: handleFormChange,
     validate: validateAll,
-  } = useFormValidation<Partial<Expense>>(initialFormState, schemaToRules(ExpenseSchema));
+  } = useFormValidation<Partial<Expense>>(
+    initialFormState,
+    schemaToRules(ExpenseSchema),
+  );
 
   const resetExpenseForm = () => {
     setNewExpense(initialFormState);
@@ -100,18 +98,18 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
 
   const fiscalData = useMemo(() => {
     const months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre',
+      "Janvier",
+      "Février",
+      "Mars",
+      "Avril",
+      "Mai",
+      "Juin",
+      "Juillet",
+      "Août",
+      "Septembre",
+      "Octobre",
+      "Novembre",
+      "Décembre",
     ];
     return months.map((name, idx) => {
       const monthRevenue = invoices
@@ -124,25 +122,32 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           );
         })
         .reduce((sum, inv) => {
-          const type = inv.type || 'invoice';
-          if (type === 'invoice') {
+          const type = inv.type || "invoice";
+          if (type === "invoice") {
             return sum + inv.total;
           }
-          if (type === 'credit_note') {
+          if (type === "credit_note") {
             return sum - inv.total;
           }
           return sum;
         }, 0);
 
-      return { name, revenue: monthRevenue, tax: monthRevenue * (taxRate / 100) };
+      return {
+        name,
+        revenue: monthRevenue,
+        tax: monthRevenue * (taxRate / 100),
+      };
     });
   }, [invoices, selectedYear, taxRate]);
 
   const totalYearlyRevenue = useMemo(
     () => fiscalData.reduce((sum, d) => sum + d.revenue, 0),
-    [fiscalData]
+    [fiscalData],
   );
-  const totalYearlyTax = useMemo(() => fiscalData.reduce((sum, d) => sum + d.tax, 0), [fiscalData]);
+  const totalYearlyTax = useMemo(
+    () => fiscalData.reduce((sum, d) => sum + d.tax, 0),
+    [fiscalData],
+  );
 
   const fiscalSummary = useMemo(() => {
     if (!userProfile) {
@@ -179,15 +184,17 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     try {
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const base64 = (event.target?.result as string).split(',')[1];
+        const base64 = (event.target?.result as string).split(",")[1];
+        // Import dynamique de analyzeReceipt pour réduire le bundle initial
+        const { analyzeReceipt } = await import("../services/geminiService");
         const result = await analyzeReceipt(base64, file.type);
 
         if (result) {
           // Find supplier if possible
-          let supplierId = '';
+          let supplierId = "";
           if (result.supplierName) {
             const existingSupplier = suppliers.find((s) =>
-              s.name.toLowerCase().includes(result.supplierName.toLowerCase())
+              s.name.toLowerCase().includes(result.supplierName.toLowerCase()),
             );
             if (existingSupplier) {
               supplierId = existingSupplier.id;
@@ -197,7 +204,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           setNewExpense((prev) => ({
             ...prev,
             date: result.date || prev.date,
-            description: result.description || result.supplierName || prev.description,
+            description:
+              result.description || result.supplierName || prev.description,
             amount: result.amount || prev.amount,
             vatAmount: result.vatAmount || 0,
             vatRate: result.vatRate || 0,
@@ -208,7 +216,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('OCR Error:', error);
+      console.error("OCR Error:", error);
       setIsAnalyzing(false);
     }
   };
@@ -222,7 +230,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     if (editingExpense) {
       const updatedExpense = { ...editingExpense, ...newExpense } as Expense;
       const updatedExpenses = expenses.map((exp) =>
-        exp.id === editingExpense.id ? updatedExpense : exp
+        exp.id === editingExpense.id ? updatedExpense : exp,
       );
       setExpenses(updatedExpenses);
       if (onSaveExpense) {
@@ -231,13 +239,13 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     } else {
       const expense: Expense = {
         id: Date.now().toString(),
-        date: newExpense.date ?? new Date().toISOString().split('T')[0],
-        description: newExpense.description || '',
+        date: newExpense.date ?? new Date().toISOString().split("T")[0],
+        description: newExpense.description || "",
         amount: Number(newExpense.amount || 0),
         vatAmount: Number(newExpense.vatAmount || 0),
         vatRate: Number(newExpense.vatRate || 0),
-        category: newExpense.category || 'Achats',
-        supplierId: newExpense.supplierId || '',
+        category: newExpense.category || "Achats",
+        supplierId: newExpense.supplierId || "",
       };
       setExpenses([expense, ...expenses]);
       if (onSaveExpense) {
@@ -265,7 +273,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Supprimer cette dépense ?')) {
+    if (confirm("Supprimer cette dépense ?")) {
       setExpenses(expenses.filter((e) => e.id !== id));
       setSelectedExpenses(selectedExpenses.filter((sid) => sid !== id));
       if (onDeleteExpense) {
@@ -278,7 +286,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     if (selectedExpenses.length === 0) {
       return;
     }
-    if (confirm(`Supprimer les ${selectedExpenses.length} dépenses sélectionnées ?`)) {
+    if (
+      confirm(
+        `Supprimer les ${selectedExpenses.length} dépenses sélectionnées ?`,
+      )
+    ) {
       setExpenses(expenses.filter((e) => !selectedExpenses.includes(e.id)));
       if (onDeleteExpense) {
         selectedExpenses.forEach((id) => onDeleteExpense(id));
@@ -305,49 +317,49 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
 
   const exportJournalCSV = () => {
     const headers = [
-      'Date',
-      'Type',
-      'Description',
-      'Montant TTC',
-      'TVA',
-      'Net HT',
-      'Catégorie',
-      'Client/Fournisseur',
+      "Date",
+      "Type",
+      "Description",
+      "Montant TTC",
+      "TVA",
+      "Net HT",
+      "Catégorie",
+      "Client/Fournisseur",
     ];
 
     const rows = [
       ...filteredExpenses.map((e) => [
         e.date,
-        'DÉPENSE',
+        "DÉPENSE",
         `"${e.description.replaceAll('"', '""')}"`,
         e.amount.toFixed(2),
         (e.vatAmount || 0).toFixed(2),
         (e.amount - (e.vatAmount || 0)).toFixed(2),
         `"${e.category}"`,
-        `"${suppliers.find((s) => s.id === e.supplierId)?.name.replaceAll('"', '""') || 'N/A'}"`,
+        `"${suppliers.find((s) => s.id === e.supplierId)?.name.replaceAll('"', '""') || "N/A"}"`,
       ]),
       ...invoices
         .filter((inv) => inv.status === InvoiceStatus.PAID)
         .map((inv) => [
           inv.date,
-          'RECETTE',
+          "RECETTE",
           `"Facture ${inv.number}"`,
           inv.total.toFixed(2),
           (inv.vatAmount || 0).toFixed(2),
           (inv.subtotal || inv.total).toFixed(2),
           '"Prestation"',
-          `"${clients.find((c) => c.id === inv.clientId)?.name.replaceAll('"', '""') || 'N/A'}"`,
+          `"${clients.find((c) => c.id === inv.clientId)?.name.replaceAll('"', '""') || "N/A"}"`,
         ]),
     ].sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
 
     const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `journal_comptable_${selectedYear}.csv`);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `journal_comptable_${selectedYear}.csv`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -357,30 +369,35 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     const paidInvoices = invoices
       .filter(
         (inv) =>
-          inv.status === InvoiceStatus.PAID && new Date(inv.date).getFullYear() === selectedYear
+          inv.status === InvoiceStatus.PAID &&
+          new Date(inv.date).getFullYear() === selectedYear,
       )
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    const { jsPDF } = await import('jspdf');
-    await import('jspdf-autotable');
+    const { jsPDF } = await import("jspdf");
+    await import("jspdf-autotable");
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text('LIVRE DES RECETTES', 14, 22);
+    doc.text("LIVRE DES RECETTES", 14, 22);
     doc.setFontSize(10);
     doc.text(
-      `Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || 'N/A'}`,
+      `Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || "N/A"}`,
       14,
-      30
+      30,
     );
-    doc.text(`SIRET: ${userProfile?.siret || 'N/A'}`, 14, 35);
-    doc.text('Document infalsifiable généré le ' + new Date().toLocaleDateString(), 14, 40);
+    doc.text(`SIRET: ${userProfile?.siret || "N/A"}`, 14, 35);
+    doc.text(
+      "Document infalsifiable généré le " + new Date().toLocaleDateString(),
+      14,
+      40,
+    );
 
     const tableData = paidInvoices.map((inv) => [
       inv.date,
       inv.number,
-      clients.find((c) => c.id === inv.clientId)?.name || 'Inconnu',
-      inv.total.toFixed(2) + ' €',
+      clients.find((c) => c.id === inv.clientId)?.name || "Inconnu",
+      inv.total.toFixed(2) + " €",
     ]);
 
     const docWithAutoTable = doc as typeof doc & {
@@ -394,9 +411,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     };
     docWithAutoTable.autoTable({
       startY: 50,
-      head: [['Date', 'N° Facture', 'Client', 'Montant Encaissé (TTC)']],
+      head: [["Date", "N° Facture", "Client", "Montant Encaissé (TTC)"]],
       body: tableData,
-      theme: 'grid',
+      theme: "grid",
       headStyles: { fillColor: [51, 51, 51] },
     });
 
@@ -408,11 +425,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     return invoices
       .filter((inv) => inv.status === InvoiceStatus.PAID)
       .reduce((sum, inv) => {
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') {
+        const type = inv.type || "invoice";
+        if (type === "invoice") {
           return sum + inv.total;
         }
-        if (type === 'credit_note') {
+        if (type === "credit_note") {
           return sum - inv.total;
         }
         return sum;
@@ -431,18 +448,18 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   const monthlyComparison = useMemo(() => {
     const data: Record<string, { income: number; expense: number }> = {};
     const months = [
-      'Jan',
-      'Fév',
-      'Mar',
-      'Avr',
-      'Mai',
-      'Juin',
-      'Juil',
-      'Août',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Déc',
+      "Jan",
+      "Fév",
+      "Mar",
+      "Avr",
+      "Mai",
+      "Juin",
+      "Juil",
+      "Août",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Déc",
     ];
 
     months.forEach((m) => (data[m] = { income: 0, expense: 0 }));
@@ -451,10 +468,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       if (inv.status === InvoiceStatus.PAID) {
         const date = new Date(inv.date);
         const monthName = months[date.getMonth()];
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') {
+        const type = inv.type || "invoice";
+        if (type === "invoice") {
           data[monthName].income += inv.total;
-        } else if (type === 'credit_note') {
+        } else if (type === "credit_note") {
           data[monthName].income -= inv.total;
         }
       }
@@ -477,20 +494,20 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   // Quarterly breakdown
   const quarterlyStats = useMemo(() => {
     const quarters = [
-      { name: 'T1 (Jan-Mar)', income: 0, expense: 0 },
-      { name: 'T2 (Avr-Juin)', income: 0, expense: 0 },
-      { name: 'T3 (Juil-Sep)', income: 0, expense: 0 },
-      { name: 'T4 (Oct-Déc)', income: 0, expense: 0 },
+      { name: "T1 (Jan-Mar)", income: 0, expense: 0 },
+      { name: "T2 (Avr-Juin)", income: 0, expense: 0 },
+      { name: "T3 (Juil-Sep)", income: 0, expense: 0 },
+      { name: "T4 (Oct-Déc)", income: 0, expense: 0 },
     ];
 
     invoices.forEach((inv) => {
       if (inv.status === InvoiceStatus.PAID) {
         const month = new Date(inv.date).getMonth();
         const qIdx = Math.floor(month / 3);
-        const type = inv.type || 'invoice';
-        if (type === 'invoice') {
+        const type = inv.type || "invoice";
+        if (type === "invoice") {
           quarters[qIdx].income += inv.total;
-        } else if (type === 'credit_note') {
+        } else if (type === "credit_note") {
           quarters[qIdx].income -= inv.total;
         }
       }
@@ -508,7 +525,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   const expensesByCategory = useMemo(() => {
     const data: Record<string, number> = {};
     expenses.forEach((exp) => {
-      const cat = exp.category || 'Autre';
+      const cat = exp.category || "Autre";
       data[cat] = (data[cat] || 0) + exp.amount;
     });
     return Object.entries(data)
@@ -524,34 +541,26 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           .find((s) => s.id === exp.supplierId)
           ?.name.toLowerCase()
           .includes(searchTerm.toLowerCase());
-      const matchesCategory = !categoryFilter || exp.category === categoryFilter;
-      const matchesMin = !minAmount || exp.amount >= Number.parseFloat(minAmount);
-      const matchesMax = !maxAmount || exp.amount <= Number.parseFloat(maxAmount);
+      const matchesCategory =
+        !categoryFilter || exp.category === categoryFilter;
+      const matchesMin =
+        !minAmount || exp.amount >= Number.parseFloat(minAmount);
+      const matchesMax =
+        !maxAmount || exp.amount <= Number.parseFloat(maxAmount);
       return matchesSearch && matchesCategory && matchesMin && matchesMax;
     });
   }, [expenses, searchTerm, categoryFilter, minAmount, maxAmount, suppliers]);
 
-  const COLORS = [
-    '#102a43',
-    '#2cb1bc',
-    '#486581',
-    '#3ebd93',
-    '#627d98',
-    '#829ab1',
-    '#f87171',
-    '#fbbf24',
-  ];
-
   const expenseCategories = [
-    'Achats',
-    'Loyer',
-    'Logiciels',
-    'Déplacements',
-    'Assurance',
-    'Marketing',
-    'Repas',
-    'Fournitures',
-    'Autre',
+    "Achats",
+    "Loyer",
+    "Logiciels",
+    "Déplacements",
+    "Assurance",
+    "Marketing",
+    "Repas",
+    "Fournitures",
+    "Autre",
   ];
 
   return (
@@ -561,31 +570,33 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           <h1 className="text-3xl font-bold text-brand-900 font-display tracking-tight">
             Comptabilité
           </h1>
-          <p className="text-brand-500 mt-1">Suivi de trésorerie et pilotage financier.</p>
+          <p className="text-brand-500 mt-1">
+            Suivi de trésorerie et pilotage financier.
+          </p>
         </div>
         <div className="flex bg-brand-100/50 p-1 rounded-2xl border border-brand-100">
           <button
-            onClick={() => setActiveTab('journal')}
-            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'journal' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
+            onClick={() => setActiveTab("journal")}
+            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === "journal" ? "bg-white text-brand-900 shadow-sm" : "bg-transparent text-brand-500 hover:text-brand-700"}`}
           >
             Journal
           </button>
           <button
-            onClick={() => setActiveTab('bilan')}
-            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'bilan' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
+            onClick={() => setActiveTab("bilan")}
+            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === "bilan" ? "bg-white text-brand-900 shadow-sm" : "bg-transparent text-brand-500 hover:text-brand-700"}`}
           >
             Bilan
           </button>
           <button
-            onClick={() => setActiveTab('fiscal')}
-            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'fiscal' ? 'bg-white text-brand-900 shadow-sm' : 'bg-transparent text-brand-500 hover:text-brand-700'}`}
+            onClick={() => setActiveTab("fiscal")}
+            className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === "fiscal" ? "bg-white text-brand-900 shadow-sm" : "bg-transparent text-brand-500 hover:text-brand-700"}`}
           >
             Fiscal
           </button>
         </div>
       </div>
 
-      {activeTab === 'bilan' && (
+      {activeTab === "bilan" && (
         <div className="space-y-8 animate-slide-up">
           {/* Main Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -606,7 +617,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   Recettes Encaissées
                 </p>
                 <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {totalRevenue.toLocaleString('fr-FR')} €
+                  {totalRevenue.toLocaleString("fr-FR")} €
                 </h3>
               </div>
             </div>
@@ -628,7 +639,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   Dépenses Totales
                 </p>
                 <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {totalExpenses.toLocaleString('fr-FR')} €
+                  {totalExpenses.toLocaleString("fr-FR")} €
                 </h3>
               </div>
             </div>
@@ -650,7 +661,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   Résultat Brut
                 </p>
                 <h3 className="text-2xl font-bold text-white dark:text-brand-900 font-display tracking-tight mt-1">
-                  {netResult.toLocaleString('fr-FR')} €
+                  {netResult.toLocaleString("fr-FR")} €
                 </h3>
               </div>
             </div>
@@ -672,142 +683,29 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   Estimation Net
                 </p>
                 <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {netAfterCharges.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+                  {netAfterCharges.toLocaleString("fr-FR", {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                  €
                 </h3>
               </div>
             </div>
           </div>
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Monthly Comparison Chart */}
-            <div className="lg:col-span-2 card-modern p-8">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-bold text-brand-900 font-display">
-                  Performance Mensuelle
-                </h3>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-brand-900"></span>
-                    <span className="text-[9px] font-bold text-brand-400 uppercase tracking-wider">
-                      Recettes
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-                    <span className="text-[9px] font-bold text-brand-400 uppercase tracking-wider">
-                      Dépenses
-                    </span>
-                  </div>
-                </div>
+          {/* Charts Section - Lazy Loaded */}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-24">
+                <Loader2 className="w-10 h-10 text-brand-600 animate-spin" />
               </div>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthlyComparison}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    barGap={8}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
-                      dy={15}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
-                      tickFormatter={(value) => `${value / 1000}k`}
-                    />
-                    <Tooltip
-                      cursor={{ fill: '#f8fafc' }}
-                      contentStyle={{
-                        borderRadius: '1rem',
-                        border: 'none',
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                        padding: '16px',
-                        backgroundColor: 'white',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                      }}
-                    />
-                    <Bar dataKey="Recettes" fill="#0f172a" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Dépenses" fill="#f87171" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Expense Breakdown */}
-            <div className="card-modern p-8">
-              <h3 className="text-lg font-bold text-brand-900 mb-8 font-display">
-                Répartition Dépenses
-              </h3>
-              {expensesByCategory.length > 0 ? (
-                <div className="flex flex-col h-full">
-                  <div className="h-48 w-full mb-6">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={expensesByCategory}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          paddingAngle={8}
-                          dataKey="value"
-                          fill="#0f172a"
-                        ></Pie>
-                        <Tooltip
-                          formatter={(value: unknown) => {
-                            if (typeof value === 'number') {
-                              return `${value.toFixed(2)} €`;
-                            }
-                            return '';
-                          }}
-                          contentStyle={
-                            {
-                              borderRadius: '12px',
-                              border: 'none',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                            } as React.CSSProperties
-                          }
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-3 flex-1 overflow-auto custom-scrollbar pr-2">
-                    {expensesByCategory.map((cat, idx) => (
-                      <div key={cat.name} className="flex items-center justify-between group">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full bg-[${COLORS[idx % COLORS.length]}]`}
-                          ></div>
-                          <span className="text-xs font-semibold text-brand-600">{cat.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-brand-900">
-                            {cat.value.toLocaleString()} €
-                          </span>
-                          <span className="text-[9px] font-bold text-brand-300 ml-2 uppercase">
-                            {((cat.value / totalExpenses) * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-brand-300 bg-brand-50/50 rounded-2xl border border-dashed border-brand-100 p-8">
-                  <PieChartIcon size={48} className="mb-4 opacity-20" />
-                  <p className="text-xs font-bold uppercase tracking-widest">Aucune dépense</p>
-                </div>
-              )}
-            </div>
-          </div>
+            }
+          >
+            <AccountingCharts
+              monthlyComparison={monthlyComparison}
+              expensesByCategory={expensesByCategory}
+              totalExpenses={totalExpenses}
+            />
+          </Suspense>
 
           {/* Quarterly Breakdown Section */}
           <div className="card-modern p-8">
@@ -825,21 +723,27 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   </p>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-brand-500">Recettes</span>
+                      <span className="text-xs font-medium text-brand-500">
+                        Recettes
+                      </span>
                       <span className="text-sm font-bold text-brand-900">
                         {q.income.toLocaleString()} €
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-brand-500">Dépenses</span>
+                      <span className="text-xs font-medium text-brand-500">
+                        Dépenses
+                      </span>
                       <span className="text-sm font-bold text-red-500">
                         -{q.expense.toLocaleString()} €
                       </span>
                     </div>
                     <div className="pt-3 border-t border-brand-100 flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-brand-400 uppercase">Profit</span>
+                      <span className="text-[10px] font-bold text-brand-400 uppercase">
+                        Profit
+                      </span>
                       <span
-                        className={`text-sm font-bold ${q.income - q.expense >= 0 ? 'text-accent-600' : 'text-red-600'}`}
+                        className={`text-sm font-bold ${q.income - q.expense >= 0 ? "text-accent-600" : "text-red-600"}`}
                       >
                         {(q.income - q.expense).toLocaleString()} €
                       </span>
@@ -860,7 +764,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
         </div>
       )}
 
-      {activeTab === 'fiscal' && (
+      {activeTab === "fiscal" && (
         <div className="space-y-8 animate-slide-up">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-brand-100 shadow-sm">
             <div className="flex items-center gap-4">
@@ -883,7 +787,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
               <select
                 title="Sélectionner l'année"
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
+                onChange={(e) =>
+                  setSelectedYear(Number.parseInt(e.target.value))
+                }
                 className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-2 text-sm font-bold text-brand-900 outline-none cursor-pointer"
               >
                 {years.map((y) => (
@@ -901,17 +807,19 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 Chiffre d&apos;Affaires Annuel
               </p>
               <h3 className="text-3xl font-bold font-display">
-                {totalYearlyRevenue.toLocaleString('fr-FR')} €
+                {totalYearlyRevenue.toLocaleString("fr-FR")} €
               </h3>
-              <p className="text-[10px] text-brand-400 mt-4 italic">Total des factures payées.</p>
+              <p className="text-[10px] text-brand-400 mt-4 italic">
+                Total des factures payées.
+              </p>
             </div>
             <div className="card-modern p-8">
               <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
                 Cotisations Sociales
               </p>
               <h3 className="text-3xl font-bold text-brand-900 font-display">
-                {fiscalSummary?.amount.toLocaleString('fr-FR') ||
-                  totalYearlyTax.toLocaleString('fr-FR')}{' '}
+                {fiscalSummary?.amount.toLocaleString("fr-FR") ||
+                  totalYearlyTax.toLocaleString("fr-FR")}{" "}
                 €
               </h3>
               <div className="mt-4 flex items-center justify-between">
@@ -928,9 +836,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 Impôt (PFL Est.)
               </p>
               <h3 className="text-3xl font-bold text-brand-900 font-display">
-                {yearlyIncomeTax.toLocaleString('fr-FR')} €
+                {yearlyIncomeTax.toLocaleString("fr-FR")} €
               </h3>
-              <p className="text-[10px] text-brand-400 mt-4">Prélèvement Libératoire</p>
+              <p className="text-[10px] text-brand-400 mt-4">
+                Prélèvement Libératoire
+              </p>
             </div>
             <div className="card-modern p-8 bg-accent-50 border-accent-100">
               <p className="text-[10px] font-bold text-accent-700 uppercase tracking-widest mb-2">
@@ -941,7 +851,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   totalYearlyRevenue -
                   (fiscalSummary?.amount || totalYearlyTax) -
                   yearlyIncomeTax
-                ).toLocaleString('fr-FR')}{' '}
+                ).toLocaleString("fr-FR")}{" "}
                 €
               </h3>
               <p className="text-[10px] text-accent-600 mt-4 italic">
@@ -956,14 +866,21 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 <tr className="bg-brand-50 text-brand-900 text-[10px] font-bold uppercase tracking-widest border-b border-brand-100">
                   <th className="px-8 py-4">Mois</th>
                   <th className="px-8 py-4 text-right">CA Encaissé</th>
-                  <th className="px-8 py-4 text-right">Cotisations ({taxRate}%)</th>
+                  <th className="px-8 py-4 text-right">
+                    Cotisations ({taxRate}%)
+                  </th>
                   <th className="px-8 py-4 text-right">Net</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-50">
                 {fiscalData.map((data) => (
-                  <tr key={data.name} className="hover:bg-brand-50/30 transition-colors">
-                    <td className="px-8 py-4 text-sm font-bold text-brand-900">{data.name}</td>
+                  <tr
+                    key={data.name}
+                    className="hover:bg-brand-50/30 transition-colors"
+                  >
+                    <td className="px-8 py-4 text-sm font-bold text-brand-900">
+                      {data.name}
+                    </td>
                     <td className="px-8 py-4 text-sm font-bold text-brand-900 text-right">
                       {data.revenue.toLocaleString()} €
                     </td>
@@ -978,7 +895,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
               </tbody>
               <tfoot>
                 <tr className="bg-brand-900 text-white font-bold">
-                  <td className="px-8 py-6 text-sm uppercase tracking-widest">Total Annuel</td>
+                  <td className="px-8 py-6 text-sm uppercase tracking-widest">
+                    Total Annuel
+                  </td>
                   <td className="px-8 py-6 text-lg text-right">
                     {totalYearlyRevenue.toLocaleString()} €
                   </td>
@@ -994,7 +913,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           </div>
         </div>
       )}
-      {activeTab === 'journal' && (
+      {activeTab === "journal" && (
         <div className="animate-fade-in space-y-6">
           {/* Journal Toolbar */}
           <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
@@ -1078,13 +997,13 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 onClick={() => {
                   setEditingExpense(null);
                   setNewExpense({
-                    date: new Date().toISOString().split('T')[0],
-                    description: '',
+                    date: new Date().toISOString().split("T")[0],
+                    description: "",
                     amount: 0,
                     vatAmount: 0,
                     vatRate: 0,
-                    category: 'Achats',
-                    supplierId: '',
+                    category: "Achats",
+                    supplierId: "",
                   });
                   setShowForm(!showForm);
                 }}
@@ -1116,7 +1035,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
               </div>
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-bold text-brand-900 dark:text-brand-50 font-display flex items-center gap-3">
-                  {editingExpense ? 'Modifier la dépense' : 'Ajouter une dépense'}
+                  {editingExpense
+                    ? "Modifier la dépense"
+                    : "Ajouter une dépense"}
                   {isAnalyzing && (
                     <span className="flex items-center gap-2 text-xs font-bold text-accent-600 animate-pulse">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1144,8 +1065,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   label="Date de l'achat"
                   type="date"
                   required
-                  value={newExpense.date || ''}
-                  onChange={handleFormChange('date')}
+                  value={newExpense.date || ""}
+                  onChange={handleFormChange("date")}
                   error={errors.date}
                   touched={touched.date}
                 />
@@ -1156,10 +1077,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   step="0.01"
                   required
                   placeholder="0.00"
-                  value={newExpense.amount || ''}
+                  value={newExpense.amount || ""}
                   onChange={(val) => {
                     const amount = Number.parseFloat(val);
-                    handleFormChange('amount')(amount);
+                    handleFormChange("amount")(amount);
                     const vatRate = newExpense.vatRate || 0;
                     const vatAmount = vatRate
                       ? amount * (vatRate / (100 + vatRate))
@@ -1175,8 +1096,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  value={newExpense.vatAmount || ''}
-                  onChange={(val) => handleFormChange('vatAmount')(Number.parseFloat(val))}
+                  value={newExpense.vatAmount || ""}
+                  onChange={(val) =>
+                    handleFormChange("vatAmount")(Number.parseFloat(val))
+                  }
                   error={errors.vatAmount}
                   touched={touched.vatAmount}
                 />
@@ -1195,7 +1118,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     onChange={(e) => {
                       const vatRate = Number.parseFloat(e.target.value);
                       const amount = newExpense.amount || 0;
-                      const vatAmount = amount ? amount * (vatRate / (100 + vatRate)) : 0;
+                      const vatAmount = amount
+                        ? amount * (vatRate / (100 + vatRate))
+                        : 0;
                       setNewExpense({ ...newExpense, vatRate, vatAmount });
                     }}
                   >
@@ -1217,7 +1142,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     title="Sélectionner la catégorie de dépense"
                     className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
                     value={newExpense.category}
-                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                    onChange={(e) =>
+                      setNewExpense({ ...newExpense, category: e.target.value })
+                    }
                   >
                     {expenseCategories.map((cat) => (
                       <option key={cat} value={cat}>
@@ -1233,8 +1160,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     type="text"
                     required
                     placeholder="Ex: Abonnement Internet, Achat écran..."
-                    value={newExpense.description || ''}
-                    onChange={(val) => setNewExpense({ ...newExpense, description: val })}
+                    value={newExpense.description || ""}
+                    onChange={(val) =>
+                      setNewExpense({ ...newExpense, description: val })
+                    }
                     validator={() => ({
                       valid: !errors.description?.error,
                       error: errors.description?.error,
@@ -1249,10 +1178,12 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                       .map((s) => ({
                         id: s.id,
                         label: s.name,
-                        subLabel: s.category || 'Fournisseur',
+                        subLabel: s.category || "Fournisseur",
                       }))}
-                    value={newExpense.supplierId || ''}
-                    onChange={(val) => setNewExpense({ ...newExpense, supplierId: val })}
+                    value={newExpense.supplierId || ""}
+                    onChange={(val) =>
+                      setNewExpense({ ...newExpense, supplierId: val })
+                    }
                     placeholder="Chercher un fournisseur..."
                   />
                 </div>
@@ -1272,7 +1203,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     type="submit"
                     className="px-10 py-3 bg-brand-900 text-white rounded-2xl hover:bg-brand-950 font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-brand-900/10 transition-all hover:scale-[1.02]"
                   >
-                    {editingExpense ? 'Mettre à jour' : 'Enregistrer la dépense'}
+                    {editingExpense
+                      ? "Mettre à jour"
+                      : "Enregistrer la dépense"}
                   </button>
                 </div>
               </form>
@@ -1306,12 +1239,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 </thead>
                 <tbody className="divide-y divide-brand-50 bg-white">
                   {filteredExpenses.map((exp) => {
-                    const supplier = suppliers.find((s) => s.id === exp.supplierId);
+                    const supplier = suppliers.find(
+                      (s) => s.id === exp.supplierId,
+                    );
                     const isSelected = selectedExpenses.includes(exp.id);
                     return (
                       <tr
                         key={exp.id}
-                        className={`hover:bg-brand-50/50 transition-colors group ${isSelected ? 'bg-brand-50/80' : ''}`}
+                        className={`hover:bg-brand-50/50 transition-colors group ${isSelected ? "bg-brand-50/80" : ""}`}
                       >
                         <td className="px-6 py-6">
                           <input
@@ -1328,12 +1263,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                               <Calendar size={14} />
                             </div>
                             <span className="text-xs font-bold text-brand-900 font-mono">
-                              {new Date(exp.date).toLocaleDateString('fr-FR')}
+                              {new Date(exp.date).toLocaleDateString("fr-FR")}
                             </span>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <p className="text-sm font-bold text-brand-900">{exp.description}</p>
+                          <p className="text-sm font-bold text-brand-900">
+                            {exp.description}
+                          </p>
                         </td>
                         <td className="px-8 py-6">
                           <span className="inline-flex px-3 py-1 rounded-full bg-brand-50 text-brand-600 text-[9px] font-bold uppercase tracking-wider border border-brand-100">
@@ -1358,7 +1295,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                         </td>
                         <td className="px-8 py-6 text-right">
                           <span className="text-sm font-bold text-red-500">
-                            -{exp.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                            -
+                            {exp.amount.toLocaleString("fr-FR", {
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                            €
                           </span>
                         </td>
                         <td className="px-8 py-6 text-right">
@@ -1386,14 +1327,17 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     <tr>
                       <td colSpan={7} className="py-24 text-center">
                         <div className="inline-block p-8 rounded-full bg-brand-50 mb-4">
-                          <FileSpreadsheet size={40} className="text-brand-200" />
+                          <FileSpreadsheet
+                            size={40}
+                            className="text-brand-200"
+                          />
                         </div>
                         <h4 className="text-brand-900 font-bold text-lg font-display">
                           Aucune dépense trouvée
                         </h4>
                         <p className="text-brand-400 text-sm max-w-xs mx-auto mt-2">
-                          Ajustez vos filtres ou ajoutez une nouvelle dépense pour alimenter votre
-                          journal.
+                          Ajustez vos filtres ou ajoutez une nouvelle dépense
+                          pour alimenter votre journal.
                         </p>
                       </td>
                     </tr>

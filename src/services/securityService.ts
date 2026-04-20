@@ -218,7 +218,7 @@ export const PasswordResetService = {
   generateResetToken(email: string): string {
     const token = crypto.randomUUID();
     if (import.meta.env.DEV) {
-      console.info(`[DEV] Password reset token for ${email}: ${token}`);
+      console.warn(`[DEV] Password reset token for ${email}: ${token}`);
     }
     return token;
   },

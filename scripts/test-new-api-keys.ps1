@@ -48,7 +48,9 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=000000000000
 VITE_FIREBASE_MEASUREMENT_ID=
 
 # Gemini API - FILL IN YOUR NEW KEY HERE
+# Use GEMINI_API_KEY for scripts, can also use VITE_GEMINI_API_KEY
 GEMINI_API_KEY=PASTE_NEW_GEMINI_KEY_HERE
+VITE_GEMINI_API_KEY=PASTE_NEW_GEMINI_KEY_HERE
 "@
 
     Set-Content -Path ".env.local" -Value $template
@@ -68,22 +70,29 @@ $envContent = Get-Content ".env.local" | ConvertFrom-StringData -ErrorAction Sil
 if ($null -eq $envContent) {
     # Try manual parsing if ConvertFrom-StringData fails
     $envContent = @{}
-    Get-Content ".env.local" | Where-Object { $_ -match '=' } | ForEach-Object {
+    Get-Content ".env.local" | Where-Object { $_ -match '=' -and $_ -notmatch '^#' } | ForEach-Object {
         $key, $value = $_ -split '=', 2
-        $envContent[$key.Trim()] = $value.Trim()
+        if ($key -and $value) {
+            $envContent[$key.Trim()] = $value.Trim()
+        }
     }
 }
 
 $firebaseKey = $envContent["VITE_FIREBASE_API_KEY"]
 $geminiKey = $envContent["GEMINI_API_KEY"]
 
+# If GEMINI_API_KEY is not found, check for VITE_GEMINI_API_KEY (Vite convention)
+if ([string]::IsNullOrWhiteSpace($geminiKey)) {
+    $geminiKey = $envContent["VITE_GEMINI_API_KEY"]
+}
+
 if ([string]::IsNullOrWhiteSpace($firebaseKey) -or $firebaseKey -eq "PASTE_NEW_FIREBASE_KEY_HERE") {
-    Print-Error "Firebase API Key not configured in .env.local"
+    Print-Error "Firebase API Key (VITE_FIREBASE_API_KEY) not configured in .env.local"
     exit 1
 }
 
 if ([string]::IsNullOrWhiteSpace($geminiKey) -or $geminiKey -eq "PASTE_NEW_GEMINI_KEY_HERE") {
-    Print-Error "Gemini API Key not configured in .env.local"
+    Print-Error "Gemini API Key (GEMINI_API_KEY) not configured in .env.local"
     exit 1
 }
 
@@ -113,7 +122,8 @@ try {
 # Step 4: Install dependencies
 Print-Status "Step 4: Installing dependencies"
 try {
-    npm install --legacy-peer-deps | Select-Object -Last 3
+    # Using --no-audit for speed and --ignore-scripts because of husky issues
+    npm install --ignore-scripts --no-audit | Select-Object -Last 3
     Print-Success "Dependencies installed"
 } catch {
     Print-Error "Failed to install dependencies: $_"
@@ -123,7 +133,7 @@ try {
 # Step 5: TypeScript compilation
 Print-Status "Step 5: Running TypeScript type check"
 try {
-    npm run type-check | Out-Null
+    npm run type-check
     Print-Success "TypeScript compilation passed (0 errors)"
 } catch {
     Print-Error "TypeScript compilation failed"
@@ -133,8 +143,8 @@ try {
 # Step 6: Run tests
 Print-Status "Step 6: Running test suite"
 try {
-    npm test -- --run | Out-Null
-    Print-Success "Test suite passed (all tests)"
+    npm run test:coverage
+    Print-Success "Test suite and coverage passed"
 } catch {
     Print-Error "Test suite failed"
     exit 1

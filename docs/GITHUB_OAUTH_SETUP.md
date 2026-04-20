@@ -1,18 +1,21 @@
 # Configuration GitHub OAuth - Guide Complet
 
-**Dernière mise à jour:** 14 avril 2026  
-**Version:** 2.0 (OAuth 2.0 sécurisé)  
+**Dernière mise à jour:** 19 avril 2026  
+**Version:** 2.1 (OAuth 2.0 sécurisé + Checklist)  
 **État:** ✅ Production-ready
+
+> **🎯 Nouvelle fonctionnalité :** Consultez [GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md) pour une configuration pas-à-pas avec valeurs à copier-coller.
 
 ## 📋 Table des matières
 
 1. [🚀 Démarrage Rapide](#-démarrage-rapide)
-2. [Configuration GitHub OAuth](#configuration-github-oauth)
-3. [Configuration Firebase](#configuration-firebase)
-4. [Utilisation dans l'application](#utilisation-dans-lapplication)
-5. [Sécurité et bonnes pratiques](#sécurité-et-bonnes-pratiques)
-6. [Dépannage](#dépannage)
-7. [Politiques et données](#politiques-et-données)
+2. [✅ Checklist de Configuration](#-checklist-de-configuration)
+3. [Configuration GitHub OAuth](#configuration-github-oauth)
+4. [Configuration Firebase](#configuration-firebase)
+5. [Utilisation dans l'application](#utilisation-dans-lapplication)
+6. [Sécurité et bonnes pratiques](#sécurité-et-bonnes-pratiques)
+7. [Dépannage](#dépannage)
+8. [Politiques et données](#politiques-et-données)
 
 ---
 
@@ -52,6 +55,39 @@ npm run dev
 # Ouvrez http://localhost:5173
 # Cliquez "Se connecter avec GitHub"
 ```
+
+**Étape 5: Utilisez le script de test automatique**
+
+```powershell
+# Test complet de la configuration
+.\scripts\test-oauth-connection.ps1
+```
+
+---
+
+## ✅ Checklist de Configuration
+
+**📋 Pour une configuration complète avec valeurs à copier-coller, consultez :**
+
+👉 **[GITHUB_OAUTH_CHECKLIST.md](./GITHUB_OAUTH_CHECKLIST.md)**
+
+Ce guide contient :
+
+- ✅ Textes exacts à copier-coller (description, URLs)
+- 🎨 Instructions pour créer le logo 512x512px
+- 🎨 Couleur du badge recommandée (`#2563eb`)
+- 🔗 Liste complète des URLs de callback
+- 🧪 Procédure de test dev + prod
+- 🔒 Checklist de sécurité
+
+### Résumé rapide des changements recommandés
+
+| Paramètre         | Valeur actuelle | Valeur recommandée                                                     |
+| ----------------- | --------------- | ---------------------------------------------------------------------- |
+| **Description**   | (vide)          | "Application de gestion complète pour micro-entrepreneurs français..." |
+| **Logo**          | (aucun)         | `public/logo.svg` → PNG 512x512px                                      |
+| **Badge color**   | `#ffffff`       | `#2563eb` (bleu professionnel)                                         |
+| **Callback URLs** | 1 URL           | 4 URLs (prod + dev + preview)                                          |
 
 ---
 
@@ -233,8 +269,8 @@ function Header() {
 #### Scopes requis
 
 ```typescript
-githubProvider.addScope('user:email'); // Email public/privé
-githubProvider.addScope('read:user'); // Profil public
+githubProvider.addScope("user:email"); // Email public/privé
+githubProvider.addScope("read:user"); // Profil public
 ```
 
 **Ne demandez jamais :**
@@ -247,7 +283,7 @@ githubProvider.addScope('read:user'); // Profil public
 
 ```typescript
 // ❌ MAUVAIS - Ne jamais côté client
-const SECRET = 'gh_pat_...'; // En clair dans le code
+const SECRET = "gh_pat_..."; // En clair dans le code
 
 // ✅ BON - Firebase gère automatiquement
 // L'échange de token se fait côté serveur (Firebase)
@@ -260,7 +296,7 @@ const SECRET = 'gh_pat_...'; // En clair dans le code
 Pour IBAN, SIRET etc. - Utilisez le service de sécurité :
 
 ```typescript
-import { encryptSensitiveData } from '@/services/securityService';
+import { encryptSensitiveData } from "@/services/securityService";
 
 await updateUserProfile(userId, {
   encryptedIBAN: encryptSensitiveData(iban),
@@ -273,7 +309,7 @@ await updateUserProfile(userId, {
 Firebase gère automatiquement le rafraîchissement des tokens. Mais vous pouvez forcer une réauthentification pour les opérations sensibles :
 
 ```typescript
-import { GitHubAuthService } from '@/services/authService';
+import { GitHubAuthService } from "@/services/authService";
 
 const authService = new GitHubAuthService(auth, db);
 
@@ -365,7 +401,7 @@ service cloud.firestore {
 // - Clic n'est pas direct (ça vient d'un callback async)
 
 // ✅ BON: événement direct
-button.addEventListener('click', loginWithGitHub);
+button.addEventListener("click", loginWithGitHub);
 
 // ❌ MAUVAIS: callback asynchrone
 setTimeout(() => loginWithGitHub(), 1000);
@@ -425,7 +461,7 @@ async function deleteUserAccount(userId: string) {
   await authService.reauthenticateWithGitHub(auth.currentUser!);
 
   // 2. Supprimer les données Firestore (cascade)
-  await deleteDoc(doc(db, 'users', userId));
+  await deleteDoc(doc(db, "users", userId));
 
   // 3. Supprimer l'utilisateur Firebase
   await deleteUser(auth.currentUser!);

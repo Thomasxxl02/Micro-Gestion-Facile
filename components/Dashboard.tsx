@@ -1132,7 +1132,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     id={id}
                     className="lg:col-span-1 row-span-1"
                   >
-                    <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-950 text-white border-none shadow-xl shadow-brand-900/20">
+                    <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden bg-linear-to-br from-brand-900 to-brand-950 text-white border-none shadow-xl shadow-brand-900/20">
                       <div className="absolute -right-4 -top-4 p-8 opacity-10">
                         <Sparkles size={120} />
                       </div>

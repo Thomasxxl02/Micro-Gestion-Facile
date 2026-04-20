@@ -20,7 +20,7 @@ import {
   type AuthError,
   type User,
   type UserCredential,
-} from 'firebase/auth';
+} from "firebase/auth";
 import {
   doc,
   getDoc,
@@ -28,19 +28,19 @@ import {
   setDoc,
   updateDoc,
   type Firestore,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
 export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  provider: 'github' | 'google' | 'email';
+  provider: "github" | "google" | "email";
   githubUsername?: string;
   createdAt: Date;
   lastLoginAt: Date;
   isVerified: boolean;
-  preferredMFA?: 'totp' | 'sms' | 'none';
+  preferredMFA?: "totp" | "sms" | "none";
 }
 
 export interface AuthError2FA {
@@ -67,13 +67,13 @@ export class GitHubAuthService {
     // Scopes recommandés pour micro-entrepreneurs
     // 'user' - Accès au profil public et email
     // 'repo' - Accès aux repositories (optionnel, pour sync future)
-    this.githubProvider.addScope('user:email');
-    this.githubProvider.addScope('read:user');
+    this.githubProvider.addScope("user:email");
+    this.githubProvider.addScope("read:user");
 
     // Force la réauthentification GitHub à chaque connexion
     this.githubProvider.setCustomParameters({
-      prompt: 'consent', // Force la sélection du compte
-      allow_signup: 'true', // Permet l'inscription
+      prompt: "consent", // Force la sélection du compte
+      allow_signup: "true", // Permet l'inscription
     });
   }
 
@@ -89,9 +89,10 @@ export class GitHubAuthService {
       await this.syncUserProfileToFirestore(result.user);
 
       return result;
-    } catch (error: any) {
-      if (error?.code === 'auth/account-exists-with-different-credential') {
-        return this.handleAccountLink(error);
+    } catch (error: unknown) {
+      const authError = error as AuthError;
+      if (authError?.code === "auth/account-exists-with-different-credential") {
+        return this.handleAccountLink(authError);
       }
       throw this.handleAuthError(error);
     }
@@ -152,7 +153,7 @@ export class GitHubAuthService {
    */
   private async syncUserProfileToFirestore(user: User): Promise<void> {
     try {
-      const userRef = doc(this.db, 'users', user.uid);
+      const userRef = doc(this.db, "users", user.uid);
 
       // Vérifier si l'utilisateur existe déjà
       const existingUser = await getDoc(userRef);
@@ -162,8 +163,9 @@ export class GitHubAuthService {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        provider: 'github',
-        githubUsername: user.displayName?.split('/')[1] || (user.displayName ?? undefined),
+        provider: "github",
+        githubUsername:
+          user.displayName?.split("/")[1] || (user.displayName ?? undefined),
         lastLoginAt: new Date(),
         isVerified: user.emailVerified,
       };
@@ -172,11 +174,11 @@ export class GitHubAuthService {
         // Nouvel utilisateur - Initialisation des métadonnées métier par défaut
         await setDoc(userRef, {
           ...profileData,
-          currency: 'EUR',
-          taxSystem: 'auto-entrepreneur',
-          activityType: 'SERVICE_BNC',
+          currency: "EUR",
+          taxSystem: "auto-entrepreneur",
+          activityType: "SERVICE_BNC",
           isVatExempt: true,
-          vatExemptionReason: 'Franchise en base de TVA - Art. 293 B du CGI',
+          vatExemptionReason: "Franchise en base de TVA - Art. 293 B du CGI",
           createdAt: new Date(),
         });
       } else {
@@ -187,7 +189,7 @@ export class GitHubAuthService {
         });
       }
     } catch (error) {
-      console.error('Erreur synchronisation profil Firestore:', error);
+      console.error("Erreur synchronisation profil Firestore:", error);
       // Ne pas bloquer la connexion si la sync échoue
     }
   }
@@ -197,7 +199,7 @@ export class GitHubAuthService {
    */
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const userRef = doc(this.db, 'users', userId);
+      const userRef = doc(this.db, "users", userId);
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
@@ -205,7 +207,7 @@ export class GitHubAuthService {
       }
       return null;
     } catch (error) {
-      console.error('Erreur récupération profil:', error);
+      console.error("Erreur récupération profil:", error);
       return null;
     }
   }
@@ -213,9 +215,13 @@ export class GitHubAuthService {
   /**
    * Met à jour les informations du profil utilisateur
    */
-  async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
+  async updateUserProfile(
+    userId: string,
+    updates: Partial<UserProfile>,
+  ): Promise<void> {
     try {
-      const userRef = doc(this.db, 'users', userId);
+      const userRef = doc(this.db, "users", userId);
+       
       const { uid: _uid, createdAt: _createdAt, ...updatableFields } = updates;
 
       await updateDoc(userRef, {
@@ -223,7 +229,7 @@ export class GitHubAuthService {
         lastLoginAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Erreur mise à jour profil:', error);
+      console.error("Erreur mise à jour profil:", error);
       throw error;
     }
   }
@@ -252,7 +258,7 @@ export class GitHubAuthService {
       // Nettoyer les données sensibles du localStorage
       this.clearSensitiveData();
     } catch (error) {
-      console.error('Erreur déconnexion:', error);
+      console.error("Erreur déconnexion:", error);
       throw error;
     }
   }
@@ -262,29 +268,33 @@ export class GitHubAuthService {
    */
   private handleAuthError(error: unknown): Error {
     if (!(error instanceof Error)) {
-      return new Error('Erreur authentification inconnue');
+      return new Error("Erreur authentification inconnue");
     }
 
     const firebaseError = error as AuthError;
 
     const errorMessages: Record<string, string> = {
-      'auth/cancelled-popup-request': 'Popup fermée. Veuillez réessayer.',
-      'auth/popup-blocked': 'Les popups sont bloquées. Veuillez les autoriser.',
-      'auth/popup-closed-by-user': "Connexion annulée par l'utilisateur.",
-      'auth/account-exists-with-different-credential':
-        'Un compte existe déjà avec cet email. Nous avons tenté de lier vos comptes, veuillez réessayer la connexion Google si nécessaire ou contacter le support.',
-      'auth/credential-already-in-use': 'Ces identifiants sont déjà associés à un compte.',
-      'auth/user-disabled': 'Ce compte a été désactivé.',
-      'auth/user-not-found': 'Utilisateur non trouvé.',
-      'auth/wrong-password': 'Mot de passe incorrect.',
-      'auth/too-many-requests': 'Trop de tentatives. Veuillez réessayer plus tard.',
-      'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion internet.',
-      'auth/operation-not-allowed': "Cette méthode d'authentification n'est pas activée.",
+      "auth/cancelled-popup-request": "Popup fermée. Veuillez réessayer.",
+      "auth/popup-blocked": "Les popups sont bloquées. Veuillez les autoriser.",
+      "auth/popup-closed-by-user": "Connexion annulée par l'utilisateur.",
+      "auth/account-exists-with-different-credential":
+        "Un compte existe déjà avec cet email. Nous avons tenté de lier vos comptes, veuillez réessayer la connexion Google si nécessaire ou contacter le support.",
+      "auth/credential-already-in-use":
+        "Ces identifiants sont déjà associés à un compte.",
+      "auth/user-disabled": "Ce compte a été désactivé.",
+      "auth/user-not-found": "Utilisateur non trouvé.",
+      "auth/wrong-password": "Mot de passe incorrect.",
+      "auth/too-many-requests":
+        "Trop de tentatives. Veuillez réessayer plus tard.",
+      "auth/network-request-failed":
+        "Erreur réseau. Vérifiez votre connexion internet.",
+      "auth/operation-not-allowed":
+        "Cette méthode d'authentification n'est pas activée.",
     };
 
     const userMessage =
       errorMessages[firebaseError.code] ||
-      "Erreur d'authentification: " + (firebaseError.message || 'Inconnue');
+      "Erreur d'authentification: " + (firebaseError.message || "Inconnue");
 
     const customError = new Error(userMessage);
     customError.cause = firebaseError;
@@ -295,7 +305,12 @@ export class GitHubAuthService {
    * Nettoie les données sensibles du localStorage
    */
   private clearSensitiveData(): void {
-    const sensitiveKeys = ['emailForSignIn', 'tempAuthToken', 'mfaToken', 'sessionToken'];
+    const sensitiveKeys = [
+      "emailForSignIn",
+      "tempAuthToken",
+      "mfaToken",
+      "sessionToken",
+    ];
 
     sensitiveKeys.forEach((key) => {
       localStorage.removeItem(key);
@@ -317,22 +332,22 @@ export class GitHubAuthService {
   /**
    * Obtient le provider principal de l'utilisateur
    */
-  getProviderForUser(user: User): 'github' | 'google' | 'email' | 'unknown' {
+  getProviderForUser(user: User): "github" | "google" | "email" | "unknown" {
     if (!user.providerData || user.providerData.length === 0) {
-      return 'unknown';
+      return "unknown";
     }
 
     const provider = user.providerData[0].providerId;
-    if (provider.includes('github')) {
-      return 'github';
+    if (provider.includes("github")) {
+      return "github";
     }
-    if (provider.includes('google')) {
-      return 'google';
+    if (provider.includes("google")) {
+      return "google";
     }
-    if (provider.includes('email')) {
-      return 'email';
+    if (provider.includes("email")) {
+      return "email";
     }
-    return 'unknown';
+    return "unknown";
   }
 }
 
@@ -345,7 +360,7 @@ export class AuthErrorHandler {
       return false;
     }
     const firebaseError = error as AuthError;
-    return firebaseError.code === 'auth/network-request-failed';
+    return firebaseError.code === "auth/network-request-failed";
   }
 
   static isAccountConflictError(error: unknown): boolean {
@@ -354,9 +369,9 @@ export class AuthErrorHandler {
     }
     const firebaseError = error as AuthError;
     return [
-      'auth/account-exists-with-different-credential',
-      'auth/credential-already-in-use',
-      'auth/email-already-in-use',
+      "auth/account-exists-with-different-credential",
+      "auth/credential-already-in-use",
+      "auth/email-already-in-use",
     ].includes(firebaseError.code);
   }
 
@@ -365,8 +380,10 @@ export class AuthErrorHandler {
       return false;
     }
     const firebaseError = error as AuthError;
-    return ['auth/operation-not-allowed', 'auth/user-disabled', 'auth/invalid-api-key'].includes(
-      firebaseError.code
-    );
+    return [
+      "auth/operation-not-allowed",
+      "auth/user-disabled",
+      "auth/invalid-api-key",
+    ].includes(firebaseError.code);
   }
 }

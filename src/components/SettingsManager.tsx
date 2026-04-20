@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SettingsManager - Gestion du profil et des paramètres d'entreprise
  * ✅ Accessibilité intégrée (WCAG 2.1 AA)
  * ✅ Composants modulaires (FormFields, Dialogs)
@@ -6,21 +6,27 @@
  */
 
 import {
+  Archive,
   ArrowRight,
   Briefcase,
   Building,
   Check,
+  Cloud,
   CreditCard,
   Download,
   ExternalLink,
   FileText,
   Globe,
   Hash,
+  Image as ImageIcon,
+  Layout,
   Mail as MailIcon,
   MapPin,
   Palette,
   Phone as PhoneIcon,
+  RefreshCw,
   ShieldCheck,
+  Sparkles,
   Trash2,
   Upload,
   User,
@@ -32,6 +38,7 @@ import { toast } from "sonner";
 import { parseImportJSON } from "../lib/exportUtils";
 import { useAppStore } from "../store/appStore";
 import useLogStore from "../store/useLogStore";
+import useUIStore from "../store/useUIStore";
 import type {
   Client,
   Expense,
@@ -265,12 +272,130 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   allData,
   setAllData,
 }) => {
+  // eslint-disable-line complexity
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<
     "profile" | "billing" | "data" | "preferences" | "security"
   >("profile");
   const { addLog, fontSize, setFontSize } = useAppStore();
+  const {
+    reducedMotion,
+    setReducedMotion,
+    soundEnabled,
+    setSoundEnabled,
+    isDarkMode: _isDarkMode,
+    setIsDarkMode: _setIsDarkMode,
+  } = useUIStore();
   const { activityLogs } = useLogStore();
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Mise à jour synchrone des variables CSS pour la personnalisation visuelle
+  useEffect(() => {
+    const root = document.documentElement;
+
+    // Densité
+    if (userProfile.uiDensity) {
+      root.setAttribute("data-density", userProfile.uiDensity);
+    }
+
+    // Border Radius
+    if (userProfile.borderRadius !== undefined) {
+      root.style.setProperty(
+        "--app-border-radius",
+        `${userProfile.borderRadius}px`,
+      );
+    }
+
+    // Mode Zen
+    root.setAttribute(
+      "data-zen-mode",
+      userProfile.isZenMode ? "true" : "false",
+    );
+  }, [userProfile.uiDensity, userProfile.borderRadius, userProfile.isZenMode]);
+
+  const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now() - 120000); // Mock: 2 min ago
+
+  const handleForceSync = async () => {
+    setIsSyncing(true);
+    // Simulation d'une synchro Firebase
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setLastSyncTime(Date.now());
+    setIsSyncing(false);
+    toast.success("Synchronisation Cloud terminée");
+  };
+
+  const cleanOldData = (type: "10years" | "drafts") => {
+    const now = new Date();
+    if (type === "10years") {
+      const tenYearsAgo = new Date(now.setFullYear(now.getFullYear() - 10));
+      const oldInvoices = allData.invoices.filter(
+        (inv) => new Date(inv.date) < tenYearsAgo,
+      );
+      if (oldInvoices.length === 0) {
+        toast.info("Aucune donnée de plus de 10 ans trouvée.");
+        return;
+      }
+      if (
+        confirm(
+          `Voulez-vous archiver (supprimer de l'app) ${oldInvoices.length} factures de plus de 10 ans ? Assurez-vous d'avoir fait un export complet avant.`,
+        )
+      ) {
+        const remaining = allData.invoices.filter(
+          (inv) => new Date(inv.date) >= tenYearsAgo,
+        );
+        setAllData.setInvoices(remaining);
+        toast.success(`${oldInvoices.length} factures archivées.`);
+      }
+    } else {
+      const sixMonthsAgo = new Date(now.setMonth(now.getMonth() - 6));
+      const oldDrafts = allData.invoices.filter(
+        (inv) => inv.status === "draft" && new Date(inv.date) < sixMonthsAgo,
+      );
+      if (oldDrafts.length === 0) {
+        toast.info("Aucun brouillon de plus de 6 mois trouvé.");
+        return;
+      }
+      if (
+        confirm(`Supprimer ${oldDrafts.length} brouillons de plus de 6 mois ?`)
+      ) {
+        const remaining = allData.invoices.filter(
+          (inv) =>
+            !(inv.status === "draft" && new Date(inv.date) < sixMonthsAgo),
+        );
+        setAllData.setInvoices(remaining);
+        toast.success(`${oldDrafts.length} brouillons supprimés.`);
+      }
+    }
+  };
+
+  // ─── THEME PRESETS ────────────────────────────────────────────────────────
+  const applyPreset = (presetName: "expert" | "artisan" | "creative") => {
+    const presets = {
+      expert: {
+        primaryColor: "#102a43", // Navy Profond
+        secondaryColor: "#486581", // Gris-Bleu
+        fontFamily: "Inter",
+      },
+      artisan: {
+        primaryColor: "#854d0e", // Terre d'ombre
+        secondaryColor: "#a16207", // Or vieilli
+        fontFamily: "Lora",
+      },
+      creative: {
+        primaryColor: "#7c3aed", // Violet vibrant
+        secondaryColor: "#db2777", // Rose fuchsia
+        fontFamily: "Montserrat",
+      },
+    };
+
+    const config = presets[presetName];
+    Object.entries(config).forEach(([key, value]) => {
+      handleChange(key as keyof UserProfile, value);
+    });
+    toast.success(
+      `Style "${presetName.charAt(0).toUpperCase() + presetName.slice(1)}" appliqué`,
+    );
+  };
 
   const dataLogs = activityLogs.filter(
     (log) =>
@@ -552,6 +677,56 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     }
   };
 
+  const handlePreviewPDF = async () => {
+    const sampleInvoice: Invoice = {
+      id: "test-preview",
+      number: "TEST-" + new Date().getFullYear() + "-0001",
+      date: new Date().toISOString().split("T")[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      type: "invoice",
+      status: "draft",
+      items: [
+        {
+          id: "item-1",
+          description: "Prestation de service (Exemple)",
+          quantity: 1,
+          unitPrice: 1500,
+        },
+        {
+          id: "item-2",
+          description: "Frais de déplacement",
+          quantity: 1,
+          unitPrice: 45,
+        },
+      ],
+      total: 1545,
+      subtotal: 1545,
+      vatAmount: 0,
+      clientId: "client-test",
+    };
+    const sampleClient: Client = {
+      id: "client-test",
+      name: "Client Démo SARL",
+      address: "123 Avenue du Test, 75000 Paris",
+      email: "contact@client-demo.fr",
+    };
+    try {
+      const { generatePDFWithFacturX } = await import("../lib/facturX");
+      const doc = await generatePDFWithFacturX(
+        sampleInvoice,
+        sampleClient,
+        userProfile,
+      );
+      const pdfUrl = doc.output("bloburl");
+      window.open(pdfUrl, "_blank");
+    } catch (error) {
+      console.error("Erreur génération PDF:", error);
+      toast.error("Erreur lors de la génération de l'aperçu");
+    }
+  };
+
   const generateSampleData = () => {
     setConfirmDialog({
       isOpen: true,
@@ -674,11 +849,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         >
           {(
             [
-              { id: "profile", label: "Profil" },
-              { id: "billing", label: "Facturation" },
-              { id: "preferences", label: "Style" },
-              { id: "security", label: "Sécurité" },
-              { id: "data", label: "Données" },
+              { id: "profile", label: "🏢 Profil" },
+              { id: "billing", label: "💳 Facturation" },
+              { id: "preferences", label: "🎨 Style" },
+              { id: "security", label: "🔐 Sécurité" },
+              { id: "data", label: "💾 Données" },
             ] as { id: typeof activeTab; label: string }[]
           ).map(({ id: tabId, label }) => {
             const isTabSelected = activeTab === tabId;
@@ -689,7 +864,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 aria-controls={`panel-${tabId}`}
                 onClick={() => setActiveTab(tabId)}
                 role="tab"
-                aria-selected={isTabSelected ? "true" : "false"}
+                aria-selected={isTabSelected}
                 tabIndex={isTabSelected ? 0 : -1}
                 className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
                   isTabSelected
@@ -755,7 +930,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   </div>
                   <FormField
                     label="Titre Professionnel"
-                    value={userProfile.professionalTitle || ""}
+                    value={userProfile.professionalTitle ?? ""}
                     onChange={(val) => handleChange("professionalTitle", val)}
                     placeholder="Ex: Consultant IT, Photographe..."
                     icon={Briefcase}
@@ -812,14 +987,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <FormField
                       label="Site Web"
                       type="url"
-                      value={userProfile.website || ""}
+                      value={userProfile.website ?? ""}
                       onChange={(val) => handleChange("website", val)}
                       placeholder="www.mon-site.fr"
                       icon={Globe}
                     />
                     <FormField
                       label="LinkedIn"
-                      value={userProfile.linkedin || ""}
+                      value={userProfile.linkedin ?? ""}
                       onChange={(val) => handleChange("linkedin", val)}
                       placeholder="linkedin.com/in/profil"
                       icon={Briefcase}
@@ -851,7 +1026,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Régime d'imposition"
-                      value={userProfile.taxSystem || "MICRO-BNC"}
+                      value={userProfile.taxSystem ?? "MICRO-BNC"}
                       onChange={(val) => handleChange("taxSystem", val)}
                       options={[
                         {
@@ -867,7 +1042,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                     <SelectField
                       label="Type d'activité URSSAF"
-                      value={userProfile.activityType || "SERVICE_BNC"}
+                      value={userProfile.activityType ?? "SERVICE_BNC"}
                       onChange={(val) => handleChange("activityType", val)}
                       options={[
                         {
@@ -890,19 +1065,19 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <ToggleSwitch
                     label="Franchise en base de TVA"
                     description="Active la mention automatique 'TVA non applicable, art. 293 B du CGI' sur vos documents"
-                    checked={userProfile.isVatExempt || false}
+                    checked={userProfile.isVatExempt ?? false}
                     onChange={(val) => handleChange("isVatExempt", val)}
                   />
                   <ToggleSwitch
                     label="Bénéficiaire de l'ACRE"
                     description="Aide à la Création et Reprise d'Entreprise — réduction de 50 % des cotisations la 1ère année (art. L. 5141-1 Code du Travail)"
-                    checked={userProfile.isAcreBeneficiary || false}
+                    checked={userProfile.isAcreBeneficiary ?? false}
                     onChange={(val) => handleChange("isAcreBeneficiary", val)}
                   />
                   <ToggleSwitch
                     label="Alerte seuil de TVA"
                     description="Vous avertir à l'approche du seuil de franchise TVA (37 500 € services / 85 000 € ventes)"
-                    checked={userProfile.vatThresholdAlert || false}
+                    checked={userProfile.vatThresholdAlert ?? false}
                     onChange={(val) => handleChange("vatThresholdAlert", val)}
                   />
                   {userProfile.vatThresholdAlert && (
@@ -931,7 +1106,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <ToggleSwitch
                     label="Alerte plafond de revenus"
                     description="Vous alerter à l'approche du plafond de CA de la micro-entreprise"
-                    checked={userProfile.revenueThresholdAlert || false}
+                    checked={userProfile.revenueThresholdAlert ?? false}
                     onChange={(val) =>
                       handleChange("revenueThresholdAlert", val)
                     }
@@ -959,6 +1134,27 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       />
                     </div>
                   )}
+
+                  <div className="border-t border-brand-50 dark:border-brand-800 pt-8 mt-4">
+                    <SelectField
+                      label="Périodicité des déclarations de CA"
+                      value={userProfile.taxDeclarationPeriod ?? "MONTHLY"}
+                      onChange={(val) =>
+                        handleChange("taxDeclarationPeriod", val)
+                      }
+                      options={[
+                        {
+                          value: "MONTHLY",
+                          label: "Mensuelle (tous les mois)",
+                        },
+                        {
+                          value: "QUARTERLY",
+                          label: "Trimestrielle (tous les 3 mois)",
+                        },
+                      ]}
+                      description="Génère des rappels automatiques avant la date limite de télédéclaration URSSAF"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -975,7 +1171,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="IBAN"
-                      value={userProfile.bankAccount || ""}
+                      value={userProfile.bankAccount ?? ""}
                       onChange={(val) => handleChange("bankAccount", val)}
                       placeholder="FR76 3000 6000 0112 3456 7890 189"
                       icon={CreditCard}
@@ -983,7 +1179,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                     <FormField
                       label="BIC / SWIFT"
-                      value={userProfile.bic || ""}
+                      value={userProfile.bic ?? ""}
                       onChange={(val) => handleChange("bic", val)}
                       placeholder="TRPUFRPPXXX"
                     />
@@ -991,7 +1187,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Devise"
-                      value={userProfile.currency || "€"}
+                      value={userProfile.currency ?? "€"}
                       onChange={(val) => handleChange("currency", val)}
                       options={[
                         { value: "€", label: "Euro (€)" },
@@ -1003,7 +1199,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <FormField
                       label="TVA par défaut (%)"
                       type="number"
-                      value={String(userProfile.defaultVatRate || 0)}
+                      value={String(userProfile.defaultVatRate ?? 0)}
                       onChange={(val) => {
                         const parsed = Number.parseFloat(val);
                         handleChange(
@@ -1036,7 +1232,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="Préfixe des Factures"
-                      value={userProfile.invoicePrefix || "FAC-"}
+                      value={userProfile.invoicePrefix ?? "FAC-"}
                       onChange={(val) => handleChange("invoicePrefix", val)}
                       placeholder="FAC-2026-"
                       icon={Hash}
@@ -1061,14 +1257,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="Préfixe des Devis"
-                      value={userProfile.quotePrefix || "DEV-"}
+                      value={userProfile.quotePrefix ?? "DEV-"}
                       onChange={(val) => handleChange("quotePrefix", val)}
                       placeholder="DEV-2026-"
                       icon={Hash}
                     />
                     <FormField
                       label="Préfixe des Avoirs"
-                      value={userProfile.creditNotePrefix || "AV-"}
+                      value={userProfile.creditNotePrefix ?? "AV-"}
                       onChange={(val) => handleChange("creditNotePrefix", val)}
                       placeholder="AV-2026-"
                       icon={Hash}
@@ -1079,7 +1275,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       Aperçu du numéro généré
                     </p>
                     <p className="text-base font-mono font-bold text-brand-700 dark:text-brand-300">
-                      {userProfile.invoicePrefix || "FAC-"}
+                      {userProfile.invoicePrefix ?? "FAC-"}
                       {String(userProfile.invoiceStartNumber ?? 1).padStart(
                         3,
                         "0",
@@ -1108,14 +1304,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       label="N° TVA Intracommunautaire"
-                      value={userProfile.tvaNumber || ""}
+                      value={userProfile.tvaNumber ?? ""}
                       onChange={(val) => handleChange("tvaNumber", val)}
                       placeholder="FR12 123456789"
                       description="Obligatoire pour les échanges UE (art. 289 CGI)"
                     />
                     <SelectField
                       label="Format e-Facture par défaut"
-                      value={userProfile.defaultEInvoiceFormat || "Factur-X"}
+                      value={userProfile.defaultEInvoiceFormat ?? "Factur-X"}
                       onChange={(val) =>
                         handleChange("defaultEInvoiceFormat", val)
                       }
@@ -1135,7 +1331,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   </div>
                   <TextAreaField
                     label="Mentions légales (pied de facture)"
-                    value={userProfile.legalMentions || ""}
+                    value={userProfile.legalMentions ?? ""}
                     onChange={(val) => handleChange("legalMentions", val)}
                     placeholder="Ex : Dispensé d'immatriculation — art. L123-1-1 Code de commerce. TVA non applicable, art. 293 B du CGI."
                     rows={3}
@@ -1154,6 +1350,77 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               aria-labelledby="tab-preferences"
               className="space-y-8 animate-slide-up"
             >
+              {/* Presets Card */}
+              <div className="bg-linear-to-br from-brand-900 to-brand-800 dark:from-brand-950 dark:to-brand-900 rounded-4xl p-8 shadow-xl border border-brand-700/50 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                  <Sparkles size={120} className="text-white" />
+                </div>
+
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                    <div className="p-2 bg-brand-700/50 text-brand-200 rounded-xl">
+                      <Sparkles size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white font-display">
+                        Styles "Métiers" Instantanés
+                      </h3>
+                      <p className="text-xs text-brand-300">
+                        Configuration visuelle complète en un clic
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("expert")}
+                      className="p-4 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-2xl transition-all text-left"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#102a43] mb-3 flex items-center justify-center border border-white/20">
+                        <Briefcase size={16} className="text-white" />
+                      </div>
+                      <h4 className="text-white font-bold text-sm">L'Expert</h4>
+                      <p className="text-[10px] text-brand-300 mt-1">
+                        Sérieux & Institutionnel (Navy + Inter)
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("artisan")}
+                      className="p-4 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-2xl transition-all text-left"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#854d0e] mb-3 flex items-center justify-center border border-white/20">
+                        <Palette size={16} className="text-white" />
+                      </div>
+                      <h4 className="text-white font-bold text-sm">
+                        L'Artisan
+                      </h4>
+                      <p className="text-[10px] text-brand-300 mt-1">
+                        Chaleureux & Authentique (Terre + Lora)
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("creative")}
+                      className="p-4 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-2xl transition-all text-left"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#7c3aed] mb-3 flex items-center justify-center border border-white/20">
+                        <Sparkles size={16} className="text-white" />
+                      </div>
+                      <h4 className="text-white font-bold text-sm">
+                        Le Créatif
+                      </h4>
+                      <p className="text-[10px] text-brand-300 mt-1">
+                        Vibrant & Moderne (Violet + Montserrat)
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Colors Card */}
               <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
@@ -1168,7 +1435,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Thème"
-                      value={userProfile.theme || "auto"}
+                      value={userProfile.theme ?? "auto"}
                       onChange={(val) => handleChange("theme", val)}
                       options={[
                         { value: "light", label: "☀️ Clair (Light)" },
@@ -1178,26 +1445,23 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                     <SelectField
                       label="Police de caractères (factures)"
-                      value={userProfile.fontFamily || "Inter"}
+                      value={userProfile.fontFamily ?? "Inter"}
                       onChange={(val) => handleChange("fontFamily", val)}
                       options={[
-                        { value: "Inter", label: "Inter (moderne, lisible)" },
+                        { value: "Inter", label: "Inter (Moderne & Standard)" },
                         {
-                          value: "Georgia",
-                          label: "Georgia (serif, classique)",
+                          value: "Roboto",
+                          label: "Roboto (Technique & Clair)",
                         },
                         {
-                          value: "Helvetica Neue",
-                          label: "Helvetica (neutre, professionnel)",
+                          value: "Playfair Display",
+                          label: "Playfair Display (Luxe & Raffiné)",
                         },
                         {
-                          value: "Palatino",
-                          label: "Palatino (élégant, premium)",
+                          value: "Montserrat",
+                          label: "Montserrat (Design & Géométrique)",
                         },
-                        {
-                          value: "Courier New",
-                          label: "Courier New (monospace, technique)",
-                        },
+                        { value: "Lora", label: "Lora (Élégant & Littéraire)" },
                       ]}
                       description="Appliquée sur les PDF et aperçus de facture"
                     />
@@ -1218,9 +1482,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <input
                         id="font-size-slider"
                         type="range"
-                        min="12"
-                        max="24"
-                        step="1"
+                        min={12}
+                        max={24}
+                        step={1}
                         value={fontSize}
                         onChange={(e) =>
                           setFontSize(Number.parseInt(e.target.value, 10))
@@ -1249,15 +1513,15 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <ColorPicker
                       label="Couleur Primaire (en-tête facture)"
                       value={
-                        userProfile.primaryColor ||
-                        userProfile.logoColor ||
+                        userProfile.primaryColor ??
+                        userProfile.logoColor ??
                         "#102a43"
                       }
                       onChange={(val) => handleChange("primaryColor", val)}
                     />
                     <ColorPicker
                       label="Couleur Secondaire (accentuation)"
-                      value={userProfile.secondaryColor || "#059669"}
+                      value={userProfile.secondaryColor ?? "#059669"}
                       onChange={(val) => handleChange("secondaryColor", val)}
                       presets={[
                         "#059669",
@@ -1270,6 +1534,225 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         "#f97316",
                       ]}
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced UI Personalization Card */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800 animate-slide-up">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Layout size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                      Personnalisation Visuelle Avancée
+                    </h3>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
+                      Ajustez finement l'expérience de l'interface
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-10">
+                  {/* Interface Density */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-brand-900 dark:text-white">
+                          Densité de l'interface
+                        </span>
+                        <div className="px-2 py-0.5 bg-brand-50 dark:bg-brand-800 text-brand-500 text-[10px] rounded uppercase font-bold tracking-wider">
+                          Nouveau
+                        </div>
+                      </div>
+                      <div className="flex bg-brand-50 dark:bg-brand-800 p-1 rounded-xl border border-brand-100 dark:border-brand-700">
+                        {(["compact", "normal", "spacious"] as const).map(
+                          (density) => (
+                            <button
+                              key={density}
+                              onClick={() => handleChange("uiDensity", density)}
+                              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                (userProfile.uiDensity ?? "normal") === density
+                                  ? "bg-white dark:bg-brand-700 text-brand-900 dark:text-white shadow-sm"
+                                  : "text-brand-400 hover:text-brand-600 dark:hover:text-brand-200"
+                              }`}
+                            >
+                              {density.charAt(0).toUpperCase() +
+                                density.slice(1)}
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-brand-500 dark:text-brand-400 leading-relaxed max-w-2xl">
+                      Le mode <b>Compact</b> réduit les marges pour afficher
+                      plus de données (idéal pour les longues factures). Le mode{" "}
+                      <b>Espacé</b> privilégie le confort visuel.
+                    </p>
+                  </div>
+
+                  {/* Border Radius */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-t border-brand-50 dark:border-brand-800 pt-8">
+                    <div className="space-y-3">
+                      <label
+                        htmlFor="border-radius-slider"
+                        className="text-sm font-semibold text-brand-700 dark:text-brand-300 flex items-center gap-2"
+                      >
+                        Arrondi des bords (Border Radius)
+                        <span className="px-2 py-0.5 bg-brand-100 dark:bg-brand-800 rounded text-brand-600 dark:text-brand-300 text-xs font-mono">
+                          {userProfile.borderRadius ?? 12}px
+                        </span>
+                      </label>
+                      <input
+                        id="border-radius-slider"
+                        type="range"
+                        min={0}
+                        max={32}
+                        step={2}
+                        value={userProfile.borderRadius ?? 12}
+                        onChange={(e) =>
+                          handleChange(
+                            "borderRadius",
+                            parseInt(e.target.value, 10),
+                          )
+                        }
+                        aria-valuemin={0}
+                        aria-valuemax={32}
+                        aria-valuenow={userProfile.borderRadius ?? 12}
+                        className="w-full h-2 bg-brand-100 dark:bg-brand-800 rounded-lg appearance-none cursor-pointer accent-brand-600 dark:accent-brand-400"
+                      />
+                      <div className="flex justify-between text-[10px] text-brand-400 font-medium font-mono uppercase tracking-tighter">
+                        <span>Carré (0px)</span>
+                        <span>Standard (12px)</span>
+                        <span>Rond (32px)</span>
+                      </div>
+                    </div>
+                    <div
+                      className="flex gap-4 p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-800/20 border border-brand-100/50 dark:border-brand-700/30 overflow-hidden"
+                      style={
+                        {
+                          "--preview-radius": `${userProfile.borderRadius ?? 12}px`,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <div className="w-12 h-12 bg-brand-900 dark:bg-white shrink-0 shadow-sm rounded-[var(--preview-radius)]" />
+                      <div className="w-12 h-12 bg-primary-500 shrink-0 shadow-sm rounded-[var(--preview-radius)]" />
+                      <div className="w-12 h-12 bg-accent-500 shrink-0 shadow-sm rounded-[var(--preview-radius)]" />
+                      <p className="text-[10px] text-brand-400 leading-tight self-center">
+                        Prévisualisation de l'arrondi appliqué aux cartes et
+                        boutons.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Zen Mode / Focus Mode */}
+                  <div className="flex items-center justify-between border-t border-brand-50 dark:border-brand-800 pt-8">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-brand-900 dark:text-white flex items-center gap-2">
+                        Mode "Zen" (Focus mode)
+                        <Zap
+                          size={14}
+                          className="text-amber-500 fill-amber-500"
+                        />
+                      </h4>
+                      <p className="text-xs text-brand-500 dark:text-brand-400 max-w-md leading-relaxed">
+                        Masque automatiquement les indicateurs d'aide, les
+                        bulles de coaching et les widgets secondaires pour vous
+                        concentrer sur la saisie.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleChange("isZenMode", !userProfile.isZenMode)
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ring-2 ring-offset-2 ring-transparent focus:ring-brand-500 ${
+                        userProfile.isZenMode
+                          ? "bg-brand-900 dark:bg-brand-600"
+                          : "bg-brand-200 dark:bg-brand-800"
+                      }`}
+                      aria-label="Mode Zen (Focus mode)"
+                      aria-pressed={userProfile.isZenMode}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          userProfile.isZenMode
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Accessibilité & Ergonomie */}
+                  <div className="space-y-6 border-t border-brand-50 dark:border-brand-800 pt-8">
+                    <h4 className="text-sm font-semibold text-brand-900 dark:text-white flex items-center gap-2">
+                      <Layout size={18} className="text-brand-600" />
+                      Ergonomie & Accessibilité
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Reduced Motion */}
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-50/30 dark:bg-brand-800/10 border border-brand-100/50 dark:border-brand-700/30">
+                        <div className="space-y-1">
+                          <label className="text-sm font-semibold text-brand-800 dark:text-brand-200">
+                            Réduire les animations
+                          </label>
+                          <p className="text-[10px] text-brand-500 dark:text-brand-400 leading-tight pr-4">
+                            Désactive les transitions et mouvements superflus
+                            (important pour le mal des transports).
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReducedMotion(!reducedMotion)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 ${
+                            reducedMotion
+                              ? "bg-brand-900 dark:bg-brand-600"
+                              : "bg-brand-200 dark:bg-brand-800"
+                          }`}
+                          aria-label="Réduire les animations"
+                          aria-pressed={reducedMotion}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              reducedMotion ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Sound Notifications */}
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-50/30 dark:bg-brand-800/10 border border-brand-100/50 dark:border-brand-700/30">
+                        <div className="space-y-1">
+                          <label className="text-sm font-semibold text-brand-800 dark:text-brand-200">
+                            Sons de notification
+                          </label>
+                          <p className="text-[10px] text-brand-500 dark:text-brand-400 leading-tight pr-4">
+                            Active des sons discrets lors de la validation
+                            d'actions ou de l'envoi d'emails.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSoundEnabled(!soundEnabled)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 ${
+                            soundEnabled
+                              ? "bg-brand-900 dark:bg-brand-600"
+                              : "bg-brand-200 dark:bg-brand-800"
+                          }`}
+                          aria-label="Sons de notification"
+                          aria-pressed={soundEnabled}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              soundEnabled ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1292,7 +1775,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   {INVOICE_TEMPLATES.map((tpl) => {
                     const isSelected =
-                      (userProfile.invoiceTemplate || "modern") === tpl.id;
+                      (userProfile.invoiceTemplate ?? "modern") === tpl.id;
                     return (
                       <button
                         key={tpl.id}
@@ -1302,16 +1785,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                             ? "border-brand-900 dark:border-white shadow-md"
                             : "border-brand-100 dark:border-brand-700 hover:border-brand-300 dark:hover:border-brand-500"
                         }`}
-                        aria-pressed={isSelected ? "true" : "false"}
+                        aria-pressed={isSelected}
                         title={`Sélectionner le gabarit ${tpl.label}`}
                       >
                         <InvoiceTemplateThumbnail
                           template={tpl.id}
                           primaryColor={userProfile.primaryColor ?? "#102a43"}
                           secondaryColor={
-                            userProfile.secondaryColor || "#059669"
+                            userProfile.secondaryColor ?? "#059669"
                           }
-                          fontFamily={userProfile.fontFamily || "Inter"}
+                          fontFamily={userProfile.fontFamily ?? "Inter"}
                         />
                         <p
                           className={`mt-2 text-[10px] font-bold uppercase tracking-wider text-center ${
@@ -1338,57 +1821,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 <div className="mt-8 pt-6 border-t border-brand-50 dark:border-brand-800">
                   <button
                     type="button"
-                    onClick={async () => {
-                      const sampleInvoice: Invoice = {
-                        id: "test-preview",
-                        number: "TEST-" + new Date().getFullYear() + "-0001",
-                        date: new Date().toISOString().split("T")[0],
-                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                          .toISOString()
-                          .split("T")[0],
-                        type: "invoice",
-                        status: "draft",
-                        items: [
-                          {
-                            id: "item-1",
-                            description: "Prestation de service (Exemple)",
-                            quantity: 1,
-                            unitPrice: 1500,
-                          },
-                          {
-                            id: "item-2",
-                            description: "Frais de déplacement",
-                            quantity: 1,
-                            unitPrice: 45,
-                          },
-                        ],
-                        total: 1545,
-                        subtotal: 1545,
-                        vatAmount: 0,
-                        clientId: "client-test",
-                      };
-
-                      const sampleClient: Client = {
-                        id: "client-test",
-                        name: "Client Démo SARL",
-                        address: "123 Avenue du Test, 75000 Paris",
-                        email: "contact@client-demo.fr",
-                      };
-
-                      try {
-                        const { generatePDFWithFacturX } =
-                          await import("../lib/facturX");
-                        const doc = await generatePDFWithFacturX(
-                          sampleInvoice,
-                          sampleClient,
-                          userProfile,
-                        );
-                        const pdfUrl = doc.output("bloburl");
-                        window.open(pdfUrl, "_blank");
-                      } catch (error) {
-                        console.error("Erreur génération PDF:", error);
-                        toast.error("Erreur lors de la génération de l'aperçu");
-                      }
+                    onClick={() => {
+                      void handlePreviewPDF();
                     }}
                     className="w-full flex items-center justify-center gap-2 p-4 bg-brand-50 dark:bg-brand-800 text-brand-700 dark:text-brand-300 rounded-2xl font-bold text-sm hover:bg-brand-100 dark:hover:bg-brand-700 transition-all border border-brand-100 dark:border-brand-700 shadow-sm"
                   >
@@ -1401,23 +1835,47 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
               </div>
 
-              {/* Signature Card */}
-              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
-                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
-                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-                    <Check size={24} />
+              {/* Signature & Stamp Card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                  <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                    <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                      <Check size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                        Signature Numérique
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
-                      Signature Numérique
-                    </h3>
-                  </div>
+                  <SignatureUploader
+                    signatureUrl={userProfile.signatureUrl}
+                    onChange={(url) => handleChange("signatureUrl", url)}
+                    onRemove={() => handleChange("signatureUrl", "")}
+                    label="Signature manuscrite"
+                    description="Dessinez votre signature ou importez un fichier PNG transparent."
+                  />
                 </div>
-                <SignatureUploader
-                  signatureUrl={userProfile.signatureUrl}
-                  onChange={(url) => handleChange("signatureUrl", url)}
-                  onRemove={() => handleChange("signatureUrl", "")}
-                />
+
+                <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                  <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                    <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                      <ImageIcon size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                        Cachet / Tampon
+                      </h3>
+                    </div>
+                  </div>
+                  <SignatureUploader
+                    signatureUrl={userProfile.stampUrl}
+                    onChange={(url) => handleChange("stampUrl", url)}
+                    onRemove={() => handleChange("stampUrl", "")}
+                    label="Tampon de l'entreprise"
+                    description="Importez votre tampon commercial professionnel (format PNG recommandé)."
+                  />
+                </div>
               </div>
 
               {/* Display Card */}
@@ -1434,7 +1892,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Taille de Police"
-                      value={userProfile.fontSize || "normal"}
+                      value={userProfile.fontSize ?? "normal"}
                       onChange={(val) => handleChange("fontSize", val)}
                       options={[
                         { value: "small", label: "🔤 Petite" },
@@ -1444,7 +1902,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                     <SelectField
                       label="Densité de l'interface"
-                      value={userProfile.uiDensity || "normal"}
+                      value={userProfile.uiDensity ?? "normal"}
                       onChange={(val) => handleChange("uiDensity", val)}
                       options={[
                         { value: "compact", label: "📦 Compacte" },
@@ -1456,7 +1914,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <SelectField
                       label="Format de date"
-                      value={userProfile.dateFormat || "DD/MM/YYYY"}
+                      value={userProfile.dateFormat ?? "DD/MM/YYYY"}
                       onChange={(val) => handleChange("dateFormat", val)}
                       options={[
                         {
@@ -1472,7 +1930,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     />
                     <SelectField
                       label="Format de l'heure"
-                      value={userProfile.timeFormat || "24h"}
+                      value={userProfile.timeFormat ?? "24h"}
                       onChange={(val) => handleChange("timeFormat", val)}
                       options={[
                         { value: "24h", label: "🕐 24h (00:00-23:59)" },
@@ -1567,7 +2025,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <ToggleSwitch
                       label="Notifications par email"
                       description="Recevoir un résumé hebdomadaire par email"
-                      checked={userProfile.enableEmailNotifications || false}
+                      checked={userProfile.enableEmailNotifications ?? false}
                       onChange={(val) =>
                         handleChange("enableEmailNotifications", val)
                       }
@@ -1602,7 +2060,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <SelectField
                         label="Délai appliqué aux nouvelles factures"
                         value={
-                          userProfile.automation?.defaultPaymentDelay ||
+                          userProfile.automation?.defaultPaymentDelay ??
                           "30_DAYS"
                         }
                         onChange={(val) =>
@@ -1627,7 +2085,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                           type="number"
                           min="0"
                           value={
-                            userProfile.automation?.customPaymentDelayDays || 0
+                            userProfile.automation?.customPaymentDelayDays ?? 0
                           }
                           onChange={(val) =>
                             handleChange("automation", {
@@ -1649,13 +2107,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       label="Activer les relances automatiques"
                       description="Envoyer un mail de rappel si la facture est impayée"
                       checked={
-                        userProfile.automation?.autoReminders?.enabled || false
+                        userProfile.automation?.autoReminders?.enabled ?? false
                       }
                       onChange={(val) =>
                         handleChange("automation", {
                           ...userProfile.automation,
                           autoReminders: {
-                            ...(userProfile.automation?.autoReminders || {
+                            ...(userProfile.automation?.autoReminders ?? {
                               after3Days: true,
                               after7Days: true,
                             }),
@@ -1705,6 +2163,74 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         />
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Productivité & Automatisation (20/04/2026) */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800 animate-slide-up">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Zap size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                      Productivité & Automatisation
+                    </h3>
+                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-0.5">
+                      Optimisez votre flux de travail quotidien
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SelectField
+                      label="Format de date & heure"
+                      value={userProfile.dateFormat ?? "DD/MM/YYYY"}
+                      onChange={(val) => handleChange("dateFormat", val)}
+                      options={[
+                        {
+                          value: "DD/MM/YYYY",
+                          label: "JJ/MM/AAAA (Standard FR)",
+                        },
+                        { value: "ISO", label: "AAAA-MM-JJ (Format ISO)" },
+                      ]}
+                      description="Format utilisé dans les listes et en-têtes"
+                    />
+                    <SelectField
+                      label="Catégorie de prestation par défaut"
+                      value={userProfile.defaultServiceCategory ?? "SERVICE"}
+                      onChange={(val) =>
+                        handleChange("defaultServiceCategory", val)
+                      }
+                      options={[
+                        { value: "SERVICE", label: "Prestation de Service" },
+                        { value: "VENTE", label: "Vente de Biens" },
+                      ]}
+                      description="Gagnez du temps lors de la création de facture"
+                    />
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-brand-50/50 dark:bg-brand-800/20 border border-brand-100 dark:border-brand-700">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-semibold text-brand-900 dark:text-white">
+                          Aperçu PDF automatique
+                        </label>
+                        <p className="text-xs text-brand-500 dark:text-brand-400">
+                          Ouvrir l'aperçu PDF immédiatement après
+                          l'enregistrement d'une facture
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        label="Aperçu PDF automatique"
+                        checked={userProfile.autoOpenPdfPreview ?? false}
+                        onChange={(enabled) =>
+                          handleChange("autoOpenPdfPreview", enabled)
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1787,7 +2313,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   ref={fileInputRef}
                   className="hidden"
                   accept=".json"
-                  onChange={handleImportAll}
+                  onChange={(e) => {
+                    void handleImportAll(e);
+                  }}
                   aria-label="Sélectionner un fichier de sauvegarde JSON pour l'importation"
                 />
               </div>
@@ -1813,51 +2341,133 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </p>
               </div>
 
+              {/* Cloud Synchronization Section */}
+              <div className="bg-linear-to-br from-brand-50 to-white dark:from-brand-900/40 dark:to-brand-800/20 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-700">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-brand-900 dark:bg-white text-white dark:text-brand-900 rounded-xl">
+                      <Cloud size={20} />
+                    </div>
+                    <h3 className="text-sm font-bold text-brand-900 dark:text-white font-display uppercase tracking-widest">
+                      Synchronisation Cloud
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2 group">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        isSyncing
+                          ? "bg-amber-500 animate-pulse"
+                          : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      }`}
+                    />
+                    <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-tighter">
+                      {isSyncing ? "Synchro..." : "Connecté"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-white/50 dark:bg-black/20 rounded-3xl border border-brand-100/50 dark:border-brand-700/50">
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="text-[10px] text-brand-400 font-bold uppercase mb-1">
+                      Dernière synchronisation
+                    </p>
+                    <p className="text-sm font-bold text-brand-900 dark:text-white">
+                      Il y a {Math.floor((Date.now() - lastSyncTime) / 60000)}{" "}
+                      minutes
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      void handleForceSync();
+                    }}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-900 hover:bg-brand-800 dark:bg-white dark:text-brand-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      size={14}
+                      className={isSyncing ? "animate-spin" : ""}
+                    />
+                    Forcer la synchro
+                  </button>
+                </div>
+              </div>
+
               {/* Nettoyage des données */}
               <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
                 <div className="flex items-center gap-3 mb-6 border-b border-brand-50 dark:border-brand-800 pb-4">
                   <div className="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
-                    <Zap size={20} />
+                    <Archive size={20} />
                   </div>
-                  <h3 className="text-sm font-bold text-brand-900 dark:text-white font-display">
-                    Nettoyage des données
+                  <h3 className="text-sm font-bold text-brand-900 dark:text-white font-display uppercase tracking-widest">
+                    Gouvernance des données
                   </h3>
                 </div>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => handleCleanData("clients")}
-                    className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-brand-900 dark:text-white">
-                        Clients en doublon
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => cleanOldData("10years")}
+                      className="p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all text-left"
+                    >
+                      <p className="text-xs font-bold text-brand-900 dark:text-white">
+                        Archiver (10 ans+)
                       </p>
-                      <p className="text-[10px] text-brand-400 mt-0.5">
-                        Fusionner par nom identique
+                      <p className="text-[9px] text-brand-400 mt-1 uppercase tracking-tighter">
+                        Conformité RGPD / Fiscale
                       </p>
-                    </div>
-                    <ArrowRight
-                      size={16}
-                      className="text-brand-300 group-hover:translate-x-1 transition-transform"
-                    />
-                  </button>
-                  <button
-                    onClick={() => handleCleanData("products")}
-                    className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-brand-900 dark:text-white">
-                        Produits inutilisés
+                    </button>
+                    <button
+                      onClick={() => cleanOldData("drafts")}
+                      className="p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all text-left"
+                    >
+                      <p className="text-xs font-bold text-brand-900 dark:text-white">
+                        Nettoyer Brouillons
                       </p>
-                      <p className="text-[10px] text-brand-400 mt-0.5">
-                        Supprimer les produits jamais facturés
+                      <p className="text-[9px] text-brand-400 mt-1 uppercase tracking-tighter">
+                        Inutilisés depuis 6 mois
                       </p>
-                    </div>
-                    <ArrowRight
-                      size={16}
-                      className="text-brand-300 group-hover:translate-x-1 transition-transform"
-                    />
-                  </button>
+                    </button>
+                  </div>
+
+                  <div className="pt-4 mt-2 space-y-3">
+                    <button
+                      onClick={() => {
+                        void handleCleanData("clients");
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
+                    >
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-brand-900 dark:text-white">
+                          Clients en doublon
+                        </p>
+                        <p className="text-[10px] text-brand-400 mt-0.5">
+                          Fusionner par nom identique
+                        </p>
+                      </div>
+                      <ArrowRight
+                        size={16}
+                        className="text-brand-300 group-hover:translate-x-1 transition-transform"
+                      />
+                    </button>
+                    <button
+                      onClick={() => {
+                        void handleCleanData("products");
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
+                    >
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-brand-900 dark:text-white">
+                          Produits inutilisés
+                        </p>
+                        <p className="text-[10px] text-brand-400 mt-0.5">
+                          Supprimer les produits jamais facturés
+                        </p>
+                      </div>
+                      <ArrowRight
+                        size={16}
+                        className="text-brand-300 group-hover:translate-x-1 transition-transform"
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1901,7 +2511,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                             <span className="text-[9px] text-brand-300">•</span>
                             <span className="text-[9px] text-brand-400 flex items-center gap-1">
                               <User size={8} />{" "}
-                              {userProfile.companyName || "Utilisateur"}
+                              {userProfile.companyName ?? "Utilisateur"}
                             </span>
                           </div>
                         </div>
@@ -1922,7 +2532,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 {
                   "--preview-primary": userProfile.primaryColor ?? "#102a43",
                   "--preview-secondary":
-                    userProfile.secondaryColor || "#059669",
+                    userProfile.secondaryColor ?? "#059669",
                 } as React.CSSProperties
               }
               className="bg-white dark:bg-brand-900/30 p-8 rounded-4xl shadow-2xl border-t-4 border-t-(--preview-primary) min-h-125 flex flex-col relative overflow-hidden"
@@ -1939,11 +2549,11 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mb-3 bg-(--preview-primary)"
                     aria-hidden="true"
                   >
-                    {(userProfile.companyName || "E").charAt(0).toUpperCase()}
+                    {(userProfile.companyName ?? "E").charAt(0).toUpperCase()}
                   </div>
                 )}
                 <h2 className="font-bold text-brand-900 dark:text-white text-xl">
-                  {userProfile.companyName || "Votre Entreprise"}
+                  {userProfile.companyName ?? "Votre Entreprise"}
                 </h2>
 
                 {/* Contenu contextuel selon l'onglet actif */}
@@ -1961,7 +2571,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <p>
                       Régime :{" "}
                       <span className="font-semibold">
-                        {userProfile.taxSystem || "MICRO-BNC"}
+                        {userProfile.taxSystem ?? "MICRO-BNC"}
                       </span>
                     </p>
                     {userProfile.bankAccount && (
@@ -1969,14 +2579,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         IBAN :{" "}
                         <span className="font-mono">
                           ····{" "}
-                          {userProfile.bankAccount.replace(/\s/g, "").slice(-4)}
+                          {(userProfile.bankAccount ?? "")
+                            .replace(/\s/g, "")
+                            .slice(-4)}
                         </span>
                       </p>
                     )}
                     <p>
                       N° facture :{" "}
                       <span className="font-mono font-semibold">
-                        {userProfile.invoicePrefix || "FAC-"}
+                        {userProfile.invoicePrefix ?? "FAC-"}
                         {String(userProfile.invoiceStartNumber ?? 1).padStart(
                           3,
                           "0",
@@ -1995,16 +2607,16 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     {/* Mini-aperçu de facture en temps réel — affiche le gabarit sélectionné */}
                     <InvoiceTemplateThumbnail
                       template={
-                        (userProfile.invoiceTemplate ||
+                        (userProfile.invoiceTemplate ??
                           "modern") as InvoiceTemplateId
                       }
                       primaryColor={userProfile.primaryColor ?? "#102a43"}
-                      secondaryColor={userProfile.secondaryColor || "#059669"}
-                      fontFamily={userProfile.fontFamily || "Inter, sans-serif"}
+                      secondaryColor={userProfile.secondaryColor ?? "#059669"}
+                      fontFamily={userProfile.fontFamily ?? "Inter, sans-serif"}
                       companyName={
-                        userProfile.companyName || "Votre Entreprise"
+                        userProfile.companyName ?? "Votre Entreprise"
                       }
-                      invoiceNumber={`${userProfile.invoicePrefix || "FAC-"}001`}
+                      invoiceNumber={`${userProfile.invoicePrefix ?? "FAC-"}001`}
                       size="preview"
                     />
                     <div className="flex items-center gap-2">
@@ -2023,7 +2635,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <p className="text-[11px] text-brand-500">
                       Police :{" "}
                       <span className="font-semibold">
-                        {userProfile.fontFamily || "Inter"}
+                        {userProfile.fontFamily ?? "Inter"}
                       </span>
                     </p>
                     <p className="text-[11px] text-brand-500">
@@ -2031,14 +2643,14 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       <span className="font-semibold">
                         {INVOICE_TEMPLATES.find(
                           (t) =>
-                            t.id === (userProfile.invoiceTemplate || "modern"),
+                            t.id === (userProfile.invoiceTemplate ?? "modern"),
                         )?.label ?? "Moderne"}
                       </span>
                     </p>
                     <p className="text-[11px] text-brand-500">
                       Thème :{" "}
                       <span className="font-semibold capitalize">
-                        {userProfile.theme || "auto"}
+                        {userProfile.theme ?? "auto"}
                       </span>
                     </p>
                   </div>
@@ -2128,7 +2740,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         title={confirmDialog.title}
         description={confirmDialog.description}
         isDangerous={confirmDialog.isDangerous}
-        onConfirm={confirmDialog.onConfirm || (() => {})}
+        onConfirm={confirmDialog.onConfirm ?? (() => {})}
         onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
       />
     </div>

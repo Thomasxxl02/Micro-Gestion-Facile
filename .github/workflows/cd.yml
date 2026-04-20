@@ -1,0 +1,252 @@
+name: CD - Build, Scan & Deploy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  build-and-push:
+    name: Build & Push to GHCR
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+
+  scan-trivy:
+    name: Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build-and-push.outputs.image-tag }}
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+          category: "trivy-container-scan"
+
+      - name: Generate Trivy report (JSON)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build-and-push.outputs.image-tag }}
+          format: "json"
+          output: "trivy-report.json"
+
+      - name: Check for critical vulnerabilities
+        run: |
+          CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-report.json)
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "::warning::Found $CRITICAL_COUNT CRITICAL vulnerabilities"
+          fi
+
+      - name: Upload Trivy report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-report
+          path: |
+            trivy-report.json
+            trivy-results.sarif
+          retention-days: 30
+
+  deploy-ssh:
+    name: Deploy to Server (SSH)
+    runs-on: ubuntu-latest
+    needs: [build-and-push, scan-trivy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://${{ secrets.DEPLOY_HOST }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          script: |
+            # Set error handling
+            set -e
+
+            # Export environment variables
+            export REGISTRY="${{ env.REGISTRY }}"
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export CONTAINER_NAME="micro-gestion-facile"
+            export NETWORK_NAME="nginx-network"
+            export APP_PORT=8080
+            export NGINX_PORT=80
+
+            echo "🚀 Starting deployment..."
+            echo "Image: $IMAGE_TAG"
+
+            # Login to registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u "${{ github.actor }}" --password-stdin
+
+            # Pull latest image
+            echo "📥 Pulling container image..."
+            docker pull "$IMAGE_TAG"
+
+            # Create network if not exists
+            docker network inspect $NETWORK_NAME >/dev/null 2>&1 || \
+              docker network create $NETWORK_NAME
+
+            # Stop old container
+            echo "🛑 Stopping old container..."
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+
+            # Run new container
+            echo "🎬 Starting new container..."
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              --network $NETWORK_NAME \
+              --expose $APP_PORT \
+              --health-cmd='wget --quiet --tries=1 --spider http://localhost/ || exit 1' \
+              --health-interval=30s \
+              --health-timeout=5s \
+              --health-start-period=10s \
+              --health-retries=3 \
+              -e NODE_ENV=production \
+              "$IMAGE_TAG"
+
+            echo "✅ Container deployed successfully"
+
+            # Verify container is healthy
+            echo "⏳ Waiting for container to be healthy..."
+            for i in {1..30}; do
+              if docker inspect $CONTAINER_NAME --format='{{.State.Health.Status}}' | grep -q healthy; then
+                echo "✅ Container is healthy"
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "❌ Container failed to become healthy"
+                docker logs $CONTAINER_NAME
+                exit 1
+              fi
+              sleep 1
+            done
+
+            # Cleanup
+            echo "🧹 Cleaning up unused resources..."
+            docker system prune -f --filter "until=24h"
+
+            echo "✨ Deployment complete!"
+
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-ssh]
+    if: always()
+
+    steps:
+      - name: Build deployment notification
+        id: notification
+        run: |
+          if [ "${{ needs.deploy-ssh.result }}" == "success" ]; then
+            STATUS="✅ Deployment successful"
+            COLOR="28a745"
+          else
+            STATUS="❌ Deployment failed"
+            COLOR="dc3545"
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "actor=${{ github.actor }}" >> $GITHUB_OUTPUT
+
+      - name: "Send deployment notification (exemple: Discord/Slack)"
+        if: always()
+        run: |
+          echo "📢 Deployment Status:"
+          echo "${{ steps.notification.outputs.status }}"
+          echo "Branch: ${{ steps.notification.outputs.branch }}"
+          echo "Commit: ${{ steps.notification.outputs.sha }}"
+          echo "By: ${{ steps.notification.outputs.actor }}"
+          echo ""
+          echo "🔗 View deployment: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

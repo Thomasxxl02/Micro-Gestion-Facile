@@ -53,7 +53,7 @@ export function useOfflineSync<T extends { id: string; updatedAt?: string | numb
     (async () => {
       try {
         if (import.meta.env.DEV) {
-          console.info(
+          console.warn(
             `[OfflineSync] Chargement initial de ${String(dexieTableName)} depuis Dexie...`
           );
         }
@@ -101,7 +101,7 @@ export function useOfflineSync<T extends { id: string; updatedAt?: string | numb
               await Promise.all(firestoreItems.map((item) => table.put(item)));
 
               if (import.meta.env.DEV) {
-                console.info(
+                console.warn(
                   `[OfflineSync] ${collectionName} synchronisé (${firestoreItems.length} items)`
                 );
               }
@@ -117,13 +117,13 @@ export function useOfflineSync<T extends { id: string; updatedAt?: string | numb
 
         if (snapshot.metadata.fromCache) {
           if (import.meta.env.DEV) {
-            console.info(`[OfflineSync] ${collectionName} depuis cache local (offline détecté)`);
+            console.warn(`[OfflineSync] ${collectionName} depuis cache local (offline détecté)`);
           }
         }
 
         if (snapshot.metadata.hasPendingWrites) {
           if (import.meta.env.DEV) {
-            console.info(`[OfflineSync] ${collectionName}: modifications locales en attente`);
+            console.warn(`[OfflineSync] ${collectionName}: modifications locales en attente`);
           }
         }
       },
@@ -155,7 +155,7 @@ export function useOfflineSync<T extends { id: string; updatedAt?: string | numb
           const table = getDexieTable(dexieTableName);
           await table.put(dataToSave);
           if (import.meta.env.DEV) {
-            console.info(`[OfflineSync] ${item.id} sauvegardé dans Dexie`);
+            console.warn(`[OfflineSync] ${item.id} sauvegardé dans Dexie`);
           }
         }
 
@@ -178,7 +178,7 @@ export function useOfflineSync<T extends { id: string; updatedAt?: string | numb
           const table = getDexieTable(dexieTableName);
           await table.delete(id);
           if (import.meta.env.DEV) {
-            console.info(`[OfflineSync] ${id} supprimé de Dexie`);
+            console.warn(`[OfflineSync] ${id} supprimé de Dexie`);
           }
         }
 

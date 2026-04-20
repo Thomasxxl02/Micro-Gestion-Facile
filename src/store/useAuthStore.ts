@@ -4,8 +4,8 @@ import { create } from "zustand";
 interface AuthStoreState {
   user: User | null;
   isAuthReady: boolean;
-  setUser: (user: User | null) => void;
-  setIsAuthReady: (ready: boolean) => void;
+  setUser: (_user: User | null) => void;
+  setIsAuthReady: (_ready: boolean) => void;
   reset: () => void;
 }
 

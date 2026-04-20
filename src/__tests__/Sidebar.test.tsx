@@ -1,10 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import Sidebar from '../components/Sidebar';
-import { ViewState } from '../types';
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import Sidebar from "../components/Sidebar";
+import { ViewState } from "../types";
 
 // Mock framer-motion car il cause des problèmes dans JSDOM
-vi.mock('motion/react', () => ({
+vi.mock("motion/react", () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>
@@ -21,13 +21,19 @@ vi.mock('motion/react', () => ({
 }));
 
 // Mock useNetworkStatus pour contrôler l'état offline dans les tests
-vi.mock('../hooks/useNetworkStatus', () => ({
+vi.mock("../hooks/useNetworkStatus", () => ({
   useNetworkStatus: () => ({ isOffline: false }),
 }));
 
-describe('Sidebar', () => {
+// Mock useDataStore pour avoir un profil sans filtrage sidebarFavorites
+vi.mock("../store/useDataStore", () => ({
+  useDataStore: () => ({ userProfile: {} }),
+  default: () => ({ userProfile: {} }),
+}));
+
+describe("Sidebar", () => {
   const defaultProps = {
-    currentView: 'dashboard' as ViewState,
+    currentView: "dashboard" as ViewState,
     setView: vi.fn(),
     isMobileMenuOpen: false,
     setIsMobileMenuOpen: vi.fn(),
@@ -35,7 +41,7 @@ describe('Sidebar', () => {
     toggleDarkMode: vi.fn(),
   };
 
-  it('affiche tous les éléments du menu', () => {
+  it("affiche tous les éléments du menu", () => {
     render(<Sidebar {...defaultProps} />);
 
     expect(screen.getByText(/Tableau de bord/i)).toBeInTheDocument();
@@ -50,28 +56,34 @@ describe('Sidebar', () => {
     expect(screen.getByText(/Paramètres/i)).toBeInTheDocument();
   });
 
-  it('appelle setView lors du clic sur un élément du menu', () => {
+  it("appelle setView lors du clic sur un élément du menu", () => {
     render(<Sidebar {...defaultProps} />);
 
-    const invoicesButton = screen.getByText(/Devis & Factures/i).closest('button');
+    const invoicesButton = screen
+      .getByText(/Devis & Factures/i)
+      .closest("button");
     if (invoicesButton) {
       fireEvent.click(invoicesButton);
     }
 
-    expect(defaultProps.setView).toHaveBeenCalledWith('invoices');
+    expect(defaultProps.setView).toHaveBeenCalledWith("invoices");
   });
 
   it("affiche l'état actif sur la vue courante", () => {
     render(<Sidebar {...defaultProps} currentView="invoices" />);
 
-    const invoicesButton = screen.getByText(/Devis & Factures/i).closest('button');
-    expect(invoicesButton).toHaveAttribute('aria-current', 'page');
+    const invoicesButton = screen
+      .getByText(/Devis & Factures/i)
+      .closest("button");
+    expect(invoicesButton).toHaveAttribute("aria-current", "page");
 
-    const dashboardButton = screen.getByText(/Tableau de bord/i).closest('button');
-    expect(dashboardButton).not.toHaveAttribute('aria-current', 'page');
+    const dashboardButton = screen
+      .getByText(/Tableau de bord/i)
+      .closest("button");
+    expect(dashboardButton).not.toHaveAttribute("aria-current", "page");
   });
 
-  it('appelle setIsMobileMenuOpen(false) lors du clic sur mobile', () => {
+  it("appelle setIsMobileMenuOpen(false) lors du clic sur mobile", () => {
     const setView = vi.fn();
     const setIsMobileMenuOpen = vi.fn();
 
@@ -81,7 +93,7 @@ describe('Sidebar', () => {
         setView={setView}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isMobileMenuOpen={true}
-      />
+      />,
     );
 
     // Le bouton overlay mobile

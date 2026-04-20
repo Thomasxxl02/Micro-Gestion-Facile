@@ -83,7 +83,7 @@ export async function getNextSequence(
 ): Promise<number> {
   try {
     const sequence = await db.invoiceNumberSequences.get(type);
-    if (!sequence || sequence.year !== year) return 1;
+    if (sequence?.year !== year) return 1;
     return sequence.currentNumber + 1;
   } catch {
     return 1;

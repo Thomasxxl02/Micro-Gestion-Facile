@@ -14,7 +14,7 @@ interface ComboboxProps {
   label?: string;
   options: ComboboxOption[];
   value: string;
-  onChange: (value: string) => void;
+  onChange: (id: string) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
@@ -159,7 +159,11 @@ const Combobox: React.FC<ComboboxProps> = ({
               aria-label="Filtrer les options"
             />
           </div>
-          <ul role="listbox" aria-label={label} className="max-h-48 overflow-y-auto">
+          <ul
+            role="listbox"
+            aria-label={label}
+            className="max-h-48 overflow-y-auto"
+          >
             {filtered.length === 0 ? (
               <div
                 role="option"

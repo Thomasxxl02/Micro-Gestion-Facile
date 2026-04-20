@@ -1,6 +1,6 @@
-import { Search } from 'lucide-react';
-import React from 'react';
-import type { ValidationResult } from '../lib/zod-schemas';
+import { Search } from "lucide-react";
+import React from "react";
+import type { ValidationResult } from "../lib/zod-schemas";
 
 // ---------------------------------------------------------------------------
 // SearchFilterFields
@@ -9,8 +9,8 @@ import type { ValidationResult } from '../lib/zod-schemas';
 interface SearchFilterFieldsProps {
   searchTerm: string;
   showArchived: boolean;
-  onSearchChange: (term: string) => void;
-  onShowArchivedChange: (show: boolean) => void;
+  onSearchChange: (value: string) => void;
+  onShowArchivedChange: (value: boolean) => void;
   placeholder?: string;
 }
 
@@ -19,7 +19,7 @@ export const SearchFilterFields: React.FC<SearchFilterFieldsProps> = ({
   showArchived,
   onSearchChange,
   onShowArchivedChange,
-  placeholder = 'Rechercher...',
+  placeholder = "Rechercher...",
 }) => (
   <div className="flex flex-col sm:flex-row gap-3">
     <div className="relative flex-1">
@@ -60,9 +60,9 @@ interface ContactFieldsProps {
   name: string;
   email: string;
   phone: string;
-  onNameChange: (val: string) => void;
-  onEmailChange: (val: string) => void;
-  onPhoneChange: (val: string) => void;
+  onNameChange: (value: string) => void;
+  onEmailChange: (value: string) => void;
+  onPhoneChange: (value: string) => void;
   contactNameLabel?: string;
   required?: boolean;
   validationErrors?: ValidationErrors;
@@ -70,21 +70,21 @@ interface ContactFieldsProps {
 }
 
 const fieldClass =
-  'w-full px-3 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm text-brand-900 dark:text-white placeholder-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500';
-const errorFieldClass = 'border-red-400 focus:ring-red-400';
-const normalFieldClass = 'border-brand-200 dark:border-slate-600';
+  "w-full px-3 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm text-brand-900 dark:text-white placeholder-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500";
+const errorFieldClass = "border-red-400 focus:ring-red-400";
+const normalFieldClass = "border-brand-200 dark:border-slate-600";
 
 function resolveError(
   errors: ValidationErrors | undefined,
   touched: TouchedFields | undefined,
-  field: string
+  field: string,
 ): string | undefined {
   if (!errors || !touched) return undefined;
   if (!touched[field]) return undefined;
   const result = errors[field];
   if (!result) return undefined;
-  if (typeof result === 'object' && 'valid' in result) {
-    return result.valid ? undefined : (result.error ?? 'Valeur invalide');
+  if (typeof result === "object" && "valid" in result) {
+    return result.valid ? undefined : (result.error ?? "Valeur invalide");
   }
   return undefined;
 }
@@ -96,14 +96,14 @@ export const ContactFields: React.FC<ContactFieldsProps> = ({
   onNameChange,
   onEmailChange,
   onPhoneChange,
-  contactNameLabel = 'Nom',
+  contactNameLabel = "Nom",
   required = false,
   validationErrors,
   touchedFields,
 }) => {
-  const nameError = resolveError(validationErrors, touchedFields, 'name');
-  const emailError = resolveError(validationErrors, touchedFields, 'email');
-  const phoneError = resolveError(validationErrors, touchedFields, 'phone');
+  const nameError = resolveError(validationErrors, touchedFields, "name");
+  const emailError = resolveError(validationErrors, touchedFields, "email");
+  const phoneError = resolveError(validationErrors, touchedFields, "phone");
 
   return (
     <div className="space-y-4">
@@ -170,9 +170,9 @@ interface AddressFieldsProps {
   address: string;
   postalCode: string;
   city: string;
-  onAddressChange: (val: string) => void;
-  onPostalCodeChange: (val: string) => void;
-  onCityChange: (val: string) => void;
+  onAddressChange: (value: string) => void;
+  onPostalCodeChange: (value: string) => void;
+  onCityChange: (value: string) => void;
   showPostalCity?: boolean;
   validationErrors?: ValidationErrors;
   touchedFields?: TouchedFields;
@@ -189,7 +189,7 @@ export const AddressFields: React.FC<AddressFieldsProps> = ({
   validationErrors,
   touchedFields,
 }) => {
-  const addressError = resolveError(validationErrors, touchedFields, 'address');
+  const addressError = resolveError(validationErrors, touchedFields, "address");
 
   return (
     <div className="space-y-3">

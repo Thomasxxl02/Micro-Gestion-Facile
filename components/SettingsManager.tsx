@@ -1,20 +1,28 @@
 import JSZip from "jszip";
 import {
+  AlertCircle,
   AlertTriangle,
   Bell,
   Briefcase,
   Building,
   Calculator,
   Calendar,
+  CalendarDays,
+  Check,
   CheckCircle2,
   Clock,
   CreditCard,
   Database,
+  ExternalLink,
   FileJson,
+  FileSearch,
   FileText,
   Globe,
+  HardDrive,
   Hash,
+  Info,
   Globe as Linkedin,
+  Lock as LockIcon,
   Mail,
   MapPin,
   Monitor,
@@ -25,7 +33,9 @@ import {
   RefreshCw,
   Save,
   Save as SaveIcon,
+  Search,
   Send,
+  Settings,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -33,10 +43,16 @@ import {
   Table,
   Trash2,
   Upload,
+  Users,
   Wallet,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { LogoUploader } from "../src/components/FormFields";
+import { checkCompliance2026 } from "../src/lib/complianceUtils";
+import { SireneService } from "../src/services/SireneService";
+import useLogStore from "../src/store/useLogStore";
 import {
   Client,
   Expense,
@@ -112,7 +128,20 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   >("profile");
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 
+  const { addLog } = useLogStore();
+
   const handleChange = (field: keyof UserProfile, value: any) => {
+    // Audit log for critical changes
+    if (field === "siret" || field === "bankAccount" || field === "tvaNumber") {
+      addLog(
+        `Modification critique : ${field}`,
+        "SECURITY",
+        "WARNING",
+        `Changement de ${userProfile[field] || "vide"} à ${value}`,
+        { field, oldValue: userProfile[field], newValue: value },
+      );
+    }
+
     const updatedProfile = { ...userProfile, [field]: value };
     setUserProfile(updatedProfile);
     if (onSaveProfile) onSaveProfile(updatedProfile);
@@ -151,13 +180,53 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     return sum % 10 === 0;
   };
 
-  const [siretStatus, setSiretStatus] = useState<"idle" | "valid" | "invalid">(
-    "idle",
-  );
-  const checkSiret = () => {
+  const [siretStatus, setSiretStatus] = useState<
+    "idle" | "valid" | "invalid" | "checking"
+  >("idle");
+  const checkSiret = async () => {
     if (!userProfile.siret) return;
-    setSiretStatus(validateSiret(userProfile.siret) ? "valid" : "invalid");
-    setTimeout(() => setSiretStatus("idle"), 3000);
+
+    setSiretStatus("checking");
+    try {
+      const company = await SireneService.verifySiret(userProfile.siret);
+      if (company) {
+        setSiretStatus("valid");
+        toast.success("SIRET vérifié avec succès !");
+
+        // Suggest pre-filling if empty or different
+        if (
+          !userProfile.companyName ||
+          userProfile.companyName !== company.name
+        ) {
+          if (
+            confirm(
+              `Voulez-vous mettre à jour la raison sociale par "${company.name}" ?`,
+            )
+          ) {
+            handleChange("companyName", company.name);
+          }
+        }
+
+        const fullAddress = `${company.address}, ${company.zipCode} ${company.city}`;
+        if (!userProfile.address || userProfile.address !== fullAddress) {
+          if (
+            confirm(
+              `Voulez-vous mettre à jour l'adresse par "${fullAddress}" ?`,
+            )
+          ) {
+            handleChange("address", fullAddress);
+          }
+        }
+      } else {
+        setSiretStatus("invalid");
+        toast.error("SIRET non trouvé dans la base Sirene.");
+      }
+    } catch (error: any) {
+      setSiretStatus("invalid");
+      toast.error(error.message || "Erreur lors de la vérification");
+    } finally {
+      setTimeout(() => setSiretStatus("idle"), 5000);
+    }
   };
 
   const handleExportAll = () => {
@@ -582,6 +651,23 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         <div className="xl:col-span-2 space-y-8">
           {activeTab === "profile" && (
             <div className="space-y-8 animate-slide-up">
+              {/* Image de marque */}
+              <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+                  <div className="p-2 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                    <Palette size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                    Image de marque
+                  </h3>
+                </div>
+                <LogoUploader
+                  logoUrl={userProfile.logoUrl}
+                  onChange={(url) => handleChange("logoUrl", url)}
+                  onRemove={() => handleChange("logoUrl", "")}
+                />
+              </div>
+
               {/* Identity Card */}
               <div className="bg-pastel-blue/30 dark:bg-brand-900 rounded-[2.5rem] p-8 shadow-xl shadow-brand-900/5 border border-white/50 dark:border-brand-800 backdrop-blur-sm">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-100/50 dark:border-brand-800 pb-6">
@@ -592,9 +678,36 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                     <h3 className="text-xl font-black text-brand-900 dark:text-white font-display tracking-tight">
                       Identité Professionnelle
                     </h3>
-                    <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest mt-0.5">
-                      Informations légales de votre structure
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">
+                        Informations légales de votre structure
+                      </p>
+                      {(() => {
+                        const comp = checkCompliance2026(userProfile);
+                        return (
+                          <div
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                              comp.isCompliant
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            }`}
+                            title={comp.missingFields.join(", ")}
+                          >
+                            {comp.isCompliant ? (
+                              <>
+                                <Check size={10} />
+                                Conforme 2026
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle size={10} />
+                                Non Conforme
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
 
@@ -929,6 +1042,102 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                       />
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-brand-900">
+                          Franchise en base de TVA
+                        </p>
+                        <p className="text-[10px] text-brand-400">
+                          TVA non applicable (art. 293 B du CGI)
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newValue = !userProfile.isVatExempt;
+                          handleChange("isVatExempt", newValue);
+                          if (
+                            newValue &&
+                            !userProfile.legalMentions?.includes("293 B")
+                          ) {
+                            const currentMentions =
+                              userProfile.legalMentions || "";
+                            handleChange(
+                              "legalMentions",
+                              currentMentions +
+                                (currentMentions ? "\n" : "") +
+                                "TVA non applicable, art. 293 B du CGI",
+                            );
+                          }
+                        }}
+                        aria-label="Franchise en base de TVA"
+                        className={`w-12 h-6 rounded-full relative transition-all ${userProfile.isVatExempt ? "bg-brand-900" : "bg-brand-200"}`}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${userProfile.isVatExempt ? "right-1" : "left-1"}`}
+                        ></div>
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                        Indemnité de recouvrement (€)
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900"
+                        value={userProfile.recoveryIndemnityAmount || 40}
+                        onChange={(e) =>
+                          handleChange(
+                            "recoveryIndemnityAmount",
+                            parseFloat(e.target.value),
+                          )
+                        }
+                        placeholder="Défaut: 40 €"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                      <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                        Conditions de règlement
+                      </label>
+                      <select
+                        aria-label="Conditions de règlement"
+                        className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900 cursor-pointer"
+                        value={userProfile.paymentTermsDefault || "A_RECEPTION"}
+                        onChange={(e) =>
+                          handleChange("paymentTermsDefault", e.target.value)
+                        }
+                      >
+                        <option value="A_RECEPTION">À réception</option>
+                        <option value="30_DAYS">30 jours</option>
+                        <option value="30_EOM">30 jours fin de mois</option>
+                        <option value="45_DAYS">45 jours</option>
+                        <option value="45_EOM">45 jours fin de mois</option>
+                        <option value="60_DAYS">60 jours</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                        Taux pénalités de retard
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900"
+                        value={
+                          userProfile.latePenaltyRate ||
+                          "3x le taux d'intérêt légal"
+                        }
+                        onChange={(e) =>
+                          handleChange("latePenaltyRate", e.target.value)
+                        }
+                        placeholder="Ex: 10% ou 3x taux légal"
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                       <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
@@ -1046,6 +1255,92 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                           </option>
                         </select>
                       </div>
+
+                      <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-brand-900">
+                            Mixité d'activité
+                          </p>
+                          <p className="text-[10px] text-brand-400">
+                            Prestation ET Vente
+                          </p>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleChange(
+                              "isMixedActivity",
+                              !userProfile.isMixedActivity,
+                            )
+                          }
+                          aria-label="Mixité d'activité"
+                          className={`w-12 h-6 rounded-full relative transition-all ${userProfile.isMixedActivity ? "bg-brand-900" : "bg-brand-200"}`}
+                        >
+                          <div
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${userProfile.isMixedActivity ? "right-1" : "left-1"}`}
+                          ></div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {userProfile.isMixedActivity && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 animate-slide-up">
+                        <div>
+                          <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                            Activité secondaire
+                          </label>
+                          <select
+                            id="activityTypeSecondary"
+                            title="Sélectionner l'activité secondaire"
+                            aria-label="Sélectionner l'activité secondaire"
+                            className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-bold text-brand-900"
+                            value={userProfile.activityTypeSecondary || "SALE"}
+                            onChange={(e) =>
+                              handleChange(
+                                "activityTypeSecondary",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="SALE">
+                              Vente de marchandises (BIC)
+                            </option>
+                            <option value="SERVICE_BIC">
+                              Prestations de services (BIC)
+                            </option>
+                            <option value="SERVICE_BNC">
+                              Prestations de services (BNC)
+                            </option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-brand-900">
+                              Versement Libératoire
+                            </p>
+                            <p className="text-[10px] text-brand-400">
+                              Option fiscale choisie
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleChange(
+                                "hasTaxVersantLiberatoire",
+                                !userProfile.hasTaxVersantLiberatoire,
+                              )
+                            }
+                            title="Option Versement Libératoire"
+                            aria-label="Option Versement Libératoire"
+                            className={`w-12 h-6 rounded-full relative transition-all ${userProfile.hasTaxVersantLiberatoire ? "bg-brand-900" : "bg-brand-200"}`}
+                          >
+                            <div
+                              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${userProfile.hasTaxVersantLiberatoire ? "right-1" : "left-1"}`}
+                            ></div>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-8 space-y-4">
                       <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
                         <div className="flex-1">
                           <p className="text-sm font-bold text-brand-900">
@@ -1070,9 +1365,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                           ></div>
                         </button>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
                         <div className="flex-1">
                           <p className="text-sm font-bold text-brand-900">
@@ -1239,7 +1532,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
                   <div>
                     <label className="block text-[10px] font-bold text-brand-400 uppercase mb-2">
                       Facture
@@ -1295,6 +1588,49 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         handleChange("creditNotePrefix", e.target.value)
                       }
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                      Format dynamique (Ex: [YYYY]-[MM]-[SEQ])
+                    </label>
+                    <input
+                      type="text"
+                      title="Format dynamique de numérotation"
+                      placeholder="[YYYY]-[MM]-[SEQ]"
+                      aria-label="Format dynamique de numérotation"
+                      className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm font-bold text-brand-900"
+                      value={userProfile.numberingFormat || "[YYYY]-[MM]-[SEQ]"}
+                      onChange={(e) =>
+                        handleChange("numberingFormat", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-brand-50/50 rounded-2xl border border-brand-100">
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-brand-900">
+                        Réinitialisation annuelle
+                      </p>
+                      <p className="text-[10px] text-brand-400">
+                        Repartir à 001 chaque 1er janvier
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleChange(
+                          "resetNumberingYearly",
+                          !userProfile.resetNumberingYearly,
+                        )
+                      }
+                      aria-label="Réinitialisation annuelle"
+                      className={`w-12 h-6 rounded-full relative transition-all ${userProfile.resetNumberingYearly ? "bg-brand-900" : "bg-brand-200"}`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${userProfile.resetNumberingYearly ? "right-1" : "left-1"}`}
+                      ></div>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1510,8 +1846,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                             Vérificateur de SIRET
                           </p>
                           <p className="text-xs text-brand-400 font-medium mt-1">
-                            Valider la conformité de votre numéro SIRET
-                            (Algorithme de Luhn)
+                            Vérifier l'existence légale via l'API Sirene (INSEE)
+                            pour pré-remplir vos coordonnées.
                           </p>
                         </div>
                         <div className="flex items-center gap-6">
@@ -1520,13 +1856,32 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                           </div>
                           <button
                             onClick={checkSiret}
-                            className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg ${siretStatus === "valid" ? "bg-emerald-500 text-white shadow-emerald-500/20" : siretStatus === "invalid" ? "bg-red-500 text-white shadow-red-500/20" : "bg-brand-900 text-white hover:bg-brand-950 shadow-brand-900/20 active:scale-95"}`}
+                            disabled={
+                              siretStatus === "checking" || !userProfile.siret
+                            }
+                            className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 ${siretStatus === "valid" ? "bg-emerald-500 text-white shadow-emerald-500/20" : siretStatus === "invalid" ? "bg-red-500 text-white shadow-red-500/20" : siretStatus === "checking" ? "bg-brand-400 text-white cursor-not-allowed" : "bg-brand-900 text-white hover:bg-brand-950 shadow-brand-900/20 active:scale-95"}`}
                           >
-                            {siretStatus === "valid"
-                              ? "Valide !"
-                              : siretStatus === "invalid"
-                                ? "Invalide"
-                                : "Vérifier"}
+                            {siretStatus === "checking" ? (
+                              <>
+                                <RefreshCw size={14} className="animate-spin" />
+                                Vérification...
+                              </>
+                            ) : siretStatus === "valid" ? (
+                              <>
+                                <CheckCircle2 size={14} />
+                                Valide !
+                              </>
+                            ) : siretStatus === "invalid" ? (
+                              <>
+                                <AlertCircle size={14} />
+                                Inexistant
+                              </>
+                            ) : (
+                              <>
+                                <Search size={14} />
+                                Vérifier l'Existence Légale
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -1778,6 +2133,154 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 </div>
 
                 <div className="space-y-8">
+                  <div className="p-8 bg-white dark:bg-brand-800/50 rounded-[2.5rem] border border-brand-100 dark:border-brand-800 relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-4">
+                        <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-2xl text-orange-600 dark:text-orange-400">
+                          <Mail size={28} />
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-black text-brand-900 dark:text-white tracking-tight">
+                            Configuration d'Expédition
+                          </h4>
+                          <p className="text-xs text-brand-400 font-medium mt-1">
+                            Gérez comment vos clients voient vos emails.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                            Nom de l'expéditeur
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={userProfile.companyName}
+                            className="w-full p-4 bg-brand-50/50 dark:bg-brand-900 border border-brand-100 dark:border-brand-800 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 font-bold text-sm"
+                            value={
+                              userProfile.integrations?.emailSettings
+                                ?.senderName || ""
+                            }
+                            onChange={(e) =>
+                              handleChange("integrations", {
+                                ...userProfile.integrations,
+                                emailSettings: {
+                                  ...userProfile.integrations?.emailSettings,
+                                  senderName: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                            Email de réponse (Reply-To)
+                          </label>
+                          <input
+                            type="email"
+                            placeholder={userProfile.email}
+                            className="w-full p-4 bg-brand-50/50 dark:bg-brand-900 border border-brand-100 dark:border-brand-800 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 font-bold text-sm"
+                            value={
+                              userProfile.integrations?.emailSettings
+                                ?.replyTo || ""
+                            }
+                            onChange={(e) =>
+                              handleChange("integrations", {
+                                ...userProfile.integrations,
+                                emailSettings: {
+                                  ...userProfile.integrations?.emailSettings,
+                                  replyTo: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                            Copie invisible (BCC)
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="votre-archive@email.com"
+                            className="w-full p-4 bg-brand-50/50 dark:bg-brand-900 border border-brand-100 dark:border-brand-800 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 font-bold text-sm"
+                            value={
+                              userProfile.integrations?.emailSettings
+                                ?.bccEmail || ""
+                            }
+                            onChange={(e) =>
+                              handleChange("integrations", {
+                                ...userProfile.integrations,
+                                emailSettings: {
+                                  ...userProfile.integrations?.emailSettings,
+                                  bccEmail: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                          <p className="mt-3 text-[10px] text-brand-400 italic">
+                            Recevez systématiquement une copie de vos envois
+                            pour vos archives personnelles.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-brand-50 dark:bg-brand-800/50 rounded-3xl border border-brand-100 dark:border-brand-800">
+                      <div className="flex items-center gap-3 mb-4">
+                        <LockIcon size={18} className="text-brand-400" />
+                        <h5 className="text-sm font-black text-brand-900 dark:text-white uppercase tracking-widest">
+                          Serveur d'envoi (SMTP)
+                        </h5>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                          {
+                            id: "internal",
+                            name: "Service Inclus",
+                            desc: "Serveur sécurisé",
+                          },
+                          {
+                            id: "gmail",
+                            name: "Gmail",
+                            desc: "Via Google OAuth",
+                          },
+                          {
+                            id: "custom_smtp",
+                            name: "Serveur Pro",
+                            desc: "Config manuelle",
+                          },
+                        ].map((provider) => (
+                          <button
+                            key={provider.id}
+                            onClick={() =>
+                              handleChange("integrations", {
+                                ...userProfile.integrations,
+                                emailSettings: {
+                                  ...userProfile.integrations?.emailSettings,
+                                  provider: provider.id as any,
+                                },
+                              })
+                            }
+                            className={`p-4 rounded-2xl border-2 transition-all text-left ${userProfile.integrations?.emailSettings?.provider === provider.id ? "border-orange-500 bg-white dark:bg-brand-900 shadow-md" : "border-transparent bg-white/50 dark:bg-brand-800 hover:border-brand-200"}`}
+                          >
+                            <p className="text-xs font-black text-brand-900 dark:text-white uppercase">
+                              {provider.name}
+                            </p>
+                            <p className="text-[10px] text-brand-400 font-medium mt-1">
+                              {provider.desc}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
                       Signature d'email par défaut
@@ -1971,31 +2474,36 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
           {activeTab === "integrations" && (
             <div className="space-y-8 animate-slide-up">
+              {/* AI & API Section */}
               <div className="bg-pastel-pink/30 dark:bg-brand-900 rounded-[2.5rem] p-8 shadow-xl shadow-brand-900/5 border border-white/50 dark:border-brand-800 backdrop-blur-sm">
                 <div className="flex items-center gap-3 mb-8 border-b border-brand-100/50 dark:border-brand-800 pb-6">
                   <div className="p-3 bg-white/60 dark:bg-brand-800 text-vibrant-pink dark:text-brand-400 rounded-2xl shadow-sm">
-                    <Sparkles size={24} />
+                    <Zap size={24} />
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-brand-900 dark:text-white font-display tracking-tight">
                       Assistant IA & API
                     </h3>
                     <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest mt-0.5">
-                      Connectez vos services externes
+                      Boostez votre productivité avec l'IA
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-8">
                   <div>
-                    <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+                    <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
                       Clé API Google Gemini
                     </label>
-                    <div className="relative">
+                    <div className="relative group">
+                      <LockIcon
+                        className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-300 dark:text-brand-600 group-focus-within:text-pink-500 transition-colors"
+                        size={18}
+                      />
                       <input
                         type="password"
                         aria-label="Clé API Google Gemini"
-                        className="w-full p-4 bg-brand-50/50 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all font-mono text-sm"
+                        className="w-full pl-14 p-5 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-800 rounded-2xl font-mono text-sm outline-none focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 transition-all"
                         value={userProfile.geminiApiKey || ""}
                         onChange={(e) =>
                           handleChange("geminiApiKey", e.target.value)
@@ -2003,19 +2511,370 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         placeholder="AIzaSy..."
                       />
                     </div>
-                    <p className="text-[10px] text-brand-400 mt-2 font-medium">
-                      Nécessaire pour utiliser l'Assistant IA. Obtenez votre clé
-                      sur{" "}
+                    <p className="text-[10px] text-brand-400 mt-3 font-medium flex items-center gap-2">
+                      <Info size={12} />
+                      Nécessaire pour l'IA. Obtenez votre clé sur{" "}
                       <a
                         href="https://aistudio.google.com/app/apikey"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
+                        className="text-pink-600 dark:text-pink-400 font-bold hover:underline"
                       >
                         Google AI Studio
                       </a>
-                      .
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cloud Backup & Legality */}
+              <div className="bg-pastel-blue/30 dark:bg-brand-900 rounded-[2.5rem] p-8 shadow-xl shadow-brand-900/5 border border-white/50 dark:border-brand-800 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-100/50 dark:border-brand-800 pb-6">
+                  <div className="p-3 bg-white/60 dark:bg-brand-800 text-vibrant-blue dark:text-brand-400 rounded-2xl shadow-sm">
+                    <HardDrive size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-brand-900 dark:text-white font-display tracking-tight">
+                      Connecteurs Cloud & Archivage
+                    </h3>
+                    <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest mt-0.5">
+                      Conservation légale 10 ans (RGPD)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Google Gemini / Assistant IA */}
+                  <div className="xl:col-span-2 p-8 bg-white dark:bg-brand-800/50 rounded-[2.5rem] border border-brand-100 dark:border-brand-800 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] -mr-32 -mt-32"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 dark:text-emerald-400">
+                            <Sparkles size={28} />
+                          </div>
+                          <div>
+                            <h4 className="text-xl font-black text-brand-900 dark:text-white tracking-tight">
+                              Assistant IA Intelligence
+                            </h4>
+                            <p className="text-xs text-brand-400 font-medium mt-1">
+                              Configurez votre moteur IA pour l'analyse et
+                              l'assistance.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleChange("integrations", {
+                              ...userProfile.integrations,
+                              aiAssistant: {
+                                ...userProfile.integrations?.aiAssistant,
+                                isEnabled:
+                                  !userProfile.integrations?.aiAssistant
+                                    ?.isEnabled,
+                              },
+                            })
+                          }
+                          className={`w-14 h-7 rounded-full relative transition-all ${userProfile.integrations?.aiAssistant?.isEnabled ? "bg-emerald-600 shadow-xl shadow-emerald-600/20" : "bg-brand-200 dark:bg-brand-700"}`}
+                        >
+                          <div
+                            className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all ${userProfile.integrations?.aiAssistant?.isEnabled ? "right-1" : "left-1"}`}
+                          ></div>
+                        </button>
+                      </div>
+
+                      {userProfile.integrations?.aiAssistant?.isEnabled && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-slide-up">
+                          <div className="space-y-6">
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                                Fournisseur IA
+                              </label>
+                              <div className="grid grid-cols-3 gap-3">
+                                {[
+                                  {
+                                    id: "google_gemini",
+                                    name: "Gemini",
+                                    icon: <Zap size={14} />,
+                                  },
+                                  {
+                                    id: "openai",
+                                    name: "OpenAI",
+                                    icon: <Sparkles size={14} />,
+                                  },
+                                  {
+                                    id: "anthropic",
+                                    name: "Claude",
+                                    icon: <FileSearch size={14} />,
+                                  },
+                                ].map((p) => (
+                                  <button
+                                    key={p.id}
+                                    onClick={() =>
+                                      handleChange("integrations", {
+                                        ...userProfile.integrations,
+                                        aiAssistant: {
+                                          ...userProfile.integrations
+                                            ?.aiAssistant,
+                                          provider: p.id as any,
+                                          model:
+                                            p.id === "google_gemini"
+                                              ? "gemini-1.5-flash"
+                                              : p.id === "openai"
+                                                ? "gpt-4o"
+                                                : "claude-3-5-sonnet",
+                                        },
+                                      })
+                                    }
+                                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${userProfile.integrations?.aiAssistant?.provider === p.id ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "border-brand-100 dark:border-brand-800 text-brand-400 hover:border-brand-200"}`}
+                                  >
+                                    {p.icon}
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">
+                                      {p.name}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-6">
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                                Clé API Secrète
+                              </label>
+                              <div className="relative">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300">
+                                  <LockIcon size={18} />
+                                </div>
+                                <input
+                                  type="password"
+                                  placeholder={`Entrez votre clé ${userProfile.integrations?.aiAssistant?.provider === "google_gemini" ? "Google AI" : "API"}`}
+                                  className="w-full pl-12 p-4 bg-brand-50/50 dark:bg-brand-900 border border-brand-100 dark:border-brand-800 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-mono text-xs"
+                                  value={
+                                    userProfile.integrations?.aiAssistant
+                                      ?.apiKey || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleChange("integrations", {
+                                      ...userProfile.integrations,
+                                      aiAssistant: {
+                                        ...userProfile.integrations
+                                          ?.aiAssistant,
+                                        apiKey: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              <p className="mt-3 text-[10px] text-brand-400 italic">
+                                La clé est stockée localement dans votre
+                                navigateur et n'est jamais transmise à nos
+                                serveurs.
+                              </p>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-3">
+                                Modèle (Optionnel)
+                              </label>
+                              <input
+                                type="text"
+                                className="w-full p-4 bg-brand-50/50 dark:bg-brand-900 border border-brand-100 dark:border-brand-800 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-mono text-xs"
+                                value={
+                                  userProfile.integrations?.aiAssistant
+                                    ?.model || ""
+                                }
+                                placeholder="ex: gemini-1.5-pro, gpt-4-turbo"
+                                onChange={(e) =>
+                                  handleChange("integrations", {
+                                    ...userProfile.integrations,
+                                    aiAssistant: {
+                                      ...userProfile.integrations?.aiAssistant,
+                                      model: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start justify-between p-6 bg-white dark:bg-brand-800/50 rounded-4xl border border-brand-100 dark:border-brand-800 hover:border-blue-200 dark:hover:border-blue-900 transition-all group">
+                    <div className="flex gap-5">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-2xl text-blue-600 dark:text-blue-400 shadow-sm group-hover:scale-110 transition-transform">
+                        <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                        <p className="text-base font-black text-brand-900 dark:text-white tracking-tight">
+                          Auto-Backup Légal
+                        </p>
+                        <p className="text-xs text-brand-400 font-medium leading-relaxed mt-1">
+                          Envoi automatique de chaque facture vers un
+                          coffre-fort numérique.
+                        </p>
+                        <div className="flex gap-2 mt-4">
+                          {["Google Drive", "Dropbox", "Digiposte"].map((p) => (
+                            <span
+                              key={p}
+                              className="px-2 py-1 bg-brand-50 dark:bg-brand-800 rounded-lg text-[9px] font-bold text-brand-500 uppercase"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleChange("integrations", {
+                          ...userProfile.integrations,
+                          autoBackup: {
+                            ...userProfile.integrations?.autoBackup,
+                            enabled:
+                              !userProfile.integrations?.autoBackup?.enabled,
+                          },
+                        })
+                      }
+                      title="Activer l'auto-backup légal"
+                      aria-label="Activer l'auto-backup légal"
+                      className={`w-14 h-7 rounded-full relative shrink-0 transition-all ${userProfile.integrations?.autoBackup?.enabled ? "bg-blue-600" : "bg-brand-200 dark:bg-brand-700"}`}
+                    >
+                      <div
+                        className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all ${userProfile.integrations?.autoBackup?.enabled ? "right-1" : "left-1"}`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  <div className="flex items-start justify-between p-6 bg-white dark:bg-brand-800/50 rounded-4xl border border-brand-100 dark:border-brand-800 hover:border-emerald-200 dark:hover:border-emerald-900 transition-all group">
+                    <div className="flex gap-5">
+                      <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 dark:text-emerald-400 shadow-sm group-hover:scale-110 transition-transform">
+                        <FileSearch size={24} />
+                      </div>
+                      <div>
+                        <p className="text-base font-black text-brand-900 dark:text-white tracking-tight">
+                          Import de Dépenses (IA)
+                        </p>
+                        <p className="text-xs text-brand-400 font-medium leading-relaxed mt-1">
+                          Scannez un dossier cloud pour créer vos dépenses
+                          automatiquement.
+                        </p>
+                        <button className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-600 hover:underline">
+                          <Settings size={14} /> Configurer le dossier "Watch"
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleChange("integrations", {
+                          ...userProfile.integrations,
+                          expenseImport: {
+                            ...userProfile.integrations?.expenseImport,
+                            dropboxWatchEnabled:
+                              !userProfile.integrations?.expenseImport
+                                ?.dropboxWatchEnabled,
+                          },
+                        })
+                      }
+                      title="Activer l'import de dépenses IA"
+                      aria-label="Activer l'import de dépenses IA"
+                      className={`w-14 h-7 rounded-full relative shrink-0 transition-all ${userProfile.integrations?.expenseImport?.dropboxWatchEnabled ? "bg-emerald-600" : "bg-brand-200 dark:bg-brand-700"}`}
+                    >
+                      <div
+                        className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all ${userProfile.integrations?.expenseImport?.dropboxWatchEnabled ? "right-1" : "left-1"}`}
+                      ></div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Productivity: Calendar & CRM */}
+              <div className="bg-pastel-yellow/30 dark:bg-brand-900 rounded-[2.5rem] p-8 shadow-xl shadow-brand-900/5 border border-white/50 dark:border-brand-800 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-8 border-b border-brand-100/50 dark:border-brand-800 pb-6">
+                  <div className="p-3 bg-white/60 dark:bg-brand-800 text-vibrant-amber dark:text-brand-400 rounded-2xl shadow-sm">
+                    <CalendarDays size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-brand-900 dark:text-white font-display tracking-tight">
+                      Productivité : Calendrier & CRM
+                    </h3>
+                    <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest mt-0.5">
+                      Automatisez vos fiches clients et factures
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="p-6 bg-white dark:bg-brand-800/50 rounded-4xl border border-brand-100 dark:border-brand-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Users size={20} className="text-brand-600" />
+                        <h4 className="font-black text-brand-900 dark:text-white">
+                          Récupération Prospect
+                        </h4>
+                      </div>
+                      <div className="flex gap-2">
+                        <Linkedin size={16} className="text-blue-700" />
+                        <ExternalLink size={16} className="text-brand-300" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-brand-400 font-medium">
+                      Créez une fiche client instantanément depuis LinkedIn ou
+                      Salesforce (Import auto du logo et coordonnées).
+                    </p>
+                    <div className="flex gap-3">
+                      <button className="flex-1 px-4 py-2 bg-brand-50 dark:bg-brand-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-600 hover:bg-brand-100 transition-all">
+                        LinkedIn
+                      </button>
+                      <button className="flex-1 px-4 py-2 bg-brand-50 dark:bg-brand-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-600 hover:bg-brand-100 transition-all">
+                        Salesforce
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-white dark:bg-brand-800/50 rounded-4xl border border-brand-100 dark:border-brand-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Calendar size={20} className="text-vibrant-amber" />
+                        <h4 className="font-black text-brand-900 dark:text-white">
+                          Sync Google Calendar
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() =>
+                          handleChange("integrations", {
+                            ...userProfile.integrations,
+                            calendarSync: {
+                              ...userProfile.integrations?.calendarSync,
+                              googleCalendarEnabled:
+                                !userProfile.integrations?.calendarSync
+                                  ?.googleCalendarEnabled,
+                            },
+                          })
+                        }
+                        title="Activer la synchronisation Google Calendar"
+                        aria-label="Activer la synchronisation Google Calendar"
+                        className={`w-12 h-6 rounded-full relative transition-all ${userProfile.integrations?.calendarSync?.googleCalendarEnabled ? "bg-vibrant-amber" : "bg-brand-200 dark:bg-brand-700"}`}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${userProfile.integrations?.calendarSync?.googleCalendarEnabled ? "right-1" : "left-1"}`}
+                        ></div>
+                      </button>
+                    </div>
+                    <p className="text-xs text-brand-400 font-medium leading-relaxed">
+                      Transformez vos rendez-vous en sessions de facturations en
+                      1 clic (ex: "Séance photo 2h").
+                    </p>
+                    <div className="bg-brand-50 dark:bg-brand-800/50 p-4 rounded-2xl flex items-center justify-between border border-dashed border-brand-200">
+                      <span className="text-[10px] font-bold text-brand-500 uppercase">
+                        Prochain RDV :
+                      </span>
+                      <span className="text-[10px] font-black text-brand-900 dark:text-white">
+                        Consulting (14:00) ⚡
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
