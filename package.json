@@ -68,11 +68,15 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "picomatch": "^4.0.4",
+    "serialize-javascript": "^7.0.3",
     "smol-toml": "^1.6.1",
     "tailwindcss": "^4.2.1",
     "tinyexec": "^1.1.1",
     "typescript": "~6.0.2",
     "vite": "^6.4.2",
     "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.3"
   }
 }
