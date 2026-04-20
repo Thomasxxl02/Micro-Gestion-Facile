@@ -57,7 +57,7 @@
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.1.4",
     "electron-to-chromium": "^1.5.337",
     "eslint": "^10.2.1",
