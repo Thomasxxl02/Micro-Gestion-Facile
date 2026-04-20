@@ -371,9 +371,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <h3 className="text-2xl font-bold text-(--text-main) font-display">
               {globalStats.total}
             </h3>
-            <p className="text-xs text-(--text-muted) mt-1">
-              Éléments actifs
-            </p>
+            <p className="text-xs text-(--text-muted) mt-1">Éléments actifs</p>
           </div>
         </div>
         <div className="bento-item">
@@ -425,8 +423,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <h3 className="text-lg font-bold font-display">
               Optimiser le stock
             </h3>
-            <button className="mt-2 text-xs font-bold flex items-center gap-2 hover:underline">
-              Générer une commande <ArrowRightCircle size={14} />
+            <button
+              className="mt-2 text-xs font-bold flex items-center gap-2 hover:underline"
+              title="Générer une commande de réapprovisionnement"
+              aria-label="Générer une commande de réapprovisionnement"
+            >
+              Générer une commande{" "}
+              <ArrowRightCircle size={14} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -434,7 +437,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
 
       {/* Side Panel Form */}
       <div
-        className={`fixed inset-y-0 right-0 w-full sm:w-[450px] bg-(--card-bg) shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-(--card-border) ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed inset-y-0 right-0 w-full sm:w-112.5 bg-(--card-bg) shadow-2xl transform transition-transform duration-300 ease-in-out z-40 border-l border-(--card-border) ${isPanelOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-(--card-border) flex justify-between items-center bg-(--bg-main)/50">
@@ -444,8 +447,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             <button
               onClick={() => setIsPanelOpen(false)}
               className="p-2 hover:bg-(--bg-main) rounded-full text-(--text-muted) transition-colors"
+              title="Fermer le panneau"
+              aria-label="Fermer le panneau"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 
@@ -455,10 +460,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           >
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-(--text-main) mb-1.5">
+                <label
+                  htmlFor="product-name"
+                  className="block text-sm font-semibold text-(--text-main) mb-1.5"
+                >
                   Nom de l'élément <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="product-name"
                   type="text"
                   required
                   className="w-full p-3 bg-(--input-bg) border border-(--input-border) rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all text-(--text-main)"
@@ -472,15 +481,20 @@ const ProductManager: React.FC<ProductManagerProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                  <label
+                    htmlFor="product-sku"
+                    className="block text-sm font-semibold text-brand-700 mb-1.5"
+                  >
                     Référence / SKU
                   </label>
                   <div className="relative">
                     <Hash
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400"
                       size={16}
+                      aria-hidden="true"
                     />
                     <input
+                      id="product-sku"
                       type="text"
                       className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                       value={formData.sku || ""}
@@ -492,10 +506,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                  <label
+                    htmlFor="product-category"
+                    className="block text-sm font-semibold text-brand-700 mb-1.5"
+                  >
                     Catégorie
                   </label>
                   <input
+                    id="product-category"
                     type="text"
                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                     value={formData.category || ""}
@@ -515,12 +533,17 @@ const ProductManager: React.FC<ProductManagerProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                  <label
+                    htmlFor="product-type"
+                    className="block text-sm font-semibold text-brand-700 mb-1.5"
+                  >
                     Type
                   </label>
                   <select
-                    className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
+                    id="product-type"
+                    className="w-full p-3 bg-white border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none"
                     value={formData.type}
+                    title="Type d'élément"
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -533,17 +556,23 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                  <label
+                    htmlFor="product-unit"
+                    className="block text-sm font-semibold text-brand-700 mb-1.5"
+                  >
                     Unité
                   </label>
                   <div className="relative">
                     <Ruler
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400"
                       size={16}
+                      aria-hidden="true"
                     />
                     <select
-                      className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
+                      id="product-unit"
+                      className="w-full pl-10 pr-3 py-3 bg-white border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none"
                       value={formData.unit || "unité"}
+                      title="Unité de mesure"
                       onChange={(e) =>
                         setFormData({ ...formData, unit: e.target.value })
                       }
@@ -560,14 +589,19 @@ const ProductManager: React.FC<ProductManagerProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                <label
+                  htmlFor="product-price"
+                  className="block text-sm font-semibold text-brand-700 mb-1.5"
+                >
                   Prix HT (EUR)
                 </label>
                 <input
+                  id="product-price"
                   type="number"
                   step="0.01"
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                   value={formData.price}
+                  placeholder="0.00"
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -580,13 +614,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
               {formData.type === "product" && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                    <label
+                      htmlFor="product-stock"
+                      className="block text-sm font-semibold text-brand-700 mb-1.5"
+                    >
                       Stock actuel
                     </label>
                     <input
+                      id="product-stock"
                       type="number"
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                       value={formData.stock}
+                      placeholder="0"
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -596,13 +635,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                    <label
+                      htmlFor="product-min-stock"
+                      className="block text-sm font-semibold text-brand-700 mb-1.5"
+                    >
                       Seuil d'alerte
                     </label>
                     <input
+                      id="product-min-stock"
                       type="number"
                       className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                       value={formData.minStock}
+                      placeholder="0"
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -615,10 +659,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-brand-700 mb-1.5">
+                <label
+                  htmlFor="product-description"
+                  className="block text-sm font-semibold text-brand-700 mb-1.5"
+                >
                   Description (pour devis/factures)
                 </label>
                 <textarea
+                  id="product-description"
                   rows={4}
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all resize-none"
                   value={formData.description}
@@ -676,14 +724,23 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           </div>
 
           <div className="flex items-center gap-4 bg-white dark:bg-brand-900 px-6 py-2 border border-brand-100 dark:border-brand-800 rounded-3xl shadow-sm">
-            <Filter size={18} className="text-brand-400 dark:text-brand-500" />
-            <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider">
+            <Filter
+              size={18}
+              className="text-brand-400 dark:text-brand-500"
+              aria-hidden="true"
+            />
+            <label
+              htmlFor="filter-category"
+              className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider"
+            >
               Catégorie
-            </span>
+            </label>
             <select
+              id="filter-category"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="bg-transparent text-sm font-bold text-brand-900 dark:text-white outline-none cursor-pointer appearance-none pr-4"
+              title="Filtrer par catégorie"
             >
               <option value="">Toutes</option>
               {categories.map((cat) => (
@@ -695,14 +752,23 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           </div>
 
           <div className="flex items-center gap-4 bg-white dark:bg-brand-900 px-6 py-2 border border-brand-100 dark:border-brand-800 rounded-3xl shadow-sm">
-            <SortAsc size={18} className="text-brand-400 dark:text-brand-500" />
-            <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider">
+            <SortAsc
+              size={18}
+              className="text-brand-400 dark:text-brand-500"
+              aria-hidden="true"
+            />
+            <label
+              htmlFor="sort-by"
+              className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider"
+            >
               Trier par
-            </span>
+            </label>
             <select
+              id="sort-by"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="bg-transparent text-sm font-bold text-brand-900 dark:text-white outline-none cursor-pointer appearance-none pr-4"
+              title="Trier la liste"
             >
               <option value="name">Nom (A-Z)</option>
               <option value="price">Prix (Décroissant)</option>
@@ -732,23 +798,34 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                 <button
                   onClick={() => openEdit(p)}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-brand-50 dark:hover:bg-brand-800 rounded-xl transition-all"
-                  title="Modifier"
+                  title="Modifier l'élément"
+                  aria-label={`Modifier ${p.name}`}
                 >
-                  <Edit2 size={16} />
+                  <Edit2 size={16} aria-hidden="true" />
                 </button>
                 <button
                   onClick={(e) => toggleArchive(p.id, e)}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all"
-                  title={p.archived ? "Restaurer" : "Archiver"}
+                  title={
+                    p.archived ? "Restaurer l'élément" : "Archiver l'élément"
+                  }
+                  aria-label={
+                    p.archived ? `Restaurer ${p.name}` : `Archiver ${p.name}`
+                  }
                 >
-                  {p.archived ? <RotateCcw size={16} /> : <Archive size={16} />}
+                  {p.archived ? (
+                    <RotateCcw size={16} aria-hidden="true" />
+                  ) : (
+                    <Archive size={16} aria-hidden="true" />
+                  )}
                 </button>
                 <button
                   onClick={(e) => handleDelete(p.id, e)}
                   className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all"
-                  title="Supprimer"
+                  title="Supprimer l'élément"
+                  aria-label={`Supprimer ${p.name}`}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
 
