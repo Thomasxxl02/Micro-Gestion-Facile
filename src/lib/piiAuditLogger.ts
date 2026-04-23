@@ -4,7 +4,7 @@
  * Fonctionnalités:
  * - Enregistrement des patterns détectés + contexte
  * - Statistiques d'utilisation (fréquence par type)
- * - Détection de nouveaux patterns non-cuverts (pour évolution)
+ * - Détection de nouveaux patterns non-couverts (pour évolution)
  * - Export pour analyse réglementaire RGPD
  *
  * Persiste en localStorage pour survie aux rechargements de page.
@@ -73,7 +73,11 @@ export class PIIAuditLogger {
         count: this.events.length,
       });
     } catch (error) {
-      logger.warn("PIIAuditLogger", "Failed to load stored events", error as Error);
+      logger.warn(
+        "PIIAuditLogger",
+        "Failed to load stored events",
+        error as Error,
+      );
       this.events = [];
       this.unknownPatterns = new Set();
     }

@@ -55,6 +55,7 @@ function formatDocumentNumber(
   customFormat?: string,
 ): string {
   const num = String(sequence).padStart(3, "0");
+  const month = String(new Date().getMonth() + 1).padStart(2, "0");
   const prefixMap: Record<DocumentType, string> = {
     invoice: userProfile.invoicePrefix ?? "FAC",
     quote: userProfile.quotePrefix ?? "DEV",
@@ -64,14 +65,24 @@ function formatDocumentNumber(
   };
   const prefix = prefixMap[type] ?? "DOC";
 
-  if (customFormat) {
-    return customFormat
-      .replace("{PREFIX}", prefix)
-      .replace("{YEAR}", String(year))
-      .replace("{NUM}", num);
-  }
+  const format =
+    customFormat || userProfile.numberingFormat || "{PREFIX}-{YEAR}-{NUM}";
 
-  return `${prefix}-${year}-${num}`;
+  return format
+    .replace(/\{PREFIX\}/g, prefix)
+    .replace(/\[PREFIX\]/g, prefix)
+    .replace(/\{YEAR\}/g, String(year))
+    .replace(/\[YEAR\]/g, String(year))
+    .replace(/\{YYYY\}/g, String(year))
+    .replace(/\[YYYY\]/g, String(year))
+    .replace(/\{YY\}/g, String(year).slice(-2))
+    .replace(/\[YY\]/g, String(year).slice(-2))
+    .replace(/\{MM\}/g, month)
+    .replace(/\[MM\]/g, month)
+    .replace(/\{NUM\}/g, num)
+    .replace(/\[NUM\]/g, num)
+    .replace(/\{SEQ\}/g, num)
+    .replace(/\[SEQ\]/g, num);
 }
 
 /**

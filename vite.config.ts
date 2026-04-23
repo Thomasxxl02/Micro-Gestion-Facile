@@ -224,7 +224,7 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: "chunks/[name]-[hash:8].js",
           entryFileNames: "js/[name]-[hash:8].js",
           assetFileNames: (assetInfo) => {
-            if (!assetInfo || !assetInfo.name) {
+            if (!assetInfo?.name) {
               return "assets/[name]-[hash:8][extname]";
             }
             const info = assetInfo.name.split(".");

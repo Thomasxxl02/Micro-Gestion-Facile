@@ -179,8 +179,23 @@ export interface UserProfile {
   hasTaxVersantLiberatoire?: boolean;
   socialContributionRate?: number;
   geminiApiKey?: string;
-  fontFamily?: string;
+
+  // Paramètres de facturation avancés (Conformité 2026)
+  forcedDraftMode?: boolean; // Bloquer la numérotation automatique tant que non validé
+  roundingMode?: "LINE" | "TOTAL"; // Arrondi par ligne ou sur le total (Factur-X)
+  smartVatDetection?: boolean; // Détection auto de la TVA selon le client
+
+  // Branding & Documents
+  fontFamily?: "sans" | "serif" | "mono" | "slab";
   invoiceTemplate?: "modern" | "classic" | "minimal" | "corporate";
+  hiddenInvoiceColumns?: string[]; // Liste des colonnes à masquer (ex: "unit", "vat")
+
+  // Sécurité & Conformité
+  auditLogEnabled?: boolean;
+  sessionTimeout?: number; // Minutes d'inactivité avant verrouillage
+  pinCode?: string; // Code PIN haché
+  biometricEnabled?: boolean;
+
   theme?: "light" | "dark" | "auto";
   dateFormat?: "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD";
   timeFormat?: "24h" | "12h";

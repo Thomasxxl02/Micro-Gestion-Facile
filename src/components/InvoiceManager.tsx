@@ -164,8 +164,11 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   const handleStatusChange = useCallback(
     (id: string, status: string) => {
       updateInvoiceStatus(id, status);
+      if (status === InvoiceStatus.PAID) {
+        playSound("success");
+      }
     },
-    [updateInvoiceStatus],
+    [updateInvoiceStatus, playSound],
   );
 
   const handleBulkExport = useCallback(() => {

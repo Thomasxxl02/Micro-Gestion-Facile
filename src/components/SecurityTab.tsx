@@ -9,11 +9,14 @@
 
 import {
   TriangleAlert as AlertTriangle,
+  Archive,
   CircleCheckBig as CheckCircle,
   Clock,
   Copy,
+  Download,
   Eye,
   EyeOff,
+  Fingerprint,
   History,
   Key,
   KeyRound,
@@ -22,11 +25,19 @@ import {
   MapPin,
   Monitor,
   Plus,
+  RotateCcw,
+  ShieldCheck,
   Smartphone,
   Trash2,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  generateFilename,
+  generateRGPDZip,
+  type ExportData,
+} from "../lib/exportUtils";
 import {
   APIKeyService,
   DataEncryptionService,
@@ -38,16 +49,17 @@ import {
   type LoginHistoryEntry,
   type Session,
 } from "../services/securityService";
+import { useDataStore } from "../store/useDataStore";
 import useLogStore from "../store/useLogStore";
 import type { UserProfile } from "../types";
 import { AlertDialog, ConfirmDialog } from "./Dialogs";
-import { FormField, SelectField } from "./FormFields";
+import { FormField, SelectField, ToggleSwitch } from "./FormFields";
 
 interface SecurityTabProps {
   userProfile: UserProfile;
-   
+
   setUserProfile: (_profile: UserProfile) => void;
-   
+
   onSaveProfile?: (_profile: UserProfile) => void;
 }
 
@@ -98,7 +110,7 @@ type SecurityTabType = (typeof SECURITY_TABS)[number];
 const handleSecurityTabKeyDown = (
   e: React.KeyboardEvent<HTMLDivElement>,
   activeTab: SecurityTabType,
-   
+
   setActiveTab: (_tab: SecurityTabType) => void,
 ) => {
   const idx = SECURITY_TABS.indexOf(activeTab);
@@ -193,11 +205,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   // ─── STATES ───
   const [activeSecurityTab, setActiveSecurityTab] =
     useState<SecurityTabType>("2fa");
-  const { activityLogs } = useLogStore();
+  const { activityLogs, addLog } = useLogStore();
+  const dataStore = useDataStore();
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([]);
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
+
+  const [isExporting, setIsExporting] = useState(false);
 
   const [totpSecret, setTotpSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -300,6 +315,87 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     setTotpSecret("");
     setQrCodeUrl("");
     setTotpVerificationCode("");
+  };
+
+  // ─── RGPD EXPORT ───
+  const handleRGPDExport = async () => {
+    try {
+      setIsExporting(true);
+      addLog(
+        "Export RGPD démarré",
+        "SECURITY",
+        "INFO",
+        "L'utilisateur a demandé un export complet de ses données.",
+      );
+
+      const exportData: ExportData = {
+        version: "1.0.0",
+        exportedAt: new Date().toISOString(),
+        userProfile,
+        invoices: dataStore.invoices,
+        clients: dataStore.clients,
+        suppliers: dataStore.suppliers,
+        products: dataStore.products,
+        expenses: dataStore.expenses,
+        emails: dataStore.emails,
+        emailTemplates: dataStore.emailTemplates,
+        calendarEvents: dataStore.calendarEvents,
+      };
+
+      const zipBlob = await generateRGPDZip(exportData);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = generateFilename("export-rgpd", "zip");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      addLog(
+        "Export RGPD terminé",
+        "SECURITY",
+        "INFO",
+        "Dossier ZIP généré et téléchargé.",
+      );
+      toast.success(
+        "Export RGPD terminé ! Vos données sont dans un fichier ZIP.",
+      );
+    } catch (error) {
+      console.error("Export error:", error);
+      addLog(
+        "Échec de l'export RGPD",
+        "SECURITY",
+        "ERROR",
+        error instanceof Error ? error.message : "Erreur inconnue",
+      );
+      toast.error("Une erreur est survenue lors de l'export.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // ─── PIN / TIMEOUT HANDLERS ───
+  const handleToggleAuditLog = (enabled: boolean) => {
+    const updated = { ...userProfile, auditLogEnabled: enabled };
+    setUserProfile(updated);
+    onSaveProfile?.(updated);
+    addLog(
+      enabled ? "Journal d'audit activé" : "Journal d'audit désactivé",
+      "SECURITY",
+      enabled ? "INFO" : "WARNING",
+    );
+  };
+
+  const handleUpdateTimeout = (minutes: number) => {
+    const updated = { ...userProfile, sessionTimeout: minutes };
+    setUserProfile(updated);
+    onSaveProfile?.(updated);
+    addLog(
+      `Timeout de session mis à jour : ${minutes} min`,
+      "SECURITY",
+      "INFO",
+    );
   };
 
   const handleDisable2FA = () => {
@@ -967,76 +1063,228 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 
       {/* AUDIT LOG TAB */}
       {activeSecurityTab === "audit" && (
-        <div
-          id="sec-panel-audit"
-          role="tabpanel"
-          aria-labelledby="sec-tab-audit"
-          className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
-        >
-          <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
-            <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
-              <History size={28} />
+        <div className="space-y-8">
+          {/* Audit Settings */}
+          <div className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800">
+            <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+              <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                <ShieldCheck size={28} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                  Coffre-fort d'Audit & Protection
+                </h3>
+                <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
+                  Surveillez et verrouillez l'accès à vos données sensibles
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
-                📜 Journal d'Audit Sécurisé
-              </h3>
-              <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
-                Historique des modifications critiques et connexions
-              </p>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-brand-50 dark:bg-brand-800/30 rounded-3xl border border-brand-100 dark:border-brand-700">
+                  <ToggleSwitch
+                    label="Journal d'audit détaillé"
+                    description="Enregistre toutes les modifications critiques des factures et clients."
+                    checked={userProfile.auditLogEnabled ?? false}
+                    onChange={handleToggleAuditLog}
+                  />
+                </div>
+
+                <div className="p-6 bg-brand-50 dark:bg-brand-800/30 rounded-3xl border border-brand-100 dark:border-brand-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-brand-200/50 dark:bg-brand-700 rounded-lg">
+                        <Fingerprint
+                          size={20}
+                          className="text-brand-600 dark:text-brand-300"
+                        />
+                      </div>
+                      <span className="font-bold text-sm text-brand-900 dark:text-white">
+                        Validation Biométrique
+                      </span>
+                    </div>
+                    <ToggleSwitch
+                      label=""
+                      checked={userProfile.biometricEnabled ?? false}
+                      onChange={(checked) => {
+                        const updated = {
+                          ...userProfile,
+                          biometricEnabled: checked,
+                        };
+                        setUserProfile(updated);
+                        onSaveProfile?.(updated);
+                        addLog(
+                          `Biométrie ${checked ? "activée" : "désactivée"}`,
+                          "SECURITY",
+                          "INFO",
+                        );
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-brand-500">
+                    Utiliser TouchID / FaceID si disponible sur votre appareil.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-white dark:bg-brand-900 rounded-3xl border border-brand-100 dark:border-brand-700">
+                  <SelectField
+                    label="Verrouillage d'inactivité"
+                    description="Temps avant de redemander le code PIN ou 2FA."
+                    value={userProfile.sessionTimeout?.toString() ?? "15"}
+                    onChange={(val) =>
+                      handleUpdateTimeout(Number.parseInt(val))
+                    }
+                    options={[
+                      { value: "5", label: "5 minutes" },
+                      { value: "15", label: "15 minutes" },
+                      { value: "30", label: "30 minutes" },
+                      { value: "60", label: "1 heure" },
+                      { value: "0", label: "Jamais" },
+                    ]}
+                  />
+                </div>
+
+                <div className="p-6 bg-white dark:bg-brand-900 rounded-3xl border border-brand-100 dark:border-brand-700">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <FormField
+                        label="Code PIN de protection"
+                        type="password"
+                        placeholder="••••"
+                        value={userProfile.pinCode ?? ""}
+                        onChange={(val) => {
+                          const updated = {
+                            ...userProfile,
+                            pinCode: val.slice(0, 4),
+                          };
+                          setUserProfile(updated);
+                          onSaveProfile?.(updated);
+                        }}
+                        className="max-w-30"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-brand-500">
+                        Requis pour les actions sensibles (suppression, export).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
-            {activityLogs
-              .filter(
-                (log) => log.category === "SECURITY" || log.category === "AUTH",
-              )
-              .sort((a, b) => b.timestamp - a.timestamp)
-              .map((log) => (
-                <div
-                  key={log.id}
-                  className={`p-4 rounded-2xl border ${getLogSeverityClass(log.severity)}`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${getLogSeverityBadgeClass(log.severity)}`}
-                      >
-                        {log.severity}
-                      </span>
-                      <span className="text-sm font-bold text-brand-900 dark:text-white">
-                        {log.action}
+          {/* RGPD Export */}
+          <div className="bg-linear-to-br from-brand-900 to-brand-950 dark:from-brand-950 dark:to-black rounded-4xl p-8 shadow-xl text-white relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 text-brand-300">
+                  <Archive size={32} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-display">
+                    Droit à la Portabilité (RGPD)
+                  </h3>
+                  <p className="text-sm text-brand-300 mt-1 max-w-md">
+                    Générez un dossier ZIP complet contenant toutes vos données
+                    personnelles et documents pour archivage ou migration.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  void handleRGPDExport();
+                }}
+                disabled={isExporting}
+                className="group flex items-center gap-3 px-8 py-4 bg-white text-brand-900 font-bold rounded-2xl hover:bg-brand-50 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+              >
+                {isExporting ? (
+                  <RotateCcw size={20} className="animate-spin" />
+                ) : (
+                  <Download size={20} />
+                )}
+                Export ZIP Complet
+              </button>
+            </div>
+            {/* Design elements */}
+            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl"></div>
+          </div>
+
+          <div
+            id="sec-panel-audit"
+            role="tabpanel"
+            aria-labelledby="sec-tab-audit"
+            className="bg-white dark:bg-brand-900/50 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-800"
+          >
+            <div className="flex items-center gap-3 mb-8 border-b border-brand-50 dark:border-brand-800 pb-4">
+              <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 rounded-xl">
+                <History size={28} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-brand-900 dark:text-white font-display">
+                  📜 Journal d'Audit Sécurisé
+                </h3>
+                <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
+                  Historique des modifications critiques et connexions
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
+              {activityLogs
+                .filter(
+                  (log) =>
+                    log.category === "SECURITY" || log.category === "AUTH",
+                )
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .map((log) => (
+                  <div
+                    key={log.id}
+                    className={`p-4 rounded-2xl border ${getLogSeverityClass(log.severity)}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${getLogSeverityBadgeClass(log.severity)}`}
+                        >
+                          {log.severity}
+                        </span>
+                        <span className="text-sm font-bold text-brand-900 dark:text-white">
+                          {log.action}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-medium text-brand-400 dark:text-brand-500">
+                        {new Date(log.timestamp).toLocaleString("fr-FR")}
                       </span>
                     </div>
-                    <span className="text-[10px] font-medium text-brand-400 dark:text-brand-500">
-                      {new Date(log.timestamp).toLocaleString("fr-FR")}
-                    </span>
+                    <p className="text-xs text-brand-600 dark:text-brand-400 mb-2">
+                      {log.details}
+                    </p>
+                    <div className="flex gap-4 text-[10px] text-brand-400 dark:text-brand-500">
+                      {log.device && (
+                        <span className="flex items-center gap-1">
+                          <Monitor size={10} /> {log.device}
+                        </span>
+                      )}
+                      {log.ip && (
+                        <span className="flex items-center gap-1">
+                          <MapPin size={10} /> {log.ip}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-brand-600 dark:text-brand-400 mb-2">
-                    {log.details}
-                  </p>
-                  <div className="flex gap-4 text-[10px] text-brand-400 dark:text-brand-500">
-                    {log.device && (
-                      <span className="flex items-center gap-1">
-                        <Monitor size={10} /> {log.device}
-                      </span>
-                    )}
-                    {log.ip && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={10} /> {log.ip}
-                      </span>
-                    )}
-                  </div>
+                ))}
+              {activityLogs.filter(
+                (log) => log.category === "SECURITY" || log.category === "AUTH",
+              ).length === 0 && (
+                <div className="text-center py-12 text-brand-400 dark:text-brand-500 italic">
+                  Aucun événement de sécurité enregistré.
                 </div>
-              ))}
-            {activityLogs.filter(
-              (log) => log.category === "SECURITY" || log.category === "AUTH",
-            ).length === 0 && (
-              <div className="text-center py-12 text-brand-400 dark:text-brand-500 italic">
-                Aucun événement de sécurité enregistré.
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

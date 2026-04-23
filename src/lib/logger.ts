@@ -6,7 +6,7 @@
  * - Logs stockés (IndexedDB)
  * - Logs versés à Sentry (prod)
  *
- * Niveles: DEBUG, INFO, WARN, ERROR, CRITICAL
+ * Niveaux: DEBUG, INFO, WARN, ERROR, CRITICAL
  */
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "critical";

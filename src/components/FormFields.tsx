@@ -49,7 +49,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   step,
   "aria-label": ariaLabel,
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+  const fieldId = id ?? `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -153,7 +153,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   rows = 3,
   className = "",
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+  const fieldId = id ?? `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -246,7 +246,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   options,
   className = "",
 }) => {
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+  const fieldId = id ?? `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
   let describedByValue: string | undefined;
   if (error) {
     describedByValue = `${fieldId}-error`;
@@ -328,7 +328,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
 }) => {
   const switchId =
-    id || `toggle-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+    id ?? `toggle-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   return (
     <div
@@ -407,7 +407,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     "#7c3aed",
   ],
 }) => {
-  const pickerId = id || `color-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+  const pickerId = id ?? `color-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   return (
     <div className={`space-y-3 ${id ? "" : ""}`}>
