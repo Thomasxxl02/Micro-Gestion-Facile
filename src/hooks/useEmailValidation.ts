@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 /**
- * Domaines jetables bloqu�s pour �viter les abus de liens magiques.
+ * Domaines jetables bloquÃ©s pour Ã©viter les abus de liens magiques.
  */
 const DISPOSABLE_DOMAINS = new Set([
   "tempmail.com",
@@ -12,11 +12,11 @@ const DISPOSABLE_DOMAINS = new Set([
   "throwaway.email",
   "mailinator.com",
   "yopmail.com",
-  "protonmail.ch", // Souvent utilis� pour le spam de masse sur les petits services (optionnel)
+  "protonmail.ch", // Souvent utilisÃ© pour le spam de masse sur les petits services (optionnel)
 ]);
 
 /**
- * Domaines g�n�riques bloqu�s (Optionnel: pour forcer le B2B si n�cessaire).
+ * Domaines gÃ©nÃ©riques bloquÃ©s (Optionnel: pour forcer le B2B si nÃ©cessaire).
  * Pour l'instant, on bloque juste les domaines de test/exemple.
  */
 const BLOCKED_DOMAINS = new Set([
@@ -56,7 +56,7 @@ export interface EmailValidationState {
 }
 
 /**
- * Hook de validation d'e-mail avec correction de fautes de frappe et d�tection de spam.
+ * Hook de validation d'e-mail avec correction de fautes de frappe et dÃ©tection de spam.
  */
 export function useEmailValidation(initialEmail = "") {
   const [email, setEmail] = useState(initialEmail);
@@ -92,16 +92,16 @@ export function useEmailValidation(initialEmail = "") {
       const user = parts[0];
       const domain = parts[1].toLowerCase();
 
-      // 2. D�tection de domaines jetables
+      // 2. DÃ©tection de domaines jetables
       if (DISPOSABLE_DOMAINS.has(domain)) {
-        setError("Les adresses e-mails temporaires sont bloqu�es.");
+        setError("Les adresses e-mails temporaires sont bloquÃ©es.");
         setIsValid(false);
         return;
       }
 
-      // 3. D�tection de domaines de test/abus
+      // 3. DÃ©tection de domaines de test/abus
       if (BLOCKED_DOMAINS.has(domain)) {
-        setError("Domaine non autoris�.");
+        setError("Domaine non autorisÃ©.");
         setIsValid(false);
         return;
       }

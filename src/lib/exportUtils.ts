@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import type {
   CalendarEvent,
   Client,
@@ -28,7 +29,49 @@ export interface ExportData {
 
 // ─── Fonctions utilitaires ────────────────────────────────────────────────────
 
-export function generateFilename(type: string, format: "json" | "csv"): string {
+/**
+ * Génère un package ZIP conforme RGPD contenant toutes les données utilisateur
+ * @param data Données complètes à exporter
+ * @returns Blob ZIP
+ */
+export async function generateRGPDZip(data: ExportData): Promise<Blob> {
+  const zip = new JSZip();
+  const folder = zip.folder(
+    `rgpd-export-${new Date().toISOString().slice(0, 10)}`,
+  );
+
+  if (!folder) throw new Error("Erreur de création du dossier ZIP");
+
+  // 1. JSON complet (Machine readable)
+  folder.file("data-complete.json", JSON.stringify(data, null, 2));
+
+  // 2. CSV individuels (Excel readable)
+  folder.file("clients.csv", exportAsCSV("clients", data.clients));
+  folder.file("invoices.csv", exportAsCSV("invoices", data.invoices));
+  folder.file("expenses.csv", exportAsCSV("expenses", data.expenses));
+  folder.file("products.csv", exportAsCSV("products", data.products));
+  folder.file("suppliers.csv", exportAsCSV("suppliers", data.suppliers));
+
+  // 3. Notice d'information
+  const readme = `EXPORT RGPD - MICRO-GESTION FACILE
+Généré le : ${new Date().toLocaleString("fr-FR")}
+
+Ce fichier contient l'intégralité de vos données personnelles et professionnelles
+stockées dans l'application, conformément au Droit à la Portabilité (Art. 20 du RGPD).
+
+Contenu :
+- data-complete.json : Format technique pour import dans un autre logiciel.
+- *.csv : Fichiers lisibles via Excel ou Tableur.
+`;
+  folder.file("README.txt", readme);
+
+  return await zip.generateAsync({ type: "blob" });
+}
+
+export function generateFilename(
+  type: string,
+  format: "json" | "csv" | "zip",
+): string {
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
   return `micro-gestion-${type}-${date}.${format}`;

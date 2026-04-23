@@ -1,0 +1,45 @@
+# Dictionnaire custom — Micro-Gestion-Facile
+# Termes techniques et métier spécifiques au projet
+
+# Termes RGPD / données personnelles
+Pseudonymisation
+pseudonymise
+pseudonymisé
+pseudonymize
+anonymiseur
+anonymisation
+
+# Audio / DSP
+ADSR
+
+# Web performance
+TTFB
+
+# API French Business Registry (INSEE Sirene)
+Sirene
+ETABLISSEMENTS
+RECUPEREE
+
+# Abréviations et acronymes
+rgpd
+verno
+
+# Programmation fonctionnelle (français)
+currifié
+
+# UI / terminologie mixte
+préview
+Editeur
+Liberatoire
+
+# Domaines e-mail jetables / typos intentionnels (liste noire)
+yopmail
+gmal
+gmial
+gamil
+hotmial
+outlok
+yaho
+wanadoo
+gnail
+gmaill

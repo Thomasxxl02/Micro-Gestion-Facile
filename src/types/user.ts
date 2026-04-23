@@ -98,6 +98,9 @@ export interface UserProfile {
   preferences?: Record<string, unknown>; // Préférences globales UI/Style
 
   // Paramètres de facturation avancés (Conformité 2026)
+  forcedDraftMode?: boolean; // Bloquer la numérotation automatique tant que non validé
+  roundingMode?: "LINE" | "TOTAL"; // Arrondi par ligne ou sur le total (Factur-X)
+  smartVatDetection?: boolean; // Détection auto de la TVA selon le client
   paymentTermsDefault?:
     | "A_RECEPTION"
     | "30_DAYS"
@@ -114,8 +117,16 @@ export interface UserProfile {
   activityTypeSecondary?: ActivityType;
   hasTaxVersantLiberatoire?: boolean;
 
-  fontFamily?: string;
+  // Branding & Documents
+  fontFamily?: "sans" | "serif" | "mono" | "slab";
   invoiceTemplate?: "modern" | "classic" | "minimal" | "corporate";
+  hiddenInvoiceColumns?: string[]; // Liste des colonnes à masquer (ex: "unit", "vat")
+
+  // Sécurité & Conformité
+  auditLogEnabled?: boolean;
+  sessionTimeout?: number; // Minutes d'inactivité avant verrouillage
+  pinCode?: string; // Code PIN haché
+  biometricEnabled?: boolean;
 
   // Préférences UI/UX
   theme?: "light" | "dark" | "auto";

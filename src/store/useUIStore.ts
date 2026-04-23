@@ -28,6 +28,12 @@ export interface UIStoreState {
   setReducedMotion: (_reduced: boolean) => void;
   soundEnabled: boolean;
   setSoundEnabled: (_enabled: boolean) => void;
+  highVisibility: boolean;
+  setHighVisibility: (_enabled: boolean) => void;
+
+  // Connection Preferences
+  offlinePriority: boolean;
+  setOfflinePriority: (_enabled: boolean) => void;
 
   // Font Size
   fontSize: number;
@@ -95,6 +101,29 @@ export const useUIStore = create<UIStoreState>()(
           set({ soundEnabled: enabled });
         },
 
+        highVisibility:
+          typeof globalThis !== "undefined" && globalThis.window
+            ? localStorage.getItem("high-visibility") === "true"
+            : false,
+        setHighVisibility: (enabled: boolean) => {
+          if (enabled) {
+            document.documentElement.classList.add("high-visibility");
+          } else {
+            document.documentElement.classList.remove("high-visibility");
+          }
+          localStorage.setItem("high-visibility", enabled.toString());
+          set({ highVisibility: enabled });
+        },
+
+        offlinePriority:
+          typeof globalThis !== "undefined" && globalThis.window
+            ? localStorage.getItem("offline-priority") === "true"
+            : false,
+        setOfflinePriority: (enabled: boolean) => {
+          localStorage.setItem("offline-priority", enabled.toString());
+          set({ offlinePriority: enabled });
+        },
+
         // Font Size
         fontSize:
           typeof globalThis !== "undefined" && globalThis.window
@@ -117,6 +146,8 @@ export const useUIStore = create<UIStoreState>()(
             fontSize: 16,
             reducedMotion: false,
             soundEnabled: true,
+            highVisibility: false,
+            offlinePriority: false,
           }),
       }),
       {
@@ -127,6 +158,8 @@ export const useUIStore = create<UIStoreState>()(
           fontSize: state.fontSize,
           reducedMotion: state.reducedMotion,
           soundEnabled: state.soundEnabled,
+          highVisibility: state.highVisibility,
+          offlinePriority: state.offlinePriority,
         }),
       },
     ),

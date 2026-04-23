@@ -13,7 +13,8 @@
     {
       "languageId": "*",
       "locale": "*",
-      "dictionaries": ["fr-fr", "french-custom"]
+      "dictionaries": ["fr-fr", "french-custom"],
+      "wordCharacters": "À-ÖØ-öø-ÿŒœ'"
     }
   ],
   "ignorePaths": [

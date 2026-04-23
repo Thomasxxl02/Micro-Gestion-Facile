@@ -1,0 +1,11 @@
+{
+  "connector": {
+    "name": "local",
+  },
+  "hints": {
+    "axe/aria": "off",
+    "no-inline-styles": "off",
+    "typescript-config/is-valid": "off",
+  },
+  "ignoredUrls": [".*\\.tsx?$"],
+}
