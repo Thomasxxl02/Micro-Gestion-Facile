@@ -10,7 +10,6 @@ import {
   Package,
   ReceiptText,
   Settings,
-  Sparkles,
   Sun,
   Truck,
   Users,
@@ -66,7 +65,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <ReceiptText size={18} />,
     },
     { id: "emails", label: "Emails", icon: <Mail size={18} /> },
-    { id: "ai_assistant", label: "Assistant IA", icon: <Sparkles size={18} /> },
     { id: "settings", label: "Paramètres", icon: <Settings size={18} /> },
   ];
 
@@ -158,7 +156,6 @@ const Sidebar: React.FC<SidebarProps> = ({
               aria-current={currentView === item.id ? "page" : undefined}
               className={`
                 w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden
-                ${item.id === "ai_assistant" ? "zen-hidden" : ""}
                 ${
                   currentView === item.id
                     ? "bg-brand-600 dark:bg-primary-500 text-white shadow-xl shadow-brand-600/30 dark:shadow-primary-500/30"

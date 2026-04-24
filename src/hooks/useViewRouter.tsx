@@ -39,7 +39,6 @@ const CalendarManager = React.lazy(
 const SettingsManager = React.lazy(
   () => import("../components/SettingsManager"),
 );
-const AIAssistant = React.lazy(() => import("../components/AIAssistant"));
 const BankReconciliationManager = React.lazy(
   () => import("../components/BankReconciliationManager"),
 );
@@ -254,9 +253,6 @@ export const useViewRouter = ({
             }}
           />
         );
-
-      case "ai_assistant":
-        return <AIAssistant />;
 
       case "bank_reconciliation":
         return (

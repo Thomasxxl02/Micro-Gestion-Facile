@@ -3,8 +3,8 @@
  * Sources : URSSAF / Service-Public.fr
  */
 
-import Decimal from 'decimal.js';
-import type { ActivityType, UserProfile } from '../types';
+import Decimal from "decimal.js";
+import type { ActivityType, UserProfile } from "../types";
 
 export interface SocialContributions {
   rate: number;
@@ -30,20 +30,58 @@ const ACRE_RATES = {
 };
 
 /**
+ * Durée d'exonération ACRE : 12 mois calendaires à compter de la date de début
+ * d'activité (art. L.5141-1 du Code du Travail).
+ *
+ * @param profile Profil utilisateur
+ * @param referenceDate Date de référence pour le calcul (défaut : aujourd'hui)
+ * @returns true si l'ACRE est encore applicable à la date de référence
+ */
+export const isAcreActive = (
+  profile: UserProfile,
+  referenceDate: Date = new Date(),
+): boolean => {
+  if (!profile.isAcreBeneficiary) return false;
+  if (!profile.businessStartDate) {
+    // Aucune date de démarrage renseignée → on applique le bénéfice par défaut
+    // (dégradé safe : l'utilisateur devrait renseigner la date)
+    return true;
+  }
+  const start = new Date(profile.businessStartDate);
+  // Date d'expiration = 12 mois après la date de début
+  const expiry = new Date(start);
+  expiry.setMonth(expiry.getMonth() + 12);
+  return referenceDate < expiry;
+};
+
+/**
  * Calcule les cotisations sociales pour un chiffre d'affaires donné
  * @param revenue Chiffre d'affaires brut (TTC ou HT selon franchise)
  * @param profile Profil de l'utilisateur (pour ACRE et type d'activité)
+ * @param referenceDate Date de référence (défaut : aujourd'hui) — utile pour les tests
  */
 export const calculateSocialContributions = (
   revenue: number,
-  profile: UserProfile
+  profile: UserProfile,
+  referenceDate: Date = new Date(),
 ): SocialContributions => {
-  const type = profile.activityType ?? 'SERVICE_BNC';
-  const isAcre = profile.isAcreBeneficiary ?? false;
+  const type = profile.activityType ?? "SERVICE_BNC";
+  const isAcre = isAcreActive(profile, referenceDate);
 
-  const rate = isAcre ? ACRE_RATES[type] : STANDARD_RATES[type];
+  // Taux personnalisé dans le profil (ex. taux négocié ou correction manuelle).
+  // Priorité sur les constantes réglementaires pour permettre la souplesse UX.
+  const rate =
+    profile.socialContributionRate !== undefined &&
+    profile.socialContributionRate > 0
+      ? profile.socialContributionRate
+      : isAcre
+        ? ACRE_RATES[type]
+        : STANDARD_RATES[type];
   const revenueD = new Decimal(revenue);
-  const amount = revenueD.times(new Decimal(rate)).dividedBy(100).toDecimalPlaces(2);
+  const amount = revenueD
+    .times(new Decimal(rate))
+    .dividedBy(100)
+    .toDecimalPlaces(2);
   const netRevenue = revenueD.minus(amount).toDecimalPlaces(2);
 
   return {
@@ -58,7 +96,10 @@ export const calculateSocialContributions = (
  * Calcule l'Impôt sur le Revenu (Prélèvement Forfaitaire Libératoire)
  * Optionnel selon le revenu fiscal de référence
  */
-export const calculateIncomeTaxPFL = (revenue: number, type: ActivityType): number => {
+export const calculateIncomeTaxPFL = (
+  revenue: number,
+  type: ActivityType,
+): number => {
   const taxRates = {
     SALE: 1.0,
     SERVICE_BIC: 1.7,
@@ -95,10 +136,12 @@ export const THRESHOLDS_2026 = {
  * Détermine le seuil applicable selon le type d'activité
  */
 export const getThresholds = (type: ActivityType) => {
-  const isSale = type === 'SALE';
+  const isSale = type === "SALE";
   return {
     micro: isSale ? THRESHOLDS_2026.MICRO.SALE : THRESHOLDS_2026.MICRO.SERVICE,
-    tva: isSale ? THRESHOLDS_2026.TVA_FRANCHISE.SALE : THRESHOLDS_2026.TVA_FRANCHISE.SERVICE,
+    tva: isSale
+      ? THRESHOLDS_2026.TVA_FRANCHISE.SALE
+      : THRESHOLDS_2026.TVA_FRANCHISE.SERVICE,
     tvaTolerance: isSale
       ? THRESHOLDS_2026.TVA_TOLERANCE.SALE
       : THRESHOLDS_2026.TVA_TOLERANCE.SERVICE,
@@ -108,8 +151,11 @@ export const getThresholds = (type: ActivityType) => {
 /**
  * Calcule l'état par rapport aux seuils
  */
-export const calculateThresholdStatus = (currentRevenue: number, profile: UserProfile) => {
-  const type = profile.activityType ?? 'SERVICE_BNC';
+export const calculateThresholdStatus = (
+  currentRevenue: number,
+  profile: UserProfile,
+) => {
+  const type = profile.activityType ?? "SERVICE_BNC";
   const thresholds = getThresholds(type);
 
   // Pourcentages d'alerte personnalisés (fallback sur 80/90%)

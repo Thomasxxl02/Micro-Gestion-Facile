@@ -14,7 +14,7 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { parseImportJSON } from "../lib/exportUtils";
+import { parseImportJSON, validateImportData } from "../lib/exportUtils";
 import { useAppStore } from "../store/appStore";
 import useLogStore from "../store/useLogStore";
 import useUIStore from "../store/useUIStore";
@@ -78,12 +78,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   setAllData,
   // eslint-disable-next-line complexity
 }) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<
     "profile" | "billing" | "data" | "preferences" | "security"
   >("profile");
 
   const { addLog, fontSize, setFontSize } = useAppStore();
+  const user = useAppStore((s) => s.user);
   const {
     reducedMotion,
     setReducedMotion,
@@ -100,7 +100,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now() - 120000);
   const [isDirty, setIsDirty] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [_lastBackupDate] = useState<string | null>(
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(
     localStorage.getItem("mgf_last_backup_date"),
   );
 
@@ -186,6 +186,21 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     if (!/^\d{14}$/.test(digits)) {
       return "Le SIRET doit contenir exactement 14 chiffres";
     }
+    // Algorithme de Luhn adapté au SIRET (norme INSEE)
+    // Chaque chiffre en position paire (depuis la droite) est doublé ;
+    // si le résultat > 9, on soustrait 9. La somme totale doit être divisible par 10.
+    let sum = 0;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let d = parseInt(digits[i], 10);
+      if ((digits.length - 1 - i) % 2 === 1) {
+        d *= 2;
+        if (d > 9) d -= 9;
+      }
+      sum += d;
+    }
+    if (sum % 10 !== 0) {
+      return "Numéro SIRET invalide (clé de contrôle incorrecte)";
+    }
     return undefined;
   };
 
@@ -215,17 +230,37 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   };
 
   const handleForceSync = async () => {
+    if (!user) {
+      toast.info("Synchronisation Cloud non disponible", {
+        description:
+          "Connectez-vous à un compte pour synchroniser vos données dans le cloud.",
+      });
+      return;
+    }
     setIsSyncing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLastSyncTime(Date.now());
-    setIsSyncing(false);
-    toast.success("Synchronisation Cloud terminée");
+    try {
+      const { doc: firestoreDoc, getDocFromServer } =
+        await import("firebase/firestore");
+      const { db: firestoreDb } = await import("../firebase");
+      await getDocFromServer(
+        firestoreDoc(firestoreDb, `users/${user.uid}/profile/main`),
+      );
+      setLastSyncTime(Date.now());
+      toast.success("Synchronisation Cloud terminée");
+    } catch (err) {
+      toast.error("Erreur de synchronisation", {
+        description:
+          err instanceof Error ? err.message : "Vérifiez votre connexion.",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleImportFile = async (file: File) => {
     try {
-      const data = await parseImportJSON(file);
-      if (!data || Object.keys(data).length === 0) {
+      const raw = await parseImportJSON(file);
+      if (!raw || Object.keys(raw).length === 0) {
         addLog("Échec de l'importation de données", "DATA", "ERROR");
         toast.error("Erreur d'importation", {
           description: "Fichier invalide ou vide",
@@ -233,43 +268,32 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         return;
       }
 
-      if (data.userProfile) setUserProfile(data.userProfile as UserProfile);
-      if (data.invoices) setAllData.setInvoices(data.invoices as Invoice[]);
-      if (data.clients) setAllData.setClients(data.clients as Client[]);
-      if (data.suppliers) setAllData.setSuppliers(data.suppliers as Supplier[]);
-      if (data.products) setAllData.setProducts(data.products as Product[]);
-      if (data.expenses) setAllData.setExpenses(data.expenses as Expense[]);
-
-      addLog("Importation de données externe réussie", "DATA", "INFO");
-      toast.success("Données importées avec succès");
-    } catch {
-      addLog("Échec de l'importation de données", "DATA", "ERROR");
-      toast.error("Erreur d'importation", {
-        description: "Le fichier est invalide ou corrompu.",
-      });
-    }
-  };
-
-  const handleImportAll = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const data = await parseImportJSON(file);
-      if (!data || Object.keys(data).length === 0) {
-        addLog("Échec de l'importation de données", "DATA", "ERROR");
-        toast.error("Erreur d'importation", {
-          description: "Fichier invalide ou vide",
+      // ── Validation de version / schéma (#10) ──────────────────────────────
+      const validation = validateImportData(raw);
+      if (!validation.isValid) {
+        addLog("Échec de l'importation : format non reconnu", "DATA", "ERROR");
+        toast.error("Format non reconnu", {
+          description: validation.warnings.join(" "),
         });
         return;
       }
+      if (validation.warnings.length > 0) {
+        // Avertissement non bloquant (version ancienne, champ version absent…)
+        toast.warning("Avertissement à l'import", {
+          description: validation.warnings.join(" "),
+        });
+      }
 
-      if (data.userProfile) setUserProfile(data.userProfile as UserProfile);
-      if (data.invoices) setAllData.setInvoices(data.invoices as Invoice[]);
-      if (data.clients) setAllData.setClients(data.clients as Client[]);
-      if (data.suppliers) setAllData.setSuppliers(data.suppliers as Supplier[]);
-      if (data.products) setAllData.setProducts(data.products as Product[]);
-      if (data.expenses) setAllData.setExpenses(data.expenses as Expense[]);
+      // ── Import des données — geminiApiKey jamais restaurée (#15) ──────────
+      if (raw.userProfile) {
+        const { geminiApiKey: _stripped, ...safeProfile } = raw.userProfile;
+        setUserProfile(safeProfile as UserProfile);
+      }
+      if (raw.invoices) setAllData.setInvoices(raw.invoices as Invoice[]);
+      if (raw.clients) setAllData.setClients(raw.clients as Client[]);
+      if (raw.suppliers) setAllData.setSuppliers(raw.suppliers as Supplier[]);
+      if (raw.products) setAllData.setProducts(raw.products as Product[]);
+      if (raw.expenses) setAllData.setExpenses(raw.expenses as Expense[]);
 
       addLog("Importation de données externe réussie", "DATA", "INFO");
       toast.success("Données importées avec succès");
@@ -489,6 +513,9 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               isSyncing={isSyncing}
               lastSyncTime={lastSyncTime}
               onForceSync={handleForceSync}
+              isFirebaseConnected={user !== null}
+              connectedEmail={user?.email ?? null}
+              lastBackupDate={lastBackupDate}
               activityLogs={activityLogs}
             />
           )}
@@ -604,10 +631,17 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
+        onExportSuccess={() => {
+          const d = localStorage.getItem("mgf_last_backup_date");
+          setLastBackupDate(d);
+        }}
         data={{
           version: "1.0",
           exportedAt: new Date().toISOString(),
-          userProfile,
+          // geminiApiKey exclue de l'export (#15 — clé sensible jamais persistée)
+          userProfile: (({ geminiApiKey: _k, ...safe }) => safe)(
+            userProfile,
+          ) as UserProfile,
           invoices: allData.invoices,
           clients: allData.clients,
           suppliers: allData.suppliers,
@@ -625,17 +659,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         isDangerous={confirmDialog.isDangerous}
         onConfirm={confirmDialog.onConfirm ?? (() => {})}
         onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-      />
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept=".json"
-        onChange={(e) => {
-          void handleImportAll(e);
-        }}
-        aria-label="Sélectionner un fichier JSON"
       />
     </div>
   );

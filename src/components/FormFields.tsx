@@ -18,7 +18,15 @@ interface FormFieldProps {
   description?: string;
   error?: string;
   required?: boolean;
-  type?: "text" | "email" | "number" | "password" | "url" | "tel" | "search";
+  type?:
+    | "text"
+    | "email"
+    | "number"
+    | "password"
+    | "url"
+    | "tel"
+    | "search"
+    | "date";
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;

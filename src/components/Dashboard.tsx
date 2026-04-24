@@ -1228,7 +1228,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                       €
                                     </p>
                                     <span
-                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-wider
                                    ${badgeClass}`}
                                     >
                                       {"activityType" in item &&
