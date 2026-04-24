@@ -54,7 +54,7 @@ export class ErrorBoundary extends React.Component<
       resetCount: 0,
     };
 
-    this.previousResetKeys = props.resetKeys || [];
+    this.previousResetKeys = props.resetKeys ?? [];
   }
 
   /**
@@ -136,7 +136,7 @@ export class ErrorBoundary extends React.Component<
       return (
         <ErrorFallback
           error={error!}
-          errorInfo={errorInfo || undefined}
+          errorInfo={errorInfo ?? undefined}
           resetErrorBoundary={this.resetErrorBoundary}
         />
       );

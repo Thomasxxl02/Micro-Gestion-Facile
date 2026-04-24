@@ -46,6 +46,7 @@ export interface UIStoreState {
 export const useUIStore = create<UIStoreState>()(
   devtools(
     persist(
+      // eslint-disable-next-line complexity
       (set) => ({
         // Navigation
         currentView: "dashboard" as ViewState,

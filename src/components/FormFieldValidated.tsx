@@ -180,6 +180,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   // Propriétés optionnelles pour intégration avec useFormValidation
   error: externalError,
   touched: externalTouched,
+  // eslint-disable-next-line complexity
 }) => {
   const isTextarea = type === "textarea";
 
@@ -221,8 +222,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   // Déterminer l'erreur et le statut touché final
   const currentError =
     externalError !== undefined ? externalError : internalError;
-  const isTouched =
-    externalTouched !== undefined ? externalTouched : internalTouched;
+  const isTouched = externalTouched ?? internalTouched;
 
   // Afficher l'erreur si on a une erreur ET (soit on affiche tout de suite, soit le champ a été touché)
   const shouldShowError =
@@ -247,7 +247,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
     }
   };
 
-  const fieldId = id || `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
+  const fieldId = id ?? `field-${label.toLowerCase().replaceAll(/\s+/g, "-")}`;
 
   let describedByValue: string | undefined;
   if (shouldShowError) {

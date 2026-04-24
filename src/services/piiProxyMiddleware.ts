@@ -128,6 +128,7 @@ export class PIIProxyMiddleware {
    * @param requestType Type de requête (compliance, financial, general, email)
    * @returns Texte avec données sensibles masquées
    */
+  // eslint-disable-next-line complexity
   static maskSensitiveData(
     text: string,
     context: string = "general",
@@ -138,7 +139,7 @@ export class PIIProxyMiddleware {
     // ORDRE CRITIQUE: Patterns spécifiques AVANT patterns génériques
     // 1. Identifiants fiscaux français (très spécifiques)
     if (PII_PATTERNS.tvaFR.test(masked)) {
-      const matches = text.match(PII_PATTERNS.tvaFR) || [];
+      const matches = text.match(PII_PATTERNS.tvaFR) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "tva",
@@ -152,7 +153,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.siret.test(masked)) {
-      const matches = text.match(PII_PATTERNS.siret) || [];
+      const matches = text.match(PII_PATTERNS.siret) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "siret",
@@ -166,7 +167,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.siren.test(masked)) {
-      const matches = text.match(PII_PATTERNS.siren) || [];
+      const matches = text.match(PII_PATTERNS.siren) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "siren",
@@ -181,7 +182,7 @@ export class PIIProxyMiddleware {
 
     // 2. Contact & Identité générales
     if (PII_PATTERNS.email.test(masked)) {
-      const matches = text.match(PII_PATTERNS.email) || [];
+      const matches = text.match(PII_PATTERNS.email) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "email",
@@ -195,7 +196,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.phoneFR.test(masked)) {
-      const matches = text.match(PII_PATTERNS.phoneFR) || [];
+      const matches = text.match(PII_PATTERNS.phoneFR) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "phoneFR",
@@ -210,7 +211,7 @@ export class PIIProxyMiddleware {
 
     // 3. Identifiants bancaires (IBAN français d'abord)
     if (PII_PATTERNS.ibanFR.test(masked)) {
-      const matches = text.match(PII_PATTERNS.ibanFR) || [];
+      const matches = text.match(PII_PATTERNS.ibanFR) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "iban",
@@ -224,7 +225,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.iban.test(masked)) {
-      const matches = text.match(PII_PATTERNS.iban) || [];
+      const matches = text.match(PII_PATTERNS.iban) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "iban",
@@ -238,7 +239,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.cardNumber.test(masked)) {
-      const matches = text.match(PII_PATTERNS.cardNumber) || [];
+      const matches = text.match(PII_PATTERNS.cardNumber) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "card",
@@ -253,7 +254,7 @@ export class PIIProxyMiddleware {
 
     // 4. TVA intracommunautaire générique (APRÈS tvaFR)
     if (PII_PATTERNS.tvaIntra.test(masked)) {
-      const matches = text.match(PII_PATTERNS.tvaIntra) || [];
+      const matches = text.match(PII_PATTERNS.tvaIntra) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "tva",
@@ -268,7 +269,7 @@ export class PIIProxyMiddleware {
 
     // 5. Identité & SSN
     if (PII_PATTERNS.ssn.test(masked)) {
-      const matches = text.match(PII_PATTERNS.ssn) || [];
+      const matches = text.match(PII_PATTERNS.ssn) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "ssn",
@@ -283,7 +284,7 @@ export class PIIProxyMiddleware {
 
     // 6. Infrastructure (moins critique)
     if (PII_PATTERNS.ipv4.test(masked)) {
-      const matches = text.match(PII_PATTERNS.ipv4) || [];
+      const matches = text.match(PII_PATTERNS.ipv4) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "ip",
@@ -297,7 +298,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.ipv6.test(masked)) {
-      const matches = text.match(PII_PATTERNS.ipv6) || [];
+      const matches = text.match(PII_PATTERNS.ipv6) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "ip",
@@ -311,7 +312,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.ipv6Compressed.test(masked)) {
-      const matches = text.match(PII_PATTERNS.ipv6Compressed) || [];
+      const matches = text.match(PII_PATTERNS.ipv6Compressed) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "ip",
@@ -325,7 +326,7 @@ export class PIIProxyMiddleware {
     }
 
     if (PII_PATTERNS.postalCode.test(masked)) {
-      const matches = text.match(PII_PATTERNS.postalCode) || [];
+      const matches = text.match(PII_PATTERNS.postalCode) ?? [];
       matches.forEach((match) => {
         PIIAuditLogger.logDetection(
           "postal",

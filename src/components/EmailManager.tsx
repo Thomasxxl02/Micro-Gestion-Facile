@@ -55,6 +55,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   onDeleteEmail,
   onSaveTemplate,
   onDeleteTemplate,
+  // eslint-disable-next-line complexity
 }) => {
   const [activeTab, setActiveTab] = useState<
     "history" | "compose" | "templates"
@@ -111,18 +112,17 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
     setIsDrafting(true);
     try {
+      let emailPurpose = "Communication diverse";
+      if (composeData.type === "reminder")
+        emailPurpose = "Relance de facture impayée";
+      else if (composeData.type === "invoice")
+        emailPurpose = "Envoi de facture";
+      else if (composeData.type === "quote") emailPurpose = "Envoi de devis";
       const draft = await draftEmail({
         clientName: client.name,
         invoiceNumber: invoice?.number,
         total: invoice?.total.toString(),
-        purpose:
-          composeData.type === "reminder"
-            ? "Relance de facture impayée"
-            : composeData.type === "invoice"
-              ? "Envoi de facture"
-              : composeData.type === "quote"
-                ? "Envoi de devis"
-                : "Communication diverse",
+        purpose: emailPurpose,
         tone: "formal",
         companyName: userProfile.companyName,
       });
@@ -140,7 +140,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(composeData.body);
+    void navigator.clipboard.writeText(composeData.body);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -159,7 +159,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     };
     setEmails([...emails, newEmail]);
     if (onSaveEmail) onSaveEmail(newEmail);
-    playSound("success");
+    void playSound("success");
     toast.success("Email envoyé avec succès");
     setIsComposeOpen(false);
     setComposeData({
@@ -190,10 +190,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({
     } else {
       const newTemplate: EmailTemplate = {
         id: Date.now().toString(),
-        name: templateFormData.name || "Nouveau Template",
-        subject: templateFormData.subject || "",
-        body: templateFormData.body || "",
-        type: templateFormData.type || "custom",
+        name: templateFormData.name ?? "Nouveau Template",
+        subject: templateFormData.subject ?? "",
+        body: templateFormData.body ?? "",
+        type: templateFormData.type ?? "custom",
       };
       setTemplates([...templates, newTemplate]);
       if (onSaveTemplate) onSaveTemplate(newTemplate);
@@ -211,8 +211,8 @@ const EmailManager: React.FC<EmailManagerProps> = ({
 
     const replacements: Record<string, string> = {
       "{{company_name}}": userProfile.companyName,
-      "{{client_name}}": client?.name || "Client",
-      "{{invoice_number}}": invoice?.number || "N/A",
+      "{{client_name}}": client?.name ?? "Client",
+      "{{invoice_number}}": invoice?.number ?? "N/A",
       "{{total}}": invoice ? `${invoice.total.toFixed(2)}€` : "0.00€",
       "{{due_date}}": invoice?.dueDate
         ? new Date(invoice.dueDate).toLocaleDateString()
@@ -514,7 +514,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                           onClick={() =>
                             setTemplateFormData({
                               ...templateFormData,
-                              body: (templateFormData.body || "") + v.key,
+                              body: (templateFormData.body ?? "") + v.key,
                             })
                           }
                           className="text-[10px] bg-brand-900 text-white px-2 py-1 rounded-lg hover:bg-brand-700 transition-all font-bold"
@@ -618,9 +618,9 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       className={`inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider mb-3 ${
                         template.type === "reminder"
                           ? "bg-orange-50 text-orange-600"
-                          : template.type === "invoice"
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-brand-50 text-brand-600"
+                          : (template.type === "invoice" &&
+                              "bg-emerald-50 text-emerald-600") ||
+                            "bg-brand-50 text-brand-600"
                       }`}
                     >
                       {template.type}
@@ -655,7 +655,9 @@ const EmailManager: React.FC<EmailManagerProps> = ({
               </h3>
               <div className="flex gap-2">
                 <button
-                  onClick={handleAIDraft}
+                  onClick={() => {
+                    void handleAIDraft();
+                  }}
                   disabled={isDrafting || !composeData.clientId}
                   className="flex items-center gap-2 px-4 py-2 bg-accent-50 text-accent-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-accent-100 transition-all disabled:opacity-50"
                 >
@@ -732,7 +734,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                           setComposeData({
                             ...composeData,
                             clientId: e.target.value,
-                            to: client?.email || "",
+                            to: client?.email ?? "",
                           });
                         }}
                       >

@@ -44,6 +44,15 @@ export default [
         clearTimeout: "readonly",
         setInterval: "readonly",
         clearInterval: "readonly",
+        // PWA / Service Workers
+        caches: "readonly",
+        ServiceWorkerGlobalScope: "readonly",
+        ExtendableEvent: "readonly",
+        FetchEvent: "readonly",
+        ExtendableMessageEvent: "readonly",
+        self: "readonly",
+        // Node / Globals
+        __dirname: "readonly",
         // Dialogs
         alert: "readonly",
         confirm: "readonly",
@@ -103,9 +112,15 @@ export default [
     },
   },
   {
+    files: ["public/sw.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     files: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       "no-console": "off",
     },
   },

@@ -9,40 +9,50 @@
  *   - CSV  : export par collection (compatible Excel/OpenOffice)
  */
 
-import { Archive, Check, Download, FileBraces as FileJson, FileSpreadsheet, X } from 'lucide-react';
-import React, { useState } from 'react';
-import { toast } from 'sonner';
+import {
+  Archive,
+  Check,
+  Download,
+  FileBraces as FileJson,
+  FileSpreadsheet,
+  X,
+} from "lucide-react";
+import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   downloadFile,
   exportAsCSV,
   exportAsJSON,
   generateFilename,
   type ExportData,
-} from '../lib/exportUtils';
+} from "../lib/exportUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ExportFormat = 'json' | 'csv';
+type ExportFormat = "json" | "csv";
 
-type CollectionKey = Exclude<keyof ExportData, 'version' | 'exportedAt' | 'userProfile'>;
+type CollectionKey = Exclude<
+  keyof ExportData,
+  "version" | "exportedAt" | "userProfile"
+>;
 
 const COLLECTION_LABELS: Record<CollectionKey, string> = {
-  invoices: 'Factures & devis',
-  clients: 'Clients',
-  suppliers: 'Fournisseurs',
-  products: 'Produits & services',
-  expenses: 'Dépenses',
-  emails: 'Emails',
+  invoices: "Factures & devis",
+  clients: "Clients",
+  suppliers: "Fournisseurs",
+  products: "Produits & services",
+  expenses: "Dépenses",
+  emails: "Emails",
   emailTemplates: "Modèles d'email",
-  calendarEvents: 'Événements calendrier',
+  calendarEvents: "Événements calendrier",
 };
 
 const CSV_COLLECTION_KEYS: CollectionKey[] = [
-  'invoices',
-  'clients',
-  'suppliers',
-  'products',
-  'expenses',
+  "invoices",
+  "clients",
+  "suppliers",
+  "products",
+  "expenses",
 ];
 
 export interface ExportModalProps {
@@ -54,10 +64,10 @@ export interface ExportModalProps {
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
-  const [format, setFormat] = useState<ExportFormat>('json');
-  const [selectedCollections, setSelectedCollections] = useState<Set<CollectionKey>>(
-    new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[])
-  );
+  const [format, setFormat] = useState<ExportFormat>("json");
+  const [selectedCollections, setSelectedCollections] = useState<
+    Set<CollectionKey>
+  >(new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[]));
   const [isExporting, setIsExporting] = useState(false);
 
   if (!isOpen) {
@@ -79,19 +89,21 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
   };
 
   const selectAll = () =>
-    setSelectedCollections(new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[]));
+    setSelectedCollections(
+      new Set(Object.keys(COLLECTION_LABELS) as CollectionKey[]),
+    );
 
   const deselectAll = () => setSelectedCollections(new Set());
 
   const handleExport = async () => {
     if (selectedCollections.size === 0) {
-      toast.warning('Sélectionnez au moins une collection à exporter.');
+      toast.warning("Sélectionnez au moins une collection à exporter.");
       return;
     }
 
     setIsExporting(true);
     try {
-      if (format === 'json') {
+      if (format === "json") {
         // Export complet JSON avec les collections sélectionnées
         const partial: Partial<ExportData> = { userProfile: data.userProfile };
         for (const key of selectedCollections) {
@@ -99,14 +111,20 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
           (partial as any)[key] = data[key];
         }
         const json = await exportAsJSON(partial);
-        downloadFile(json, generateFilename('backup', 'json'), 'application/json');
-        toast.success('Export JSON téléchargé avec succès');
+        downloadFile(
+          json,
+          generateFilename("backup", "json"),
+          "application/json",
+        );
+        toast.success("Export JSON téléchargé avec succès");
       } else {
         // Export CSV par collection (une par fichier)
-        const csvKeys = CSV_COLLECTION_KEYS.filter((k) => selectedCollections.has(k));
+        const csvKeys = CSV_COLLECTION_KEYS.filter((k) =>
+          selectedCollections.has(k),
+        );
         if (csvKeys.length === 0) {
           toast.warning(
-            'Le format CSV ne supporte que : factures, clients, fournisseurs, produits, dépenses.'
+            "Le format CSV ne supporte que : factures, clients, fournisseurs, produits, dépenses.",
           );
           return;
         }
@@ -116,13 +134,17 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
             continue;
           }
           const csv = exportAsCSV(key, rows);
-          downloadFile(csv, generateFilename(key, 'csv'), 'text/csv;charset=utf-8');
+          downloadFile(
+            csv,
+            generateFilename(key, "csv"),
+            "text/csv;charset=utf-8",
+          );
         }
         toast.success(`${csvKeys.length} fichier(s) CSV téléchargé(s)`);
       }
       onClose();
     } catch (err) {
-      console.error('[ExportModal] Erreur export:', err);
+      console.error("[ExportModal] Erreur export:", err);
       toast.error("L'export a échoué. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -191,17 +213,17 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
               <div className="grid grid-cols-2 gap-3">
                 <label
                   className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                    format === 'json'
-                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200'
-                      : 'border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500'
+                    format === "json"
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200"
+                      : "border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500"
                   }`}
                 >
                   <input
                     type="radio"
                     name="export-format"
                     value="json"
-                    checked={format === 'json'}
-                    onChange={() => setFormat('json')}
+                    checked={format === "json"}
+                    onChange={() => setFormat("json")}
                     className="sr-only"
                   />
                   <FileJson size={24} aria-hidden="true" />
@@ -209,24 +231,28 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
                     <p className="font-bold text-sm">JSON</p>
                     <p className="text-[10px] opacity-70">Backup complet</p>
                   </div>
-                  {format === 'json' && (
-                    <Check size={14} className="ml-auto text-brand-500" aria-hidden="true" />
+                  {format === "json" && (
+                    <Check
+                      size={14}
+                      className="ml-auto text-brand-500"
+                      aria-hidden="true"
+                    />
                   )}
                 </label>
 
                 <label
                   className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                    format === 'csv'
-                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200'
-                      : 'border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500'
+                    format === "csv"
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-800/50 text-brand-700 dark:text-brand-200"
+                      : "border-brand-100 dark:border-brand-800 hover:border-brand-300 text-brand-500"
                   }`}
                 >
                   <input
                     type="radio"
                     name="export-format"
                     value="csv"
-                    checked={format === 'csv'}
-                    onChange={() => setFormat('csv')}
+                    checked={format === "csv"}
+                    onChange={() => setFormat("csv")}
                     className="sr-only"
                   />
                   <FileSpreadsheet size={24} aria-hidden="true" />
@@ -234,8 +260,12 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
                     <p className="font-bold text-sm">CSV</p>
                     <p className="text-[10px] opacity-70">Compatible Excel</p>
                   </div>
-                  {format === 'csv' && (
-                    <Check size={14} className="ml-auto text-brand-500" aria-hidden="true" />
+                  {format === "csv" && (
+                    <Check
+                      size={14}
+                      className="ml-auto text-brand-500"
+                      aria-hidden="true"
+                    />
                   )}
                 </label>
               </div>
@@ -265,43 +295,50 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
               </div>
 
               <div className="space-y-2 max-h-56 overflow-y-auto">
-                {(Object.keys(COLLECTION_LABELS) as CollectionKey[]).map((key) => {
-                  const isDisabledForCSV = format === 'csv' && !csvOnlyCollections.includes(key);
-                  const count = (data[key] as unknown[]).length;
-                  const checked = selectedCollections.has(key) && !isDisabledForCSV;
+                {(Object.keys(COLLECTION_LABELS) as CollectionKey[]).map(
+                  (key) => {
+                    const isDisabledForCSV =
+                      format === "csv" && !csvOnlyCollections.includes(key);
+                    const count = (data[key] as unknown[]).length;
+                    const checked =
+                      selectedCollections.has(key) && !isDisabledForCSV;
 
-                  return (
-                    <label
-                      key={key}
-                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
-                        isDisabledForCSV
-                          ? 'opacity-40 cursor-not-allowed'
-                          : 'hover:bg-brand-50 dark:hover:bg-brand-800/50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={isDisabledForCSV}
-                        onChange={() => !isDisabledForCSV && toggleCollection(key)}
-                        className="w-4 h-4 rounded accent-brand-600"
-                        aria-label={`Inclure ${COLLECTION_LABELS[key]}`}
-                      />
-                      <span className="flex-1 text-sm text-brand-700 dark:text-brand-300">
-                        {COLLECTION_LABELS[key]}
-                      </span>
-                      <span className="text-xs font-mono text-brand-400 dark:text-brand-600 bg-brand-50 dark:bg-brand-800 px-2 py-0.5 rounded-full">
-                        {count}
-                      </span>
-                    </label>
-                  );
-                })}
+                    return (
+                      <label
+                        key={key}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                          isDisabledForCSV
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-brand-50 dark:hover:bg-brand-800/50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={isDisabledForCSV}
+                          onChange={() =>
+                            !isDisabledForCSV && toggleCollection(key)
+                          }
+                          className="w-4 h-4 rounded accent-brand-600"
+                          aria-label={`Inclure ${COLLECTION_LABELS[key]}`}
+                        />
+                        <span className="flex-1 text-sm text-brand-700 dark:text-brand-300">
+                          {COLLECTION_LABELS[key]}
+                        </span>
+                        <span className="text-xs font-mono text-brand-400 dark:text-brand-600 bg-brand-50 dark:bg-brand-800 px-2 py-0.5 rounded-full">
+                          {count}
+                        </span>
+                      </label>
+                    );
+                  },
+                )}
               </div>
 
-              {format === 'csv' && (
+              {format === "csv" && (
                 <p className="mt-2 text-[10px] text-amber-600 dark:text-amber-400">
-                  Le format CSV exporte chaque collection dans un fichier séparé. Emails, modèles et
-                  événements sont disponibles uniquement en JSON.
+                  Le format CSV exporte chaque collection dans un fichier
+                  séparé. Emails, modèles et événements sont disponibles
+                  uniquement en JSON.
                 </p>
               )}
             </div>
@@ -316,13 +353,17 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
               Annuler
             </button>
             <button
-              onClick={handleExport}
+              onClick={() => {
+                void handleExport();
+              }}
               disabled={isExporting || selectedCollections.size === 0}
               className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors"
               title="Lancer l'export"
             >
               <Download size={16} aria-hidden="true" />
-              {isExporting ? 'Export en cours...' : `Exporter (${selectedCollections.size})`}
+              {isExporting
+                ? "Export en cours..."
+                : `Exporter (${selectedCollections.size})`}
             </button>
           </div>
         </div>

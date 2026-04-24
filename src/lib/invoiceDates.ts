@@ -8,7 +8,7 @@ import type { UserProfile } from '../types';
  */
 export function calculateDueDate(issueDate: string, userProfile: UserProfile): string {
   const date = new Date(issueDate);
-  const delayType = userProfile.automation?.defaultPaymentDelay || '30_DAYS';
+  const delayType = userProfile.automation?.defaultPaymentDelay ?? '30_DAYS';
 
   let daysToAdd: number;
 
@@ -26,7 +26,7 @@ export function calculateDueDate(issueDate: string, userProfile: UserProfile): s
       daysToAdd = 60;
       break;
     case 'CUSTOM':
-      daysToAdd = userProfile.automation?.customPaymentDelayDays || 30;
+      daysToAdd = userProfile.automation?.customPaymentDelayDays ?? 30;
       break;
     default:
       daysToAdd = 30;

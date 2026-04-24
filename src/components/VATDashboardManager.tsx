@@ -5,7 +5,7 @@
  * Suivi mensuel du CA, seuils TVA, et simulation "passage au régime TVA".
  */
 
-import Decimal from 'decimal.js';
+import Decimal from "decimal.js";
 import {
   CircleAlert as AlertCircle,
   ArrowRight,
@@ -16,8 +16,8 @@ import {
   Euro,
   TrendingUp,
   TriangleAlert,
-} from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+} from "lucide-react";
+import React, { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -27,9 +27,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import { getThresholds } from '../lib/fiscalCalculations';
-import { InvoiceStatus, type Invoice, type UserProfile } from '../types';
+} from "recharts";
+import { getThresholds } from "../lib/fiscalCalculations";
+import { InvoiceStatus, type Invoice, type UserProfile } from "../types";
 
 interface VATDashboardManagerProps {
   invoices: Invoice[];
@@ -37,37 +37,50 @@ interface VATDashboardManagerProps {
 }
 
 // ─── Constantes TVA régime réel ─────────────────────────────────────────────
-const VAT_RATES = { NORMAL: 20, REDUCED_1: 10, REDUCED_2: 5.5, SUPER_REDUCED: 2.1 };
+const VAT_RATES = {
+  NORMAL: 20,
+  REDUCED_1: 10,
+  REDUCED_2: 5.5,
+  SUPER_REDUCED: 2.1,
+};
 
 const MONTH_LABELS = [
-  'Jan',
-  'Fév',
-  'Mar',
-  'Avr',
-  'Mai',
-  'Juin',
-  'Juil',
-  'Août',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Déc',
+  "Jan",
+  "Fév",
+  "Mar",
+  "Avr",
+  "Mai",
+  "Juin",
+  "Juil",
+  "Août",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Déc",
 ];
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
-const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, userProfile }) => {
+const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({
+  invoices,
+  userProfile,
+  // eslint-disable-next-line complexity
+}) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [simulationAmount, setSimulationAmount] = useState<string>('');
+  const [simulationAmount, setSimulationAmount] = useState<string>("");
   const [simulationRate, setSimulationRate] = useState<number>(20);
 
-  const activityType = userProfile.activityType || 'SERVICE_BNC';
+  const activityType = userProfile.activityType ?? "SERVICE_BNC";
   const thresholds = getThresholds(activityType);
   const isVatExempt = userProfile.isVatExempt ?? true;
 
   // ── Données annuelles ────────────────────────────────────────────────────
   const { yearTotal, cumulativeData } = useMemo(() => {
-    const monthly = Array.from({ length: 12 }, (_, i) => ({ month: i, revenue: 0, count: 0 }));
+    const monthly = Array.from({ length: 12 }, (_, i) => ({
+      month: i,
+      revenue: 0,
+      count: 0,
+    }));
 
     invoices
       .filter((inv) => {
@@ -75,7 +88,7 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
         return (
           year === selectedYear &&
           inv.status === InvoiceStatus.PAID &&
-          (inv.type === 'invoice' || inv.type === 'deposit_invoice')
+          (inv.type === "invoice" || inv.type === "deposit_invoice")
         );
       })
       .forEach((inv) => {
@@ -105,7 +118,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
   // ── Statut seuil ────────────────────────────────────────────────────────
   const tvaStatus = useMemo(() => {
     const ratio =
-      Number.isFinite(thresholds.tva) && thresholds.tva > 0 ? yearTotal / thresholds.tva : 0;
+      Number.isFinite(thresholds.tva) && thresholds.tva > 0
+        ? yearTotal / thresholds.tva
+        : 0;
     const ratioTolerance =
       Number.isFinite(thresholds.tvaTolerance) && thresholds.tvaTolerance > 0
         ? yearTotal / thresholds.tvaTolerance
@@ -119,7 +134,8 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
       remaining,
       progressPercent,
       isExceeded: yearTotal > thresholds.tva,
-      isInToleranceBand: yearTotal > thresholds.tva && yearTotal <= thresholds.tvaTolerance,
+      isInToleranceBand:
+        yearTotal > thresholds.tva && yearTotal <= thresholds.tvaTolerance,
       isAboveToleranceBand: yearTotal > thresholds.tvaTolerance,
       percentLabel: `${progressPercent}%`,
     };
@@ -135,7 +151,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
       .times(new Decimal(simulationRate))
       .dividedBy(100)
       .toDecimalPlaces(2);
-    const htD = new Decimal(amount).dividedBy(1 + simulationRate / 100).toDecimalPlaces(2);
+    const htD = new Decimal(amount)
+      .dividedBy(1 + simulationRate / 100)
+      .toDecimalPlaces(2);
     return {
       ht: htD.toNumber(),
       vat: vatD.toNumber(),
@@ -146,21 +164,30 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
 
   // ── Années disponibles ───────────────────────────────────────────────────
   const availableYears = useMemo(() => {
-    const years = new Set(invoices.map((inv) => new Date(inv.date).getFullYear()));
+    const years = new Set(
+      invoices.map((inv) => new Date(inv.date).getFullYear()),
+    );
     years.add(new Date().getFullYear());
     return Array.from(years).sort((a, b) => b - a);
   }, [invoices]);
 
   // ── Barre de progression ─────────────────────────────────────────────────
-  const progressState = tvaStatus.isAboveToleranceBand
-    ? 'critical'
-    : tvaStatus.isExceeded
-      ? 'exceeded'
-      : tvaStatus.ratio >= 0.85
-        ? 'warning'
-        : 'normal';
+  let progressState: "critical" | "exceeded" | "warning" | "normal" = "normal";
+  if (tvaStatus.isAboveToleranceBand) progressState = "critical";
+  else if (tvaStatus.isExceeded) progressState = "exceeded";
+  else if (tvaStatus.ratio >= 0.85) progressState = "warning";
 
   const thresholdPercent = (thresholds.tva / thresholds.tvaTolerance) * 100;
+
+  let vatBadgeClass = "bg-brand-100 text-brand-700";
+  if (tvaStatus.isAboveToleranceBand) vatBadgeClass = "bg-red-100 text-red-700";
+  else if (tvaStatus.isExceeded) vatBadgeClass = "bg-amber-100 text-amber-700";
+  else if (isVatExempt) vatBadgeClass = "bg-accent-100 text-accent-700";
+
+  let vatBadgeLabel = "Régime TVA";
+  if (tvaStatus.isAboveToleranceBand) vatBadgeLabel = "⚠ Tolérance dépassée";
+  else if (tvaStatus.isExceeded) vatBadgeLabel = "⚠ Seuil dépassé";
+  else if (isVatExempt) vatBadgeLabel = "Franchise active";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -172,8 +199,8 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
           </h2>
           <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
             {isVatExempt
-              ? 'Franchise en base — art. 293 B du CGI'
-              : 'Régime TVA réel simplifié actif'}
+              ? "Franchise en base — art. 293 B du CGI"
+              : "Régime TVA réel simplifié actif"}
           </p>
         </div>
         <div className="relative">
@@ -204,9 +231,10 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
         >
           <TriangleAlert size={16} className="shrink-0 mt-0.5" />
           <div>
-            <strong>Seuil de tolérance dépassé.</strong> Vous êtes soumis à la TVA dès le 1er jour
-            du mois suivant le dépassement ({thresholds.tvaTolerance.toLocaleString('fr-FR')} €).
-            Contactez un expert-comptable.
+            <strong>Seuil de tolérance dépassé.</strong> Vous êtes soumis à la
+            TVA dès le 1er jour du mois suivant le dépassement (
+            {thresholds.tvaTolerance.toLocaleString("fr-FR")} €). Contactez un
+            expert-comptable.
           </div>
         </div>
       )}
@@ -217,10 +245,12 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <div>
-            Vous avez dépassé le seuil de franchise ({thresholds.tva.toLocaleString('fr-FR')} €)
-            mais restez dans la zone de tolérance jusqu'à{' '}
-            {thresholds.tvaTolerance.toLocaleString('fr-FR')} €. Vous pouvez continuer sans TVA
-            cette année, mais devrez l'appliquer l'année suivante si le cumul reste supérieur.
+            Vous avez dépassé le seuil de franchise (
+            {thresholds.tva.toLocaleString("fr-FR")} €) mais restez dans la zone
+            de tolérance jusqu'à{" "}
+            {thresholds.tvaTolerance.toLocaleString("fr-FR")} €. Vous pouvez
+            continuer sans TVA cette année, mais devrez l'appliquer l'année
+            suivante si le cumul reste supérieur.
           </div>
         </div>
       )}
@@ -235,7 +265,7 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
             </p>
           </div>
           <p className="text-2xl font-bold text-brand-900 dark:text-brand-50 font-display">
-            {yearTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+            {yearTotal.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
           </p>
         </div>
         <div className="card-modern p-5">
@@ -246,21 +276,23 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
             </p>
           </div>
           <p className="text-2xl font-bold text-brand-900 dark:text-brand-50 font-display">
-            {thresholds.tva.toLocaleString('fr-FR')} €
+            {thresholds.tva.toLocaleString("fr-FR")} €
           </p>
         </div>
         <div className="card-modern p-5">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               size={14}
-              className={tvaStatus.isExceeded ? 'text-red-400' : 'text-accent-500'}
+              className={
+                tvaStatus.isExceeded ? "text-red-400" : "text-accent-500"
+              }
             />
             <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
               Utilisation
             </p>
           </div>
           <p
-            className={`text-2xl font-bold font-display ${tvaStatus.isExceeded ? 'text-red-600 dark:text-red-400' : 'text-brand-900 dark:text-brand-50'}`}
+            className={`text-2xl font-bold font-display ${tvaStatus.isExceeded ? "text-red-600 dark:text-red-400" : "text-brand-900 dark:text-brand-50"}`}
           >
             {tvaStatus.percentLabel}
           </p>
@@ -269,16 +301,21 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
           <div className="flex items-center gap-2 mb-2">
             <BadgeCheck
               size={14}
-              className={tvaStatus.isExceeded ? 'text-red-400' : 'text-accent-500'}
+              className={
+                tvaStatus.isExceeded ? "text-red-400" : "text-accent-500"
+              }
             />
             <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
               Reste disponible
             </p>
           </div>
           <p
-            className={`text-2xl font-bold font-display ${tvaStatus.isExceeded ? 'text-red-600 dark:text-red-400' : 'text-accent-600 dark:text-accent-400'}`}
+            className={`text-2xl font-bold font-display ${tvaStatus.isExceeded ? "text-red-600 dark:text-red-400" : "text-accent-600 dark:text-accent-400"}`}
           >
-            {tvaStatus.remaining.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+            {tvaStatus.remaining.toLocaleString("fr-FR", {
+              minimumFractionDigits: 2,
+            })}{" "}
+            €
           </p>
         </div>
       </div>
@@ -290,23 +327,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
             Progression vers le seuil TVA
           </h3>
           <span
-            className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-              tvaStatus.isAboveToleranceBand
-                ? 'bg-red-100 text-red-700'
-                : tvaStatus.isExceeded
-                  ? 'bg-amber-100 text-amber-700'
-                  : isVatExempt
-                    ? 'bg-accent-100 text-accent-700'
-                    : 'bg-brand-100 text-brand-700'
-            }`}
+            className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${vatBadgeClass}`}
           >
-            {tvaStatus.isAboveToleranceBand
-              ? '⚠ Tolérance dépassée'
-              : tvaStatus.isExceeded
-                ? '⚠ Seuil dépassé'
-                : isVatExempt
-                  ? 'Franchise active'
-                  : 'Régime TVA'}
+            {vatBadgeLabel}
           </span>
         </div>
 
@@ -328,10 +351,10 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
         <div className="flex justify-between mt-2 text-[10px] text-brand-400 font-medium">
           <span>0 €</span>
           <span className="text-amber-600 font-bold">
-            Franchise : {thresholds.tva.toLocaleString('fr-FR')} €
+            Franchise : {thresholds.tva.toLocaleString("fr-FR")} €
           </span>
           <span className="text-red-500 font-bold">
-            Tolérance : {thresholds.tvaTolerance.toLocaleString('fr-FR')} €
+            Tolérance : {thresholds.tvaTolerance.toLocaleString("fr-FR")} €
           </span>
         </div>
       </div>
@@ -342,7 +365,10 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
           CA mensuel et cumulé — {selectedYear}
         </h3>
         <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={cumulativeData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart
+            data={cumulativeData}
+            margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="grad-ca" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0f172a" stopOpacity={0.15} />
@@ -353,8 +379,17 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
                 <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#f1f5f9"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+            />
             <YAxis
               tick={{ fontSize: 10 }}
               tickLine={false}
@@ -363,7 +398,7 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
             />
             <Tooltip
               formatter={(value, name) => [
-                `${Number(value ?? 0).toLocaleString('fr-FR')} €`,
+                `${Number(value ?? 0).toLocaleString("fr-FR")} €`,
                 String(name),
               ]}
               contentStyle={{ fontSize: 11, borderRadius: 12 }}
@@ -374,10 +409,10 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
               stroke="#f59e0b"
               strokeDasharray="5 3"
               label={{
-                value: 'Seuil TVA',
-                position: 'insideTopRight',
+                value: "Seuil TVA",
+                position: "insideTopRight",
                 fontSize: 9,
-                fill: '#f59e0b',
+                fill: "#f59e0b",
               }}
             />
             {/* Ligne seuil tolérance */}
@@ -386,10 +421,10 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
               stroke="#ef4444"
               strokeDasharray="5 3"
               label={{
-                value: 'Tolérance',
-                position: 'insideTopRight',
+                value: "Tolérance",
+                position: "insideTopRight",
                 fontSize: 9,
-                fill: '#ef4444',
+                fill: "#ef4444",
               }}
             />
             <Area
@@ -461,7 +496,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
               <option value={VAT_RATES.NORMAL}>Taux normal — 20%</option>
               <option value={VAT_RATES.REDUCED_1}>Taux réduit — 10%</option>
               <option value={VAT_RATES.REDUCED_2}>Taux réduit — 5,5%</option>
-              <option value={VAT_RATES.SUPER_REDUCED}>Taux super-réduit — 2,1%</option>
+              <option value={VAT_RATES.SUPER_REDUCED}>
+                Taux super-réduit — 2,1%
+              </option>
             </select>
           </div>
         </div>
@@ -470,22 +507,22 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
           <div className="grid grid-cols-3 gap-3">
             {[
               {
-                label: 'Montant HT',
-                value: `${simulation.ht.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`,
-                sub: 'encaissé net',
-                color: 'text-brand-900 dark:text-brand-50',
+                label: "Montant HT",
+                value: `${simulation.ht.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`,
+                sub: "encaissé net",
+                color: "text-brand-900 dark:text-brand-50",
               },
               {
-                label: 'TVA collectée',
-                value: `${simulation.vat.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`,
-                sub: 'à reverser au fisc',
-                color: 'text-amber-600',
+                label: "TVA collectée",
+                value: `${simulation.vat.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`,
+                sub: "à reverser au fisc",
+                color: "text-amber-600",
               },
               {
-                label: 'Montant TTC',
-                value: `${simulation.ttc > 0 ? parseFloat(simulationAmount).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '0'} €`,
-                sub: 'facturé au client',
-                color: 'text-brand-900 dark:text-brand-50',
+                label: "Montant TTC",
+                value: `${simulation.ttc > 0 ? parseFloat(simulationAmount).toLocaleString("fr-FR", { minimumFractionDigits: 2 }) : "0"} €`,
+                sub: "facturé au client",
+                color: "text-brand-900 dark:text-brand-50",
               },
             ].map(({ label, value, sub, color }) => (
               <div
@@ -495,7 +532,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
                 <p className="text-[9px] font-bold text-brand-400 uppercase tracking-widest mb-1">
                   {label}
                 </p>
-                <p className={`text-lg font-bold font-display ${color}`}>{value}</p>
+                <p className={`text-lg font-bold font-display ${color}`}>
+                  {value}
+                </p>
                 <p className="text-[9px] text-brand-400 mt-1 italic">{sub}</p>
               </div>
             ))}
@@ -508,8 +547,9 @@ const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({ invoices, use
         )}
 
         <p className="mt-4 text-[10px] text-brand-300 italic">
-          💡 En régime TVA, le CA pris en compte pour les plafonds micro-entreprise est le montant
-          HT, ce qui réduit mécaniquement vos seuils apparents.
+          💡 En régime TVA, le CA pris en compte pour les plafonds
+          micro-entreprise est le montant HT, ce qui réduit mécaniquement vos
+          seuils apparents.
         </p>
       </div>
     </div>

@@ -168,7 +168,7 @@ const DroppableAction: React.FC<{
       ref={setNodeRef}
       onClick={action.onClick}
       aria-label={action.label ? `${action.label}` : "Action non nommée"}
-      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color || "bg-brand-700"} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? "scale-110 bg-[#3ebd93]!" : "scale-100"}`}
+      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color ?? "bg-brand-700"} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? "scale-110 bg-[#3ebd93]!" : "scale-100"}`}
     >
       {action.icon &&
         React.createElement(action.icon, {
@@ -373,7 +373,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   const vatProgress = fiscalStatus.tva.percentage;
   const currentThresholds = getThresholds(
-    userProfile.activityType || "SERVICE_BNC",
+    userProfile.activityType ?? "SERVICE_BNC",
   );
 
   // ── Projection de CA (régression linéaire locale) ──────────────────────────
@@ -396,7 +396,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     return projectRevenue(
       history,
       6,
-      userProfile.activityType || "SERVICE_BNC",
+      userProfile.activityType ?? "SERVICE_BNC",
     );
   }, [invoices, userProfile.activityType]);
 
@@ -530,7 +530,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       (p) =>
         p.type === "product" &&
         p.stock !== undefined &&
-        p.stock <= (p.minStock || 0) &&
+        p.stock <= (p.minStock ?? 0) &&
         !p.archived,
     );
   }, [products]);
@@ -627,6 +627,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           strategy={verticalListSortingStrategy}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-auto">
+            {/* eslint-disable-next-line complexity */}
             {widgetOrder.map((id) => {
               if (isSyncing) {
                 if (id === "stats") {
@@ -736,7 +737,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                               <p className="font-bold mb-1 underline">
                                 Calculateur de cotisations
                               </p>
-                              <p>Type : {userProfile.activityType || "BNC"}</p>
+                              <p>Type : {userProfile.activityType ?? "BNC"}</p>
                               <p>Taux URSSAF : {socialContributions.rate}%</p>
                               {userProfile.isAcreBeneficiary && (
                                 <p className="text-accent-400">
@@ -1118,10 +1119,48 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                 | (Expense & {
                                     activityType: "invoice" | "expense";
                                   }),
+                              // eslint-disable-next-line complexity
                             ) => {
                               const isExpense =
                                 "activityType" in item &&
                                 item.activityType === "expense";
+                              const isInvoice =
+                                "activityType" in item &&
+                                item.activityType === "invoice";
+                              const invoiceStatus = isInvoice
+                                ? (item as unknown as Invoice).status
+                                : null;
+                              let activityIconClass =
+                                "bg-brand-50 dark:bg-brand-800/50 text-brand-500";
+                              if (invoiceStatus === InvoiceStatus.PAID) {
+                                activityIconClass =
+                                  "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400";
+                              } else if (invoiceStatus === InvoiceStatus.SENT) {
+                                activityIconClass =
+                                  "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400";
+                              }
+                              const iconClass = isInvoice
+                                ? activityIconClass
+                                : "bg-red-50 dark:bg-red-900/20 text-red-500";
+                              let activityBadgeClass =
+                                "bg-brand-50 dark:bg-brand-800/50 text-brand-600";
+                              if (invoiceStatus === InvoiceStatus.PAID) {
+                                activityBadgeClass =
+                                  "bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400";
+                              } else if (invoiceStatus === InvoiceStatus.SENT) {
+                                activityBadgeClass =
+                                  "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400";
+                              }
+                              const badgeClass = isInvoice
+                                ? activityBadgeClass
+                                : "bg-red-50 dark:bg-red-900/20 text-red-700";
+                              let activityItemLabel = (item as Invoice).number;
+                              if (isInvoice)
+                                activityItemLabel = (item as unknown as Invoice)
+                                  .number;
+                              else if (isExpense)
+                                activityItemLabel = (item as Expense)
+                                  .description;
                               return (
                                 <div
                                   key={item.id}
@@ -1152,18 +1191,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                   <div className="flex items-center gap-4">
                                     <div
                                       className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold
-                                ${
-                                  "activityType" in item &&
-                                  item.activityType === "invoice"
-                                    ? (item as unknown as Invoice).status ===
-                                      InvoiceStatus.PAID
-                                      ? "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400"
-                                      : (item as unknown as Invoice).status ===
-                                          InvoiceStatus.SENT
-                                        ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
-                                        : "bg-brand-50 dark:bg-brand-800/50 text-brand-500"
-                                    : "bg-red-50 dark:bg-red-900/20 text-red-500"
-                                }`}
+                                ${iconClass}`}
                                     >
                                       {"activityType" in item &&
                                       item.activityType === "invoice" ? (
@@ -1174,13 +1202,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     </div>
                                     <div>
                                       <p className="text-sm font-bold text-brand-900 dark:text-brand-50 group-hover:text-brand-950 dark:group-hover:text-white transition-colors">
-                                        {"activityType" in item &&
-                                        item.activityType === "invoice"
-                                          ? (item as unknown as Invoice).number
-                                          : "activityType" in item &&
-                                              item.activityType === "expense"
-                                            ? (item as Expense).description
-                                            : (item as Invoice).number}
+                                        {activityItemLabel}
                                       </p>
                                       <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
                                         {new Date(
@@ -1207,18 +1229,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     </p>
                                     <span
                                       className={`text-[9px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-[0.05em]
-                                   ${
-                                     "activityType" in item &&
-                                     item.activityType === "invoice"
-                                       ? (item as unknown as Invoice).status ===
-                                         InvoiceStatus.PAID
-                                         ? "bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400"
-                                         : (item as unknown as Invoice)
-                                               .status === InvoiceStatus.SENT
-                                           ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                                           : "bg-brand-50 dark:bg-brand-800/50 text-brand-600"
-                                       : "bg-red-50 dark:bg-red-900/20 text-red-700"
-                                   }`}
+                                   ${badgeClass}`}
                                     >
                                       {"activityType" in item &&
                                       item.activityType === "invoice"
@@ -1329,7 +1340,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             >
                               <div className="flex justify-between items-start">
                                 <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-                                  {product.sku || "SANS SKU"}
+                                  {product.sku ?? "SANS SKU"}
                                 </span>
                                 <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 uppercase tracking-widest">
                                   Stock bas
@@ -1340,12 +1351,12 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                   {product.name}
                                 </p>
                                 <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                                  {product.stock} {product.unit || "u."}
+                                  {product.stock} {product.unit ?? "u."}
                                 </p>
                               </div>
                               <p className="text-[9px] text-red-400 font-bold uppercase tracking-widest">
                                 Seuil : {product.minStock}{" "}
-                                {product.unit || "u."}
+                                {product.unit ?? "u."}
                               </p>
                             </div>
                           ))
@@ -1452,7 +1463,9 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                             </span>
                           )}
                           <button
-                            onClick={handlePredict}
+                            onClick={() => {
+                              void handlePredict();
+                            }}
                             disabled={isPredicting}
                             aria-label={
                               isPredicting

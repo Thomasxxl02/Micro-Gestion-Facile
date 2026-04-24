@@ -8,6 +8,7 @@ import {
 import React from "react";
 import { loginWithGoogle, sendEmailLink } from "../firebase";
 import { useEmailValidation } from "../hooks/useEmailValidation";
+import { wrapAsync } from "../lib/asyncUtils";
 import { getFriendlyAuthErrorMessage } from "../lib/authErrors";
 import EmailSuccessBanner from "./EmailSuccessBanner";
 import ErrorBanner from "./ErrorBanner";
@@ -110,6 +111,20 @@ const AuthPage: React.FC = () => {
   };
 
   const emailInputRef = React.useRef<HTMLInputElement>(null);
+
+  let emailIconColor = "text-brand-400";
+  if (emailValidationError) emailIconColor = "text-red-500";
+  else if (emailValidationWarning) emailIconColor = "text-yellow-500";
+  else if (isEmailValid) emailIconColor = "text-green-500";
+
+  let emailInputBorder =
+    "border-brand-200 dark:border-brand-800 focus:ring-brand-500/10 focus:border-brand-500";
+  if (emailValidationError)
+    emailInputBorder = "border-red-500 focus:ring-red-500/10";
+  else if (emailValidationWarning)
+    emailInputBorder = "border-yellow-500 focus:ring-yellow-500/10";
+  else if (isEmailValid)
+    emailInputBorder = "border-green-500 focus:ring-green-500/10";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 transition-colors duration-500">
@@ -247,7 +262,7 @@ const AuthPage: React.FC = () => {
           {!isEmailSent ? (
             <form
               aria-label="Connexion par lien magique"
-              onSubmit={handleEmailLogin}
+              onSubmit={wrapAsync(handleEmailLogin)}
               className="space-y-4 text-left"
             >
               <label className="flex items-center gap-3 cursor-pointer group select-none ml-1">
@@ -274,15 +289,7 @@ const AuthPage: React.FC = () => {
               </label>
               <div className="relative">
                 <Mail
-                  className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
-                    emailValidationError
-                      ? "text-red-500"
-                      : emailValidationWarning
-                        ? "text-yellow-500"
-                        : isEmailValid
-                          ? "text-green-500"
-                          : "text-brand-400"
-                  }`}
+                  className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${emailIconColor}`}
                   size={20}
                 />
                 <input
@@ -295,15 +302,7 @@ const AuthPage: React.FC = () => {
                   value={emailLink}
                   onChange={(e) => void setEmailLink(e.target.value)}
                   disabled={loadingService !== null}
-                  className={`w-full pl-12 pr-12 py-4 bg-white dark:bg-brand-900/50 border rounded-2xl focus:ring-4 outline-none transition-all dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
-                    emailValidationError
-                      ? "border-red-500 focus:ring-red-500/10"
-                      : emailValidationWarning
-                        ? "border-yellow-500 focus:ring-yellow-500/10"
-                        : isEmailValid
-                          ? "border-green-500 focus:ring-green-500/10"
-                          : "border-brand-200 dark:border-brand-800 focus:ring-brand-500/10 focus:border-brand-500"
-                  }`}
+                  className={`w-full pl-12 pr-12 py-4 bg-white dark:bg-brand-900/50 border rounded-2xl focus:ring-4 outline-none transition-all dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${emailInputBorder}`}
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   {isEmailValidating && (

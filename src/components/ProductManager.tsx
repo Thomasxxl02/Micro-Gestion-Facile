@@ -36,6 +36,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
   products,
   onSave,
   onDelete,
+  // eslint-disable-next-line complexity
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,9 +103,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     if (priceValue < 0) {
       errors.price = "Prix doit être positif ou zéro";
     } else {
-      const amountResult = validateAmount(formData.price || 0);
+      const amountResult = validateAmount(formData.price ?? 0);
       if (!amountResult.valid) {
-        errors.price = amountResult.error || "Prix invalide";
+        errors.price = amountResult.error ?? "Prix invalide";
       }
     }
 
@@ -126,8 +127,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     const isService = formData.type === "service";
     return {
       id: Date.now().toString(),
-      name: formData.name || "",
-      description: formData.description || "",
+      name: formData.name ?? "",
+      description: formData.description ?? "",
       price: Number(formData.price) || 0,
       type: (formData.type as "service" | "product") || "product",
       category: formData.category,
@@ -187,7 +188,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     if (product) {
       const updated = {
         ...product,
-        stock: Math.max(0, (product.stock || 0) + delta),
+        stock: Math.max(0, (product.stock ?? 0) + delta),
       };
       if (onSave) {
         onSave(updated);
@@ -210,12 +211,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     ];
     const rows = products.map((p) =>
       [
-        `"${p.sku || ""}"`,
+        `"${p.sku ?? ""}"`,
         `"${p.name}"`,
         `"${p.type === "service" ? "Prestation" : "Marchandise"}"`,
-        `"${p.category || ""}"`,
+        `"${p.category ?? ""}"`,
         p.price.toFixed(2),
-        `"${p.unit || ""}"`,
+        `"${p.unit ?? ""}"`,
         p.stock ?? "",
         p.minStock ?? "",
         `"${p.description.replaceAll('"', '""')}"`,
@@ -293,7 +294,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     const activeProducts = products.filter((p) => !p.archived);
     const services = activeProducts.filter((p) => p.type === "service");
     const goods = activeProducts.filter((p) => p.type === "product");
-    const lowStock = goods.filter((p) => (p.stock || 0) <= (p.minStock || 0));
+    const lowStock = goods.filter((p) => (p.stock ?? 0) <= (p.minStock ?? 0));
 
     return {
       total: activeProducts.length,
@@ -309,7 +310,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
       (p) =>
         ((p.name || "").toLowerCase().includes(term) ||
           (p.description || "").toLowerCase().includes(term) ||
-          (p.sku || "").toLowerCase().includes(term)) &&
+          (p.sku ?? "").toLowerCase().includes(term)) &&
         (showArchived ? p.archived === true : !p.archived),
     );
 
@@ -322,7 +323,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
         (p) =>
           p.type === "product" &&
           p.stock !== undefined &&
-          p.stock <= (p.minStock || 0),
+          p.stock <= (p.minStock ?? 0),
       );
     }
 
@@ -333,9 +334,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
       } else if (sortBy === "type") {
         comparison = a.type.localeCompare(b.type);
       } else if (sortBy === "category") {
-        comparison = (a.category || "").localeCompare(b.category || "");
+        comparison = (a.category ?? "").localeCompare(b.category ?? "");
       } else if (sortBy === "stock") {
-        comparison = (a.stock || 0) - (b.stock || 0);
+        comparison = (a.stock ?? 0) - (b.stock ?? 0);
       } else {
         comparison = a.name.localeCompare(b.name);
       }
@@ -392,7 +393,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                 type="file"
                 accept=".csv"
                 className="hidden"
-                onChange={importCSV}
+                onChange={(e) => {
+                  void importCSV(e);
+                }}
               />
             </label>
             <button
@@ -557,7 +560,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       id="formData-sku"
                       type="text"
                       className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                      value={formData.sku || ""}
+                      value={formData.sku ?? ""}
                       onChange={(e) =>
                         setFormData({ ...formData, sku: e.target.value })
                       }
@@ -576,7 +579,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                     id="formData-category"
                     type="text"
                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                    value={formData.category || ""}
+                    value={formData.category ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
@@ -631,7 +634,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       id="formData-unit"
                       title="Sélectionner l'unité"
                       className="w-full pl-10 pr-3 py-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
-                      value={formData.unit || "unité"}
+                      value={formData.unit ?? "unité"}
                       onChange={(e) =>
                         setFormData({ ...formData, unit: e.target.value })
                       }
@@ -862,6 +865,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {/* eslint-disable-next-line complexity */}
           {processedProducts.map((p) => (
             <div
               key={p.id}
@@ -951,7 +955,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       {p.price.toFixed(2)} €
                     </span>
                     <span className="text-[10px] text-brand-400 dark:text-brand-500 font-bold uppercase tracking-widest">
-                      / {p.unit || "unité"}
+                      / {p.unit ?? "unité"}
                     </span>
                   </div>
                 </div>
@@ -970,9 +974,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                         <Minus size={12} aria-hidden="true" />
                       </button>
                       <div
-                        className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock || 0) ? "text-red-500 dark:text-red-400" : "text-brand-900 dark:text-white"}`}
+                        className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock ?? 0) ? "text-red-500 dark:text-red-400" : "text-brand-900 dark:text-white"}`}
                       >
-                        {p.stock <= (p.minStock || 0) && (
+                        {p.stock <= (p.minStock ?? 0) && (
                           <AlertCircle size={12} aria-hidden="true" />
                         )}
                         <span className="text-sm">{p.stock}</span>

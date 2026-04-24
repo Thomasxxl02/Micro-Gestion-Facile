@@ -54,6 +54,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   clients = [],
   onSaveExpense,
   onDeleteExpense,
+  // eslint-disable-next-line complexity
 }) => {
   const [activeTab, setActiveTab] = useState<"journal" | "bilan" | "fiscal">(
     "journal",
@@ -240,12 +241,12 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       const expense: Expense = {
         id: Date.now().toString(),
         date: newExpense.date ?? new Date().toISOString().split("T")[0],
-        description: newExpense.description || "",
-        amount: Number(newExpense.amount || 0),
-        vatAmount: Number(newExpense.vatAmount || 0),
-        vatRate: Number(newExpense.vatRate || 0),
-        category: newExpense.category || "Achats",
-        supplierId: newExpense.supplierId || "",
+        description: newExpense.description ?? "",
+        amount: Number(newExpense.amount ?? 0),
+        vatAmount: Number(newExpense.vatAmount ?? 0),
+        vatRate: Number(newExpense.vatRate ?? 0),
+        category: newExpense.category ?? "Achats",
+        supplierId: newExpense.supplierId ?? "",
       };
       setExpenses([expense, ...expenses]);
       if (onSaveExpense) {
@@ -264,8 +265,8 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       date: expense.date,
       description: expense.description,
       amount: expense.amount,
-      vatAmount: expense.vatAmount || 0,
-      vatRate: expense.vatRate || 0,
+      vatAmount: expense.vatAmount ?? 0,
+      vatRate: expense.vatRate ?? 0,
       category: expense.category,
       supplierId: expense.supplierId,
     });
@@ -333,10 +334,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
         "DÉPENSE",
         `"${e.description.replaceAll('"', '""')}"`,
         e.amount.toFixed(2),
-        (e.vatAmount || 0).toFixed(2),
-        (e.amount - (e.vatAmount || 0)).toFixed(2),
+        (e.vatAmount ?? 0).toFixed(2),
+        (e.amount - (e.vatAmount ?? 0)).toFixed(2),
         `"${e.category}"`,
-        `"${suppliers.find((s) => s.id === e.supplierId)?.name.replaceAll('"', '""') || "N/A"}"`,
+        `"${suppliers.find((s) => s.id === e.supplierId)?.name.replaceAll('"', '""') ?? "N/A"}"`,
       ]),
       ...invoices
         .filter((inv) => inv.status === InvoiceStatus.PAID)
@@ -345,10 +346,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           "RECETTE",
           `"Facture ${inv.number}"`,
           inv.total.toFixed(2),
-          (inv.vatAmount || 0).toFixed(2),
-          (inv.subtotal || inv.total).toFixed(2),
+          (inv.vatAmount ?? 0).toFixed(2),
+          (inv.subtotal ?? inv.total).toFixed(2),
           '"Prestation"',
-          `"${clients.find((c) => c.id === inv.clientId)?.name.replaceAll('"', '""') || "N/A"}"`,
+          `"${clients.find((c) => c.id === inv.clientId)?.name.replaceAll('"', '""') ?? "N/A"}"`,
         ]),
     ].sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
 
@@ -382,11 +383,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     doc.text("LIVRE DES RECETTES", 14, 22);
     doc.setFontSize(10);
     doc.text(
-      `Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName || "N/A"}`,
+      `Année: ${selectedYear} - Micro-Entreprise: ${userProfile?.companyName ?? "N/A"}`,
       14,
       30,
     );
-    doc.text(`SIRET: ${userProfile?.siret || "N/A"}`, 14, 35);
+    doc.text(`SIRET: ${userProfile?.siret ?? "N/A"}`, 14, 35);
     doc.text(
       "Document infalsifiable généré le " + new Date().toLocaleDateString(),
       14,
@@ -396,7 +397,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     const tableData = paidInvoices.map((inv) => [
       inv.date,
       inv.number,
-      clients.find((c) => c.id === inv.clientId)?.name || "Inconnu",
+      clients.find((c) => c.id === inv.clientId)?.name ?? "Inconnu",
       inv.total.toFixed(2) + " €",
     ]);
 
@@ -818,7 +819,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 Cotisations Sociales
               </p>
               <h3 className="text-3xl font-bold text-brand-900 font-display">
-                {fiscalSummary?.amount.toLocaleString("fr-FR") ||
+                {fiscalSummary?.amount.toLocaleString("fr-FR") ??
                   totalYearlyTax.toLocaleString("fr-FR")}{" "}
                 €
               </h3>
@@ -827,7 +828,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   Taux appliqué
                 </span>
                 <span className="text-xs font-bold text-brand-600">
-                  {fiscalSummary?.rate || taxRate}%
+                  {fiscalSummary?.rate ?? taxRate}%
                 </span>
               </div>
             </div>
@@ -849,7 +850,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
               <h3 className="text-3xl font-bold text-accent-900 font-display">
                 {(
                   totalYearlyRevenue -
-                  (fiscalSummary?.amount || totalYearlyTax) -
+                  (fiscalSummary?.amount ?? totalYearlyTax) -
                   yearlyIncomeTax
                 ).toLocaleString("fr-FR")}{" "}
                 €
@@ -987,7 +988,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                 Export Journal (CSV)
               </button>
               <button
-                onClick={handleExportLivreRecettesPFD}
+                onClick={() => {
+                  void handleExportLivreRecettesPFD();
+                }}
                 className="flex-1 sm:flex-none bg-white hover:bg-brand-50 text-brand-600 border border-brand-100 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest shadow-sm"
               >
                 <Calculator size={16} />
@@ -1018,7 +1021,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   accept="image/*"
                   title="Télécharger une image de ticket"
                   className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleFileUpload}
+                  onChange={(e) => {
+                    void handleFileUpload(e);
+                  }}
                 />
                 <button className="w-full sm:w-auto bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-500/10 text-[10px] font-bold uppercase tracking-widest">
                   <Camera size={18} />
@@ -1065,7 +1070,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   label="Date de l'achat"
                   type="date"
                   required
-                  value={newExpense.date || ""}
+                  value={newExpense.date ?? ""}
                   onChange={handleFormChange("date")}
                   error={errors.date}
                   touched={touched.date}
@@ -1077,14 +1082,14 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   step="0.01"
                   required
                   placeholder="0.00"
-                  value={newExpense.amount || ""}
+                  value={newExpense.amount ?? ""}
                   onChange={(val) => {
                     const amount = Number.parseFloat(val);
                     handleFormChange("amount")(amount);
-                    const vatRate = newExpense.vatRate || 0;
+                    const vatRate = newExpense.vatRate ?? 0;
                     const vatAmount = vatRate
                       ? amount * (vatRate / (100 + vatRate))
-                      : newExpense.vatAmount || 0;
+                      : (newExpense.vatAmount ?? 0);
                     setNewExpense((prev) => ({ ...prev, vatAmount }));
                   }}
                   error={errors.amount}
@@ -1096,7 +1101,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  value={newExpense.vatAmount || ""}
+                  value={newExpense.vatAmount ?? ""}
                   onChange={(val) =>
                     handleFormChange("vatAmount")(Number.parseFloat(val))
                   }
@@ -1114,10 +1119,10 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     id="expense-vat-rate"
                     title="Sélectionner le taux TVA"
                     className="w-full p-4 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white dark:bg-brand-800 transition-all font-bold text-brand-900 dark:text-brand-50 appearance-none cursor-pointer"
-                    value={newExpense.vatRate || 0}
+                    value={newExpense.vatRate ?? 0}
                     onChange={(e) => {
                       const vatRate = Number.parseFloat(e.target.value);
-                      const amount = newExpense.amount || 0;
+                      const amount = newExpense.amount ?? 0;
                       const vatAmount = amount
                         ? amount * (vatRate / (100 + vatRate))
                         : 0;
@@ -1160,7 +1165,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                     type="text"
                     required
                     placeholder="Ex: Abonnement Internet, Achat écran..."
-                    value={newExpense.description || ""}
+                    value={newExpense.description ?? ""}
                     onChange={(val) =>
                       setNewExpense({ ...newExpense, description: val })
                     }
@@ -1178,9 +1183,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
                       .map((s) => ({
                         id: s.id,
                         label: s.name,
-                        subLabel: s.category || "Fournisseur",
+                        subLabel: s.category ?? "Fournisseur",
                       }))}
-                    value={newExpense.supplierId || ""}
+                    value={newExpense.supplierId ?? ""}
                     onChange={(val) =>
                       setNewExpense({ ...newExpense, supplierId: val })
                     }

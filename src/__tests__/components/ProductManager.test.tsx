@@ -98,7 +98,7 @@ describe('ProductManager Component', () => {
       render(<ProductManager products={mockProducts} onSave={onSave} onDelete={onDelete} />);
 
       expect(
-        screen.queryByText(/Produits|Products/i) || screen.queryByText(/Package/i)
+        screen.queryByText(/Produits|Products/i) ?? screen.queryByText(/Package/i)
       ).toBeDefined();
     });
 
@@ -456,7 +456,7 @@ describe('ProductManager Component', () => {
     it('affiche le SKU du produit', () => {
       render(<ProductManager products={mockProducts} onSave={onSave} onDelete={onDelete} />);
 
-      expect(screen.queryByText('CONS-001') || screen.queryByText('MAINT-001')).toBeDefined();
+      expect(screen.queryByText('CONS-001') ?? screen.queryByText('MAINT-001')).toBeDefined();
     });
 
     it("affiche l'unité de mesure du produit", () => {

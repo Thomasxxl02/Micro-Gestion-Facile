@@ -38,7 +38,7 @@ describe("Database Migrations", () => {
   });
 
   afterEach(async () => {
-    await db.close();
+    db.close();
     await Dexie.delete(testDbName);
   });
 

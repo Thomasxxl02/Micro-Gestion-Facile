@@ -66,7 +66,7 @@ function formatDocumentNumber(
   const prefix = prefixMap[type] ?? "DOC";
 
   const format =
-    customFormat || userProfile.numberingFormat || "{PREFIX}-{YEAR}-{NUM}";
+    (customFormat ?? userProfile.numberingFormat) ?? "{PREFIX}-{YEAR}-{NUM}";
 
   return format
     .replace(/\{PREFIX\}/g, prefix)

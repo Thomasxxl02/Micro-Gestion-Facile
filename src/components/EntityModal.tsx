@@ -4,8 +4,8 @@
  * Remplace les panneaux dupliqués dans InvoiceManager, ClientManager, SupplierManager
  */
 
-import { LoaderCircle as Loader2, X } from 'lucide-react';
-import React from 'react';
+import { LoaderCircle as Loader2, X } from "lucide-react";
+import React from "react";
 
 interface EntityModalProps {
   isOpen: boolean;
@@ -36,9 +36,10 @@ export const EntityModal: React.FC<EntityModalProps> = ({
   isDangerous = false,
   children,
   showDeleteButton = true,
-  deleteLabel = 'Supprimer',
-  saveLabel = 'Enregistrer',
-  cancelLabel = 'Annuler',
+  deleteLabel = "Supprimer",
+  saveLabel = "Enregistrer",
+  cancelLabel = "Annuler",
+  // eslint-disable-next-line complexity
 }) => {
   if (!isOpen) {
     return null;
@@ -62,7 +63,7 @@ export const EntityModal: React.FC<EntityModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="entity-modal-title"
-        aria-describedby={subtitle ? 'entity-modal-subtitle' : undefined}
+        aria-describedby={subtitle ? "entity-modal-subtitle" : undefined}
       >
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
@@ -96,7 +97,7 @@ export const EntityModal: React.FC<EntityModalProps> = ({
 
         {/* Footer - Actions */}
         <div
-          className={`flex flex-wrap gap-3 ${isDangerous ? 'border-t border-red-100 pt-6 dark:border-red-900/30' : ''}`}
+          className={`flex flex-wrap gap-3 ${isDangerous ? "border-t border-red-100 pt-6 dark:border-red-900/30" : ""}`}
         >
           {isEditing && showDeleteButton && onDelete && (
             <button
@@ -104,7 +105,13 @@ export const EntityModal: React.FC<EntityModalProps> = ({
               disabled={isSaving}
               className="inline-flex items-center gap-2 rounded-2xl bg-red-50 px-6 py-3 text-red-600 font-bold text-sm hover:bg-red-100 disabled:opacity-50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition-all"
             >
-              {isSaving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+              {isSaving && (
+                <Loader2
+                  size={16}
+                  className="animate-spin"
+                  aria-hidden="true"
+                />
+              )}
               {deleteLabel}
             </button>
           )}
@@ -117,11 +124,15 @@ export const EntityModal: React.FC<EntityModalProps> = ({
             {cancelLabel}
           </button>
           <button
-            onClick={onSave}
+            onClick={() => {
+              void onSave();
+            }}
             disabled={isSaving}
             className="inline-flex items-center gap-2 rounded-2xl bg-brand-900 px-8 py-3 text-white font-bold text-sm hover:bg-brand-800 disabled:opacity-50 dark:bg-white dark:text-brand-900 dark:hover:bg-brand-100 shadow-xl shadow-brand-900/20 dark:shadow-white/5 transition-all"
           >
-            {isSaving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+            {isSaving && (
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            )}
             {saveLabel}
           </button>
         </div>

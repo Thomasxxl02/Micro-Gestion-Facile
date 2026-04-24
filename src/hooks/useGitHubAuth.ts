@@ -51,29 +51,31 @@ export function useGitHubAuth(): UseGitHubAuthState & UseGitHubAuthMethods {
 
   // Effet : Écoute les changements d'authentification Firebase
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      try {
-        setIsLoading(true);
-        setUser(firebaseUser);
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      void (async () => {
+        try {
+          setIsLoading(true);
+          setUser(firebaseUser);
 
-        if (firebaseUser) {
-          // Récupérer le profil utilisateur depuis Firestore
-          const userProfile = await authService.getUserProfile(
-            firebaseUser.uid,
+          if (firebaseUser) {
+            // Récupérer le profil utilisateur depuis Firestore
+            const userProfile = await authService.getUserProfile(
+              firebaseUser.uid,
+            );
+            setProfile(userProfile);
+            setError(null);
+          } else {
+            setProfile(null);
+          }
+        } catch (err) {
+          console.error("Erreur récupération profil:", err);
+          setError(
+            err instanceof Error ? err : new Error("Erreur authentification"),
           );
-          setProfile(userProfile);
-          setError(null);
-        } else {
-          setProfile(null);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err) {
-        console.error("Erreur récupération profil:", err);
-        setError(
-          err instanceof Error ? err : new Error("Erreur authentification"),
-        );
-      } finally {
-        setIsLoading(false);
-      }
+      })();
     });
 
     return () => unsubscribe();

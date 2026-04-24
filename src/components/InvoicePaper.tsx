@@ -17,6 +17,15 @@ const InvoicePaper: React.FC<InvoicePaperProps> = ({
 }) => {
   const handlePrint = () => window.print();
 
+  const invoiceTypeLabel =
+    (
+      {
+        quote: "Devis",
+        credit_note: "Avoir",
+        deposit_invoice: "Facture d'acompte",
+      } as Record<string, string>
+    )[invoice.type] ?? "Facture";
+
   return (
     <div className="fixed inset-0 bg-brand-900/70 backdrop-blur-sm z-70 flex items-center justify-center p-4 print:p-0 print:bg-transparent print:backdrop-blur-none">
       <div className="bg-white w-full max-w-2xl rounded-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] print:max-h-none print:rounded-none print:shadow-none print:overflow-visible">
@@ -65,13 +74,7 @@ const InvoicePaper: React.FC<InvoicePaperProps> = ({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-brand-900 uppercase tracking-wider">
-                {invoice.type === "quote"
-                  ? "Devis"
-                  : invoice.type === "credit_note"
-                    ? "Avoir"
-                    : invoice.type === "deposit_invoice"
-                      ? "Facture d'acompte"
-                      : "Facture"}
+                {invoiceTypeLabel}
               </div>
               <div className="text-lg font-bold text-brand-600 mt-1">
                 {invoice.number}

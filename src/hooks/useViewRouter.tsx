@@ -6,50 +6,60 @@
  * const ViewComponent = useViewRouter(currentView, syncData)
  */
 
-import React, { Suspense, useEffect } from 'react';
-import LoadingFallback from '../components/LoadingFallback';
-import { saveOAuthToken, type OAuthToken } from '../services/cloudSyncService';
-import { useAppStore } from '../store/appStore';
-import { InvoiceStatus, type UserProfile } from '../types';
-import type { AppShellSyncResult } from './useAppShellSync';
+import React, { Suspense, useEffect } from "react";
+import LoadingFallback from "../components/LoadingFallback";
+import { saveOAuthToken, type OAuthToken } from "../services/cloudSyncService";
+import { useAppStore } from "../store/appStore";
+import { InvoiceStatus, type UserProfile } from "../types";
+import type { AppShellSyncResult } from "./useAppShellSync";
 
 const DEFAULT_USER_PROFILE: UserProfile = {
-  companyName: '',
-  siret: '',
-  address: '',
-  email: '',
-  phone: '',
+  companyName: "",
+  siret: "",
+  address: "",
+  email: "",
+  phone: "",
 };
 
 // Lazy load des managers
-const Dashboard = React.lazy(() => import('../components/Dashboard'));
-const InvoiceManager = React.lazy(() => import('../components/InvoiceManager'));
-const ClientManager = React.lazy(() => import('../components/ClientManager'));
-const SupplierManager = React.lazy(() => import('../components/SupplierManager'));
-const ProductManager = React.lazy(() => import('../components/ProductManager'));
-const AccountingManager = React.lazy(() => import('../components/AccountingManager'));
-const EmailManager = React.lazy(() => import('../components/EmailManager'));
-const CalendarManager = React.lazy(() => import('../components/CalendarManager'));
-const SettingsManager = React.lazy(() => import('../components/SettingsManager'));
-const AIAssistant = React.lazy(() => import('../components/AIAssistant'));
-const BankReconciliationManager = React.lazy(
-  () => import('../components/BankReconciliationManager')
+const Dashboard = React.lazy(() => import("../components/Dashboard"));
+const InvoiceManager = React.lazy(() => import("../components/InvoiceManager"));
+const ClientManager = React.lazy(() => import("../components/ClientManager"));
+const SupplierManager = React.lazy(
+  () => import("../components/SupplierManager"),
 );
-const VATDashboardManager = React.lazy(() => import('../components/VATDashboardManager'));
+const ProductManager = React.lazy(() => import("../components/ProductManager"));
+const AccountingManager = React.lazy(
+  () => import("../components/AccountingManager"),
+);
+const EmailManager = React.lazy(() => import("../components/EmailManager"));
+const CalendarManager = React.lazy(
+  () => import("../components/CalendarManager"),
+);
+const SettingsManager = React.lazy(
+  () => import("../components/SettingsManager"),
+);
+const AIAssistant = React.lazy(() => import("../components/AIAssistant"));
+const BankReconciliationManager = React.lazy(
+  () => import("../components/BankReconciliationManager"),
+);
+const VATDashboardManager = React.lazy(
+  () => import("../components/VATDashboardManager"),
+);
 
 export type ViewType =
-  | 'dashboard'
-  | 'invoices'
-  | 'clients'
-  | 'suppliers'
-  | 'products'
-  | 'accounting'
-  | 'emails'
-  | 'calendar'
-  | 'settings'
-  | 'ai_assistant'
-  | 'bank_reconciliation'
-  | 'vat_dashboard';
+  | "dashboard"
+  | "invoices"
+  | "clients"
+  | "suppliers"
+  | "products"
+  | "accounting"
+  | "emails"
+  | "calendar"
+  | "settings"
+  | "ai_assistant"
+  | "bank_reconciliation"
+  | "vat_dashboard";
 
 interface ViewRouterProps {
   currentView: ViewType;
@@ -82,18 +92,18 @@ export const useViewRouter = ({
   useEffect(() => {
     // Vérifier si nous sommes sur l'URL de callback (plus simple que de modifier le router complet)
     if (
-      window.location.pathname === '/oauth-callback' ||
-      window.location.hash.includes('access_token')
+      window.location.pathname === "/oauth-callback" ||
+      window.location.hash.includes("access_token")
     ) {
       const hash = window.location.hash.substring(1);
       const params = new URLSearchParams(hash);
-      const accessToken = params.get('access_token');
-      const state = params.get('state');
+      const accessToken = params.get("access_token");
+      const state = params.get("state");
 
       if (accessToken && state) {
         try {
           const { provider } = JSON.parse(atob(state));
-          const expiresIn = parseInt(params.get('expires_in') || '3600', 10);
+          const expiresIn = parseInt(params.get("expires_in") ?? "3600", 10);
 
           const token: OAuthToken = {
             provider,
@@ -105,22 +115,26 @@ export const useViewRouter = ({
 
           // Nettoyer l'URL et fermer la popup ou rediriger
           if (window.opener) {
-            window.opener.postMessage({ type: 'OAUTH_SUCCESS', provider }, window.location.origin);
+            window.opener.postMessage(
+              { type: "OAUTH_SUCCESS", provider },
+              window.location.origin,
+            );
             window.close();
           } else {
-            window.location.hash = '';
-            window.location.pathname = '/';
+            window.location.hash = "";
+            window.location.pathname = "/";
           }
         } catch (e) {
-          console.error('Erreur lors du parsing du state OAuth', e);
+          console.error("Erreur lors du parsing du state OAuth", e);
         }
       }
     }
   }, []);
 
+  // eslint-disable-next-line complexity
   const renderView = (): React.ReactNode => {
     switch (currentView) {
-      case 'dashboard':
+      case "dashboard":
         return (
           <Dashboard
             invoices={syncData.invoices}
@@ -133,7 +147,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'invoices':
+      case "invoices":
         return (
           <InvoiceManager
             invoices={syncData.invoices}
@@ -146,7 +160,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'clients':
+      case "clients":
         return (
           <ClientManager
             clients={syncData.clients}
@@ -156,7 +170,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'suppliers':
+      case "suppliers":
         return (
           <SupplierManager
             suppliers={syncData.suppliers}
@@ -167,7 +181,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'products':
+      case "products":
         return (
           <ProductManager
             products={syncData.products}
@@ -176,7 +190,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'accounting':
+      case "accounting":
         return (
           <AccountingManager
             expenses={syncData.expenses}
@@ -190,7 +204,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'emails':
+      case "emails":
         return (
           <EmailManager
             emails={syncData.emails}
@@ -207,7 +221,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'calendar':
+      case "calendar":
         return (
           <CalendarManager
             events={syncData.calendarEvents}
@@ -218,7 +232,7 @@ export const useViewRouter = ({
           />
         );
 
-      case 'settings':
+      case "settings":
         return (
           <SettingsManager
             userProfile={syncData.userProfile ?? DEFAULT_USER_PROFILE}
@@ -241,23 +255,26 @@ export const useViewRouter = ({
           />
         );
 
-      case 'ai_assistant':
+      case "ai_assistant":
         return <AIAssistant />;
 
-      case 'bank_reconciliation':
+      case "bank_reconciliation":
         return (
           <BankReconciliationManager
             invoices={syncData.invoices}
             onMarkInvoicePaid={(id: string) => {
               const invoice = syncData.invoices.find((i) => i.id === id);
               if (invoice) {
-                syncData.saveInvoice({ ...invoice, status: InvoiceStatus.PAID });
+                syncData.saveInvoice({
+                  ...invoice,
+                  status: InvoiceStatus.PAID,
+                });
               }
             }}
           />
         );
 
-      case 'vat_dashboard':
+      case "vat_dashboard":
         return (
           <VATDashboardManager
             invoices={syncData.invoices}

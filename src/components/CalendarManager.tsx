@@ -124,14 +124,14 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
     } else {
       const newEvent: CalendarEvent = {
         id: Date.now().toString(),
-        title: formData.title || "Nouvel événement",
+        title: formData.title ?? "Nouvel événement",
         description: formData.description,
-        start: formData.start || new Date().toISOString(),
-        end: formData.end || new Date().toISOString(),
-        type: formData.type || "meeting",
+        start: formData.start ?? new Date().toISOString(),
+        end: formData.end ?? new Date().toISOString(),
+        type: formData.type ?? "meeting",
         clientId: formData.clientId,
         invoiceId: formData.invoiceId,
-        color: formData.color || "#102a43",
+        color: formData.color ?? "#102a43",
       };
       setEvents([...events, newEvent]);
       onSaveEvent?.(newEvent);
@@ -286,6 +286,9 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                 new Date().getDate() === date.day &&
                 new Date().getMonth() === date.month &&
                 new Date().getFullYear() === date.year;
+              const dayClass = date.currentMonth
+                ? "text-brand-900 dark:text-white"
+                : "text-brand-300 dark:text-slate-600";
 
               return (
                 <div
@@ -294,7 +297,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full transition-colors ${isToday ? "bg-brand-900 text-white shadow-md" : date.currentMonth ? "text-brand-900 dark:text-white" : "text-brand-300 dark:text-slate-600"}`}
+                      className={`text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full transition-colors ${isToday ? "bg-brand-900 text-white shadow-md" : dayClass}`}
                     >
                       {date.day}
                     </span>
