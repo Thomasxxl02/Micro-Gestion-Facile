@@ -531,9 +531,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       : "border-brand-200")
                   }
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                  }}
                   placeholder="Ex: Création site web"
                 />
                 {validationErrors.name && (
@@ -561,9 +561,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       type="text"
                       className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                       value={formData.sku ?? ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sku: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, sku: e.target.value });
+                      }}
                       placeholder="REF-001"
                     />
                   </div>
@@ -580,9 +580,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                     type="text"
                     className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
                     value={formData.category ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, category: e.target.value });
+                    }}
                     placeholder="Ex: Développement"
                     list="product-categories"
                   />
