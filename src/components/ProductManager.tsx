@@ -524,12 +524,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                   id="formData-name"
                   type="text"
                   required
-                  className={
-                    "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
-                    (validationErrors.name
+                  className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
+                    validationErrors.name
                       ? "border-red-500"
-                      : "border-brand-200")
-                  }
+                      : "border-brand-200"
+                  }`}
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
@@ -607,12 +606,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                     title="Sélectionner le type d'élément"
                     className="w-full p-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
                     value={formData.type}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setFormData({
                         ...formData,
                         type: e.target.value as "service" | "product",
-                      })
-                    }
+                      });
+                    }}
                   >
                     <option value="service">Prestation</option>
                     <option value="product">Marchandise</option>
@@ -635,9 +634,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       title="Sélectionner l'unité"
                       className="w-full pl-10 pr-3 py-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
                       value={formData.unit ?? "unité"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, unit: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, unit: e.target.value });
+                      }}
                     >
                       <option value="unité">Unité</option>
                       <option value="heure">Heure</option>
@@ -663,19 +662,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                   step="0.01"
                   placeholder="0.00"
                   title="Prix HT (hors taxe) en euros"
-                  className={
-                    "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
-                    (validationErrors.price
+                  className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
+                    validationErrors.price
                       ? "border-red-500"
-                      : "border-brand-200")
-                  }
+                      : "border-brand-200"
+                  }`}
                   value={formData.price}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData({
                       ...formData,
                       price: Number.parseFloat(e.target.value),
-                    })
-                  }
+                    });
+                  }}
                 />
                 {validationErrors.price && (
                   <p className="text-xs text-red-600 mt-1">
@@ -698,19 +696,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       type="number"
                       placeholder="0"
                       title="Quantité en stock actuel"
-                      className={
-                        "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
-                        (validationErrors.stock
+                      className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
+                        validationErrors.stock
                           ? "border-red-500"
-                          : "border-brand-200")
-                      }
+                          : "border-brand-200"
+                      }`}
                       value={formData.stock}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           stock: Number.parseInt(e.target.value) || 0,
-                        })
-                      }
+                        });
+                      }}
                     />
                     {validationErrors.stock && (
                       <p className="text-xs text-red-600 mt-1">
@@ -730,19 +727,18 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                       type="number"
                       placeholder="0"
                       title="Seuil minimum d'alerte pour le stock"
-                      className={
-                        "w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all " +
-                        (validationErrors.minStock
+                      className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
+                        validationErrors.minStock
                           ? "border-red-500"
-                          : "border-brand-200")
-                      }
+                          : "border-brand-200"
+                      }`}
                       value={formData.minStock}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           minStock: Number.parseInt(e.target.value) || 0,
-                        })
-                      }
+                        });
+                      }}
                     />
                   </div>
                 </div>
@@ -760,9 +756,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                   rows={4}
                   className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all resize-none"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, description: e.target.value });
+                  }}
                   placeholder="Description détaillée qui apparaîtra sur les documents..."
                 />
               </div>
