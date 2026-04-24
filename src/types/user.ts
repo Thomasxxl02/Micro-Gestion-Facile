@@ -72,6 +72,8 @@ export interface UserProfile {
   // Nouveaux champs métiers
   activityType?: ActivityType;
   isAcreBeneficiary?: boolean;
+  /** Date de début d'activité (ISO 8601 : YYYY-MM-DD). Détermine l'expiration de l'ACRE (12 mois — art. L.5141-1 Code du Travail). */
+  businessStartDate?: string;
   vatThresholdAlert?: boolean;
   customVatThresholdPercentage?: number; // Seuil personnalisé pour alerte TVA (ex: 80%)
   revenueThresholdAlert?: boolean;
@@ -94,7 +96,12 @@ export interface UserProfile {
 
   // Champs critiques pour SettingsManager et AIAssistant
   socialContributionRate?: number; // Taux de cotisation sociale (ex: 21.1)
-  geminiApiKey?: string; // Clé API pour Gemini AI
+  /**
+   * @deprecated Ne pas utiliser pour stocker une clé API en clair.
+   * Utiliser SecurityAPIKey (keyHash + prefix) dans SecuritySettings à la place.
+   * Ce champ est exclu des exports et des imports pour éviter toute fuite.
+   */
+  geminiApiKey?: never; // Intentionnellement inutilisable en TypeScript
   preferences?: Record<string, unknown>; // Préférences globales UI/Style
 
   // Paramètres de facturation avancés (Conformité 2026)

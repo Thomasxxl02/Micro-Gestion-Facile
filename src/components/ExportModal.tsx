@@ -58,12 +58,19 @@ const CSV_COLLECTION_KEYS: CollectionKey[] = [
 export interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Appelé après un export réussi (mise à jour de la date de sauvegarde) */
+  onExportSuccess?: () => void;
   data: ExportData;
 }
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
-const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
+const ExportModal: React.FC<ExportModalProps> = ({
+  isOpen,
+  onClose,
+  onExportSuccess,
+  data,
+}) => {
   const [format, setFormat] = useState<ExportFormat>("json");
   const [selectedCollections, setSelectedCollections] = useState<
     Set<CollectionKey>
@@ -116,6 +123,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
           generateFilename("backup", "json"),
           "application/json",
         );
+        localStorage.setItem(
+          "mgf_last_backup_date",
+          new Date().toLocaleDateString("fr-FR"),
+        );
+        onExportSuccess?.();
         toast.success("Export JSON téléchargé avec succès");
       } else {
         // Export CSV par collection (une par fichier)
@@ -140,6 +152,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, data }) => {
             "text/csv;charset=utf-8",
           );
         }
+        localStorage.setItem(
+          "mgf_last_backup_date",
+          new Date().toLocaleDateString("fr-FR"),
+        );
+        onExportSuccess?.();
         toast.success(`${csvKeys.length} fichier(s) CSV téléchargé(s)`);
       }
       onClose();

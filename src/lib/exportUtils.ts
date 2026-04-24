@@ -13,6 +13,9 @@ import type {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** Version courante du format d'export. Incrémenter à chaque rupture de schéma. */
+export const CURRENT_EXPORT_VERSION = "1.0";
+
 export interface ExportData {
   version: string;
   exportedAt: string;
@@ -106,6 +109,47 @@ export function exportAsCSV(collectionKey: string, rows: unknown[]): Blob {
   return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); // BOM pour Excel
 }
 
+/**
+ * Génère un script SQL compatible SQLite/PostgreSQL pour exporter les données
+ */
+export function exportAsSQL(data: ExportData): Blob {
+  let sql = `-- EXPORT SQL - MICRO-GESTION FACILE\n`;
+  sql += `-- Généré le : ${new Date().toLocaleString("fr-FR")}\n\n`;
+
+  // Helper pour échapper les chaînes SQL
+  const esc = (val: unknown) => {
+    if (val === null || val === undefined) return "NULL";
+    if (typeof val === "boolean") return val ? "1" : "0";
+    if (typeof val === "number") return val.toString();
+    return `'${String(val).replace(/'/g, "''")}'`;
+  };
+
+  const collections: (keyof ExportData)[] = [
+    "clients",
+    "invoices",
+    "suppliers",
+    "products",
+    "expenses",
+  ];
+
+  collections.forEach((key) => {
+    const rows = data[key] as unknown as Record<string, unknown>[];
+    if (!rows || rows.length === 0) return;
+
+    sql += `\n-- Table ${key}\n`;
+    const columns = Object.keys(rows[0] as Record<string, unknown>);
+
+    rows.forEach((row) => {
+      const values = columns
+        .map((col) => esc((row as Record<string, unknown>)[col]))
+        .join(", ");
+      sql += `INSERT INTO ${key} (${columns.join(", ")}) VALUES (${values});\n`;
+    });
+  });
+
+  return new Blob([sql], { type: "text/sql" });
+}
+
 export function downloadFile(
   blob: Blob,
   filename: string,
@@ -139,4 +183,79 @@ export async function parseImportJSON(
     reader.onerror = () => reject(new Error("Erreur de lecture du fichier."));
     reader.readAsText(file);
   });
+}
+
+// ─── Validation à l'import ────────────────────────────────────────────────────
+
+export interface ImportValidationResult {
+  isValid: boolean;
+  /** false si la version du fichier est incompatible avec l'application */
+  isVersionCompatible: boolean;
+  detectedVersion?: string;
+  /** Messages à afficher à l'utilisateur (avertissements non bloquants) */
+  warnings: string[];
+}
+
+/**
+ * Valide le contenu d'un fichier importé :
+ * - Présence et compatibilité du champ `version`
+ * - Présence d'au moins un champ de données connu
+ *
+ * Cette fonction NE modifie pas les données ; elle ne fait que les inspecter.
+ */
+export function validateImportData(data: unknown): ImportValidationResult {
+  const warnings: string[] = [];
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return {
+      isValid: false,
+      isVersionCompatible: false,
+      warnings: ["Le fichier est vide ou malformé."],
+    };
+  }
+
+  const obj = data as Record<string, unknown>;
+  const detectedVersion =
+    typeof obj.version === "string" ? obj.version : undefined;
+
+  if (!detectedVersion) {
+    warnings.push(
+      "Ce fichier ne contient pas de numéro de version. Il peut provenir d'une version ancienne de l'application.",
+    );
+  }
+
+  // Compatibilité : toute version "1.x" est acceptée
+  const majorCurrent = CURRENT_EXPORT_VERSION.split(".")[0];
+  const majorDetected = detectedVersion?.split(".")[0];
+  const isVersionCompatible = !majorDetected || majorDetected === majorCurrent;
+
+  if (detectedVersion && !isVersionCompatible) {
+    warnings.push(
+      `Version incompatible : fichier v${detectedVersion}, application v${CURRENT_EXPORT_VERSION}. Certaines données peuvent ne pas s'importer correctement.`,
+    );
+  }
+
+  const knownFields = [
+    "userProfile",
+    "invoices",
+    "clients",
+    "products",
+    "suppliers",
+    "expenses",
+  ];
+  const hasAnyKnownField = knownFields.some((f) => f in obj);
+
+  if (!hasAnyKnownField) {
+    return {
+      isValid: false,
+      isVersionCompatible,
+      detectedVersion,
+      warnings: [
+        ...warnings,
+        "Format non reconnu : aucune donnée connue dans ce fichier.",
+      ],
+    };
+  }
+
+  return { isValid: true, isVersionCompatible, detectedVersion, warnings };
 }

@@ -51,8 +51,9 @@ describe("Sidebar", () => {
     expect(screen.getByText(/Fournisseurs/i)).toBeInTheDocument();
     expect(screen.getByText(/Catalogue/i)).toBeInTheDocument();
     expect(screen.getByText(/Comptabilité/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rapprochement/i)).toBeInTheDocument();
+    expect(screen.getByText(/Suivi TVA/i)).toBeInTheDocument();
     expect(screen.getByText(/Emails/i)).toBeInTheDocument();
-    expect(screen.getByText(/Assistant IA/i)).toBeInTheDocument();
     expect(screen.getByText(/Paramètres/i)).toBeInTheDocument();
   });
 

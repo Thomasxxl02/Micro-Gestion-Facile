@@ -4,10 +4,8 @@ import AppShell from "./components/AppShell";
 import AuthPage from "./components/AuthPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineIndicator from "./components/OfflineIndicator";
-import PerformanceDashboard from "./components/PerformanceDashboard";
 import { Toaster } from "./components/Toaster";
 import { useAuth } from "./hooks/useAuth";
-import { performanceMonitor } from "./lib/performanceMonitor";
 import { initializeServiceWorker } from "./lib/serviceWorkerManager";
 import { useAppStore } from "./store/appStore";
 import { useUIStore } from "./store/useUIStore";
@@ -22,8 +20,6 @@ const App: React.FC = () => {
   // Initialize Service Worker for offline support
   useEffect(() => {
     void initializeServiceWorker();
-    // Initialize performance monitoring
-    void performanceMonitor.initialize(process.env.NODE_ENV === "production");
   }, []);
 
   useEffect(() => {
@@ -51,7 +47,6 @@ const App: React.FC = () => {
         <OfflineIndicator />
         <AppShell />
         <Toaster />
-        {process.env.NODE_ENV === "development" && <PerformanceDashboard />}
       </>
     </ErrorBoundary>
   );

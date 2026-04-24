@@ -17,8 +17,11 @@ export async function generateInvoiceNumber(
     let nextNumber = 1;
 
     if (sequence) {
-      // Réinitialiser si changement d'année
-      nextNumber = sequence.year === year ? sequence.currentNumber + 1 : 1;
+      // Réinitialiser si changement d'année, sauf si l'utilisateur a désactivé la réinitialisation annuelle
+      // Ref: art. 289-I-5° CGI — la continuité chronologique est obligatoire dans tous les cas
+      const shouldResetForYear =
+        (userProfile.resetNumberingYearly ?? true) && sequence.year !== year;
+      nextNumber = shouldResetForYear ? 1 : sequence.currentNumber + 1;
     }
 
     await db.invoiceNumberSequences.put({
@@ -66,7 +69,7 @@ function formatDocumentNumber(
   const prefix = prefixMap[type] ?? "DOC";
 
   const format =
-    (customFormat ?? userProfile.numberingFormat) ?? "{PREFIX}-{YEAR}-{NUM}";
+    customFormat ?? userProfile.numberingFormat ?? "{PREFIX}-{YEAR}-{NUM}";
 
   return format
     .replace(/\{PREFIX\}/g, prefix)

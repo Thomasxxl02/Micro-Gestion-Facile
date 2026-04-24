@@ -97,9 +97,9 @@ describe("Rate Limiter", () => {
         });
       }
 
-      // Vérifier les intervalles
-      expect(times[1] - times[0]).toBeGreaterThanOrEqual(200);
-      expect(times[2] - times[1]).toBeGreaterThanOrEqual(200);
+      // Vérifier les intervalles (tolérance de 10ms pour imprécision setTimeout)
+      expect(times[1] - times[0]).toBeGreaterThanOrEqual(190);
+      expect(times[2] - times[1]).toBeGreaterThanOrEqual(190);
     });
   });
 

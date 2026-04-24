@@ -148,6 +148,8 @@ export interface UserProfile {
   logoColor?: string;
   activityType?: ActivityType;
   isAcreBeneficiary?: boolean;
+  /** Date de début d'activité (ISO 8601 : YYYY-MM-DD). Sert à calculer l'expiration de l'ACRE (12 mois). */
+  businessStartDate?: string;
   vatThresholdAlert?: boolean;
   customVatThresholdPercentage?: number;
   revenueThresholdAlert?: boolean;

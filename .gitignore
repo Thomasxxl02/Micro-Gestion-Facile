@@ -32,3 +32,6 @@ dist-ssr
 coverage/
 lcov-report/
 
+# Fichiers d'analyse ESLint temporaires (ne pas committer)
+lint-*.json
+lint2.json
