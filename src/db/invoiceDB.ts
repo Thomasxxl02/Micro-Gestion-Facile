@@ -9,7 +9,7 @@
  * - Support du mode offline-first
  */
 
-import Dexie, { type Table } from 'dexie';
+import Dexie, { type Table } from "dexie";
 import type {
   CalendarEvent,
   ChatMessage,
@@ -22,7 +22,7 @@ import type {
   Product,
   Supplier,
   UserProfile,
-} from '../types';
+} from "../types";
 
 /**
  * Séquence de numérotation continue pour les documents
@@ -35,7 +35,7 @@ import type {
  * Ref légale : Art. 289-I-5° CGI — séquence chronologique continue
  */
 export interface InvoiceNumberSequence {
-  type: 'invoice' | 'quote' | 'order' | 'credit_note' | 'deposit_invoice';
+  type: "invoice" | "quote" | "order" | "credit_note" | "deposit_invoice";
   year: number; // Année en cours de la séquence (reset si changement d'année)
   currentNumber: number; // Dernier numéro utilisé pour (type, year)
   lastUsedAt: string; // ISO timestamp pour audit
@@ -61,48 +61,52 @@ class InvoiceDB extends Dexie {
   invoiceNumberSequences!: Table<InvoiceNumberSequence>;
 
   constructor() {
-    super('MicroGestionFacile');
+    super("MicroGestionFacile");
 
     this.version(1).stores({
       // Schéma initial - v1
       // Format : { tableName: 'primaryKey, index1, index2, ...' }
-      invoices: '&id, number, clientId, date, status, eInvoiceStatus',
-      invoiceItems: '&id, invoiceId', // Relation avec invoices
-      clients: '&id, name, email, archived',
-      suppliers: '&id, name, email, archived',
-      products: '&id, name, category, archived',
-      expenses: '&id, supplierId, date, category',
-      emails: '&id, relatedId, type, status, sentAt',
-      emailTemplates: '&id, type, name',
-      calendarEvents: '&id, clientId, invoiceId, start, type',
-      userProfile: '&id', // Un seul profil utilisateur
-      chatMessages: '&id, timestamp, role',
+      invoices: "&id, number, clientId, date, status, eInvoiceStatus",
+      invoiceItems: "&id, invoiceId", // Relation avec invoices
+      clients: "&id, name, email, archived",
+      suppliers: "&id, name, email, archived",
+      products: "&id, name, category, archived",
+      expenses: "&id, supplierId, date, category",
+      emails: "&id, relatedId, type, status, sentAt",
+      emailTemplates: "&id, type, name",
+      calendarEvents: "&id, clientId, invoiceId, start, type",
+      userProfile: "&id", // Un seul profil utilisateur
+      chatMessages: "&id, timestamp, role",
     });
 
     // Migration v2 - Ajout de la table de séquences pour numérotation continue
     this.version(2)
       .stores({
-        invoices: '&id, number, clientId, date, status, eInvoiceStatus',
-        invoiceItems: '&id, invoiceId',
-        clients: '&id, name, email, archived',
-        suppliers: '&id, name, email, archived',
-        products: '&id, name, category, archived',
-        expenses: '&id, supplierId, date, category',
-        emails: '&id, relatedId, type, status, sentAt',
-        emailTemplates: '&id, type, name',
-        calendarEvents: '&id, clientId, invoiceId, start, type',
-        userProfile: '&id',
-        chatMessages: '&id, timestamp, role',
-        invoiceNumberSequences: '&type', // 'invoice', 'quote', 'order', 'credit_note'
+        invoices: "&id, number, clientId, date, status, eInvoiceStatus",
+        invoiceItems: "&id, invoiceId",
+        clients: "&id, name, email, archived",
+        suppliers: "&id, name, email, archived",
+        products: "&id, name, category, archived",
+        expenses: "&id, supplierId, date, category",
+        emails: "&id, relatedId, type, status, sentAt",
+        emailTemplates: "&id, type, name",
+        calendarEvents: "&id, clientId, invoiceId, start, type",
+        userProfile: "&id",
+        chatMessages: "&id, timestamp, role",
+        invoiceNumberSequences: "&type", // 'invoice', 'quote', 'order', 'credit_note'
       })
       .upgrade(async (tx) => {
         // Initialise les séquences à partir des numéros existants
-        const invoices = (await tx.table('invoices').toArray()) as Invoice[];
+        const invoices = (await tx.table("invoices").toArray()) as Invoice[];
         const sequences: Record<string, InvoiceNumberSequence> = {};
 
         // Extrait le dernier numéro utilisé pour chaque type
         for (const doc of invoices) {
-          const type = (doc.type || 'invoice') as 'invoice' | 'quote' | 'order' | 'credit_note';
+          const type = (doc.type || "invoice") as
+            | "invoice"
+            | "quote"
+            | "order"
+            | "credit_note";
           const match = doc.number.match(/(\d+)$/); // Extrait le dernier nombre
           const num = match ? parseInt(match[1], 10) : 0;
 
@@ -118,11 +122,11 @@ class InvoiceDB extends Dexie {
         }
 
         // Insère les séquences initialisées (ou défaut si aucun doc)
-        const docTypes: Array<'invoice' | 'quote' | 'order' | 'credit_note'> = [
-          'invoice',
-          'quote',
-          'order',
-          'credit_note',
+        const docTypes: Array<"invoice" | "quote" | "order" | "credit_note"> = [
+          "invoice",
+          "quote",
+          "order",
+          "credit_note",
         ];
         for (const type of docTypes) {
           if (!sequences[type]) {
@@ -135,7 +139,9 @@ class InvoiceDB extends Dexie {
           }
         }
 
-        await tx.table('invoiceNumberSequences').bulkPut(Object.values(sequences));
+        await tx
+          .table("invoiceNumberSequences")
+          .bulkPut(Object.values(sequences));
       });
 
     // Migration v3 — Ajout du champ `year` sur les séquences existantes
@@ -143,29 +149,29 @@ class InvoiceDB extends Dexie {
     this.version(3)
       .stores({
         // Schéma identique à v2 — aucun index supplémentaire requis
-        invoices: '&id, number, clientId, date, status, eInvoiceStatus',
-        invoiceItems: '&id, invoiceId',
-        clients: '&id, name, email, archived',
-        suppliers: '&id, name, email, archived',
-        products: '&id, name, category, archived',
-        expenses: '&id, supplierId, date, category',
-        emails: '&id, relatedId, type, status, sentAt',
-        emailTemplates: '&id, type, name',
-        calendarEvents: '&id, clientId, invoiceId, start, type',
-        userProfile: '&id',
-        chatMessages: '&id, timestamp, role',
-        invoiceNumberSequences: '&type',
+        invoices: "&id, number, clientId, date, status, eInvoiceStatus",
+        invoiceItems: "&id, invoiceId",
+        clients: "&id, name, email, archived",
+        suppliers: "&id, name, email, archived",
+        products: "&id, name, category, archived",
+        expenses: "&id, supplierId, date, category",
+        emails: "&id, relatedId, type, status, sentAt",
+        emailTemplates: "&id, type, name",
+        calendarEvents: "&id, clientId, invoiceId, start, type",
+        userProfile: "&id",
+        chatMessages: "&id, timestamp, role",
+        invoiceNumberSequences: "&type",
       })
       .upgrade(async (tx) => {
         // Ajoute le champ `year` aux séquences qui ne l'ont pas encore
-        const sequences = await tx.table('invoiceNumberSequences').toArray();
+        const sequences = await tx.table("invoiceNumberSequences").toArray();
         for (const seq of sequences) {
           if (seq.year === undefined) {
             // On déduit l'année depuis lastUsedAt ; à défaut l'année courante
             const year = seq.lastUsedAt
               ? new Date(seq.lastUsedAt).getFullYear()
               : new Date().getFullYear();
-            await tx.table('invoiceNumberSequences').put({ ...seq, year });
+            await tx.table("invoiceNumberSequences").put({ ...seq, year });
           }
         }
       });
@@ -175,43 +181,49 @@ class InvoiceDB extends Dexie {
     // Les enregistrements sans updatedAt sont rétroactivement initialisés depuis date/createdAt
     this.version(4)
       .stores({
-        invoices: '&id, number, clientId, date, status, eInvoiceStatus, updatedAt',
-        invoiceItems: '&id, invoiceId',
-        clients: '&id, name, email, archived, updatedAt',
-        suppliers: '&id, name, email, archived, updatedAt',
-        products: '&id, name, category, archived, updatedAt',
-        expenses: '&id, supplierId, date, category, updatedAt',
-        emails: '&id, relatedId, type, status, sentAt',
-        emailTemplates: '&id, type, name',
-        calendarEvents: '&id, clientId, invoiceId, start, type',
-        userProfile: '&id',
-        chatMessages: '&id, timestamp, role',
-        invoiceNumberSequences: '&type',
+        invoices:
+          "&id, number, clientId, date, status, eInvoiceStatus, updatedAt",
+        invoiceItems: "&id, invoiceId",
+        clients: "&id, name, email, archived, updatedAt",
+        suppliers: "&id, name, email, archived, updatedAt",
+        products: "&id, name, category, archived, updatedAt",
+        expenses: "&id, supplierId, date, category, updatedAt",
+        emails: "&id, relatedId, type, status, sentAt",
+        emailTemplates: "&id, type, name",
+        calendarEvents: "&id, clientId, invoiceId, start, type",
+        userProfile: "&id",
+        chatMessages: "&id, timestamp, role",
+        invoiceNumberSequences: "&type",
       })
+      // eslint-disable-next-line complexity
       .upgrade(async (tx) => {
         const now = new Date().toISOString();
 
         // Backfill invoices : utilise `date` (champ obligatoire) comme proxy
-        const invoices = await tx.table('invoices').toArray();
+        const invoices = await tx.table("invoices").toArray();
         for (const doc of invoices) {
           if (doc.updatedAt === undefined) {
-            await tx.table('invoices').put({ ...doc, updatedAt: doc.date ?? now });
+            await tx
+              .table("invoices")
+              .put({ ...doc, updatedAt: doc.date ?? now });
           }
         }
 
         // Backfill clients
-        const clients = await tx.table('clients').toArray();
+        const clients = await tx.table("clients").toArray();
         for (const client of clients) {
           if (client.updatedAt === undefined) {
-            await tx.table('clients').put({ ...client, updatedAt: client.createdAt ?? now });
+            await tx
+              .table("clients")
+              .put({ ...client, updatedAt: client.createdAt ?? now });
           }
         }
 
         // Backfill suppliers
-        const suppliers = await tx.table('suppliers').toArray();
+        const suppliers = await tx.table("suppliers").toArray();
         for (const supplier of suppliers) {
           if (supplier.updatedAt === undefined) {
-            await tx.table('suppliers').put({
+            await tx.table("suppliers").put({
               ...supplier,
               updatedAt: supplier.createdAt ?? now,
             });
@@ -219,18 +231,22 @@ class InvoiceDB extends Dexie {
         }
 
         // Backfill products
-        const products = await tx.table('products').toArray();
+        const products = await tx.table("products").toArray();
         for (const product of products) {
           if (product.updatedAt === undefined) {
-            await tx.table('products').put({ ...product, updatedAt: product.createdAt ?? now });
+            await tx
+              .table("products")
+              .put({ ...product, updatedAt: product.createdAt ?? now });
           }
         }
 
         // Backfill expenses : pas de createdAt — on utilise `date`
-        const expenses = await tx.table('expenses').toArray();
+        const expenses = await tx.table("expenses").toArray();
         for (const expense of expenses) {
           if (expense.updatedAt === undefined) {
-            await tx.table('expenses').put({ ...expense, updatedAt: expense.date ?? now });
+            await tx
+              .table("expenses")
+              .put({ ...expense, updatedAt: expense.date ?? now });
           }
         }
       });
@@ -295,10 +311,14 @@ class InvoiceDB extends Dexie {
         await this.emails.bulkPut(data.emails as Email[]);
       }
       if (data.emailTemplates) {
-        await this.emailTemplates.bulkPut(data.emailTemplates as EmailTemplate[]);
+        await this.emailTemplates.bulkPut(
+          data.emailTemplates as EmailTemplate[],
+        );
       }
       if (data.calendarEvents) {
-        await this.calendarEvents.bulkPut(data.calendarEvents as CalendarEvent[]);
+        await this.calendarEvents.bulkPut(
+          data.calendarEvents as CalendarEvent[],
+        );
       }
       if (data.userProfile) {
         await this.userProfile.bulkPut(data.userProfile as UserProfile[]);
@@ -342,27 +362,27 @@ export const db = new InvoiceDB();
 export async function initializeDB(): Promise<void> {
   try {
     await db.open();
-    console.warn('✅ Base de données initialisée avec succès');
+    console.warn("✅ Base de données initialisée avec succès");
 
     // Initialiser le profil utilisateur s'il n'existe pas
     const existingProfile = await db.userProfile.toArray();
     if (existingProfile.length === 0) {
       const defaultProfile = {
-        id: 'main', // Clé primaire requise par le schéma Dexie '&id'
-        companyName: 'Ma Micro-Entreprise',
-        siret: '',
-        address: '',
-        email: '',
-        phone: '',
-        currency: 'EUR',
-        invoicePrefix: 'FAC',
-        quotePrefix: 'DEV',
-        orderPrefix: 'CMD',
-        creditNotePrefix: 'AV',
+        id: "main", // Clé primaire requise par le schéma Dexie '&id'
+        companyName: "Ma Micro-Entreprise",
+        siret: "",
+        address: "",
+        email: "",
+        phone: "",
+        currency: "EUR",
+        invoicePrefix: "FAC",
+        quotePrefix: "DEV",
+        orderPrefix: "CMD",
+        creditNotePrefix: "AV",
         defaultVatRate: 20,
       } satisfies UserProfile & { id: string };
       await db.userProfile.add(defaultProfile);
-      console.warn('✅ Profil utilisateur initialisé');
+      console.warn("✅ Profil utilisateur initialisé");
     }
   } catch (error) {
     console.error("❌ Erreur lors de l'initialisation de la BD:", error);

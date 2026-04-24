@@ -248,8 +248,8 @@ describe("Rate Limiter", () => {
       };
 
       // Lancer plusieurs requests
-      limiter.execute(slowFn);
-      limiter.execute(slowFn);
+      void limiter.execute(slowFn);
+      void limiter.execute(slowFn);
 
       const cleared = limiter.clearQueue();
       expect(cleared).toBeGreaterThan(0);

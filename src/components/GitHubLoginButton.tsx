@@ -44,7 +44,7 @@ export function GitHubLoginButton({
   useEffect(() => {
     if (user) {
       setLocalError(null);
-      onSuccess?.(user.displayName || user.email || "Utilisateur");
+      onSuccess?.(user.displayName ?? user.email ?? "Utilisateur");
     }
   }, [user, onSuccess]);
 
@@ -80,7 +80,9 @@ export function GitHubLoginButton({
         setRetryCount((prev) => prev + 1);
         // Backoff exponentiel avec référence stockée pour annulation au démontage
         retryTimeoutRef.current = setTimeout(
-          handleClick,
+          () => {
+            void handleClick();
+          },
           Math.pow(2, retryCount) * 1000,
         );
       } else {
@@ -101,7 +103,9 @@ export function GitHubLoginButton({
   return (
     <div className={`w-full flex flex-col gap-4 ${className}`}>
       <button
-        onClick={handleClick}
+        onClick={() => {
+          void handleClick();
+        }}
         disabled={isDisabled}
         aria-label={showText ? displayText : "Se connecter avec GitHub"}
         title={showText ? "" : label}

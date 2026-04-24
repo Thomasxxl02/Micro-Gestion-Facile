@@ -117,7 +117,9 @@ export function ErrorFallback({
 
           {import.meta.env.DEV && (
             <button
-              onClick={handleExportLogs}
+              onClick={() => {
+                void handleExportLogs();
+              }}
               disabled={exportLoading}
               className="flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors"
               type="button"

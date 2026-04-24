@@ -326,7 +326,7 @@ export function useInvoiceActions({
         `Relance : Facture ${invoice.number} - ${userProfile.companyName}`,
       );
       const bizName = userProfile.companyName || "";
-      const fullName = userProfile.professionalTitle || "Votre prestataire";
+      const fullName = userProfile.professionalTitle ?? "Votre prestataire";
       const body = encodeURIComponent(
         `Bonjour ${client.name || "Madame, Monsieur"},\n\n` +
           `Sauf erreur de notre part, le paiement de la facture n°${invoice.number} d'un montant de ${invoice.total.toFixed(2)}€, ` +
@@ -409,13 +409,13 @@ export function useInvoiceActions({
 
       const rows = docs.map((doc) => {
         const clientName =
-          clients.find((c) => c.id === doc.clientId)?.name || "Client Inconnu";
+          clients.find((c) => c.id === doc.clientId)?.name ?? "Client Inconnu";
         const formattedDate = new Date(doc.date).toISOString().split("T")[0];
         const subtotal = doc.items.reduce(
           (s, i) => s + i.quantity * i.unitPrice,
           0,
         );
-        const discountVal = subtotal * ((doc.discount || 0) / 100);
+        const discountVal = subtotal * ((doc.discount ?? 0) / 100);
 
         return [
           doc.number,
@@ -462,6 +462,7 @@ export function useInvoiceActions({
     convertOrderToInvoice,
     createCreditNote,
     transmitPPF,
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     updateInvoiceStatus,
     updateReminderDate,
     deleteInvoice,

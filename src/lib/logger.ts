@@ -164,7 +164,7 @@ class CentralizedLogger {
       console.error(
         `%c${timestamp} ${prefix} ${entry.level.toUpperCase()}: ${entry.message}`,
         `color: ${colors[entry.level]}; font-weight: bold;`,
-        entry.data || entry.stack,
+        entry.data ?? entry.stack,
       );
     } else if (entry.level === "warn") {
       console.warn(
@@ -255,11 +255,11 @@ class CentralizedLogger {
     message: string,
     data?: Record<string, unknown>,
   ): void {
-    this.log("debug", context, message, data);
+    void this.log("debug", context, message, data);
   }
 
   info(context: string, message: string, data?: Record<string, unknown>): void {
-    this.log("info", context, message, data);
+    void this.log("info", context, message, data);
   }
 
   warn(
@@ -273,9 +273,9 @@ class CentralizedLogger {
         errorMessage: data.message,
         stack: data.stack,
       };
-      this.log("warn", context, message, errorData);
+      void this.log("warn", context, message, errorData);
     } else {
-      this.log("warn", context, message, data);
+      void this.log("warn", context, message, data);
     }
   }
 
@@ -293,7 +293,7 @@ class CentralizedLogger {
 
     const stack = error instanceof Error ? error.stack : undefined;
 
-    this.log("error", context, message, errorData, stack);
+    void this.log("error", context, message, errorData, stack);
   }
 
   critical(
@@ -310,7 +310,7 @@ class CentralizedLogger {
 
     const stack = error instanceof Error ? error.stack : undefined;
 
-    this.log("critical", context, message, errorData, stack);
+    void this.log("critical", context, message, errorData, stack);
   }
 
   /**
@@ -371,7 +371,7 @@ class CentralizedLogger {
         log.level,
         log.context,
         log.message,
-        JSON.stringify(log.data || {}),
+        JSON.stringify(log.data ?? {}),
       ]);
 
       const csv = [

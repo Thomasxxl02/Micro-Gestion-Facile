@@ -38,8 +38,8 @@ export const calculateSocialContributions = (
   revenue: number,
   profile: UserProfile
 ): SocialContributions => {
-  const type = profile.activityType || 'SERVICE_BNC';
-  const isAcre = profile.isAcreBeneficiary || false;
+  const type = profile.activityType ?? 'SERVICE_BNC';
+  const isAcre = profile.isAcreBeneficiary ?? false;
 
   const rate = isAcre ? ACRE_RATES[type] : STANDARD_RATES[type];
   const revenueD = new Decimal(revenue);
@@ -109,7 +109,7 @@ export const getThresholds = (type: ActivityType) => {
  * Calcule l'état par rapport aux seuils
  */
 export const calculateThresholdStatus = (currentRevenue: number, profile: UserProfile) => {
-  const type = profile.activityType || 'SERVICE_BNC';
+  const type = profile.activityType ?? 'SERVICE_BNC';
   const thresholds = getThresholds(type);
 
   // Pourcentages d'alerte personnalisés (fallback sur 80/90%)

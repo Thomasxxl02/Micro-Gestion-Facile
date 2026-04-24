@@ -21,10 +21,10 @@ import {
   Unlink,
   Upload,
   CircleSlash as XCircle,
-} from 'lucide-react';
-import Papa from 'papaparse';
-import React, { useCallback, useRef, useState } from 'react';
-import { InvoiceStatus, type Invoice } from '../types';
+} from "lucide-react";
+import Papa from "papaparse";
+import React, { useCallback, useRef, useState } from "react";
+import { InvoiceStatus, type Invoice } from "../types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ function parseDate(raw: string): string {
   const dmyMatch = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
   if (dmyMatch) {
     const [, d, m, y] = dmyMatch;
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   // ISO YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
@@ -76,7 +76,7 @@ function parseAmount(raw: string): number {
   if (!raw) {
     return 0;
   }
-  const cleaned = raw.replaceAll(/[€$ ]/g, '').replace(',', '.');
+  const cleaned = raw.replaceAll(/[€$ ]/g, "").replace(",", ".");
   return parseFloat(cleaned) || 0;
 }
 
@@ -87,7 +87,7 @@ function parseCSV(text: string): BankTransaction[] {
   const result = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
-    delimiter: '',
+    delimiter: "",
     transformHeader: (h) => h.trim().toLowerCase(),
   });
 
@@ -96,15 +96,17 @@ function parseCSV(text: string): BankTransaction[] {
       // Heuristique de détection des colonnes (multi-banques)
       const dateKey = Object.keys(row).find((k) => /date|dat/.test(k));
       const descKey = Object.keys(row).find((k) =>
-        /libellé|libell|label|description|motif|operat/.test(k)
+        /libellé|libell|label|description|motif|operat/.test(k),
       );
       const amtKey = Object.keys(row).find((k) =>
-        /montant|amount|valeur|credit|débit|debit/.test(k)
+        /montant|amount|valeur|credit|débit|debit/.test(k),
       );
       const creditKey = Object.keys(row).find((k) => /crédit|credit/.test(k));
       const debitKey = Object.keys(row).find((k) => /débit|debit/.test(k));
       const balKey = Object.keys(row).find((k) => /solde|balance/.test(k));
-      const refKey = Object.keys(row).find((k) => /référence|reference|ref/.test(k));
+      const refKey = Object.keys(row).find((k) =>
+        /référence|reference|ref/.test(k),
+      );
 
       if (!dateKey || !descKey) {
         return null;
@@ -121,8 +123,8 @@ function parseCSV(text: string): BankTransaction[] {
 
       return {
         id: `bank-${Date.now()}-${idx}`,
-        date: parseDate(row[dateKey] ?? ''),
-        description: row[descKey]?.trim() ?? '',
+        date: parseDate(row[dateKey] ?? ""),
+        description: row[descKey]?.trim() ?? "",
         amount,
         balance: balKey ? parseAmount(row[balKey]) : undefined,
         reference: refKey ? row[refKey]?.trim() : undefined,
@@ -141,17 +143,17 @@ function parseOFX(text: string): BankTransaction[] {
   let match: RegExpExecArray | null;
 
   const extract = (block: string, tag: string) => {
-    const m = new RegExp(`<${tag}>([^<]+)`, 'i').exec(block);
-    return m ? m[1].trim() : '';
+    const m = new RegExp(`<${tag}>([^<]+)`, "i").exec(block);
+    return m ? m[1].trim() : "";
   };
 
   let idx = 0;
   while ((match = stmtTrnRe.exec(text)) !== null) {
     const block = match[1];
-    const trnAmt = parseAmount(extract(block, 'TRNAMT'));
-    const datePosted = extract(block, 'DTPOSTED');
-    const memo = extract(block, 'MEMO') || extract(block, 'NAME');
-    const fitid = extract(block, 'FITID');
+    const trnAmt = parseAmount(extract(block, "TRNAMT"));
+    const datePosted = extract(block, "DTPOSTED");
+    const memo = extract(block, "MEMO") || extract(block, "NAME");
+    const fitid = extract(block, "FITID");
 
     if (datePosted) {
       transactions.push({
@@ -177,12 +179,15 @@ function parseOFX(text: string): BankTransaction[] {
  *   2. Numéro de facture dans la description
  *   3. Proximité de date (±30 jours)
  */
-function autoMatch(transactions: BankTransaction[], invoices: Invoice[]): BankTransaction[] {
+function autoMatch(
+  transactions: BankTransaction[],
+  invoices: Invoice[],
+): BankTransaction[] {
   const unpaidInvoices = invoices.filter(
     (inv) =>
-      inv.type === 'invoice' &&
+      inv.type === "invoice" &&
       inv.status !== InvoiceStatus.PAID &&
-      inv.status !== InvoiceStatus.CANCELLED
+      inv.status !== InvoiceStatus.CANCELLED,
   );
 
   return transactions.map((tx) => {
@@ -247,9 +252,11 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'matched' | 'unmatched'>('all');
-  const [sortField, setSortField] = useState<'date' | 'amount'>('date');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "matched" | "unmatched"
+  >("all");
+  const [sortField, setSortField] = useState<"date" | "amount">("date");
   const [sortAsc, setSortAsc] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -261,8 +268,8 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
         const text = await file.text();
         let parsed: BankTransaction[];
 
-        const ext = file.name.split('.').pop()?.toLowerCase();
-        if (ext === 'ofx' || ext === 'qfx') {
+        const ext = file.name.split(".").pop()?.toLowerCase();
+        if (ext === "ofx" || ext === "qfx") {
           parsed = parseOFX(text);
         } else {
           parsed = parseCSV(text);
@@ -270,7 +277,7 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
 
         if (parsed.length === 0) {
           setError(
-            'Aucune transaction trouvée. Vérifiez le format du fichier (CSV avec en-têtes ou OFX/QFX).'
+            "Aucune transaction trouvée. Vérifiez le format du fichier (CSV avec en-têtes ou OFX/QFX).",
           );
           return;
         }
@@ -283,12 +290,14 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
           return [...prev, ...newTx];
         });
       } catch {
-        setError("Erreur lors du parsing du fichier. Vérifiez qu'il est bien encodé en UTF-8.");
+        setError(
+          "Erreur lors du parsing du fichier. Vérifiez qu'il est bien encodé en UTF-8.",
+        );
       } finally {
         setIsLoading(false);
       }
     },
-    [invoices]
+    [invoices],
   );
 
   const handleDrop = useCallback(
@@ -299,7 +308,7 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
         void handleFileImport(file);
       }
     },
-    [handleFileImport]
+    [handleFileImport],
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -307,7 +316,7 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
     if (file) {
       void handleFileImport(file);
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const toggleMatch = (txId: string, invoiceId?: string) => {
@@ -320,37 +329,48 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
               matchedInvoiceId: tx.isMatched ? undefined : invoiceId,
               matchConfidence: tx.isMatched ? undefined : 1,
             }
-          : tx
-      )
+          : tx,
+      ),
     );
   };
 
   const markPaid = (tx: BankTransaction) => {
     if (tx.matchedInvoiceId && onMarkInvoicePaid) {
       onMarkInvoicePaid(tx.matchedInvoiceId);
-      setTransactions((prev) => prev.map((t) => (t.id === tx.id ? { ...t, isMatched: true } : t)));
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === tx.id ? { ...t, isMatched: true } : t)),
+      );
     }
   };
 
   const exportReconciliation = () => {
     const rows = [
-      ['Date', 'Description', 'Montant (€)', 'Référence', 'Rapproché', 'N° Facture'],
+      [
+        "Date",
+        "Description",
+        "Montant (€)",
+        "Référence",
+        "Rapproché",
+        "N° Facture",
+      ],
       ...transactions.map((tx) => {
         const inv = invoices.find((i) => i.id === tx.matchedInvoiceId);
         return [
           tx.date,
           tx.description,
           tx.amount.toFixed(2),
-          tx.reference || '',
-          tx.isMatched ? 'Oui' : 'Non',
-          inv?.number || '',
+          tx.reference ?? "",
+          tx.isMatched ? "Oui" : "Non",
+          inv?.number ?? "",
         ];
       }),
     ];
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(';')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `rapprochement-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
@@ -360,10 +380,10 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
   // ─── Données filtrées ───────────────────────────────────────────────────────
   const filtered = transactions
     .filter((tx) => {
-      if (filterStatus === 'matched') {
+      if (filterStatus === "matched") {
         return tx.isMatched;
       }
-      if (filterStatus === 'unmatched') {
+      if (filterStatus === "unmatched") {
         return !tx.isMatched;
       }
       return true;
@@ -371,19 +391,25 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
     .filter(
       (tx) =>
         tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (tx.reference ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+        (tx.reference ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
       const factor = sortAsc ? 1 : -1;
-      if (sortField === 'date') {
-        return factor * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      if (sortField === "date") {
+        return (
+          factor * (new Date(a.date).getTime() - new Date(b.date).getTime())
+        );
       }
       return factor * (a.amount - b.amount);
     });
 
   const matchedCount = transactions.filter((t) => t.isMatched).length;
-  const totalCredit = transactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-  const totalDebit = transactions.filter((t) => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+  const totalCredit = transactions
+    .filter((t) => t.amount > 0)
+    .reduce((s, t) => s + t.amount, 0);
+  const totalDebit = transactions
+    .filter((t) => t.amount < 0)
+    .reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -393,7 +419,8 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
             Rapprochement Bancaire
           </h2>
           <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">
-            Importez un relevé CSV ou OFX pour rapprocher automatiquement vos encaissements.
+            Importez un relevé CSV ou OFX pour rapprocher automatiquement vos
+            encaissements.
           </p>
         </div>
         {transactions.length > 0 && (
@@ -425,10 +452,11 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
             )}
             <div>
               <p className="font-bold text-brand-700 dark:text-brand-200">
-                {isLoading ? 'Analyse en cours…' : 'Déposez votre relevé ici'}
+                {isLoading ? "Analyse en cours…" : "Déposez votre relevé ici"}
               </p>
               <p className="text-sm text-brand-400 mt-1">
-                Formats supportés : CSV (Boursorama, BNP, Société Générale…), OFX, QFX
+                Formats supportés : CSV (Boursorama, BNP, Société Générale…),
+                OFX, QFX
               </p>
             </div>
           </div>
@@ -461,31 +489,33 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               {
-                label: 'Transactions',
+                label: "Transactions",
                 value: transactions.length.toString(),
-                color: 'text-brand-900 dark:text-brand-50',
+                color: "text-brand-900 dark:text-brand-50",
               },
               {
-                label: 'Rapprochées',
+                label: "Rapprochées",
                 value: `${matchedCount} / ${transactions.length}`,
-                color: 'text-accent-600',
+                color: "text-accent-600",
               },
               {
-                label: 'Total crédits',
-                value: `+${totalCredit.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`,
-                color: 'text-accent-600',
+                label: "Total crédits",
+                value: `+${totalCredit.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`,
+                color: "text-accent-600",
               },
               {
-                label: 'Total débits',
-                value: `${totalDebit.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`,
-                color: 'text-red-500',
+                label: "Total débits",
+                value: `${totalDebit.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`,
+                color: "text-red-500",
               },
             ].map(({ label, value, color }) => (
               <div key={label} className="card-modern p-4">
                 <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
                   {label}
                 </p>
-                <p className={`text-xl font-bold mt-1 font-display ${color}`}>{value}</p>
+                <p className={`text-xl font-bold mt-1 font-display ${color}`}>
+                  {value}
+                </p>
               </div>
             ))}
           </div>
@@ -506,17 +536,19 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
               />
             </div>
             <div className="flex gap-1.5 border border-brand-100 dark:border-brand-700 rounded-2xl p-1">
-              {(['all', 'matched', 'unmatched'] as const).map((f) => (
+              {(["all", "matched", "unmatched"] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilterStatus(f)}
                   className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${
                     filterStatus === f
-                      ? 'bg-brand-900 text-white dark:bg-white dark:text-brand-900'
-                      : 'text-brand-400 hover:text-brand-700 dark:hover:text-brand-200'
+                      ? "bg-brand-900 text-white dark:bg-white dark:text-brand-900"
+                      : "text-brand-400 hover:text-brand-700 dark:hover:text-brand-200"
                   }`}
                 >
-                  {f === 'all' ? 'Tout' : f === 'matched' ? 'Rapprochées' : 'En attente'}
+                  {f === "all"
+                    ? "Tout"
+                    : (f === "matched" && "Rapprochées") || "En attente"}
                 </button>
               ))}
             </div>
@@ -540,17 +572,20 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
 
           {/* Tableau des transactions */}
           <div className="card-modern overflow-hidden">
-            <table className="w-full text-sm" aria-label="Transactions bancaires">
+            <table
+              className="w-full text-sm"
+              aria-label="Transactions bancaires"
+            >
               <thead>
                 <tr className="border-b border-brand-100 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-900/50">
                   <th className="text-left px-4 py-3">
                     <button
                       className="flex items-center gap-1 text-[10px] font-bold text-brand-400 uppercase tracking-widest hover:text-brand-700"
                       onClick={() => {
-                        if (sortField === 'date') {
+                        if (sortField === "date") {
                           setSortAsc((a) => !a);
                         } else {
-                          setSortField('date');
+                          setSortField("date");
                           setSortAsc(false);
                         }
                       }}
@@ -565,10 +600,10 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                     <button
                       className="flex items-center gap-1 text-[10px] font-bold text-brand-400 uppercase tracking-widest hover:text-brand-700 ml-auto"
                       onClick={() => {
-                        if (sortField === 'amount') {
+                        if (sortField === "amount") {
                           setSortAsc((a) => !a);
                         } else {
-                          setSortField('amount');
+                          setSortField("amount");
                           setSortAsc(false);
                         }
                       }}
@@ -587,20 +622,25 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
               <tbody className="divide-y divide-brand-50 dark:divide-brand-800/50">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-12 text-brand-300 text-sm">
+                    <td
+                      colSpan={5}
+                      className="text-center py-12 text-brand-300 text-sm"
+                    >
                       Aucune transaction trouvée
                     </td>
                   </tr>
                 ) : (
                   filtered.map((tx) => {
-                    const linkedInvoice = invoices.find((i) => i.id === tx.matchedInvoiceId);
+                    const linkedInvoice = invoices.find(
+                      (i) => i.id === tx.matchedInvoiceId,
+                    );
                     return (
                       <tr
                         key={tx.id}
                         className="hover:bg-brand-50/50 dark:hover:bg-brand-800/20 transition-colors"
                       >
                         <td className="px-4 py-3 text-brand-500 font-mono text-xs whitespace-nowrap">
-                          {new Date(tx.date).toLocaleDateString('fr-FR')}
+                          {new Date(tx.date).toLocaleDateString("fr-FR")}
                         </td>
                         <td className="px-4 py-3 max-w-xs">
                           <p className="text-brand-800 dark:text-brand-200 font-medium truncate">
@@ -613,10 +653,13 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                           )}
                         </td>
                         <td
-                          className={`px-4 py-3 text-right font-bold font-display ${tx.amount >= 0 ? 'text-accent-600' : 'text-red-500'}`}
+                          className={`px-4 py-3 text-right font-bold font-display ${tx.amount >= 0 ? "text-accent-600" : "text-red-500"}`}
                         >
-                          {tx.amount >= 0 ? '+' : ''}
-                          {tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                          {tx.amount >= 0 ? "+" : ""}
+                          {tx.amount.toLocaleString("fr-FR", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          €
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
                           {linkedInvoice ? (
@@ -625,14 +668,17 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                               <span className="text-xs font-bold text-brand-700 dark:text-brand-300">
                                 {linkedInvoice.number}
                               </span>
-                              {tx.matchConfidence !== undefined && tx.matchConfidence < 1 && (
-                                <span className="text-[9px] text-brand-400 bg-brand-50 dark:bg-brand-800 px-1.5 py-0.5 rounded-full">
-                                  {Math.round(tx.matchConfidence * 100)}%
-                                </span>
-                              )}
+                              {tx.matchConfidence !== undefined &&
+                                tx.matchConfidence < 1 && (
+                                  <span className="text-[9px] text-brand-400 bg-brand-50 dark:bg-brand-800 px-1.5 py-0.5 rounded-full">
+                                    {Math.round(tx.matchConfidence * 100)}%
+                                  </span>
+                                )}
                             </div>
                           ) : (
-                            <span className="text-[10px] text-brand-300 italic">Non rapproché</span>
+                            <span className="text-[10px] text-brand-300 italic">
+                              Non rapproché
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -644,15 +690,17 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                                   className="text-accent-600"
                                   aria-hidden="true"
                                 />
-                                {linkedInvoice && linkedInvoice.status !== InvoiceStatus.PAID && (
-                                  <button
-                                    onClick={() => markPaid(tx)}
-                                    title="Marquer la facture comme payée"
-                                    className="text-[10px] font-bold text-accent-600 hover:text-accent-700 bg-accent-50 dark:bg-accent-900/20 px-2.5 py-1 rounded-xl transition-all"
-                                  >
-                                    Solder
-                                  </button>
-                                )}
+                                {linkedInvoice &&
+                                  linkedInvoice.status !==
+                                    InvoiceStatus.PAID && (
+                                    <button
+                                      onClick={() => markPaid(tx)}
+                                      title="Marquer la facture comme payée"
+                                      className="text-[10px] font-bold text-accent-600 hover:text-accent-700 bg-accent-50 dark:bg-accent-900/20 px-2.5 py-1 rounded-xl transition-all"
+                                    >
+                                      Solder
+                                    </button>
+                                  )}
                                 <button
                                   onClick={() => toggleMatch(tx.id)}
                                   title="Délier cette transaction"
@@ -674,7 +722,11 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                               )
                             )}
                             {!tx.isMatched && tx.amount <= 0 && (
-                              <XCircle size={14} className="text-brand-200" aria-hidden="true" />
+                              <XCircle
+                                size={14}
+                                className="text-brand-200"
+                                aria-hidden="true"
+                              />
                             )}
                           </div>
                         </td>

@@ -295,7 +295,7 @@ const AIAssistant: React.FC = () => {
 
         {messages.map((msg) => (
           <div
-            key={msg.id || `msg-${msg.timestamp}`}
+            key={msg.id ?? `msg-${msg.timestamp}`}
             className={`flex items-start gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
           >
             <div

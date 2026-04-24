@@ -51,7 +51,7 @@ export const migration001AddInvoiceNumberSequence: Migration = {
 
     for (const invoice of invoices) {
       const year = new Date(invoice.date).getFullYear();
-      const type = invoice.type || "invoice";
+      const type = invoice.type ?? "invoice";
 
       if (!sequences[type]) sequences[type] = {};
       sequences[type][year] = Math.max(

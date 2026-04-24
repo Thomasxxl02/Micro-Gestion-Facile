@@ -165,7 +165,7 @@ export class GitHubAuthService {
         photoURL: user.photoURL,
         provider: "github",
         githubUsername:
-          user.displayName?.split("/")[1] || (user.displayName ?? undefined),
+          user.displayName?.split("/")[1] ?? (user.displayName ?? undefined),
         lastLoginAt: new Date(),
         isVerified: user.emailVerified,
       };

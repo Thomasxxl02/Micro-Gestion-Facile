@@ -21,9 +21,9 @@ const App: React.FC = () => {
 
   // Initialize Service Worker for offline support
   useEffect(() => {
-    initializeServiceWorker();
+    void initializeServiceWorker();
     // Initialize performance monitoring
-    performanceMonitor.initialize(process.env.NODE_ENV === 'production');
+    void performanceMonitor.initialize(process.env.NODE_ENV === "production");
   }, []);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const App: React.FC = () => {
         <OfflineIndicator />
         <AppShell />
         <Toaster />
-        {process.env.NODE_ENV === 'development' && <PerformanceDashboard />}
+        {process.env.NODE_ENV === "development" && <PerformanceDashboard />}
       </>
     </ErrorBoundary>
   );

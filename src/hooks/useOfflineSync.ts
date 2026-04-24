@@ -51,7 +51,7 @@ export function useOfflineSync<
       return;
     }
 
-    (async () => {
+    void (async () => {
       try {
         if (import.meta.env.DEV) {
           console.warn(
@@ -102,7 +102,7 @@ export function useOfflineSync<
         );
 
         if (dexieTableName) {
-          (async () => {
+          void (async () => {
             try {
               const table = getDexieTable(dexieTableName);
               await Promise.all(firestoreItems.map((item) => table.put(item)));
@@ -163,7 +163,7 @@ export function useOfflineSync<
           userId,
           updatedAt: serverTimestamp(),
           createdAt:
-            (item as Record<string, unknown>).createdAt || serverTimestamp(),
+            (item as Record<string, unknown>).createdAt ?? serverTimestamp(),
         };
 
         if (dexieTableName) {
@@ -196,7 +196,7 @@ export function useOfflineSync<
         return { success: false, error: err };
       }
     },
-    [userId, collectionName, dexieTableName],
+    [userId, collectionName, dexieTableName, offlinePriority],
   );
 
   const remove = useCallback(

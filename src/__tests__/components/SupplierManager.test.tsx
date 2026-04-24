@@ -55,7 +55,7 @@ vi.mock("../../components/FormFieldValidated", () => ({
       <label>{label}</label>
       <input
         placeholder={label}
-        value={value || ""}
+        value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
       />
     </div>
@@ -66,7 +66,7 @@ vi.mock("../../components/FormFields", () => ({
   TextAreaField: ({ label, value, onChange }: any) => (
     <textarea
       placeholder={label}
-      value={value || ""}
+      value={value ?? ""}
       onChange={(e) => onChange?.(e.target.value)}
     />
   ),
@@ -84,17 +84,17 @@ vi.mock("../../components/EntityFormFields", () => ({
     <div data-testid="contact-fields">
       <input
         placeholder="Nom"
-        value={name || ""}
+        value={name ?? ""}
         onChange={(e) => onNameChange?.(e.target.value)}
       />
       <input
         placeholder="Email"
-        value={email || ""}
+        value={email ?? ""}
         onChange={(e) => onEmailChange?.(e.target.value)}
       />
       <input
         placeholder="Téléphone"
-        value={phone || ""}
+        value={phone ?? ""}
         onChange={(e) => onPhoneChange?.(e.target.value)}
       />
     </div>
@@ -110,17 +110,17 @@ vi.mock("../../components/EntityFormFields", () => ({
     <div data-testid="address-fields">
       <input
         placeholder="Adresse"
-        value={address || ""}
+        value={address ?? ""}
         onChange={(e) => onAddressChange?.(e.target.value)}
       />
       <input
         placeholder="Le code postal"
-        value={postalCode || ""}
+        value={postalCode ?? ""}
         onChange={(e) => onPostalCodeChange?.(e.target.value)}
       />
       <input
         placeholder="Ville"
-        value={city || ""}
+        value={city ?? ""}
         onChange={(e) => onCityChange?.(e.target.value)}
       />
     </div>
@@ -129,7 +129,7 @@ vi.mock("../../components/EntityFormFields", () => ({
     <div data-testid="financial-fields">
       <input
         placeholder="IBAN"
-        value={formData?.iban || ""}
+        value={formData?.iban ?? ""}
         onChange={(e) => onChange({ ...formData, iban: e.target.value })}
       />
     </div>
@@ -138,7 +138,7 @@ vi.mock("../../components/EntityFormFields", () => ({
     <div data-testid="search-fields">
       <input
         placeholder="Chercher..."
-        value={filters?.search || ""}
+        value={filters?.search ?? ""}
         onChange={(e) => onChange?.({ ...filters, search: e.target.value })}
       />
     </div>
@@ -322,7 +322,7 @@ describe("SupplierManager Component", () => {
 
       // Total = 350 + 500 = 850€
       expect(
-        screen.queryByText(/850|8.*50/i) || screen.queryByText(/Dépenses/i),
+        screen.queryByText(/850|8.*50/i) ?? screen.queryByText(/Dépenses/i),
       ).toBeDefined();
     });
 
@@ -394,7 +394,7 @@ describe("SupplierManager Component", () => {
 
       // Modal devrait être visible après le clic
       const modal = screen.queryByTestId("entity-modal");
-      expect(modal || screen.getByText("Fournisseur A SARL")).toBeTruthy();
+      expect(modal ?? screen.getByText("Fournisseur A SARL")).toBeTruthy();
     });
 
     it("précharge les données du fournisseur en édition", () => {

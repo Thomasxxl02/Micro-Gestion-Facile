@@ -6,16 +6,20 @@ import {
   Truck,
   Upload,
   Wallet,
-} from 'lucide-react';
-import React, { useMemo, useRef } from 'react';
-import { useEntityFilters, useEntityForm } from '../hooks/useEntity';
-import { useFormValidation } from '../hooks/useFormValidation';
-import { schemaToRules, SupplierSchema } from '../lib/zod-schemas';
-import type { Expense, Supplier } from '../types';
-import { AddressFields, ContactFields, SearchFilterFields } from './EntityFormFields';
-import EntityModal from './EntityModal';
-import { FormFieldValidated } from './FormFieldValidated';
-import { TextAreaField } from './FormFields';
+} from "lucide-react";
+import React, { useMemo, useRef } from "react";
+import { useEntityFilters, useEntityForm } from "../hooks/useEntity";
+import { useFormValidation } from "../hooks/useFormValidation";
+import { schemaToRules, SupplierSchema } from "../lib/zod-schemas";
+import type { Expense, Supplier } from "../types";
+import {
+  AddressFields,
+  ContactFields,
+  SearchFilterFields,
+} from "./EntityFormFields";
+import EntityModal from "./EntityModal";
+import { FormFieldValidated } from "./FormFieldValidated";
+import { TextAreaField } from "./FormFields";
 
 interface SupplierManagerProps {
   suppliers: Supplier[];
@@ -31,13 +35,17 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   expenses,
   onSave,
   onDelete,
+  // eslint-disable-next-line complexity
 }) => {
   const form = useEntityForm<Supplier>();
-  const filters = useEntityFilters(suppliers as unknown as Record<string, unknown>[], {
-    searchField: 'name',
-    hasArchive: true,
-    archiveField: 'archived',
-  });
+  const filters = useEntityFilters(
+    suppliers as unknown as Record<string, unknown>[],
+    {
+      searchField: "name",
+      hasArchive: true,
+      archiveField: "archived",
+    },
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -46,17 +54,26 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
     touched: touchedFields,
     handleChange: handleFormChange,
     validate: validateAll,
-  } = useFormValidation(form.formData || ({} as Supplier), schemaToRules(SupplierSchema), {
-    validateOnChange: true,
-  });
+  } = useFormValidation(
+    form.formData ?? ({} as Supplier),
+    schemaToRules(SupplierSchema),
+    {
+      validateOnChange: true,
+    },
+  );
 
   // Stats: spending by supplier
   const getSupplierStats = (supplierId: unknown) => {
-    if (typeof supplierId !== 'string') {
+    if (typeof supplierId !== "string") {
       return { totalSpent: 0, count: 0 };
     }
-    const supplierExpenses = expenses.filter((exp) => exp.supplierId === supplierId);
-    const totalSpent = supplierExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const supplierExpenses = expenses.filter(
+      (exp) => exp.supplierId === supplierId,
+    );
+    const totalSpent = supplierExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0,
+    );
     return { totalSpent, count: supplierExpenses.length };
   };
 
@@ -72,7 +89,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
 
   const processedSuppliers = useMemo(() => {
     return (filters.filteredEntities as unknown as Supplier[]).sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     );
   }, [filters.filteredEntities]);
 
@@ -88,7 +105,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
     if (form.isEditing && form.editingId) {
       const original = suppliers.find((s) => s.id === form.editingId);
       const updated = { ...original, ...validatedData } as Supplier;
-      setSuppliers(suppliers.map((s) => (s.id === form.editingId ? updated : s)));
+      setSuppliers(
+        suppliers.map((s) => (s.id === form.editingId ? updated : s)),
+      );
       onSave?.(updated);
     } else {
       const newSupplier: Supplier = {
@@ -123,35 +142,35 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
 
   const exportCSV = () => {
     const headers = [
-      'Nom',
-      'Contact',
-      'Catégorie',
-      'Email',
-      'Téléphone',
-      'Adresse',
-      'SIRET',
-      'TVA',
-      'Site Web',
-      'Conditions Paiement',
-      'Notes',
-      'Total Dépensé',
-      'Date Création',
-      'Statut',
+      "Nom",
+      "Contact",
+      "Catégorie",
+      "Email",
+      "Téléphone",
+      "Adresse",
+      "SIRET",
+      "TVA",
+      "Site Web",
+      "Conditions Paiement",
+      "Notes",
+      "Total Dépensé",
+      "Date Création",
+      "Statut",
     ];
     const rows = processedSuppliers.map((s) => {
       const supplier = s as Supplier;
       const stats = getSupplierStats(supplier.id);
-      const contactName: string = supplier.contactName ?? '';
-      const category: string = supplier.category ?? '';
-      const email: string = supplier.email ?? '';
-      const phone: string = supplier.phone ?? '';
-      const address: string = supplier.address?.replaceAll('\n', ' ') ?? '';
-      const siret: string = supplier.siret ?? '';
-      const tvaNumber: string = supplier.tvaNumber ?? '';
-      const website: string = supplier.website ?? '';
-      const paymentTerms: string = supplier.paymentTerms ?? '';
-      const notes: string = supplier.notes?.replaceAll('\n', ' ') ?? '';
-      const createdAt: string = supplier.createdAt ?? '';
+      const contactName: string = supplier.contactName ?? "";
+      const category: string = supplier.category ?? "";
+      const email: string = supplier.email ?? "";
+      const phone: string = supplier.phone ?? "";
+      const address: string = supplier.address?.replaceAll("\n", " ") ?? "";
+      const siret: string = supplier.siret ?? "";
+      const tvaNumber: string = supplier.tvaNumber ?? "";
+      const website: string = supplier.website ?? "";
+      const paymentTerms: string = supplier.paymentTerms ?? "";
+      const notes: string = supplier.notes?.replaceAll("\n", " ") ?? "";
+      const createdAt: string = supplier.createdAt ?? "";
       return [
         '"' + s.name + '"',
         '"' + contactName + '"',
@@ -167,12 +186,12 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
         stats.totalSpent.toFixed(2),
         '"' + createdAt + '"',
         s.archived ? '"Archivé"' : '"Actif"',
-      ].join(',');
+      ].join(",");
     });
-    const csv = [headers.join(','), ...rows].join('\n');
-    const link = document.createElement('a');
+    const csv = [headers.join(","), ...rows].join("\n");
+    const link = document.createElement("a");
     link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
-    link.download = `fournisseurs_${filters.showArchived ? 'archives' : 'actifs'}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `fournisseurs_${filters.showArchived ? "archives" : "actifs"}_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -184,7 +203,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       return;
     }
     const text = await file.text();
-    const lines = text.split('\n');
+    const lines = text.split("\n");
     const newSuppliers: Supplier[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -192,7 +211,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       if (!line) {
         continue;
       }
-      const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((p) => p.replaceAll('"', ''));
+      const parts = line
+        .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+        .map((p) => p.replaceAll('"', ""));
       if (parts.length >= 1) {
         newSuppliers.push({
           id: `${Date.now()}_${i}`,
@@ -216,7 +237,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
     if (newSuppliers.length > 0) {
       setSuppliers([...suppliers, ...newSuppliers]);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -240,8 +261,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               onClick={() => filters.setShowArchived(false)}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                 filters.showArchived
-                  ? 'bg-brand-900 text-white dark:bg-white dark:text-brand-900'
-                  : 'text-brand-500'
+                  ? "bg-brand-900 text-white dark:bg-white dark:text-brand-900"
+                  : "text-brand-500"
               }`}
             >
               Actifs
@@ -250,8 +271,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               onClick={() => filters.setShowArchived(true)}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                 filters.showArchived
-                  ? 'bg-brand-900 text-white dark:bg-white dark:text-brand-900'
-                  : 'text-brand-500'
+                  ? "bg-brand-900 text-white dark:bg-white dark:text-brand-900"
+                  : "text-brand-500"
               }`}
             >
               Archivés
@@ -266,14 +287,19 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               type="file"
               accept=".csv"
               className="hidden"
-              onChange={handleImportCSV}
+              onChange={(e) => {
+                void handleImportCSV(e);
+              }}
             />
           </label>
           <button onClick={exportCSV} className="btn-secondary px-4 py-2.5">
             <Download size={18} />
             <span className="hidden sm:inline">Export</span>
           </button>
-          <button onClick={() => form.openCreate()} className="btn-primary px-6 py-2.5">
+          <button
+            onClick={() => form.openCreate()}
+            className="btn-primary px-6 py-2.5"
+          >
             <Plus size={18} />
             Nouveau
           </button>
@@ -286,20 +312,26 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
           <div className="p-3 bg-brand-100 dark:bg-brand-800 rounded-2xl text-brand-600 dark:text-brand-300 mb-4">
             <Truck size={24} />
           </div>
-          <h3 className="text-2xl font-bold text-brand-900 dark:text-white">{globalStats.count}</h3>
-          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">Fournisseurs Actifs</p>
+          <h3 className="text-2xl font-bold text-brand-900 dark:text-white">
+            {globalStats.count}
+          </h3>
+          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
+            Fournisseurs Actifs
+          </p>
         </div>
         <div className="bento-item">
           <div className="p-3 bg-accent-100 dark:bg-accent-900/30 rounded-2xl text-accent-600 dark:text-accent-400 mb-4">
             <Wallet size={24} />
           </div>
           <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400">
-            {globalStats.totalExpenses.toLocaleString('fr-FR', {
-              style: 'currency',
-              currency: 'EUR',
+            {globalStats.totalExpenses.toLocaleString("fr-FR", {
+              style: "currency",
+              currency: "EUR",
             })}
           </h3>
-          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">Total Dépensé</p>
+          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
+            Total Dépensé
+          </p>
         </div>
         <div className="bento-item">
           <div className="p-3 bg-brand-100 dark:bg-brand-800 rounded-2xl text-brand-600 dark:text-brand-300 mb-4">
@@ -308,7 +340,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
           <h3 className="text-2xl font-bold text-brand-900 dark:text-white">
             {globalStats.archivedCount}
           </h3>
-          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">Archivés</p>
+          <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
+            Archivés
+          </p>
         </div>
       </div>
 
@@ -325,7 +359,10 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       <div className="space-y-3">
         {processedSuppliers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertCircle size={48} className="text-brand-300 dark:text-brand-700 mb-4" />
+            <AlertCircle
+              size={48}
+              className="text-brand-300 dark:text-brand-700 mb-4"
+            />
             <h3 className="text-lg font-semibold text-brand-900 dark:text-white">
               Aucun fournisseur trouvé
             </h3>
@@ -348,14 +385,14 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
                       {supplier.name}
                     </h4>
                     <p className="text-sm text-brand-500 dark:text-brand-400">
-                      {supplier.category || '—'} • {supplier.email}
+                      {supplier.category ?? "—"} • {supplier.email}
                     </p>
                     <p className="text-xs text-brand-400 dark:text-brand-500 mt-1">
-                      Total dépensé:{' '}
+                      Total dépensé:{" "}
                       <span className="font-bold">
-                        {stats.totalSpent.toLocaleString('fr-FR', {
-                          style: 'currency',
-                          currency: 'EUR',
+                        {stats.totalSpent.toLocaleString("fr-FR", {
+                          style: "currency",
+                          currency: "EUR",
                         })}
                       </span>
                     </p>
@@ -369,7 +406,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
                         ? `Restaurer le fournisseur ${supplier.name}`
                         : `Archiver le fournisseur ${supplier.name}`
                     }
-                    className={`p-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${supplier.archived ? 'bg-amber-50 text-amber-600' : 'hover:bg-brand-50 text-brand-400'}`}
+                    className={`p-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${supplier.archived ? "bg-amber-50 text-amber-600" : "hover:bg-brand-50 text-brand-400"}`}
                   >
                     <Archive size={18} aria-hidden="true" />
                   </button>
@@ -383,21 +420,27 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       {/* Modal Form */}
       <EntityModal
         isOpen={form.isPanelOpen}
-        title={form.isEditing ? 'Modifier le fournisseur' : 'Nouveau fournisseur'}
+        title={
+          form.isEditing ? "Modifier le fournisseur" : "Nouveau fournisseur"
+        }
         isEditing={form.isEditing}
         onClose={form.closePanel}
-        onSave={handleSubmit}
-        onDelete={handleDelete}
+        onSave={() => {
+          void handleSubmit();
+        }}
+        onDelete={() => {
+          void handleDelete();
+        }}
         showDeleteButton={form.isEditing}
       >
         <div className="space-y-6">
           <ContactFields
-            name={validatedData.name || ''}
-            email={validatedData.email || ''}
-            phone={validatedData.phone || ''}
-            onNameChange={(val) => handleFormChange('name')(val)}
-            onEmailChange={(val) => handleFormChange('email')(val)}
-            onPhoneChange={(val) => handleFormChange('phone')(val)}
+            name={validatedData.name || ""}
+            email={validatedData.email ?? ""}
+            phone={validatedData.phone ?? ""}
+            onNameChange={(val) => handleFormChange("name")(val)}
+            onEmailChange={(val) => handleFormChange("email")(val)}
+            onPhoneChange={(val) => handleFormChange("phone")(val)}
             contactNameLabel="Nom du fournisseur"
             required={true}
             validationErrors={validationErrors}
@@ -411,16 +454,16 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="N° TVA (optionnel)"
-                value={validatedData.tvaNumber || ''}
-                onChange={(val) => handleFormChange('tvaNumber')(val)}
+                value={validatedData.tvaNumber ?? ""}
+                onChange={(val) => handleFormChange("tvaNumber")(val)}
                 validationType="vat"
                 error={validationErrors.tvaNumber}
                 touched={touchedFields.tvaNumber}
               />
               <FormFieldValidated
                 label="Site Web"
-                value={validatedData.website || ''}
-                onChange={(val) => handleFormChange('website')(val)}
+                value={validatedData.website ?? ""}
+                onChange={(val) => handleFormChange("website")(val)}
                 validationType="website"
                 error={validationErrors.website}
                 touched={touchedFields.website}
@@ -429,8 +472,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="IBAN"
-                value={validatedData.iban || ''}
-                onChange={(val) => handleFormChange('iban')(val)}
+                value={validatedData.iban ?? ""}
+                onChange={(val) => handleFormChange("iban")(val)}
                 validationType="iban"
                 placeholder="FR14..."
                 error={validationErrors.iban}
@@ -438,8 +481,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               />
               <FormFieldValidated
                 label="Catégorie"
-                value={validatedData.category || ''}
-                onChange={(val) => handleFormChange('category')(val)}
+                value={validatedData.category ?? ""}
+                onChange={(val) => handleFormChange("category")(val)}
                 type="text"
                 validationType="name"
                 placeholder="Ex: Matériel, Logiciel..."
@@ -454,10 +497,10 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               Localisation & Notes
             </h4>
             <AddressFields
-              address={validatedData.address || ''}
-              postalCode={''}
-              city={''}
-              onAddressChange={(val) => handleFormChange('address')(val)}
+              address={validatedData.address ?? ""}
+              postalCode={""}
+              city={""}
+              onAddressChange={(val) => handleFormChange("address")(val)}
               onPostalCodeChange={() => undefined}
               onCityChange={() => undefined}
               showPostalCity={false}
@@ -467,8 +510,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated
                 label="Délai de paiement (jours)"
-                value={validatedData.paymentTerms || '30'}
-                onChange={(val) => handleFormChange('paymentTerms')(val)}
+                value={validatedData.paymentTerms ?? "30"}
+                onChange={(val) => handleFormChange("paymentTerms")(val)}
                 type="number"
                 validationType="amount"
                 error={validationErrors.paymentTerms}
@@ -476,8 +519,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               />
               <FormFieldValidated
                 label="SIRET"
-                value={validatedData.siret || ''}
-                onChange={(val) => handleFormChange('siret')(val)}
+                value={validatedData.siret ?? ""}
+                onChange={(val) => handleFormChange("siret")(val)}
                 validationType="siret"
                 error={validationErrors.siret}
                 touched={touchedFields.siret}
@@ -485,8 +528,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             </div>
             <TextAreaField
               label="Notes"
-              value={validatedData.notes || ''}
-              onChange={(val) => handleFormChange('notes')(val)}
+              value={validatedData.notes ?? ""}
+              onChange={(val) => handleFormChange("notes")(val)}
               rows={3}
             />
           </div>

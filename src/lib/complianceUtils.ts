@@ -10,6 +10,7 @@ export interface ComplianceStatus {
 /**
  * Calcule le statut de conformité Factur-X 2026 d'un profil
  */
+// eslint-disable-next-line complexity
 export const checkCompliance2026 = (profile: UserProfile): ComplianceStatus => {
   const missingFields: string[] = [];
   const recommendations: string[] = [];

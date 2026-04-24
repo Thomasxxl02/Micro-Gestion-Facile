@@ -52,18 +52,18 @@ vi.mock('../../components/EntityFormFields', () => ({
       <input
         placeholder="Nom / Société *"
         required
-        value={name || ''}
+        value={name ?? ''}
         onChange={(e) => onNameChange?.(e.target.value)}
       />
       <input
         placeholder="Email *"
         required
-        value={email || ''}
+        value={email ?? ''}
         onChange={(e) => onEmailChange?.(e.target.value)}
       />
       <input
         placeholder="Téléphone"
-        value={phone || ''}
+        value={phone ?? ''}
         onChange={(e) => onPhoneChange?.(e.target.value)}
       />
     </div>
@@ -79,17 +79,17 @@ vi.mock('../../components/EntityFormFields', () => ({
     <div data-testid="address-fields">
       <input
         placeholder="Adresse"
-        value={address || ''}
+        value={address ?? ''}
         onChange={(e) => onAddressChange?.(e.target.value)}
       />
       <input
         placeholder="Code postal"
-        value={postalCode || ''}
+        value={postalCode ?? ''}
         onChange={(e) => onPostalCodeChange?.(e.target.value)}
       />
       <input
         placeholder="Ville"
-        value={city || ''}
+        value={city ?? ''}
         onChange={(e) => onCityChange?.(e.target.value)}
       />
     </div>
@@ -98,13 +98,13 @@ vi.mock('../../components/EntityFormFields', () => ({
     <div data-testid="financial-fields">
       <input
         placeholder="SIRET"
-        value={formData?.siret || ''}
+        value={formData?.siret ?? ''}
         onChange={(e) => onChange({ ...formData, siret: e.target.value })}
       />
       <input
         placeholder="Site Web"
         type="url"
-        value={formData?.website || ''}
+        value={formData?.website ?? ''}
         onChange={(e) => onChange({ ...formData, website: e.target.value })}
       />
     </div>
@@ -113,7 +113,7 @@ vi.mock('../../components/EntityFormFields', () => ({
     <div data-testid="search-fields">
       <input
         placeholder="Chercher..."
-        value={filters?.search || ''}
+        value={filters?.search ?? ''}
         onChange={(e) => onChange?.({ ...filters, search: e.target.value })}
       />
     </div>

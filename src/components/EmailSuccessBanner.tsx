@@ -12,10 +12,10 @@
  * Typage: TypeScript strict
  */
 
-import { ChevronLeft, Mail, MailOpen, RefreshCw } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useCallback, useEffect } from 'react';
-import { useEmailTimer } from '../hooks/useEmailTimer';
+import { ChevronLeft, Mail, MailOpen, RefreshCw } from "lucide-react";
+import { motion } from "motion/react";
+import { useCallback, useEffect } from "react";
+import { useEmailTimer } from "../hooks/useEmailTimer";
 
 interface EmailSuccessBannerProps {
   /** Email auquel le lien a été envoyé */
@@ -32,7 +32,7 @@ interface EmailSuccessBannerProps {
  * Masquer email: affiche "tho***@example.com"
  */
 function maskEmail(email: string): string {
-  const [local, domain] = email.split('@');
+  const [local, domain] = email.split("@");
   if (local.length <= 3) {
     return `${local[0]}***@${domain}`;
   }
@@ -58,6 +58,7 @@ function maskEmail(email: string): string {
  * />
  * ```
  */
+// eslint-disable-next-line complexity
 export function EmailSuccessBanner({
   email,
   onResend,
@@ -66,7 +67,7 @@ export function EmailSuccessBanner({
 }: EmailSuccessBannerProps) {
   // Effet haptique au montage (succès initial)
   useEffect(() => {
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate([10, 30, 10, 30]);
     }
   }, []);
@@ -87,7 +88,7 @@ export function EmailSuccessBanner({
     maxResends: 3, // Limite à 3 renvois (4 tentatives au total)
     onLinkExpiry: () => {
       // Afficher message "lien expiré"
-      console.warn('⏰ Lien de connexion expiré');
+      console.warn("⏰ Lien de connexion expiré");
     },
   });
 
@@ -103,7 +104,7 @@ export function EmailSuccessBanner({
       resetTimer();
       startResendCooldown();
     } catch (error) {
-      console.error('Erreur lors du renvoi:', error);
+      console.error("Erreur lors du renvoi:", error);
     }
   }, [canResend, isResending, onResend, resetTimer, startResendCooldown]);
 
@@ -112,9 +113,15 @@ export function EmailSuccessBanner({
     return (
       <div className="p-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg">
         <div className="flex items-start gap-3">
-          <MailOpen size={24} className="text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+          <MailOpen
+            size={24}
+            className="text-red-500 shrink-0 mt-0.5"
+            aria-hidden="true"
+          />
           <div className="flex-1">
-            <h3 className="font-bold text-red-900 dark:text-red-100">Lien expiré 🔌</h3>
+            <h3 className="font-bold text-red-900 dark:text-red-100">
+              Lien expiré 🔌
+            </h3>
             <p className="text-sm text-red-700 dark:text-red-200 mt-1">
               Le lien de connexion a expiré (15 minutes maximum).
             </p>
@@ -134,11 +141,26 @@ export function EmailSuccessBanner({
     );
   }
 
+  const resendAriaLabel = isMaxResendsReached
+    ? "Limite de renvois atteinte"
+    : (!canResend && `Renvoyer dans ${resendCooldownSeconds}s`) ||
+      "Renvoyer le lien";
+
+  const resendTitle = isMaxResendsReached
+    ? "Limite de renvois atteinte"
+    : (!canResend && `Renvoyer dans ${resendCooldownSeconds}s`) || "";
+
+  let resendButtonText = "Renvoyer le lien";
+  if (isResending) resendButtonText = "Envoi...";
+  else if (isMaxResendsReached) resendButtonText = "Limite atteinte";
+  else if (!canResend)
+    resendButtonText = `Renvoyer (${resendCooldownSeconds}s)`;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: 'spring', duration: 0.5 }}
+      transition={{ type: "spring", duration: 0.5 }}
       className="p-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg shadow-lg shadow-blue-500/10"
       role="status"
       aria-live="polite"
@@ -148,9 +170,13 @@ export function EmailSuccessBanner({
         <motion.div
           initial={{ rotate: -20, scale: 0.5 }}
           animate={{ rotate: 0, scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring' }}
+          transition={{ delay: 0.2, type: "spring" }}
         >
-          <Mail size={24} className="text-blue-500 shrink-0 mt-0.5" aria-hidden="true" />
+          <Mail
+            size={24}
+            className="text-blue-500 shrink-0 mt-0.5"
+            aria-hidden="true"
+          />
         </motion.div>
 
         {/* Contenu */}
@@ -160,7 +186,7 @@ export function EmailSuccessBanner({
             Vérifiez votre email ! 📮
           </h3>
           <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-            Un lien de connexion a été envoyé à{' '}
+            Un lien de connexion a été envoyé à{" "}
             <span className="font-mono font-bold">{maskEmail(email)}</span>
           </p>
 
@@ -178,7 +204,9 @@ export function EmailSuccessBanner({
           <div className="flex flex-col sm:flex-row gap-2 mt-5">
             {/* Bouton Resend */}
             <button
-              onClick={handleResend}
+              onClick={() => {
+                void handleResend();
+              }}
               disabled={!canResend || isResending}
               className={`
                 px-4 py-2.5 rounded-lg font-bold text-sm
@@ -187,39 +215,19 @@ export function EmailSuccessBanner({
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                 ${
                   canResend && !isResending
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-                    : 'bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed opacity-60'
+                    ? "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+                    : "bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed opacity-60"
                 }
               `}
-              aria-label={
-                isMaxResendsReached
-                  ? 'Limite de renvois atteinte'
-                  : !canResend
-                    ? `Renvoyer dans ${resendCooldownSeconds}s`
-                    : 'Renvoyer le lien'
-              }
-              title={
-                isMaxResendsReached
-                  ? 'Limite de renvois atteinte'
-                  : !canResend
-                    ? `Renvoyer dans ${resendCooldownSeconds}s`
-                    : ''
-              }
+              aria-label={resendAriaLabel}
+              title={resendTitle}
             >
               <RefreshCw
                 size={16}
-                className={isResending ? 'animate-spin' : ''}
+                className={isResending ? "animate-spin" : ""}
                 aria-hidden="true"
               />
-              <span>
-                {isResending
-                  ? 'Envoi...'
-                  : isMaxResendsReached
-                    ? 'Limite atteinte'
-                    : !canResend
-                      ? `Renvoyer (${resendCooldownSeconds}s)`
-                      : 'Renvoyer le lien'}
-              </span>
+              <span>{resendButtonText}</span>
             </button>
 
             {/* Bouton Modifier email */}
@@ -253,7 +261,8 @@ export function EmailSuccessBanner({
             )}
             {isMaxResendsReached && (
               <p className="text-[10px] text-red-500 dark:text-red-400 font-bold">
-                ⚠️ Limite de renvois atteinte. Si vous n&apos;avez rien reçu, vérifiez vos spams ou changez d&apos;email.
+                ⚠️ Limite de renvois atteinte. Si vous n&apos;avez rien reçu,
+                vérifiez vos spams ou changez d&apos;email.
               </p>
             )}
           </div>

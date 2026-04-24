@@ -287,16 +287,14 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
         expenses,
       };
 
-      const syncTimer = setTimeout(async () => {
-        try {
-          await uploadToCloud(
-            provider,
-            `mgf-backup-${new Date().toISOString().split("T")[0]}.json`,
-            JSON.stringify(dataToSync),
-          );
-        } catch (e) {
+      const syncTimer = setTimeout(() => {
+        uploadToCloud(
+          provider,
+          `mgf-backup-${new Date().toISOString().split("T")[0]}.json`,
+          JSON.stringify(dataToSync),
+        ).catch((e: unknown) => {
           console.error("[CloudSync] Auto-sync failed:", e);
-        }
+        });
       }, 5000); // Délai de 5s pour éviter de spammer si plusieurs modifs rapides
 
       return () => clearTimeout(syncTimer);
@@ -306,13 +304,14 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
   // ─── SAVE WRAPPER POUR FIRESTORE ───
   const saveUserProfile = (profile: UserProfile) => {
     if (userId) {
-      saveDoc("profiles", { ...profile, id: userId } as UserProfile & {
+      void saveDoc("profiles", { ...profile, id: userId } as UserProfile & {
         id: string;
       });
     }
   };
 
   // ─── RETOUR CENTRALISÉ ───
+  /* eslint-disable @typescript-eslint/no-misused-promises */
   return {
     invoices,
     clients,
@@ -341,6 +340,7 @@ export const useAppShellSync = (userId: string): AppShellSyncResult => {
     deleteCalendarEvent,
     saveUserProfile,
   };
+  /* eslint-enable @typescript-eslint/no-misused-promises */
 };
 
 /**

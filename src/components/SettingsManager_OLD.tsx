@@ -282,6 +282,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   onSaveProfile,
   allData,
   setAllData,
+  // eslint-disable-next-line complexity
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<

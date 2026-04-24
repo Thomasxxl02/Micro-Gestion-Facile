@@ -57,7 +57,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
       }
 
       // Force this SW to become active immediately
-      self.skipWaiting();
+      await self.skipWaiting();
     })(),
   );
 });
@@ -125,6 +125,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
  * BACKGROUND SYNC
  * Resync queued offline requests when online
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 self.addEventListener("sync", (event: any) => {
   console.log("[SW] Background sync event:", event.tag);
 
@@ -141,17 +142,17 @@ self.addEventListener("message", (event: ExtendableMessageEvent) => {
   const { data } = event;
 
   if (data.type === "SKIP_WAITING") {
-    self.skipWaiting();
+    void self.skipWaiting();
   }
 
   if (data.type === "GET_CACHE_SIZE") {
-    getCacheSize().then((size) => {
+    void getCacheSize().then((size) => {
       event.ports[0].postMessage({ type: "CACHE_SIZE", size });
     });
   }
 
   if (data.type === "CLEAR_CACHE") {
-    clearAllCaches().then(() => {
+    void clearAllCaches().then(() => {
       event.ports[0].postMessage({ type: "CACHE_CLEARED" });
     });
   }
@@ -181,7 +182,7 @@ async function cacheFirstStrategy(request: Request): Promise<Response> {
     // Cache successful responses
     if (response.ok && response.status === 200) {
       const cache = await caches.open(CACHE_CONFIG.ASSETS);
-      cache.put(request, response.clone());
+      void cache.put(request, response.clone());
     }
 
     return response;
@@ -206,12 +207,12 @@ async function networkFirstStrategy(request: Request): Promise<Response> {
     // Cache successful responses
     if (response.ok && response.status === 200) {
       const cache = await caches.open(CACHE_CONFIG.API);
-      cache.put(request, response.clone());
+      void cache.put(request, response.clone());
     }
 
     console.log("[SW] Network response:", request.url);
     return response;
-  } catch (error) {
+  } catch (_error) {
     clearTimeout(timeoutId);
     console.log("[SW] Network failed, checking cache:", request.url);
 
@@ -241,7 +242,7 @@ async function networkFirstStrategy(request: Request): Promise<Response> {
 async function networkWithCacheFallback(request: Request): Promise<Response> {
   try {
     return await fetch(request);
-  } catch (error) {
+  } catch (_error) {
     console.log("[SW] Network failed, using cache:", request.url);
     const cached = await caches.match(request);
     if (cached) {
@@ -362,6 +363,7 @@ async function retryRequest(req: QueuedRequest): Promise<Response> {
  * INDEXEDDB FOR QUEUED REQUESTS
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let dbInstance: any = null;
 
 async function openRequestDB() {

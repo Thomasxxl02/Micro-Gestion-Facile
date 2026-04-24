@@ -224,7 +224,7 @@ describe("generateFacturX_XML — Conformité Factur-X BASIC 2026", () => {
         ],
       });
       const xml = generateFacturX_XML(invoiceMultiItems, client, userProfile);
-      const lineCount = (xml.match(/IncludedSupplyChainTradeLineItem/g) || [])
+      const lineCount = (xml.match(/IncludedSupplyChainTradeLineItem/g) ?? [])
         .length;
       // On a ouverture + fermeture de balise pour chaque item × 2
       expect(lineCount).toBe(6); // 3 items × 2 balises (open+close)

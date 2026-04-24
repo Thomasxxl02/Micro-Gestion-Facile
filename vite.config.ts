@@ -166,6 +166,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           // Optimized manual chunks for better code splitting
+          // eslint-disable-next-line complexity
           manualChunks: (id: string) => {
             // Heavy vendor libraries get their own chunk
             if (id.includes("node_modules/recharts")) {
