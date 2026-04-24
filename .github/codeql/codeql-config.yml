@@ -1,0 +1,7 @@
+name: CodeQL config
+
+paths-ignore:
+  - coverage/
+  - node_modules/
+  - dist/
+  - public/sw.ts
