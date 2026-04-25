@@ -1,7 +1,12 @@
 name: CodeQL config
 
+# Exclure les fichiers générés automatiquement (faux positifs garantis)
 paths-ignore:
   - coverage/
+  - lcov-report/
   - node_modules/
   - dist/
+  - dist-ssr/
+  - .vite/
   - public/sw.ts
+  - scripts/
