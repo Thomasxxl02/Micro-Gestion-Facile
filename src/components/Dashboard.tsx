@@ -646,7 +646,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                   return (
                     <div
                       key={id}
-                      className="card-modern p-6 h-75 animate-pulse bg-gray-100 dark:bg-gray-800"
+                      className="card-pro p-6 h-75 animate-pulse bg-gray-100 dark:bg-gray-800"
                     />
                   );
                 }
@@ -661,35 +661,35 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                       id="stats-revenue"
                       className="lg:col-span-1"
                     >
-                      <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-brand-900 dark:text-brand-50">
-                          <TrendingUp size={120} />
+                      <div className="card-pro p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+                        <div className="absolute -right-6 -top-6 p-8 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-500 text-brand-900 dark:text-brand-50">
+                          <TrendingUp size={140} />
                         </div>
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="p-2.5 bg-brand-50 dark:bg-brand-800 text-brand-900 dark:text-brand-50 rounded-xl">
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="p-3 bg-brand-100 dark:bg-brand-800 text-brand-600 dark:text-brand-400 rounded-2xl shadow-sm group-hover:shadow-md transition-all">
                             <Euro size={20} />
                           </div>
-                          <span className="flex items-center text-[9px] font-bold uppercase tracking-wider text-accent-600 bg-accent-50 dark:bg-accent-900/20 px-2.5 py-1 rounded-full border border-accent-100 dark:border-accent-900/30">
+                          <span className="flex items-center text-[10px] font-black uppercase tracking-wider text-accent-700 bg-accent-50 dark:bg-accent-900/30 px-3 py-1.5 rounded-xl border border-accent-100 dark:border-accent-800/50">
                             Encaissé
                           </span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
+                          <p className="text-[11px] font-black text-brand-400 dark:text-brand-500 uppercase tracking-[0.1em] mb-1">
                             Chiffre d&apos;Affaires
                           </p>
-                          <div className="flex items-baseline gap-2 mt-1">
-                            <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display">
+                          <div className="flex items-baseline gap-2">
+                            <h3 className="text-3xl font-black text-brand-950 dark:text-white tracking-tighter font-display">
                               {totalRevenue.toLocaleString("fr-FR")} €
                             </h3>
                             <div
-                              className={`flex items-center text-[10px] font-bold ${cashFlowStats.percent >= 0 ? "text-accent-600" : "text-red-500"}`}
+                              className={`flex items-center text-[11px] font-black px-2 py-0.5 rounded-lg ${cashFlowStats.percent >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-rose-600 bg-rose-50 dark:bg-rose-900/20"}`}
                             >
                               {cashFlowStats.percent >= 0 ? (
-                                <ArrowUpRight size={12} />
+                                <ArrowUpRight size={12} className="mr-0.5" />
                               ) : (
-                                <ArrowDownRight size={12} />
+                                <ArrowDownRight size={12} className="mr-0.5" />
                               )}
-                              {Math.abs(cashFlowStats.percent).toFixed(0)}%
+                              {Math.abs(cashFlowStats.percent).toFixed(1)}%
                             </div>
                           </div>
                         </div>
@@ -698,23 +698,23 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
                     {/* Profit Card */}
                     <SortableWidget id="stats-profit" className="lg:col-span-1">
-                      <div className="bg-brand-600 dark:bg-brand-900 text-white p-6 rounded-4xl h-full shadow-xl shadow-brand-600/20 relative overflow-hidden group border border-white/5">
-                        <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <TrendingUp size={120} />
+                      <div className="bg-linear-to-br from-brand-600 to-brand-800 text-white p-6 rounded-[2rem] h-full shadow-2xl shadow-brand-500/30 relative overflow-hidden group border border-white/10 hover:shadow-brand-500/40 transition-all duration-500 translate-z-0">
+                        <div className="absolute -right-8 -top-8 p-8 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700">
+                          <TrendingUp size={160} />
                         </div>
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="p-2.5 bg-white/10 text-white rounded-xl">
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                          <div className="p-3 bg-white/10 backdrop-blur-md text-white rounded-2xl border border-white/10 shadow-inner">
                             <Wallet size={20} />
                           </div>
-                          <span className="flex items-center text-[9px] font-bold uppercase tracking-wider text-brand-200 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
+                          <span className="flex items-center text-[10px] font-black uppercase tracking-wider text-brand-100 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
                             Brut
                           </span>
                         </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-brand-300 uppercase tracking-widest">
+                        <div className="relative z-10">
+                          <p className="text-[11px] font-black text-brand-100/70 uppercase tracking-[0.1em] mb-1">
                             Résultat Brut
                           </p>
-                          <h3 className="text-2xl font-bold mt-1 tracking-tight font-display">
+                          <h3 className="text-3xl font-black tracking-tighter font-display drop-shadow-sm">
                             {netProfit.toLocaleString("fr-FR")} €
                           </h3>
                         </div>
@@ -723,7 +723,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
                     {/* Net After Tax Card */}
                     <SortableWidget id="stats-net" className="lg:col-span-1">
-                      <div className="card-modern p-6 h-full flex flex-col justify-between border-dashed bg-brand-50/30 dark:bg-brand-800/10">
+                      <div className="card-pro p-6 h-full flex flex-col justify-between border-dashed bg-brand-50/30 dark:bg-brand-800/10">
                         <div className="flex justify-between items-start mb-4">
                           <div className="p-2.5 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-xl">
                             <Calculator size={20} />
@@ -766,7 +766,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
                     {/* Micro Threshold Card (NEW) */}
                     <SortableWidget id="stats-micro" className="lg:col-span-1">
-                      <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden">
+                      <div className="card-pro p-6 h-full flex flex-col justify-between relative overflow-hidden">
                         <div className="relative z-10">
                           <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
                             Seuil Micro-Entreprise
@@ -802,7 +802,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
                     {/* VAT Threshold Card */}
                     <SortableWidget id="stats-vat" className="lg:col-span-1">
-                      <div className="card-modern p-6 h-full flex flex-col justify-between relative overflow-hidden">
+                      <div className="card-pro p-6 h-full flex flex-col justify-between relative overflow-hidden">
                         <div className="relative z-10">
                           <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
                             Franchise TVA
@@ -846,7 +846,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="md:col-span-2 lg:col-span-3 row-span-2"
                   >
-                    <div className="card-modern p-8 h-full flex flex-col">
+                    <div className="card-pro p-8 h-full flex flex-col">
                       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
                         <div>
                           <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 font-display">
@@ -996,7 +996,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="lg:col-span-1 row-span-2"
                   >
-                    <div className="card-modern p-8 flex flex-col h-full">
+                    <div className="card-pro p-8 flex flex-col h-full">
                       <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 mb-8 font-display">
                         Répartition Dépenses
                       </h3>
@@ -1086,7 +1086,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="md:col-span-2 lg:col-span-2 row-span-2"
                   >
-                    <div className="card-modern p-8 flex flex-col h-full">
+                    <div className="card-pro p-8 flex flex-col h-full">
                       <div className="flex justify-between items-center mb-8">
                         <div>
                           <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 font-display">
@@ -1255,7 +1255,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="md:col-span-1 lg:col-span-1 border-dashed border-2 border-brand-100 dark:border-brand-800 rounded-4xl"
                   >
-                    <div className="card-modern p-6 h-full flex flex-col bg-transparent shadow-none">
+                    <div className="card-pro p-6 h-full flex flex-col bg-transparent shadow-none">
                       <div className="flex items-center gap-3 mb-6">
                         <div className="p-2.5 bg-brand-50 dark:bg-brand-800 text-brand-900 dark:text-brand-50 rounded-xl">
                           <Zap size={18} />
@@ -1325,7 +1325,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="lg:col-span-1 row-span-2"
                   >
-                    <div className="card-modern p-8 flex flex-col h-full">
+                    <div className="card-pro p-8 flex flex-col h-full">
                       <div className="flex justify-between items-center mb-8">
                         <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 flex items-center gap-3 font-display">
                           <Package size={20} className="text-red-500" /> Stocks
@@ -1384,7 +1384,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                     id={id}
                     className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-4 zen-hidden"
                   >
-                    <div className="card-modern p-6 relative overflow-hidden">
+                    <div className="card-pro p-6 relative overflow-hidden">
                       {/* Alertes seuils dynamiques */}
                       {revenueProjection.alerts.length > 0 && (
                         <div className="mb-5 space-y-2">

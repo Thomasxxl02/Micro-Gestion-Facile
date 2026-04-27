@@ -127,14 +127,14 @@ const AuthPage: React.FC = () => {
     emailInputBorder = "border-green-500 focus:ring-green-500/10";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 transition-colors duration-500">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-brand-50 to-white dark:from-brand-950 dark:to-brand-900 transition-colors duration-500 overflow-hidden relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-200/30 dark:bg-brand-800/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-200/30 dark:bg-accent-800/20 rounded-full blur-3xl animate-pulse delay-700" />
+        <div className="absolute top-0 -left-24 w-[40rem] h-[40rem] bg-brand-200/40 dark:bg-brand-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 -right-24 w-[40rem] h-[40rem] bg-accent-200/30 dark:bg-accent-600/10 rounded-full blur-[120px] animate-pulse delay-1000" />
       </div>
 
-      <div className="max-w-md w-full glass p-10 rounded-[2.5rem] shadow-2xl text-center border border-white/40 dark:border-white/5 relative z-10 animate-fade-in">
-        <div className="w-24 h-24 bg-white dark:bg-brand-800 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-500">
+      <div className="max-w-md w-full glass p-8 sm:p-12 rounded-[3.5rem] shadow-[0_32px_120px_-20px_rgba(139,92,246,0.15)] dark:shadow-[0_32px_120px_-20px_rgba(0,0,0,0.5)] text-center border border-white/60 dark:border-white/5 relative z-10 animate-fade-in backdrop-blur-3xl">
+        <div className="w-24 h-24 bg-gradient-to-tr from-brand-600 to-accent-500 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-brand-500/40 rotate-6 hover:rotate-0 transition-all duration-700 cursor-default group">
           <svg
             width="48"
             height="48"
@@ -142,6 +142,7 @@ const AuthPage: React.FC = () => {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             aria-label="Micro Gestion logo"
+            className="group-hover:scale-110 transition-transform duration-500"
           >
             <text
               x="50%"
@@ -149,22 +150,21 @@ const AuthPage: React.FC = () => {
               dominantBaseline="middle"
               textAnchor="middle"
               fontSize="28"
-              fontWeight="bold"
-              fill="#1F2937"
-              className="dark:fill-white"
+              fontWeight="900"
+              fill="white"
             >
               MG
             </text>
           </svg>
         </div>
-        <h1 className="text-4xl font-bold text-brand-900 dark:text-white mb-4 tracking-tight">
+        <h1 className="text-4xl font-extrabold text-brand-900 dark:text-white mb-4 tracking-tight font-display">
           Micro Gestion
         </h1>
-        <p className="text-brand-600 dark:text-brand-300 mb-12 text-lg">
+        <p className="text-brand-500 dark:text-brand-400 mb-12 text-lg font-medium">
           Votre allié quotidien pour une gestion simplifiée et intelligente.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <ErrorBanner
             error={loginError}
             type="auth"
@@ -182,9 +182,9 @@ const AuthPage: React.FC = () => {
             }
             className={`
               w-full min-h-11 sm:min-h-12.5 py-3 sm:py-4 px-4 sm:px-8
-              bg-brand-600 hover:bg-brand-700 text-white border-2 border-brand-500 hover:border-brand-600 rounded-2xl font-bold
-              flex items-center justify-center gap-3 sm:gap-4 hover:scale-100 sm:hover:scale-[1.02] active:scale-95 transition-all
-              shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 group disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100
+              bg-brand-600 hover:bg-brand-700 text-white border-none rounded-[2rem] font-bold
+              flex items-center justify-center gap-3 sm:gap-4 hover:scale-[1.03] active:scale-95 transition-all duration-300
+              shadow-[0_12px_32px_-8px_rgba(124,58,237,0.4)] hover:shadow-[0_20px_48px_-8px_rgba(124,58,237,0.5)] group disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100
             `}
           >
             <div className="flex items-center gap-3 h-6">
@@ -197,7 +197,7 @@ const AuthPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <div className="bg-white p-1 rounded-lg">
+                  <div className="bg-white p-1.5 rounded-xl transition-transform group-hover:scale-110 duration-500">
                     <svg
                       width="18"
                       height="18"
