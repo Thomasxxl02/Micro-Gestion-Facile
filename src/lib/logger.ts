@@ -47,7 +47,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
 };
 
 // Session ID unique pour chaque session utilisateur
-const SESSION_ID = `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+const SESSION_ID = `session-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
 // Store local pour la config
 let currentConfig: LoggerConfig = { ...DEFAULT_CONFIG };

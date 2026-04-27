@@ -509,7 +509,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           </div>
 
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
             className="flex-1 overflow-y-auto p-8 space-y-6"
           >
             <div className="space-y-6">
