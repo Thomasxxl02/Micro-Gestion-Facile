@@ -368,7 +368,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
               }
             >
               <div className="w-12 h-12 bg-brand-900 dark:bg-white shrink-0 shadow-sm rounded-(--preview-radius)" />
-              <div className="w-12 h-12 bg-primary-500 shrink-0 shadow-sm rounded-(--preview-radius)" />
+              <div className="w-12 h-12 bg-brand-500 shrink-0 shadow-sm rounded-(--preview-radius)" />
               <div className="w-12 h-12 bg-accent-500 shrink-0 shadow-sm rounded-(--preview-radius)" />
               <p className="text-[10px] text-brand-400 leading-tight self-center">
                 Prévisualisation de l'arrondi
