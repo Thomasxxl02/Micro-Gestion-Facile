@@ -54,7 +54,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   clients = [],
   onSaveExpense,
   onDeleteExpense,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const [activeTab, setActiveTab] = useState<"journal" | "bilan" | "fiscal">(
     "journal",

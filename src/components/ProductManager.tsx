@@ -36,7 +36,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
   products,
   onSave,
   onDelete,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

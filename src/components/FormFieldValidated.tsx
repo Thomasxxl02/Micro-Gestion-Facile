@@ -23,8 +23,6 @@
  */
 
 import {
-  CircleAlert as AlertCircle,
-  CircleCheck as CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -44,6 +42,14 @@ import {
   validateWebsiteForm,
   type ValidationResult,
 } from "../lib/zod-schemas";
+import {
+  ErrorMessage,
+  ErrorIcon,
+  getFieldBorderClass,
+  InputIcon,
+  LabelSection,
+  SuccessMessage,
+} from "./FormFieldValidatedSections";
 
 // Aliases for validator map keys
 const validateFrenchPhone = validatePhoneForm;
@@ -94,16 +100,6 @@ const htmlTypeToValidation: Record<string, ValidationType> = {
   url: "website",
   number: "amount",
   text: "none",
-};
-
-const getFieldBorderClass = (hasErr: boolean, hasSuc: boolean): string => {
-  if (hasErr) {
-    return "border-red-500 focus:ring-red-500/10 focus:border-red-600";
-  }
-  if (hasSuc) {
-    return "border-green-500 focus:ring-green-500/10 focus:border-green-600";
-  }
-  return "";
 };
 
 interface FormFieldValidatedProps {
@@ -180,7 +176,7 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   // Propriétés optionnelles pour intégration avec useFormValidation
   error: externalError,
   touched: externalTouched,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const isTextarea = type === "textarea";
 
@@ -265,87 +261,54 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   const hasError = shouldShowError;
   const hasSuccess = currentError && currentError.valid && value;
 
+  const commonInputProps = {
+    id: fieldId,
+    required: required,
+    value: value,
+    onChange: handleChange,
+    onBlur: handleBlur,
+    placeholder: placeholder,
+    ...(_autoComplete && { autoComplete: _autoComplete }),
+    ...ariaAttrs,
+    "aria-label": ariaLabel,
+    "aria-describedby": describedByValue,
+    maxLength: maxLength,
+  };
+
+  const borderClass = getFieldBorderClass(!!hasError, !!hasSuccess);
+
   return (
     <div className={`space-y-1.5 ${className}`}>
-      {/* Label */}
-      <div className="flex items-center justify-between gap-2">
-        <label
-          htmlFor={fieldId}
-          className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
-        >
-          {label}
-          {required && (
-            <span className="text-red-500 ml-1" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-        {showValidationIcon && hasSuccess && (
-          <CheckCircle2
-            size={14}
-            className="text-green-600 dark:text-green-400"
-            aria-hidden="true"
-          />
-        )}
-      </div>
+      <LabelSection
+        fieldId={fieldId}
+        label={label}
+        required={required}
+        showValidationIcon={showValidationIcon}
+        hasSuccess={hasSuccess}
+      />
 
-      {/* Input Container */}
       <div className="relative">
-        {Icon && (
-          <Icon
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-300 dark:text-brand-600 pointer-events-none"
-            size={18}
-            aria-hidden="true"
-          />
-        )}
+        <InputIcon icon={Icon} />
 
         {isTextarea ? (
           <textarea
-            id={fieldId}
-            required={required}
-            value={value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            {...(_autoComplete && { autoComplete: _autoComplete })}
-            {...ariaAttrs}
-            aria-label={ariaLabel}
-            aria-describedby={describedByValue}
-            maxLength={maxLength}
-            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-y min-h-24 ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
+            {...commonInputProps}
+            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all resize-y min-h-24 ${borderClass} ${inputClassName}`}
           />
         ) : (
           <input
-            id={fieldId}
+            {...commonInputProps}
             type={type}
-            required={required}
-            value={value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            {...(_autoComplete && { autoComplete: _autoComplete })}
-            {...ariaAttrs}
-            aria-label={ariaLabel}
-            aria-describedby={describedByValue}
             min={min}
             max={max}
             step={step}
-            maxLength={maxLength}
-            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${getFieldBorderClass(!!hasError, !!(currentError && currentError.valid && value))} ${inputClassName}`}
+            className={`w-full ${Icon ? "pl-12" : "pl-4"} p-4 bg-white dark:bg-(--input-bg) border border-(--input-border) rounded-2xl outline-none focus:ring-4 focus:ring-(--input-focus-ring) focus:border-(--input-focus-border) text-(--input-text) placeholder:text-(--input-placeholder) transition-all ${borderClass} ${inputClassName}`}
           />
         )}
 
-        {/* Erreur Icon */}
-        {showValidationIcon && hasError && (
-          <AlertCircle
-            size={18}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-red-600 dark:text-red-400 pointer-events-none"
-            aria-hidden="true"
-          />
-        )}
+        <ErrorIcon showValidationIcon={showValidationIcon} hasError={!!hasError} />
       </div>
 
-      {/* Description */}
       {description && (
         <p
           id={`${fieldId}-description`}
@@ -355,24 +318,9 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
         </p>
       )}
 
-      {/* Erreur */}
-      {hasError && (
-        <p
-          id={`${fieldId}-error`}
-          className="text-[10px] text-red-600 dark:text-red-400 font-medium flex items-center gap-1"
-        >
-          <AlertCircle size={12} aria-hidden="true" />
-          {currentError.error}
-        </p>
-      )}
+      <ErrorMessage hasError={!!hasError} fieldId={fieldId} currentError={currentError} />
 
-      {/* Succès (optionnel) */}
-      {hasSuccess && !description && (
-        <p className="text-[10px] text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-          <CheckCircle2 size={12} aria-hidden="true" />
-          Valide !
-        </p>
-      )}
+      <SuccessMessage hasSuccess={hasSuccess} description={description} />
     </div>
   );
 };

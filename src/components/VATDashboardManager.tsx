@@ -64,7 +64,7 @@ const MONTH_LABELS = [
 const VATDashboardManager: React.FC<VATDashboardManagerProps> = ({
   invoices,
   userProfile,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [simulationAmount, setSimulationAmount] = useState<string>("");

@@ -75,7 +75,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
   handleChange,
   onPreviewPDF,
   uiState,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const applyPreset = (presetName: "expert" | "artisan" | "creative") => {
     const presets = {

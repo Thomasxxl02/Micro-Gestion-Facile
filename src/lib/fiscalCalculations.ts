@@ -5,6 +5,12 @@
 
 import Decimal from "decimal.js";
 import type { ActivityType, UserProfile } from "../types";
+import { 
+  ACRE_RATES, 
+  TAX_PFL_RATES, 
+  getRatesForYear, 
+  getThresholdsForYear 
+} from "./complianceConstants";
 
 export interface SocialContributions {
   rate: number;
@@ -12,22 +18,6 @@ export interface SocialContributions {
   netRevenue: number;
   isAcreApplied: boolean;
 }
-
-// Taux de cotisations standard 2026 (estimations basées sur la trajectoire 2024-2026)
-const STANDARD_RATES = {
-  SALE: 12.3, // Vente de marchandises (BIC)
-  SERVICE_BIC: 21.2, // Prestations de services artisanales/commerciales (BIC)
-  SERVICE_BNC: 23.2, // Prestations de services libérales (BNC)
-  LIBERAL: 23.2, // Professions libérales réglementées (BNC)
-};
-
-// Taux ACRE (exonération partielle pour la première année)
-const ACRE_RATES = {
-  SALE: 6.2,
-  SERVICE_BIC: 10.6,
-  SERVICE_BNC: 12.1,
-  LIBERAL: 12.1,
-};
 
 /**
  * Durée d'exonération ACRE : 12 mois calendaires à compter de la date de début
@@ -67,16 +57,23 @@ export const calculateSocialContributions = (
 ): SocialContributions => {
   const type = profile.activityType ?? "SERVICE_BNC";
   const isAcre = isAcreActive(profile, referenceDate);
+  const year = referenceDate.getFullYear();
+
+  // On utilise les taux via le module de conformité
+  const rates = getRatesForYear(year);
 
   // Taux personnalisé dans le profil (ex. taux négocié ou correction manuelle).
   // Priorité sur les constantes réglementaires pour permettre la souplesse UX.
-  const rate =
+  let rate: number;
+  if (
     profile.socialContributionRate !== undefined &&
     profile.socialContributionRate > 0
-      ? profile.socialContributionRate
-      : isAcre
-        ? ACRE_RATES[type]
-        : STANDARD_RATES[type];
+  ) {
+    rate = profile.socialContributionRate;
+  } else {
+    rate = isAcre ? ACRE_RATES[type] : rates[type];
+  }
+
   const revenueD = new Decimal(revenue);
   const amount = revenueD
     .times(new Decimal(rate))
@@ -100,51 +97,103 @@ export const calculateIncomeTaxPFL = (
   revenue: number,
   type: ActivityType,
 ): number => {
-  const taxRates = {
-    SALE: 1.0,
-    SERVICE_BIC: 1.7,
-    SERVICE_BNC: 2.2,
-    LIBERAL: 2.2,
-  };
-
   return new Decimal(revenue)
-    .times(new Decimal(taxRates[type]))
+    .times(new Decimal(TAX_PFL_RATES[type]))
     .dividedBy(100)
     .toDecimalPlaces(2)
     .toNumber();
 };
 
 /**
- * Seuils de Chiffre d'Affaires 2026 (Projections basées sur 2025)
+ * Détermine le seuil applicable selon le type d'activité et la date
  */
-export const THRESHOLDS_2026 = {
-  MICRO: {
-    SALE: 188700,
-    SERVICE: 77700,
-  },
-  TVA_FRANCHISE: {
-    SALE: 91900,
-    SERVICE: 36800,
-  },
-  TVA_TOLERANCE: {
-    SALE: 101000,
-    SERVICE: 39100,
-  },
+export const getThresholds = (
+  type: ActivityType,
+  referenceDate: Date = new Date(),
+) => {
+  const isSale = type === "SALE";
+  const year = referenceDate.getFullYear();
+
+  // On utilise les seuils via le module de conformité
+  const thresholds = getThresholdsForYear(year);
+
+  return {
+    micro: isSale ? thresholds.MICRO.SALE : thresholds.MICRO.SERVICE,
+    tva: isSale
+      ? thresholds.TVA_FRANCHISE.SALE
+      : thresholds.TVA_FRANCHISE.SERVICE,
+    tvaTolerance: isSale
+      ? thresholds.TVA_TOLERANCE.SALE
+      : thresholds.TVA_TOLERANCE.SERVICE,
+  };
 };
 
 /**
- * Détermine le seuil applicable selon le type d'activité
+ * Calcule les cotisations pour une activité mixte (Vente + Service)
  */
-export const getThresholds = (type: ActivityType) => {
-  const isSale = type === "SALE";
+export const calculateMixedActivityContributions = (
+  saleRevenue: number,
+  serviceRevenue: number,
+  profile: UserProfile,
+  referenceDate: Date = new Date(),
+) => {
+  const saleResult = calculateSocialContributions(
+    saleRevenue,
+    { ...profile, activityType: "SALE" },
+    referenceDate,
+  );
+  const serviceResult = calculateSocialContributions(
+    serviceRevenue,
+    { ...profile, activityType: "SERVICE_BNC" }, // Par défaut BNC pour mixte
+    referenceDate,
+  );
+
   return {
-    micro: isSale ? THRESHOLDS_2026.MICRO.SALE : THRESHOLDS_2026.MICRO.SERVICE,
-    tva: isSale
-      ? THRESHOLDS_2026.TVA_FRANCHISE.SALE
-      : THRESHOLDS_2026.TVA_FRANCHISE.SERVICE,
-    tvaTolerance: isSale
-      ? THRESHOLDS_2026.TVA_TOLERANCE.SALE
-      : THRESHOLDS_2026.TVA_TOLERANCE.SERVICE,
+    sale: saleResult,
+    service: serviceResult,
+    totalAmount: new Decimal(saleResult.amount)
+      .plus(serviceResult.amount)
+      .toNumber(),
+    totalNetRevenue: new Decimal(saleResult.netRevenue)
+      .plus(serviceResult.netRevenue)
+      .toNumber(),
+  };
+};
+
+/**
+ * Calcule l'état par rapport aux seuils pour une activité mixte
+ */
+export const calculateMixedThresholdStatus = (
+  saleRevenue: number,
+  serviceRevenue: number,
+  profile: UserProfile,
+  referenceDate: Date = new Date(),
+) => {
+  const thresholdsSale = getThresholds("SALE", referenceDate);
+  const thresholdsService = getThresholds("SERVICE_BNC", referenceDate);
+
+  const totalRevenue = new Decimal(saleRevenue).plus(serviceRevenue).toNumber();
+
+  // En activité mixte, le CA global ne doit pas dépasser le seuil SALE,
+  // ET le CA SERVICE ne doit pas dépasser le seuil SERVICE.
+  const isGlobalMicroExceeded = totalRevenue > thresholdsSale.micro;
+  const isServiceMicroExceeded = serviceRevenue > thresholdsService.micro;
+
+  const isGlobalTvaExceeded = totalRevenue > thresholdsSale.tva;
+  const isServiceTvaExceeded = serviceRevenue > thresholdsService.tva;
+
+  return {
+    totalRevenue,
+    isMicroExceeded: isGlobalMicroExceeded || isServiceMicroExceeded,
+    isTvaExceeded: isGlobalTvaExceeded || isServiceTvaExceeded,
+    global: {
+      current: totalRevenue,
+      limit: thresholdsSale.micro,
+    },
+    service: {
+      current: serviceRevenue,
+      limit: thresholdsService.micro,
+    },
   };
 };
 
@@ -154,9 +203,10 @@ export const getThresholds = (type: ActivityType) => {
 export const calculateThresholdStatus = (
   currentRevenue: number,
   profile: UserProfile,
+  referenceDate: Date = new Date(),
 ) => {
   const type = profile.activityType ?? "SERVICE_BNC";
-  const thresholds = getThresholds(type);
+  const thresholds = getThresholds(type, referenceDate);
 
   // Pourcentages d'alerte personnalisés (fallback sur 80/90%)
   const vatAlertPercent = profile.customVatThresholdPercentage ?? 80;
