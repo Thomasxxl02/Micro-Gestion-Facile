@@ -1119,7 +1119,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                 | (Expense & {
                                     activityType: "invoice" | "expense";
                                   }),
-                              // eslint-disable-next-line complexity
+                               
                             ) => {
                               const isExpense =
                                 "activityType" in item &&

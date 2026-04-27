@@ -293,8 +293,8 @@ export class GitHubAuthService {
     };
 
     const userMessage =
-      errorMessages[firebaseError.code] ||
-      "Erreur d'authentification: " + (firebaseError.message || "Inconnue");
+      errorMessages[firebaseError.code] ??
+      "Erreur d'authentification: " + (firebaseError.message ?? "Inconnue");
 
     const customError = new Error(userMessage);
     customError.cause = firebaseError;

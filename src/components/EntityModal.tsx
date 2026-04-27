@@ -39,7 +39,7 @@ export const EntityModal: React.FC<EntityModalProps> = ({
   deleteLabel = "Supprimer",
   saveLabel = "Enregistrer",
   cancelLabel = "Annuler",
-  // eslint-disable-next-line complexity
+   
 }) => {
   if (!isOpen) {
     return null;

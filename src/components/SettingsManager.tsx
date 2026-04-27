@@ -76,7 +76,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   onSaveProfile,
   allData,
   setAllData,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const [activeTab, setActiveTab] = useState<
     "profile" | "billing" | "data" | "preferences" | "security"

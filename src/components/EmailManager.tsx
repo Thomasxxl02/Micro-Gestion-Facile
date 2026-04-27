@@ -55,7 +55,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   onDeleteEmail,
   onSaveTemplate,
   onDeleteTemplate,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const [activeTab, setActiveTab] = useState<
     "history" | "compose" | "templates"

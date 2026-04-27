@@ -35,7 +35,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   expenses,
   onSave,
   onDelete,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const form = useEntityForm<Supplier>();
   const filters = useEntityFilters(

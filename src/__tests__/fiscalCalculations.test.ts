@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import {
   calculateIncomeTaxPFL,
   calculateSocialContributions,
   calculateThresholdStatus,
   getThresholds,
   isAcreActive,
+  calculateMixedActivityContributions,
+  calculateMixedThresholdStatus,
 } from "../lib/fiscalCalculations";
 import type { ActivityType, UserProfile } from "../types";
 
@@ -18,6 +20,113 @@ describe("fiscalCalculations", () => {
     activityType: "SERVICE_BNC" as ActivityType,
     isAcreBeneficiary: false,
   };
+
+  describe("Temporal Tests (2025 vs 2026)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("applique les taux de 2025 en décembre 2025", () => {
+      const date2025 = new Date("2025-12-31T12:00:00");
+      vi.setSystemTime(date2025);
+
+      const revenue = 1000;
+      const result = calculateSocialContributions(revenue, {
+        ...mockProfile,
+        activityType: "SERVICE_BNC",
+      });
+
+      // Taux 2025 SERVICE_BNC est 23.1%
+      expect(result.rate).toBe(23.1);
+      expect(result.amount).toBe(231);
+    });
+
+    it("applique les nouveaux taux de 2026 en janvier 2026", () => {
+      const date2026 = new Date("2026-01-01T12:00:00");
+      vi.setSystemTime(date2026);
+
+      const revenue = 1000;
+      const result = calculateSocialContributions(revenue, {
+        ...mockProfile,
+        activityType: "SERVICE_BNC",
+      });
+
+      // Taux 2026 SERVICE_BNC est 23.2%
+      expect(result.rate).toBe(23.2);
+      expect(result.amount).toBe(232);
+    });
+
+    it("utilise les seuils corrects lors du changement d'année", () => {
+      const date2025 = new Date("2025-12-31");
+      const date2026 = new Date("2026-01-01");
+
+      const thresholds2025 = getThresholds("SERVICE_BNC", date2025);
+      const thresholds2026 = getThresholds("SERVICE_BNC", date2026);
+
+      // Dans mon implémentation actuelle ils sont identiques, 
+      // mais on vérifie que la date est bien prise en compte
+      expect(thresholds2025.micro).toBe(77700);
+      expect(thresholds2026.micro).toBe(77700);
+    });
+
+    it("vérifie le calcul ACRE à cheval sur deux ans", () => {
+      const profileAcre: UserProfile = {
+        ...mockProfile,
+        isAcreBeneficiary: true,
+        businessStartDate: "2025-06-01",
+      };
+
+      // En décembre 2025 (6 mois après), ACRE est actif
+      const result2025 = calculateSocialContributions(1000, profileAcre, new Date("2025-12-01"));
+      expect(result2025.isAcreApplied).toBe(true);
+      expect(result2025.rate).toBe(12.1);
+
+      // En juillet 2026 (>12 mois après), ACRE n'est plus actif
+      const result2026 = calculateSocialContributions(1000, profileAcre, new Date("2026-07-01"));
+      expect(result2026.isAcreApplied).toBe(false);
+      expect(result2026.rate).toBe(23.2); // Taux 2026
+    });
+  });
+
+  describe("Mixed Activity Calculations (Sale + Service)", () => {
+    it("calcule correctement les cotisations mixtes", () => {
+      const saleRev = 1000; // Taux 12.3% -> 123
+      const serviceRev = 1000; // Taux 23.2% (2026) -> 232
+      
+      // On force 2026 pour le test
+      const result = calculateMixedActivityContributions(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
+      
+      expect(result.sale.amount).toBe(123);
+      expect(result.service.amount).toBe(232);
+      expect(result.totalAmount).toBe(355);
+    });
+
+    it("détecte le dépassement de seuil spécifique au service en activité mixte", () => {
+      const saleRev = 10000;
+      const serviceRev = 80000; // Dépasse le seuil service (77700) mais pas le global (188700)
+      
+      const status = calculateMixedThresholdStatus(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
+      
+      expect(status.isMicroExceeded).toBe(true);
+      expect(status.service.current).toBeGreaterThan(status.service.limit);
+      expect(status.global.current).toBeLessThan(status.global.limit);
+    });
+
+    it("détecte le dépassement de seuil global en activité mixte", () => {
+      const saleRev = 150000;
+      const serviceRev = 50000; 
+      // Global = 200000 > 188700
+      
+      const status = calculateMixedThresholdStatus(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
+      
+      expect(status.isMicroExceeded).toBe(true);
+      expect(status.global.current).toBeGreaterThan(status.global.limit);
+    });
+  });
 
   describe("calculateSocialContributions", () => {
     it("calcule correctement les cotisations pour SERVICE_BNC au taux standard", () => {

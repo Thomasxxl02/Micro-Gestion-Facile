@@ -49,7 +49,7 @@ export const BillingTab: React.FC<BillingTabProps> = ({
   userProfile,
   handleChange,
   validationErrors,
-  // eslint-disable-next-line complexity
+   
 }) => {
   const thresholds = getThresholds(userProfile.activityType ?? "SERVICE_BNC");
 

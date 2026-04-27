@@ -200,7 +200,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   userProfile,
   setUserProfile,
   onSaveProfile,
-  // eslint-disable-next-line complexity
+   
 }) => {
   // ─── STATES ───
   const [activeSecurityTab, setActiveSecurityTab] =

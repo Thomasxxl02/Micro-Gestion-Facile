@@ -5,6 +5,11 @@
  */
 
 import {
+  RenderArchiveAssistant,
+  RenderMergeAssistant,
+} from "./DataTabAssistants";
+import { EncryptionModal } from "./DataTabEncryption";
+import {
   AlertTriangle,
   Archive,
   ArrowRight,
@@ -131,7 +136,11 @@ function stringSimilarity(a: string, b: string): number {
   const n = lb.length;
   if (m === 0 || n === 0) return 0;
   const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
-    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+    Array.from({ length: n + 1 }, (_, j) => {
+      if (i === 0) return j;
+      if (j === 0) return i;
+      return 0;
+    }),
   );
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -220,7 +229,34 @@ export const DataTab: React.FC<DataTabProps> = ({
   lastBackupDate,
   activityLogs,
 }) => {
+  /** Taille estimée des données locales (Ko) */
+  const estimatedSizeKB = React.useMemo(() => {
+    const json = JSON.stringify(allData);
+    return Math.round(new TextEncoder().encode(json).length / 1024);
+  }, [allData]);
+
+  /** Couleur d'alerte pour le stockage */
+  const storageColor = React.useMemo(() => {
+    if (estimatedSizeKB > 40_960) return "text-red-500";
+    if (estimatedSizeKB > 20_480) return "text-amber-500";
+    return "text-emerald-500";
+  }, [estimatedSizeKB]);
+
+  /** Couleur d'alerte pour la barre de stockage */
+  const storageBarColor = React.useMemo(() => {
+    if (estimatedSizeKB > 40_960) return "bg-red-500";
+    if (estimatedSizeKB > 20_480) return "bg-amber-500";
+    return "bg-emerald-400";
+  }, [estimatedSizeKB]);
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  /** Statut visuel de la synchronisation */
+  const syncStatus = React.useMemo(() => {
+    if (isSyncing) return { color: "bg-amber-500 animate-pulse", label: "Synchro..." };
+    if (isFirebaseConnected) return { color: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", label: "Connecté" };
+    return { color: "bg-red-400", label: "Non connecté" };
+  }, [isSyncing, isFirebaseConnected]);
 
   /** Factures en attente de confirmation d'archivage (export JSON + suppression) */
   const [archiveConfirm, setArchiveConfirm] = React.useState<Invoice[] | null>(
@@ -230,11 +266,9 @@ export const DataTab: React.FC<DataTabProps> = ({
   /** Doublons clients en attente de confirmation de fusion */
   const [mergeConfirm, setMergeConfirm] = React.useState<{
     groups: Array<{
-      keep: Client;
-      duplicates: Client[];
-      /** Nb de factures liées aux doublons, à réassigner au client conservé */
+      keep: { id: string; name: string };
+      duplicates: Array<{ id: string; name: string }>;
       invoiceCount: number;
-      /** Données présentes dans les doublons mais absentes du client conservé */
       diffs: string[];
     }>;
     toKeep: Client[];
@@ -242,12 +276,6 @@ export const DataTab: React.FC<DataTabProps> = ({
   } | null>(null);
 
   // ─── NOUVELLES FONCTIONNALITÉS DATA ─────────────────────────────────────────────────
-
-  /** Taille estimée des données locales (Ko) */
-  const estimatedSizeKB = React.useMemo(() => {
-    const json = JSON.stringify(allData);
-    return Math.round(new TextEncoder().encode(json).length / 1024);
-  }, [allData]);
 
   /** Années disponibles dans les factures (pour l'export partiel) */
   const availableYears = React.useMemo(() => {
@@ -866,13 +894,7 @@ export const DataTab: React.FC<DataTabProps> = ({
               <HardDrive size={12} /> Stockage local estimé
             </span>
             <span
-              className={`text-[10px] font-bold ${
-                estimatedSizeKB > 40_960
-                  ? "text-red-500"
-                  : estimatedSizeKB > 20_480
-                    ? "text-amber-500"
-                    : "text-emerald-500"
-              }`}
+              className={`text-[10px] font-bold ${storageColor}`}
             >
               {estimatedSizeKB < 1024
                 ? `${estimatedSizeKB} Ko`
@@ -882,13 +904,7 @@ export const DataTab: React.FC<DataTabProps> = ({
           </div>
           <div className="w-full bg-brand-100 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${
-                estimatedSizeKB > 40_960
-                  ? "bg-red-500"
-                  : estimatedSizeKB > 20_480
-                    ? "bg-amber-500"
-                    : "bg-emerald-400"
-              }`}
+              className={`h-full rounded-full transition-all ${storageBarColor}`}
               style={{
                 width: `${Math.min((estimatedSizeKB / 51_200) * 100, 100)}%`,
               }}
@@ -1124,24 +1140,12 @@ export const DataTab: React.FC<DataTabProps> = ({
             <h3 className="text-sm font-bold text-brand-900 dark:text-white font-display uppercase tracking-widest">
               Synchronisation Cloud
             </h3>
-          </div>
           <div className="flex items-center gap-2 group">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isSyncing
-                  ? "bg-amber-500 animate-pulse"
-                  : isFirebaseConnected
-                    ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                    : "bg-red-400"
-              }`}
-            />
+            <div className={`w-2 h-2 rounded-full ${syncStatus.color}`} />
             <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-tighter">
-              {isSyncing
-                ? "Synchro..."
-                : isFirebaseConnected
-                  ? "Connecté"
-                  : "Non connecté"}
+              {syncStatus.label}
             </span>
+          </div>
           </div>
         </div>
         {isFirebaseConnected && connectedEmail && (
@@ -1225,53 +1229,12 @@ export const DataTab: React.FC<DataTabProps> = ({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {archiveConfirm ? (
-              <div className="sm:col-span-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl space-y-3">
-                <div className="flex items-start gap-2">
-                  <Archive
-                    size={16}
-                    className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
-                  />
-                  <div>
-                    <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
-                      {archiveConfirm.length} facture(s) de plus de 10 ans
-                    </p>
-                    <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">
-                      Un fichier JSON sera téléchargé pour conservation légale
-                      (art.&nbsp;L110-4 C.com.), puis ces factures seront
-                      retirées de l'application. Conservez ce fichier sur un
-                      support sûr.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={() => setArchiveConfirm(null)}
-                    className="px-3 py-1.5 text-xs font-bold text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-600 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-800 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={confirmArchive}
-                    className="px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors flex items-center gap-1.5"
-                  >
-                    <Download size={12} /> Exporter et archiver
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={prepareArchive}
-                className="p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all text-left"
-              >
-                <p className="text-xs font-bold text-brand-900 dark:text-white">
-                  Archiver (10 ans+)
-                </p>
-                <p className="text-[9px] text-brand-400 mt-1 uppercase tracking-tighter">
-                  Conformité RGPD / Fiscale
-                </p>
-              </button>
-            )}
+            <RenderArchiveAssistant 
+              archiveConfirm={archiveConfirm}
+              setArchiveConfirm={setArchiveConfirm}
+              prepareArchive={prepareArchive}
+              confirmArchive={confirmArchive}
+            />
             <button
               onClick={() => cleanOldData("drafts")}
               className="p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all text-left"
@@ -1286,80 +1249,12 @@ export const DataTab: React.FC<DataTabProps> = ({
           </div>
 
           <div className="pt-4 mt-2 space-y-3">
-            {mergeConfirm ? (
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl space-y-3">
-                <div className="flex items-start gap-2">
-                  <User
-                    size={16}
-                    className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
-                  />
-                  <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
-                    {mergeConfirm.groups.length} groupe(s) —{" "}
-                    {mergeConfirm.groups.reduce(
-                      (acc, g) => acc + g.duplicates.length,
-                      0,
-                    )}{" "}
-                    client(s) supprimés après confirmation
-                  </p>
-                </div>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {mergeConfirm.groups.map((g) => (
-                    <div
-                      key={g.keep.id}
-                      className="p-2 bg-white/60 dark:bg-brand-800/40 rounded-xl text-[10px] space-y-0.5"
-                    >
-                      <p className="font-bold text-brand-900 dark:text-white">
-                        « {g.keep.name} » — {g.duplicates.length} doublon(s)
-                        conservé(s)
-                      </p>
-                      {g.invoiceCount > 0 && (
-                        <p className="text-amber-700 dark:text-amber-400">
-                          ↳ {g.invoiceCount} facture(s) réassignée(s) au client
-                          conservé
-                        </p>
-                      )}
-                      {g.diffs.length > 0 && (
-                        <p className="text-red-600 dark:text-red-400">
-                          ⚠ Données perdues : {g.diffs.join(" · ")}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={() => setMergeConfirm(null)}
-                    className="px-3 py-1.5 text-xs font-bold text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-600 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-800 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={confirmMerge}
-                    className="px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors"
-                  >
-                    Confirmer la fusion
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={prepareMerge}
-                className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
-              >
-                <div className="text-left">
-                  <p className="text-sm font-bold text-brand-900 dark:text-white">
-                    Clients en doublon
-                  </p>
-                  <p className="text-[10px] text-brand-400 mt-0.5">
-                    Fusionner par nom identique
-                  </p>
-                </div>
-                <ArrowRight
-                  size={16}
-                  className="text-brand-300 group-hover:translate-x-1 transition-transform"
-                />
-              </button>
-            )}
+            <RenderMergeAssistant 
+              mergeConfirm={mergeConfirm}
+              setMergeConfirm={setMergeConfirm}
+              prepareMerge={prepareMerge}
+              confirmMerge={confirmMerge}
+            />
             <button
               onClick={() => {
                 handleCleanData("products");
@@ -1572,100 +1467,21 @@ export const DataTab: React.FC<DataTabProps> = ({
         </div>
       )}
 
-      {/* ────────────────────── Modal : export chiffré AES-256 ─────────────────────── */}
-      {isEncryptModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white dark:bg-brand-900 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-brand-50 dark:bg-brand-800 rounded-xl">
-                <Lock
-                  size={18}
-                  className="text-brand-600 dark:text-brand-300"
-                />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-brand-900 dark:text-white">
-                  Chiffrer le backup (AES-256)
-                </h3>
-                <p className="text-[10px] text-brand-400 mt-0.5">
-                  Dérivation PBKDF2 · 100 000 itérations
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="relative">
-                <input
-                  type={encryptPwdVisible ? "text" : "password"}
-                  value={encryptPassword}
-                  onChange={(e) => {
-                    setEncryptPassword(e.target.value);
-                  }}
-                  placeholder="Mot de passe"
-                  className="w-full text-sm px-4 py-3 pr-10 rounded-2xl bg-brand-50 dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEncryptPwdVisible((v) => !v);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-400 hover:text-brand-600"
-                >
-                  {encryptPwdVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-              <input
-                type={encryptPwdVisible ? "text" : "password"}
-                value={encryptPasswordConfirm}
-                onChange={(e) => {
-                  setEncryptPasswordConfirm(e.target.value);
-                }}
-                placeholder="Confirmer le mot de passe"
-                className="w-full text-sm px-4 py-3 rounded-2xl bg-brand-50 dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-400"
-              />
-              {encryptPassword &&
-                encryptPasswordConfirm &&
-                encryptPassword !== encryptPasswordConfirm && (
-                  <p className="text-[11px] text-red-500">
-                    Les mots de passe ne correspondent pas.
-                  </p>
-                )}
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setIsEncryptModalOpen(false);
-                  setEncryptPassword("");
-                  setEncryptPasswordConfirm("");
-                }}
-                className="px-4 py-2 text-xs font-bold text-brand-600 dark:text-brand-300 bg-brand-100 dark:bg-brand-800 rounded-xl hover:bg-brand-200 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => {
-                  void handleEncryptedExport();
-                }}
-                disabled={
-                  isEncrypting ||
-                  !encryptPassword ||
-                  encryptPassword !== encryptPasswordConfirm
-                }
-                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-brand-600 rounded-xl hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isEncrypting ? (
-                  "Chiffrement…"
-                ) : (
-                  <>
-                    <Lock size={13} /> Exporter chiffré
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ────────────────────── Modal : import déchiffrement ──────────────────────── */}
+      {/* Modale Chiffrement */}
+      <EncryptionModal
+        isOpen={isEncryptModalOpen}
+        onClose={() => setIsEncryptModalOpen(false)}
+        password={encryptPassword}
+        setPassword={setEncryptPassword}
+        confirm={encryptPasswordConfirm}
+        setConfirm={setEncryptPasswordConfirm}
+        isVisible={encryptPwdVisible}
+        setVisible={setEncryptPwdVisible}
+        isEncrypting={isEncrypting}
+        onEncrypt={() => {
+          void handleEncryptedExport();
+        }}
+      />
       {decryptModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
           <div className="bg-white dark:bg-brand-900 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
