@@ -9,42 +9,30 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* --- Palette Slate Brand (Épuré Professionnel) --- */
-  --color-brand-50: #f8fafc;
-  --color-brand-100: #e2e8f0;
-  --color-brand-200: #cbd5e1;
-  --color-brand-300: #94a3b8;
-  --color-brand-400: #64748b;
-  --color-brand-500: #475569;
-  --color-brand-600: #334155;
-  --color-brand-700: #1e293b;
-  --color-brand-800: #0f172a;
-  --color-brand-900: #020617;
-  --color-brand-950: #0a0d14;
+  /* --- Thème Indigo & Rose (Vibrant & Pro) --- */
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --color-brand-950: #2e1065;
 
-  /* --- Palette Émeraude Accent (Croissance & Confiance) --- */
-  --color-accent-50: #f0fdf4;
-  --color-accent-100: #dcfce7;
-  --color-accent-200: #bbf7d0;
-  --color-accent-300: #86efac;
-  --color-accent-400: #4ade80;
-  --color-accent-500: #22c55e;
-  --color-accent-600: #16a34a;
-  --color-accent-700: #15803d;
-  --color-accent-800: #166534;
-  --color-accent-900: #0f3319;
-
-  /* --- Palette Bleu Ciel Primary (Confiance & Clarté) --- */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #065f86;
-  --color-primary-900: #0c4a6e;
+  /* --- Couleurs Sémantiques Modernes --- */
+  --color-accent-50: #fff1f2;
+  --color-accent-100: #ffe4e6;
+  --color-accent-200: #fecdd3;
+  --color-accent-300: #fda4af;
+  --color-accent-400: #fb7185;
+  --color-accent-500: #f43f5e;
+  --color-accent-600: #e11d48;
+  --color-accent-700: #be123c;
+  --color-accent-800: #9f1239;
+  --color-accent-900: #881337;
 
   /* --- Définition des animations --- */
   --animate-fade-in: fadeIn 0.5s ease-out;
