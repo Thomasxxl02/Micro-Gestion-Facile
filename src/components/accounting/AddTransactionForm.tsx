@@ -59,7 +59,10 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           <Plus size={24} className="rotate-45" />
         </button>
       </div>
-      <form onSubmit={handleAddExpense} className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+      <form
+        onSubmit={handleAddExpense}
+        className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10"
+      >
         <FormFieldValidated
           id="expense-date"
           label="Date de l'achat"
@@ -82,7 +85,9 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             const amount = Number.parseFloat(val);
             handleFormChange("amount" as keyof Expense)(amount);
             const vatRate = newExpense.vatRate ?? 0;
-            const vatAmount = vatRate ? amount * (vatRate / (100 + vatRate)) : (newExpense.vatAmount ?? 0);
+            const vatAmount = vatRate
+              ? amount * (vatRate / (100 + vatRate))
+              : (newExpense.vatAmount ?? 0);
             setNewExpense((prev) => ({ ...prev, vatAmount }));
           }}
           error={errors.amount}
@@ -95,12 +100,19 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           step="0.01"
           placeholder="0.00"
           value={newExpense.vatAmount ?? ""}
-          onChange={(val) => handleFormChange("vatAmount" as keyof Expense)(Number.parseFloat(val))}
+          onChange={(val) =>
+            handleFormChange("vatAmount" as keyof Expense)(
+              Number.parseFloat(val),
+            )
+          }
           error={errors.vatAmount}
           touched={touched.vatAmount}
         />
         <div>
-          <label htmlFor="expense-vat-rate" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+          <label
+            htmlFor="expense-vat-rate"
+            className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2"
+          >
             Taux TVA (%)
           </label>
           <select
@@ -111,7 +123,9 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             onChange={(e) => {
               const vatRate = Number.parseFloat(e.target.value);
               const amount = newExpense.amount ?? 0;
-              const vatAmount = amount ? amount * (vatRate / (100 + vatRate)) : 0;
+              const vatAmount = amount
+                ? amount * (vatRate / (100 + vatRate))
+                : 0;
               setNewExpense({ ...newExpense, vatRate, vatAmount });
             }}
           >
@@ -122,7 +136,10 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="expense-category" className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">
+          <label
+            htmlFor="expense-category"
+            className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2"
+          >
             Catégorie
           </label>
           <select
@@ -130,7 +147,9 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             title="Sélectionner la catégorie de dépense"
             className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
             value={newExpense.category}
-            onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+            onChange={(e) =>
+              setNewExpense({ ...newExpense, category: e.target.value })
+            }
           >
             {expenseCategories.map((cat) => (
               <option key={cat} value={cat}>
@@ -147,7 +166,9 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             required
             placeholder="Ex: Abonnement Internet, Achat écran..."
             value={newExpense.description ?? ""}
-            onChange={(val) => setNewExpense({ ...newExpense, description: val })}
+            onChange={(val) =>
+              setNewExpense({ ...newExpense, description: val })
+            }
             validator={() => ({
               valid: !errors.description?.error,
               error: errors.description?.error,
@@ -165,7 +186,9 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
                 subLabel: s.category ?? "Fournisseur",
               }))}
             value={newExpense.supplierId ?? ""}
-            onChange={(val) => setNewExpense({ ...newExpense, supplierId: val })}
+            onChange={(val) =>
+              setNewExpense({ ...newExpense, supplierId: val })
+            }
             placeholder="Chercher un fournisseur..."
           />
         </div>

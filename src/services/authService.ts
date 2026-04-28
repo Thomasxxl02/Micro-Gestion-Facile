@@ -165,7 +165,7 @@ export class GitHubAuthService {
         photoURL: user.photoURL,
         provider: "github",
         githubUsername:
-          user.displayName?.split("/")[1] ?? (user.displayName ?? undefined),
+          user.displayName?.split("/")[1] ?? user.displayName ?? undefined,
         lastLoginAt: new Date(),
         isVerified: user.emailVerified,
       };
@@ -221,7 +221,7 @@ export class GitHubAuthService {
   ): Promise<void> {
     try {
       const userRef = doc(this.db, "users", userId);
-       
+
       const { uid: _uid, createdAt: _createdAt, ...updatableFields } = updates;
 
       await updateDoc(userRef, {

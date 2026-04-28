@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  type: 'service' | 'product';
+  type: "service" | "product";
   category?: string;
   sku?: string;
   unit?: string; // ex: "heure", "jour", "unité", "km"

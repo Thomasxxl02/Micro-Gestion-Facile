@@ -22,9 +22,7 @@
  * ```
  */
 
-import {
-  type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
   validateAddressForm,
@@ -176,7 +174,6 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
   // Propriétés optionnelles pour intégration avec useFormValidation
   error: externalError,
   touched: externalTouched,
-   
 }) => {
   const isTextarea = type === "textarea";
 
@@ -306,7 +303,10 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
           />
         )}
 
-        <ErrorIcon showValidationIcon={showValidationIcon} hasError={!!hasError} />
+        <ErrorIcon
+          showValidationIcon={showValidationIcon}
+          hasError={!!hasError}
+        />
       </div>
 
       {description && (
@@ -318,7 +318,11 @@ export const FormFieldValidated: React.FC<FormFieldValidatedProps> = ({
         </p>
       )}
 
-      <ErrorMessage hasError={!!hasError} fieldId={fieldId} currentError={currentError} />
+      <ErrorMessage
+        hasError={!!hasError}
+        fieldId={fieldId}
+        currentError={currentError}
+      />
 
       <SuccessMessage hasSuccess={hasSuccess} description={description} />
     </div>

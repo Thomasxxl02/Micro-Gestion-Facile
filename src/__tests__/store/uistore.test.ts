@@ -1,16 +1,16 @@
 /**
  * Tests du store UI — src/store/useUIStore.ts
- * 
- * Vérifie l'état initial, les actions Zustand, la persistance 
+ *
+ * Vérifie l'état initial, les actions Zustand, la persistance
  * et l'interaction avec le DOM (classes high-visibility, dark, etc.)
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useUIStore } from "../../store/useUIStore";
 
 // Mock matchMedia for jsdom
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -67,20 +67,26 @@ describe("useUIStore", () => {
     it("gère la réduction de mouvement (reducedMotion)", () => {
       useUIStore.getState().setReducedMotion(true);
       expect(useUIStore.getState().reducedMotion).toBe(true);
-      expect(document.documentElement.classList.contains("reduced-motion")).toBe(true);
+      expect(
+        document.documentElement.classList.contains("reduced-motion"),
+      ).toBe(true);
       expect(localStorage.getItem("reduced-motion")).toBe("true");
     });
 
     it("gère la haute visibilité (highVisibility)", () => {
       useUIStore.getState().setHighVisibility(true);
       expect(useUIStore.getState().highVisibility).toBe(true);
-      expect(document.documentElement.classList.contains("high-visibility")).toBe(true);
+      expect(
+        document.documentElement.classList.contains("high-visibility"),
+      ).toBe(true);
     });
 
     it("met à jour la taille de police (fontSize)", () => {
       useUIStore.getState().setFontSize(20);
       expect(useUIStore.getState().fontSize).toBe(20);
-      expect(document.documentElement.style.getPropertyValue("--app-font-size")).toBe("20px");
+      expect(
+        document.documentElement.style.getPropertyValue("--app-font-size"),
+      ).toBe("20px");
       expect(localStorage.getItem("font-size")).toBe("20");
     });
   });
@@ -97,9 +103,9 @@ describe("useUIStore", () => {
       state.setCurrentView("invoices");
       state.setIsDarkMode(true);
       state.setFontSize(24);
-      
+
       state.reset();
-      
+
       const newState = useUIStore.getState();
       expect(newState.currentView).toBe("dashboard");
       expect(newState.isDarkMode).toBe(false);

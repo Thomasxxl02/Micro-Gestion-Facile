@@ -8,7 +8,8 @@ export * from "./product";
 export * from "./supplier";
 // Re-export from user en excluant ActivityType déjà exporté par common
 export type {
-  LogEntry, SecurityAPIKey,
-  SecuritySettings, UserProfile
+  LogEntry,
+  SecurityAPIKey,
+  SecuritySettings,
+  UserProfile,
 } from "./user";
-

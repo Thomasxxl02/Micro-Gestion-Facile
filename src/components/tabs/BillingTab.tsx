@@ -49,7 +49,6 @@ export const BillingTab: React.FC<BillingTabProps> = ({
   userProfile,
   handleChange,
   validationErrors,
-   
 }) => {
   const thresholds = getThresholds(userProfile.activityType ?? "SERVICE_BNC");
 

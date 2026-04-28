@@ -30,51 +30,74 @@ export const ClientList: React.FC<ClientListProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {clients.map((client) => {
         const stats = getClientStats(client.id);
         return (
           <div
             key={client.id}
-            className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
+            className="card-modern p-6 flex flex-col justify-between group hover:border-brand-500 transition-all"
           >
-            <button
-              onClick={() => onEdit(client)}
-              aria-label={`Modifier le client ${client.name}`}
-              className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <div>
-                <h4 className="font-semibold text-brand-900 dark:text-white">
-                  {client.name}
-                </h4>
-                <div className="flex gap-4 mt-1 text-xs text-brand-600 dark:text-brand-300">
-                  {client.email && <span>{client.email}</span>}
-                  {client.phone && <span>{client.phone}</span>}
-                </div>
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black text-xl shadow-inner uppercase">
+                {client.name.substring(0, 2)}
               </div>
-            </button>
-            <div className="text-right mr-4">
-              <div className="font-semibold text-accent-600 dark:text-accent-400">
-                {stats.revenue.toLocaleString("fr-FR", {
-                  style: "currency",
-                  currency: "EUR",
-                })}
-              </div>
-              <div className="text-xs text-brand-500 dark:text-brand-400">
-                {stats.count} facture(s)
+              <div className="flex flex-col items-end">
+                <span
+                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${client.archived ? "bg-neutral-100 text-neutral-400" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"}`}
+                >
+                  {client.archived ? "Archivé" : "Actif"}
+                </span>
               </div>
             </div>
+
+            <button
+              onClick={() => onEdit(client)}
+              className="text-left mb-6 group/title"
+            >
+              <h4 className="text-lg font-black text-neutral-900 dark:text-white group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400 transition-colors">
+                {client.name}
+              </h4>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-1">
+                {client.email || "Pas d'email renseigné"}
+              </p>
+            </button>
+
+            <div className="grid grid-cols-2 gap-4 py-4 border-y border-neutral-100 dark:border-neutral-800 mb-4">
+              <div>
+                <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">
+                  Total Reçu
+                </p>
+                <p className="text-sm font-black text-brand-600 dark:text-brand-400">
+                  {stats.revenue.toLocaleString("fr-FR", {
+                    style: "currency",
+                    currency: "EUR",
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">
+                  Factures
+                </p>
+                <p className="text-sm font-black text-neutral-800 dark:text-neutral-200">
+                  {stats.count} doc.
+                </p>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <button
-                onClick={() => onToggleArchive(client.id)}
-                className="text-xs px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 transition-colors"
-                title={
-                  client.archived
-                    ? "Restaurer le client"
-                    : "Archiver le client"
-                }
+                onClick={() => onEdit(client)}
+                className="flex-1 text-xs font-bold py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-brand-600 hover:text-white dark:hover:bg-brand-500 transition-all"
               >
-                {client.archived ? "Restaurer" : "Archiver"}
+                Gérer
+              </button>
+              <button
+                onClick={() => onToggleArchive(client.id)}
+                className="px-3 py-2 rounded-xl border border-neutral-100 dark:border-neutral-800 text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all"
+                title={client.archived ? "Désarchiver" : "Archiver"}
+              >
+                {client.archived ? "Restaurer" : "Masquer"}
               </button>
             </div>
           </div>

@@ -75,7 +75,6 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
   handleChange,
   onPreviewPDF,
   uiState,
-   
 }) => {
   const applyPreset = (presetName: "expert" | "artisan" | "creative") => {
     const presets = {

@@ -12,7 +12,7 @@ export interface Client {
   website?: string;
   tvaNumber?: string;
   paymentTerms?: string;
-  category?: 'Particulier' | 'Entreprise' | 'Association' | 'Public';
+  category?: "Particulier" | "Entreprise" | "Association" | "Public";
   isPublicEntity?: boolean; // Pour Chorus Pro
   createdAt?: string;
   updatedAt?: string; // ISO timestamp — indexé dans IndexedDB pour sync LWW

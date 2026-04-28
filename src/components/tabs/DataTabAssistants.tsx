@@ -17,14 +17,18 @@ export const RenderArchiveAssistant = ({
     return (
       <div className="sm:col-span-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl space-y-3">
         <div className="flex items-start gap-2">
-          <Archive size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <Archive
+            size={16}
+            className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
+          />
           <div>
             <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
               {archiveConfirm.length} facture(s) de plus de 10 ans
             </p>
             <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">
-              Un fichier JSON sera téléchargé pour conservation légale (art.&nbsp;L110-4 C.com.), 
-              puis ces factures seront retirées de l'application.
+              Un fichier JSON sera téléchargé pour conservation légale
+              (art.&nbsp;L110-4 C.com.), puis ces factures seront retirées de
+              l'application.
             </p>
           </div>
         </div>
@@ -51,8 +55,12 @@ export const RenderArchiveAssistant = ({
       onClick={prepareArchive}
       className="p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all text-left"
     >
-      <p className="text-xs font-bold text-brand-900 dark:text-white">Archiver (10 ans+)</p>
-      <p className="text-[9px] text-brand-400 mt-1 uppercase tracking-tighter">Conformité RGPD / Fiscale</p>
+      <p className="text-xs font-bold text-brand-900 dark:text-white">
+        Archiver (10 ans+)
+      </p>
+      <p className="text-[9px] text-brand-400 mt-1 uppercase tracking-tighter">
+        Conformité RGPD / Fiscale
+      </p>
     </button>
   );
 };
@@ -85,9 +93,17 @@ export const RenderMergeAssistant = ({
     return (
       <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl space-y-3">
         <div className="flex items-start gap-2">
-          <User size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <User
+            size={16}
+            className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
+          />
           <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
-            {mergeConfirm.groups.length} groupe(s) — {mergeConfirm.groups.reduce((acc, g) => acc + g.duplicates.length, 0)} client(s)
+            {mergeConfirm.groups.length} groupe(s) —{" "}
+            {mergeConfirm.groups.reduce(
+              (acc, g) => acc + g.duplicates.length,
+              0,
+            )}{" "}
+            client(s)
           </p>
         </div>
         <div className="flex gap-2 justify-end">
@@ -114,10 +130,17 @@ export const RenderMergeAssistant = ({
       className="w-full flex items-center justify-between p-4 bg-brand-50/50 dark:bg-brand-800/30 border border-brand-100 dark:border-brand-700 rounded-2xl hover:bg-brand-100 transition-all group"
     >
       <div className="text-left">
-        <p className="text-sm font-bold text-brand-900 dark:text-white">Clients en doublon</p>
-        <p className="text-[10px] text-brand-400 mt-0.5">Fusionner par nom identique</p>
+        <p className="text-sm font-bold text-brand-900 dark:text-white">
+          Clients en doublon
+        </p>
+        <p className="text-[10px] text-brand-400 mt-0.5">
+          Fusionner par nom identique
+        </p>
       </div>
-      <User size={16} className="text-brand-300 group-hover:translate-x-1 transition-transform" />
+      <User
+        size={16}
+        className="text-brand-300 group-hover:translate-x-1 transition-transform"
+      />
     </button>
   );
 };

@@ -1,7 +1,21 @@
 import { useMemo } from "react";
-import { InvoiceStatus, type Invoice, type Expense, type UserProfile } from "../types";
-import { calculateThresholdStatus, calculateSocialContributions, getThresholds, type SocialContributions } from "../lib/fiscalCalculations";
-import { projectRevenue, type MonthlyRevenue, type RevenueProjectionResult } from "../lib/revenueProjection";
+import {
+  InvoiceStatus,
+  type Invoice,
+  type Expense,
+  type UserProfile,
+} from "../types";
+import {
+  calculateThresholdStatus,
+  calculateSocialContributions,
+  getThresholds,
+  type SocialContributions,
+} from "../lib/fiscalCalculations";
+import {
+  projectRevenue,
+  type MonthlyRevenue,
+  type RevenueProjectionResult,
+} from "../lib/revenueProjection";
 
 export interface DashboardStats {
   totalRevenue: number;
@@ -35,7 +49,7 @@ export interface DashboardStats {
 export const useDashboardStats = (
   invoices: Invoice[],
   expenses: Expense[],
-  userProfile: UserProfile
+  userProfile: UserProfile,
 ): DashboardStats => {
   const totalRevenue = useMemo(() => {
     return invoices
@@ -70,16 +84,16 @@ export const useDashboardStats = (
   const netAfterTax = netProfit - estimatedTax;
 
   const vatProgress = fiscalStatus.tva.percentage;
-  
+
   const currentThresholds = useMemo(() => {
-    return getThresholds(userProfile.activityType ?? "SERVICE_BNC", new Date(), userProfile);
+    return getThresholds(userProfile.activityType ?? "SERVICE_BNC", new Date());
   }, [userProfile.activityType, userProfile.businessStartDate, userProfile]);
 
   const revenueProjection = useMemo(() => {
     const monthsMap: Record<string, number> = {};
     invoices
       .filter(
-        (inv) => inv.status === InvoiceStatus.PAID && inv.type === "invoice"
+        (inv) => inv.status === InvoiceStatus.PAID && inv.type === "invoice",
       )
       .forEach((inv) => {
         const key = inv.date.slice(0, 7); // YYYY-MM
@@ -89,12 +103,12 @@ export const useDashboardStats = (
       ([month, revenue]) => ({
         month,
         revenue,
-      })
+      }),
     );
     return projectRevenue(
       history,
       6,
-      userProfile.activityType ?? "SERVICE_BNC"
+      userProfile.activityType ?? "SERVICE_BNC",
     );
   }, [invoices, userProfile.activityType]);
 

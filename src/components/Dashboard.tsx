@@ -33,13 +33,18 @@ import {
   Mail,
   Package,
   ShoppingCart,
+  History,
+  ShieldAlert,
+  ShoppingBag,
   Sparkles,
   TrendingDown,
   TrendingUp,
   Users,
   Wallet,
   Zap,
+  LayoutDashboard,
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -168,7 +173,7 @@ const DroppableAction: React.FC<{
       ref={setNodeRef}
       onClick={action.onClick}
       aria-label={action.label ? `${action.label}` : "Action non nommée"}
-      className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider shadow-sm hover:shadow-md ${action.color ?? "bg-brand-700"} dark:bg-brand-800 dark:text-brand-50 dark:border-brand-700 relative transition-all duration-200 ${isOver ? "scale-110 bg-[#3ebd93]!" : "scale-100"}`}
+      className={`btn-primary text-[11px] ${isOver ? "scale-110 bg-green-600!" : "scale-100"}`}
     >
       {action.icon &&
         React.createElement(action.icon, {
@@ -201,7 +206,7 @@ const DraggableQuote: React.FC<{
   return (
     <div
       ref={setNodeRef}
-      className={`dnd-quote flex items-center justify-between p-3 rounded-xl border border-brand-100 dark:border-brand-800 hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-grab active:cursor-grabbing ${
+      className={`interactive-item rounded-xl p-3 border border-brand-100 dark:border-brand-800 cursor-grab active:cursor-grabbing ${
         isDragging
           ? "bg-brand-50 shadow-lg scale-95 opacity-50"
           : "bg-white dark:bg-brand-900/50 opacity-100"
@@ -250,6 +255,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"overview" | "fiscal">("overview");
   const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
     const saved = localStorage.getItem("dashboard_widgets");
     return saved
@@ -264,6 +271,12 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           "prediction",
         ];
   });
+
+  // Animation de chargement simulée pour l'effet "premium"
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("dashboard_widgets", JSON.stringify(widgetOrder));
@@ -338,6 +351,41 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       }
     }
   };
+
+  const revenueData = useMemo(() => {
+    const months = [
+      "Jan",
+      "Fév",
+      "Mar",
+      "Avr",
+      "Mai",
+      "Juin",
+      "Juil",
+      "Août",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Déc",
+    ];
+    return months.map((month, index) => ({
+      name: month,
+      revenue: invoices
+        .filter(
+          (inv) =>
+            new Date(inv.date).getMonth() === index &&
+            inv.status === InvoiceStatus.PAID,
+        )
+        .reduce((sum, inv) => sum + inv.total, 0),
+      prospects: invoices
+        .filter(
+          (inv) =>
+            new Date(inv.date).getMonth() === index &&
+            inv.status === InvoiceStatus.DRAFT,
+        )
+        .reduce((sum, inv) => sum + inv.total, 0),
+    }));
+  }, [invoices]);
+
   const totalRevenue = useMemo(() => {
     return invoices
       .filter((inv) => inv.status === InvoiceStatus.PAID)
@@ -541,86 +589,147 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       label: "Facture",
       icon: FileText,
       onClick: () => onNavigate("invoices"),
-      color: "bg-brand-900 text-white",
+      color: "btn-primary",
     },
     {
       id: "quick-action-expense",
       label: "Dépense",
       icon: TrendingDown,
       onClick: () => onNavigate("accounting"),
-      color: "bg-white text-brand-900 border border-brand-100",
+      color: "btn-secondary",
     },
     {
       id: "quick-action-client",
       label: "Client",
       icon: Users,
       onClick: () => onNavigate("clients"),
-      color: "bg-white text-brand-900 border border-brand-100",
+      color: "btn-secondary",
     },
     {
       id: "quick-action-email",
       label: "Email",
       icon: Mail,
       onClick: () => onNavigate("emails"),
-      color: "bg-white text-brand-900 border border-brand-100",
+      color: "btn-secondary",
     },
     {
       id: "quick-action-product",
       label: "Produit",
       icon: Package,
       onClick: () => onNavigate("products"),
-      color: "bg-white text-brand-900 border border-brand-100",
+      color: "btn-secondary",
     },
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-10">
+    <div className="space-y-12 pb-12">
+      {/* Header avec Actions - Style 2026 Premium */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4">
+        <div className="space-y-1">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 text-accent-600 dark:text-accent-400 font-bold text-[11px] tracking-[0.2em] uppercase"
+          >
+            <Sparkles size={14} className="animate-pulse" />
+            <span>Pilotage Intégré</span>
+          </motion.div>
+
+          <div className="flex items-baseline gap-4">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl font-black text-brand-950 dark:text-white tracking-tighter"
+            >
+              Bonjour,{" "}
+              <span className="text-brand-600 dark:text-brand-400 italic">
+                {userProfile.companyName.split(" ")[0]}
+              </span>
+            </motion.h1>
+
+            {/* Compliance Badge Subtil */}
+            {(() => {
+              const comp = checkCompliance2026(userProfile);
+              return (
+                <button
+                  onClick={() => onNavigate("settings")}
+                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all
+                    ${
+                      comp.isCompliant
+                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-400/20"
+                        : "bg-rose-50 text-rose-600 dark:bg-rose-400/10 dark:text-rose-400 border border-rose-100 dark:border-rose-400/20 animate-pulse"
+                    }
+                  `}
+                >
+                  {comp.isCompliant ? (
+                    <CheckCircle2 size={10} />
+                  ) : (
+                    <AlertCircle size={10} />
+                  )}
+                  {comp.isCompliant ? "Conforme" : "Alerte"}
+                </button>
+              );
+            })()}
+          </div>
+
+          <p className="text-brand-500/70 dark:text-brand-400/70 font-medium max-w-xl text-lg mt-2">
+            Votre activité est{" "}
+            <span className="text-brand-950 dark:text-brand-50 font-bold underline decoration-accent-400/30">
+              sous contrôle
+            </span>{" "}
+            pour ce mois d'octobre.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap gap-2.5"
+        >
+          {quickActions.map((action) => (
+            <DroppableAction key={action.id} action={action} />
+          ))}
+        </motion.div>
+      </header>
+
+      {/* Navigation Interne - Tabs Glass */}
+      <nav className="flex gap-4 p-1.5 bg-brand-100/50 dark:bg-brand-900/30 rounded-2xl w-fit backdrop-blur-sm border border-brand-200/50 dark:border-brand-800/50">
+        {[
+          { id: "overview", label: "Général", icon: LayoutDashboard },
+          { id: "fiscal", label: "Performances", icon: ShieldAlert },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`
+              flex items-center gap-2.5 py-2.5 px-6 rounded-xl text-xs font-bold transition-all relative
+              ${
+                activeTab === tab.id
+                  ? "bg-white dark:bg-brand-800 text-brand-950 dark:text-white shadow-sm"
+                  : "text-brand-500/70 hover:text-brand-900 dark:hover:text-brand-100"
+              }
+            `}
+          >
+            <tab.icon
+              size={14}
+              className={
+                activeTab === tab.id ? "text-brand-600 dark:text-brand-400" : ""
+              }
+            />
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-brand-900 dark:text-brand-50 tracking-tight font-display flex items-center gap-3">
-              Tableau de bord
-              {(() => {
-                const comp = checkCompliance2026(userProfile);
-                return (
-                  <button
-                    onClick={() => onNavigate("settings")}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${
-                      comp.isCompliant
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 animate-pulse"
-                    }`}
-                  >
-                    {comp.isCompliant ? (
-                      <>
-                        <CheckCircle2 size={12} />
-                        Conforme 2026
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle size={12} />
-                        Action Requise : Conformité 2026
-                      </>
-                    )}
-                  </button>
-                );
-              })()}
-            </h1>
-            <p className="text-brand-500 dark:text-brand-400 mt-1 text-sm">
-              Aperçu de votre activité et de vos revenus.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {quickActions.map((action) => (
-              <DroppableAction key={action.id} action={action} />
-            ))}
-          </div>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[minmax(200px,auto)]"></div>
 
         <SortableContext
           items={widgetOrder}
@@ -656,110 +765,129 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               if (id === "stats") {
                 return (
                   <React.Fragment key={id}>
-                    {/* Total Revenue Card */}
+                    {/* Chiffre d'Affaires */}
                     <SortableWidget
                       id="stats-revenue"
                       className="lg:col-span-1"
                     >
-                      <div className="card-pro p-6 h-full flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute -right-6 -top-6 p-8 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-500 text-brand-900 dark:text-brand-50">
+                      <div className="card-modern h-full flex flex-col justify-between overflow-hidden group">
+                        <div className="absolute -right-6 -top-6 p-8 opacity-[0.03] group-hover:opacity-[0.1] group-hover:scale-110 transition-all duration-700 text-brand-900 dark:text-brand-50">
                           <TrendingUp size={140} />
                         </div>
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="p-3 bg-brand-100 dark:bg-brand-800 text-brand-600 dark:text-brand-400 rounded-2xl shadow-sm group-hover:shadow-md transition-all">
-                            <Euro size={20} />
+                        <div className="p-6 h-full flex flex-col">
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="w-12 h-12 bg-linear-to-br from-brand-100 to-brand-50 dark:from-brand-900/40 dark:to-brand-800/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center shadow-inner border border-brand-100 dark:border-brand-800">
+                              <Euro size={24} />
+                            </div>
+                            <div className="stat-badge">
+                              <TrendingUp size={12} strokeWidth={3} />
+                              Encaissé
+                            </div>
                           </div>
-                          <span className="flex items-center text-[10px] font-black uppercase tracking-wider text-accent-700 bg-accent-50 dark:bg-accent-900/30 px-3 py-1.5 rounded-xl border border-accent-100 dark:border-accent-800/50">
-                            Encaissé
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-black text-brand-400 dark:text-brand-500 uppercase tracking-[0.1em] mb-1">
-                            Chiffre d&apos;Affaires
-                          </p>
-                          <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-black text-brand-950 dark:text-white tracking-tighter font-display">
-                              {totalRevenue.toLocaleString("fr-FR")} €
-                            </h3>
-                            <div
-                              className={`flex items-center text-[11px] font-black px-2 py-0.5 rounded-lg ${cashFlowStats.percent >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-rose-600 bg-rose-50 dark:bg-rose-900/20"}`}
-                            >
-                              {cashFlowStats.percent >= 0 ? (
-                                <ArrowUpRight size={12} className="mr-0.5" />
-                              ) : (
-                                <ArrowDownRight size={12} className="mr-0.5" />
-                              )}
-                              {Math.abs(cashFlowStats.percent).toFixed(1)}%
+                          <div className="mt-auto">
+                            <p className="text-[10px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-1.5">
+                              Chiffre d&apos;Affaires
+                            </p>
+                            <div className="flex items-baseline gap-2">
+                              <h3 className="text-4xl font-black text-brand-950 dark:text-white tracking-tight font-display">
+                                {totalRevenue.toLocaleString("fr-FR")} €
+                              </h3>
+                              <div
+                                className={`flex items-center text-[11px] font-black px-2 py-0.5 rounded-lg ${cashFlowStats.percent >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-rose-600 bg-rose-50 dark:bg-rose-900/20"}`}
+                              >
+                                {cashFlowStats.percent >= 0 ? "+" : ""}
+                                {cashFlowStats.percent.toFixed(1)}%
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </SortableWidget>
 
-                    {/* Profit Card */}
+                    {/* Résultat Brut - Premium Card */}
                     <SortableWidget id="stats-profit" className="lg:col-span-1">
-                      <div className="bg-linear-to-br from-brand-600 to-brand-800 text-white p-6 rounded-[2rem] h-full shadow-2xl shadow-brand-500/30 relative overflow-hidden group border border-white/10 hover:shadow-brand-500/40 transition-all duration-500 translate-z-0">
-                        <div className="absolute -right-8 -top-8 p-8 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700">
-                          <TrendingUp size={160} />
+                      <div className="bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 dark:from-indigo-600 dark:via-brand-600 dark:to-brand-800 text-white rounded-4xl p-6 h-full shadow-2xl shadow-brand-500/20 relative overflow-hidden group border border-white/10 hover:shadow-brand-500/40 transition-all duration-500">
+                        <div className="absolute -right-8 -top-8 p-8 opacity-10 group-hover:opacity-25 group-hover:scale-110 transition-all duration-700">
+                          <Sparkles size={160} />
                         </div>
                         <div className="flex justify-between items-start mb-6 relative z-10">
-                          <div className="p-3 bg-white/10 backdrop-blur-md text-white rounded-2xl border border-white/10 shadow-inner">
-                            <Wallet size={20} />
+                          <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
+                            <Wallet size={24} />
                           </div>
-                          <span className="flex items-center text-[10px] font-black uppercase tracking-wider text-brand-100 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-                            Brut
-                          </span>
+                          <div className="px-3 py-1 bg-accent-400/20 border border-accent-400/30 rounded-full text-[10px] font-black uppercase tracking-widest text-accent-100 flex items-center gap-1.5 backdrop-blur-md">
+                            <Zap
+                              size={12}
+                              className="fill-accent-400 animate-pulse"
+                            />
+                            Premium
+                          </div>
                         </div>
-                        <div className="relative z-10">
-                          <p className="text-[11px] font-black text-brand-100/70 uppercase tracking-[0.1em] mb-1">
+                        <div className="relative z-10 mt-auto">
+                          <p className="text-[10px] font-black text-brand-100/60 uppercase tracking-widest mb-1.5">
                             Résultat Brut
                           </p>
-                          <h3 className="text-3xl font-black tracking-tighter font-display drop-shadow-sm">
+                          <h3 className="text-4xl font-black tracking-tight font-display drop-shadow-lg">
                             {netProfit.toLocaleString("fr-FR")} €
                           </h3>
                         </div>
                       </div>
                     </SortableWidget>
 
-                    {/* Net After Tax Card */}
+                    {/* Net Après Impôts */}
                     <SortableWidget id="stats-net" className="lg:col-span-1">
-                      <div className="card-pro p-6 h-full flex flex-col justify-between border-dashed bg-brand-50/30 dark:bg-brand-800/10">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="p-2.5 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-xl">
-                            <Calculator size={20} />
-                          </div>
-                          <div className="group relative">
-                            <AlertCircle
-                              size={14}
-                              className="text-brand-300 cursor-help"
-                            />
-                            <div className="absolute bottom-full right-0 mb-2 w-56 p-3 bg-brand-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl border border-brand-700">
-                              <p className="font-bold mb-1 underline">
-                                Calculateur de cotisations
-                              </p>
-                              <p>Type : {userProfile.activityType ?? "BNC"}</p>
-                              <p>Taux URSSAF : {socialContributions.rate}%</p>
-                              {userProfile.isAcreBeneficiary && (
-                                <p className="text-accent-400">
-                                  Bénéficiaire ACRE appliqué
+                      <div className="card-modern h-full flex flex-col justify-between overflow-hidden border-dashed group">
+                        <div className="p-6 h-full flex flex-col">
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="w-12 h-12 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-2xl flex items-center justify-center border border-accent-100 dark:border-accent-800">
+                              <Calculator size={24} />
+                            </div>
+                            <div className="group relative">
+                              <AlertCircle
+                                size={14}
+                                className="text-neutral-300 dark:text-neutral-700 cursor-help transition-colors hover:text-brand-500"
+                              />
+                              <div className="absolute top-full right-0 mt-3 w-64 p-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs rounded-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all pointer-events-none z-50 shadow-2xl border border-neutral-800 dark:border-neutral-200">
+                                <p className="font-black mb-2 uppercase tracking-tight">
+                                  Détails Fiscaux 2026
                                 </p>
-                              )}
-                              <p className="mt-1 opacity-70 italic text-[8.5px]">
-                                Basé sur les taux officiels 2026.
-                              </p>
+                                <div className="space-y-1 opacity-80 font-medium">
+                                  <p className="flex justify-between">
+                                    Type :{" "}
+                                    <span className="font-bold">
+                                      {userProfile.activityType ?? "BNC"}
+                                    </span>
+                                  </p>
+                                  <p className="flex justify-between">
+                                    Taux URSSAF :{" "}
+                                    <span className="font-bold">
+                                      {socialContributions.rate}%
+                                    </span>
+                                  </p>
+                                  {userProfile.isAcreBeneficiary && (
+                                    <p className="flex justify-between text-emerald-500 font-bold">
+                                      Bonus ACRE : <span>-50%</span>
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="h-px bg-white/10 dark:bg-neutral-100 my-2" />
+                                <p className="text-[10px] leading-relaxed opacity-60">
+                                  Calcul basé sur les grilles fiscales
+                                  actualisées (art. L133-6-8 CSS).
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-                            Revenu Net Est.
-                          </p>
-                          <h3 className="text-2xl font-bold text-brand-900 dark:text-brand-50 mt-1 tracking-tight font-display">
-                            {netAfterTax.toLocaleString("fr-FR", {
-                              maximumFractionDigits: 0,
-                            })}{" "}
-                            €
-                          </h3>
+                          <div className="mt-auto">
+                            <p className="text-[10px] font-black text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-1.5">
+                              Net Estimé (après charges)
+                            </p>
+                            <h3 className="text-4xl font-black text-brand-950 dark:text-white tracking-tight font-display">
+                              {netAfterTax.toLocaleString("fr-FR", {
+                                maximumFractionDigits: 0,
+                              })}{" "}
+                              €
+                            </h3>
+                          </div>
                         </div>
                       </div>
                     </SortableWidget>
@@ -989,95 +1117,109 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 );
               }
 
-              if (id === "expenses") {
-                return (
-                  <SortableWidget
-                    key={id}
-                    id={id}
-                    className="lg:col-span-1 row-span-2"
-                  >
-                    <div className="card-pro p-8 flex flex-col h-full">
-                      <h3 className="text-lg font-bold text-brand-900 dark:text-brand-50 mb-8 font-display">
-                        Répartition Dépenses
-                      </h3>
-                      {expensesByCategory.length > 0 ? (
-                        <div className="flex flex-col h-full">
-                          <div className="h-48 w-full mb-8">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={expensesByCategory}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={55}
-                                  outerRadius={75}
-                                  paddingAngle={8}
-                                  dataKey="value"
-                                >
-                                  {expensesByCategory.map((entry) => (
-                                    <Cell
-                                      key={entry.name}
-                                      fill={
-                                        COLORS[
-                                          expensesByCategory.indexOf(entry) %
-                                            COLORS.length
-                                        ]
-                                      }
-                                    />
-                                  ))}
-                                </Pie>
-                                <Tooltip
-                                  formatter={(value) =>
-                                    typeof value === "number"
-                                      ? `${value.toFixed(2)} €`
-                                      : ""
-                                  }
-                                  contentStyle={{
-                                    borderRadius: "12px",
-                                    border: "none",
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                    backgroundColor: "var(--card-bg)",
-                                    color: "var(--text-main)",
-                                  }}
+              {
+                /* Répartition Dépenses - Bento Small */
+              }
+              <SortableWidget
+                id="expenses"
+                className="lg:col-span-1 row-span-2"
+              >
+                <div className="card-modern p-6 flex flex-col h-full group">
+                  <div className="mb-6">
+                    <h3 className="text-sm font-black text-brand-950 dark:text-white font-display uppercase tracking-tight">
+                      Répartition
+                    </h3>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
+                      Postes de dépenses
+                    </p>
+                  </div>
+                  {expensesByCategory.length > 0 ? (
+                    <div className="flex flex-col h-full">
+                      <div className="h-40 w-full mb-6 relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={expensesByCategory}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={70}
+                              paddingAngle={4}
+                              dataKey="value"
+                              stroke="none"
+                            >
+                              {expensesByCategory.map((entry, idx) => (
+                                <Cell
+                                  key={entry.name}
+                                  fill={COLORS[idx % COLORS.length]}
+                                  className="hover:opacity-80 transition-opacity outline-none"
                                 />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <div className="space-y-4 flex-1 overflow-auto custom-scrollbar pr-2">
-                            {expensesByCategory.map((cat, idx) => (
-                              <div
-                                key={cat.name}
-                                className="flex items-center justify-between group"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className={`w-2.5 h-2.5 rounded-full bg-[${COLORS[idx % COLORS.length]}]`}
-                                  ></div>
-                                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
-                                    {cat.name}
-                                  </span>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-xs font-black text-brand-900 dark:text-brand-50">
-                                    {cat.value.toLocaleString()} €
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-brand-300 bg-brand-50/50 dark:bg-brand-800/10 rounded-3xl border border-dashed border-brand-100 dark:border-brand-700 p-8">
-                          <TrendingDown size={48} className="mb-4 opacity-20" />
-                          <p className="text-[10px] font-bold uppercase tracking-widest">
-                            Aucune dépense
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "var(--color-neutral-900)",
+                                border: "none",
+                                borderRadius: "12px",
+                                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                              }}
+                              itemStyle={{
+                                color: "white",
+                                fontSize: "10px",
+                                fontWeight: "900",
+                                textTransform: "uppercase",
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-tighter">
+                            Total
+                          </p>
+                          <p className="text-lg font-black text-brand-950 dark:text-white leading-none">
+                            {expensesByCategory
+                              .reduce((sum, item) => sum + item.value, 0)
+                              .toLocaleString()}
+                            €
                           </p>
                         </div>
-                      )}
+                      </div>
+                      <div className="space-y-2.5 flex-1 overflow-auto custom-scrollbar-hide">
+                        {expensesByCategory.map((cat, idx) => (
+                          <div
+                            key={cat.name}
+                            className="flex items-center justify-between p-2 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{
+                                  backgroundColor: COLORS[idx % COLORS.length],
+                                }}
+                              ></div>
+                              <span className="text-[10px] font-bold text-neutral-500 truncate max-w-20">
+                                {cat.name}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-black text-brand-950 dark:text-neutral-200">
+                              {cat.value.toLocaleString()} €
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </SortableWidget>
-                );
-              }
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-neutral-300 dark:text-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-3xl border border-dashed border-neutral-100 dark:border-neutral-800 p-8">
+                      <ShoppingBag size={40} className="mb-3 opacity-20" />
+                      <p className="text-[9px] font-black uppercase tracking-widest text-center leading-relaxed">
+                        Aucune dépense
+                        <br />
+                        répertoriée
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </SortableWidget>;
 
               if (id === "activity") {
                 return (
@@ -1119,7 +1261,6 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                 | (Expense & {
                                     activityType: "invoice" | "expense";
                                   }),
-                               
                             ) => {
                               const isExpense =
                                 "activityType" in item &&

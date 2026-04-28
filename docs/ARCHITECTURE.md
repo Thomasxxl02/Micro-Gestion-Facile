@@ -187,8 +187,8 @@ const setter = useAppStore((s) => s.setInvoices);
 useEffect(() => {
   if (!user) return;
   const unsubscribe = onSnapshot(
-    query(collection(db, 'invoices'), where('uid', '==', user.uid)),
-    (snapshot) => setInvoices(snapshot.docs.map((doc) => doc.data()))
+    query(collection(db, "invoices"), where("uid", "==", user.uid)),
+    (snapshot) => setInvoices(snapshot.docs.map((doc) => doc.data())),
   );
   return unsubscribe; // cleanup
 }, [user]);

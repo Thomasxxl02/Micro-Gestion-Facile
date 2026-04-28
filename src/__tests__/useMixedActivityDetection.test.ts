@@ -28,9 +28,8 @@ const REFERENCE_DATE = new Date("2026-06-15T12:00:00");
 const CURRENT_YEAR = 2026;
 
 /** Crée une facture valide avec les champs minimalistes nécessaires au hook. */
-function makeInvoice(
-  overrides: Partial<Invoice> & { total: number },
-): Invoice {
+function makeInvoice(overrides: Partial<Invoice> & { total: number }): Invoice {
+  const { total, ...rest } = overrides;
   return {
     id: crypto.randomUUID(),
     type: "invoice",
@@ -39,11 +38,11 @@ function makeInvoice(
     invoiceNumber: "FA-001",
     clientId: "client-1",
     items: [],
-    subtotal: overrides.total,
+    subtotal: total,
     taxTotal: 0,
-    total: overrides.total,
+    total: total,
     operationCategory: "SERVICES",
-    ...overrides,
+    ...rest,
   } as Invoice;
 }
 
@@ -253,7 +252,9 @@ describe("useMixedActivityDetection", () => {
 
   describe("Calcul de la ventilation", () => {
     it("calcule correctement la répartition 50/50 d'une facture MIXTE", () => {
-      const invoices = [makeInvoice({ total: 2000, operationCategory: "MIXTE" })];
+      const invoices = [
+        makeInvoice({ total: 2000, operationCategory: "MIXTE" }),
+      ];
       const { result } = renderHook(() =>
         useMixedActivityDetection(invoices, BASE_PROFILE, REFERENCE_DATE),
       );
@@ -264,7 +265,9 @@ describe("useMixedActivityDetection", () => {
     });
 
     it("ventile correctement BIENS → tout en saleRevenue", () => {
-      const invoices = [makeInvoice({ total: 3000, operationCategory: "BIENS" })];
+      const invoices = [
+        makeInvoice({ total: 3000, operationCategory: "BIENS" }),
+      ];
       const { result } = renderHook(() =>
         useMixedActivityDetection(invoices, BASE_PROFILE, REFERENCE_DATE),
       );

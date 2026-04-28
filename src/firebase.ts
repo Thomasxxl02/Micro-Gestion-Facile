@@ -316,11 +316,11 @@ export const completeEmailLinkSignIn = async () => {
     let email = globalThis.localStorage.getItem("emailForSignIn");
 
     // Si l'utilisateur a ouvert le lien sur un autre appareil/navigateur
-// ⚠️ Amélioration UX : On suggère à l'utilisateur de fournir l'email
-// utilisé lors de l'envoi du lien pour confirmer l'identité.
-email ??= globalThis.prompt(
-        "Sécurité : Veuillez confirmer l'adresse e-mail avec laquelle vous avez demandé ce lien pour finaliser la connexion :",
-      );
+    // ⚠️ Amélioration UX : On suggère à l'utilisateur de fournir l'email
+    // utilisé lors de l'envoi du lien pour confirmer l'identité.
+    email ??= globalThis.prompt(
+      "Sécurité : Veuillez confirmer l'adresse e-mail avec laquelle vous avez demandé ce lien pour finaliser la connexion :",
+    );
 
     if (email) {
       try {

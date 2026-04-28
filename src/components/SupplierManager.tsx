@@ -6,8 +6,10 @@ import {
   Truck,
   Upload,
   Wallet,
+  TrendingUp,
 } from "lucide-react";
-import React, { useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import React, { useMemo, useRef, useState } from "react";
 import { useEntityFilters, useEntityForm } from "../hooks/useEntity";
 import { useFormValidation } from "../hooks/useFormValidation";
 import { schemaToRules, SupplierSchema } from "../lib/zod-schemas";
@@ -35,8 +37,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   expenses,
   onSave,
   onDelete,
-   
 }) => {
+  const [activeTab, setActiveTab] = useState<"list" | "analytics">("list");
   const form = useEntityForm<Supplier>();
   const filters = useEntityFilters(
     suppliers as unknown as Record<string, unknown>[],
@@ -242,16 +244,23 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
     }
   };
 
+  const toggleArchive = (id: string) => {
+    const updated = suppliers.map((s) =>
+      s.id === id ? { ...s, archived: !s.archived } : s,
+    );
+    setSuppliers(updated);
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-10">
-      {/* Header */}
+      {/* Header Premium */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 dark:text-white font-display">
-            Gestion Fournisseurs
+          <h2 className="text-4xl font-black text-brand-950 dark:text-white font-display tracking-tight uppercase">
+            Fournisseurs
           </h2>
-          <p className="text-brand-500 dark:text-brand-400 mt-1">
-            Gérez vos partenaires et suivez vos achats.
+          <p className="text-brand-400 dark:text-brand-500 font-medium mt-1">
+            Gérez votre réseau de partenaires et leurs coordonnées.
           </p>
         </div>
 
@@ -300,8 +309,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             onClick={() => form.openCreate()}
             className="btn-primary px-6 py-2.5"
           >
-            <Plus size={18} />
-            Nouveau
+            <Plus size={20} strokeWidth={2.5} />
+            <span>Nouveau Fournisseur</span>
           </button>
         </div>
       </div>
@@ -356,9 +365,9 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       />
 
       {/* Supplier List */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {processedSuppliers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
             <AlertCircle
               size={48}
               className="text-brand-300 dark:text-brand-700 mb-4"
@@ -373,42 +382,67 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             return (
               <div
                 key={(supplier as Supplier).id}
-                className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
+                className="card-modern p-6 flex flex-col justify-between group hover:border-brand-500 transition-all"
               >
-                <button
-                  onClick={() => form.openEdit(supplier as Supplier)}
-                  aria-label={`Modifier le fournisseur ${supplier.name}`}
-                  className="flex-1 text-left rounded-lg p-2 -m-2 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                >
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black text-xl shadow-inner border border-brand-100 dark:border-brand-800">
+                    <Truck size={28} />
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${supplier.archived ? "bg-neutral-100 text-neutral-400" : "bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400"}`}
+                    >
+                      {supplier.archived ? "Inactif" : "Partenaire"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="text-xl font-black text-brand-950 dark:text-white tracking-tight leading-tight group-hover:text-brand-600 transition-colors">
+                    {supplier.name}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500 font-bold uppercase tracking-wider">
+                      {supplier.category || "Général"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 py-5 border-y border-neutral-100 dark:border-neutral-800/60 mb-6 group-hover:bg-neutral-50/50 dark:group-hover:bg-brand-900/10 transition-colors rounded-xl px-2 -mx-2">
                   <div>
-                    <h4 className="font-semibold text-brand-900 dark:text-white">
-                      {supplier.name}
-                    </h4>
-                    <p className="text-sm text-brand-500 dark:text-brand-400">
-                      {supplier.category ?? "—"} • {supplier.email}
+                    <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-1">
+                      Dépenses
                     </p>
-                    <p className="text-xs text-brand-400 dark:text-brand-500 mt-1">
-                      Total dépensé:{" "}
-                      <span className="font-bold">
-                        {stats.totalSpent.toLocaleString("fr-FR", {
-                          style: "currency",
-                          currency: "EUR",
-                        })}
-                      </span>
+                    <p className="text-lg font-black text-rose-600 dark:text-rose-400">
+                      {stats.totalSpent.toLocaleString("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      })}
                     </p>
                   </div>
-                </button>
+                  <div className="text-right">
+                    <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-1">
+                      Opérations
+                    </p>
+                    <p className="text-lg font-black text-neutral-800 dark:text-neutral-200">
+                      {stats.count} fact.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <button
-                    onClick={() => toggleArchive((supplier as Supplier).id)}
-                    aria-label={
-                      supplier.archived
-                        ? `Restaurer le fournisseur ${supplier.name}`
-                        : `Archiver le fournisseur ${supplier.name}`
-                    }
-                    className={`p-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${supplier.archived ? "bg-amber-50 text-amber-600" : "hover:bg-brand-50 text-brand-400"}`}
+                    onClick={() => form.openEdit(supplier as Supplier)}
+                    className="flex-1 px-4 py-2.5 bg-brand-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 hover:bg-brand-700 hover:scale-[1.02] transition-all"
                   >
-                    <Archive size={18} aria-hidden="true" />
+                    Détails
+                  </button>
+                  <button
+                    onClick={() => toggleArchive((supplier as Supplier).id)}
+                    className={`p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-800 transition-all shadow-sm ${supplier.archived ? "bg-amber-50 text-amber-600 border-amber-200" : "text-neutral-400 hover:text-rose-500 hover:bg-rose-50"}`}
+                    title={supplier.archived ? "Désarchiver" : "Archiver"}
+                  >
+                    <Archive size={18} />
                   </button>
                 </div>
               </div>
@@ -435,16 +469,16 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
       >
         <div className="space-y-6">
           <ContactFields
-            name={validatedData.name || ""}
+            name={validatedData.contactName || ""}
             email={validatedData.email ?? ""}
             phone={validatedData.phone ?? ""}
-            onNameChange={(val) => handleFormChange("name")(val)}
+            onNameChange={(val) => handleFormChange("contactName")(val)}
             onEmailChange={(val) => handleFormChange("email")(val)}
             onPhoneChange={(val) => handleFormChange("phone")(val)}
-            contactNameLabel="Nom du fournisseur"
+            contactNameLabel="Nom du contact"
             required={true}
-            validationErrors={validationErrors}
-            touchedFields={touchedFields}
+            validationErrors={validationErrors as any}
+            touchedFields={touchedFields as any}
           />
 
           <div className="space-y-4">
@@ -504,8 +538,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               onPostalCodeChange={() => undefined}
               onCityChange={() => undefined}
               showPostalCity={false}
-              validationErrors={validationErrors}
-              touchedFields={touchedFields}
+              validationErrors={validationErrors as any}
+              touchedFields={touchedFields as any}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated

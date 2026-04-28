@@ -10,7 +10,7 @@
  *   import { invoiceRepository, getDexieTable } from '../db/repositories';
  */
 
-import type { Table } from 'dexie';
+import type { Table } from "dexie";
 import type {
   CalendarEvent,
   ChatMessage,
@@ -23,18 +23,18 @@ import type {
   Product,
   Supplier,
   UserProfile,
-} from '../../types';
-import { db, type InvoiceNumberSequence } from '../invoiceDB';
+} from "../../types";
+import { db, type InvoiceNumberSequence } from "../invoiceDB";
 
 // ─── Re-exports des repositories ────────────────────────────────────────────
 
-export { calendarRepository } from './CalendarRepository';
-export { clientRepository } from './ClientRepository';
-export { emailRepository, emailTemplateRepository } from './EmailRepository';
-export { expenseRepository } from './ExpenseRepository';
-export { invoiceItemRepository, invoiceRepository } from './InvoiceRepository';
-export { productRepository } from './ProductRepository';
-export { supplierRepository } from './SupplierRepository';
+export { calendarRepository } from "./CalendarRepository";
+export { clientRepository } from "./ClientRepository";
+export { emailRepository, emailTemplateRepository } from "./EmailRepository";
+export { expenseRepository } from "./ExpenseRepository";
+export { invoiceItemRepository, invoiceRepository } from "./InvoiceRepository";
+export { productRepository } from "./ProductRepository";
+export { supplierRepository } from "./SupplierRepository";
 
 // ─── Cartographie type-safe des tables Dexie ────────────────────────────────
 

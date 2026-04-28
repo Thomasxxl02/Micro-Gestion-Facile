@@ -11,10 +11,15 @@
  * Patterns: React best practices avec useCallback
  */
 
-import { CircleAlert as AlertCircle, Shield, Wifi, X } from 'lucide-react';
-import React, { useCallback } from 'react';
+import { CircleAlert as AlertCircle, Shield, Wifi, X } from "lucide-react";
+import React, { useCallback } from "react";
 
-export type ErrorType = 'network' | 'auth' | 'validation' | 'security' | 'unknown';
+export type ErrorType =
+  | "network"
+  | "auth"
+  | "validation"
+  | "security"
+  | "unknown";
 
 interface ErrorBannerProps {
   /** Message d'erreur à afficher (null hides banner) */
@@ -41,42 +46,42 @@ interface ErrorConfig {
 const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
   network: {
     icon: Wifi,
-    bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-    borderColor: 'border-yellow-500',
-    textColor: 'text-yellow-900 dark:text-yellow-100',
-    iconColor: 'text-yellow-500',
-    suggestion: 'Vérifiez votre connexion Internet et réessayez',
+    bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+    borderColor: "border-yellow-500",
+    textColor: "text-yellow-900 dark:text-yellow-100",
+    iconColor: "text-yellow-500",
+    suggestion: "Vérifiez votre connexion Internet et réessayez",
   },
   auth: {
     icon: Shield,
-    bgColor: 'bg-red-50 dark:bg-red-900/20',
-    borderColor: 'border-red-500',
-    textColor: 'text-red-900 dark:text-red-100',
-    iconColor: 'text-red-500',
-    suggestion: 'Vérifiez vos identifiants et réessayez',
+    bgColor: "bg-red-50 dark:bg-red-900/20",
+    borderColor: "border-red-500",
+    textColor: "text-red-900 dark:text-red-100",
+    iconColor: "text-red-500",
+    suggestion: "Vérifiez vos identifiants et réessayez",
   },
   validation: {
     icon: AlertCircle,
-    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
-    borderColor: 'border-orange-500',
-    textColor: 'text-orange-900 dark:text-orange-100',
-    iconColor: 'text-orange-500',
-    suggestion: 'Corrigez les erreurs et réessayez',
+    bgColor: "bg-orange-50 dark:bg-orange-900/20",
+    borderColor: "border-orange-500",
+    textColor: "text-orange-900 dark:text-orange-100",
+    iconColor: "text-orange-500",
+    suggestion: "Corrigez les erreurs et réessayez",
   },
   security: {
     icon: AlertCircle,
-    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-    borderColor: 'border-purple-600',
-    textColor: 'text-purple-900 dark:text-purple-100',
-    iconColor: 'text-purple-600',
-    suggestion: 'Pour des raisons de sécurité, veuillez réessayer',
+    bgColor: "bg-purple-50 dark:bg-purple-900/20",
+    borderColor: "border-purple-600",
+    textColor: "text-purple-900 dark:text-purple-100",
+    iconColor: "text-purple-600",
+    suggestion: "Pour des raisons de sécurité, veuillez réessayer",
   },
   unknown: {
     icon: AlertCircle,
-    bgColor: 'bg-gray-50 dark:bg-gray-900/20',
-    borderColor: 'border-gray-400',
-    textColor: 'text-gray-900 dark:text-gray-100',
-    iconColor: 'text-gray-500',
+    bgColor: "bg-gray-50 dark:bg-gray-900/20",
+    borderColor: "border-gray-400",
+    textColor: "text-gray-900 dark:text-gray-100",
+    iconColor: "text-gray-500",
   },
 };
 
@@ -99,10 +104,10 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
  */
 export function ErrorBanner({
   error,
-  type = 'unknown',
+  type = "unknown",
   onDismiss,
   showDismiss = true,
-  className = '',
+  className = "",
 }: ErrorBannerProps) {
   const config = ERROR_CONFIGS[type];
   const Icon = config.icon;
@@ -115,11 +120,11 @@ export function ErrorBanner({
   // Handler fermeture avec touche Escape
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape' && showDismiss) {
+      if (e.key === "Escape" && showDismiss) {
         handleDismiss();
       }
     },
-    [handleDismiss, showDismiss]
+    [handleDismiss, showDismiss],
   );
 
   // Si pas d'erreur, ne rien afficher
@@ -149,7 +154,11 @@ export function ErrorBanner({
     >
       <div className="flex items-start gap-4">
         {/* Icône */}
-        <Icon size={20} className={`${config.iconColor} shrink-0 mt-0.5`} aria-hidden="true" />
+        <Icon
+          size={20}
+          className={`${config.iconColor} shrink-0 mt-0.5`}
+          aria-hidden="true"
+        />
 
         {/* Contenu */}
         <div className="flex-1 min-w-0">

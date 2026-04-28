@@ -164,7 +164,7 @@ class RateLimiter {
       return result;
     } catch (error) {
       // Logic for generic retry with latency tracking
-       
+
       const _latency = Date.now() - startTime;
 
       // Retry logic
@@ -341,4 +341,3 @@ export const rateLimiter = new RateLimiter();
 
 // Export class for testing
 export { RateLimiter };
-

@@ -6,8 +6,8 @@
  *              emailTemplates '&id, type, name'
  */
 
-import type { Email, EmailTemplate } from '../../types';
-import { db } from '../invoiceDB';
+import type { Email, EmailTemplate } from "../../types";
+import { db } from "../invoiceDB";
 
 export const emailRepository = {
   /** Tous les e-mails envoyés */
@@ -18,14 +18,15 @@ export const emailRepository = {
 
   /** E-mails liés à un document (facture, devis…) via relatedId */
   findByRelated: (relatedId: string): Promise<Email[]> =>
-    db.emails.where('relatedId').equals(relatedId).toArray(),
+    db.emails.where("relatedId").equals(relatedId).toArray(),
 
   /** E-mails par type (ex: 'invoice', 'reminder') */
-  findByType: (type: string): Promise<Email[]> => db.emails.where('type').equals(type).toArray(),
+  findByType: (type: string): Promise<Email[]> =>
+    db.emails.where("type").equals(type).toArray(),
 
   /** E-mails par statut (ex: 'sent', 'failed', 'draft') */
   findByStatus: (status: string): Promise<Email[]> =>
-    db.emails.where('status').equals(status).toArray(),
+    db.emails.where("status").equals(status).toArray(),
 
   /** Persiste (insert ou update) un e-mail */
   save: (email: Email): Promise<string> => db.emails.put(email),
@@ -45,17 +46,20 @@ export const emailTemplateRepository = {
   findAll: (): Promise<EmailTemplate[]> => db.emailTemplates.toArray(),
 
   /** Modèle par identifiant */
-  findById: (id: string): Promise<EmailTemplate | undefined> => db.emailTemplates.get(id),
+  findById: (id: string): Promise<EmailTemplate | undefined> =>
+    db.emailTemplates.get(id),
 
   /** Modèles par type de document (index type) */
   findByType: (type: string): Promise<EmailTemplate[]> =>
-    db.emailTemplates.where('type').equals(type).toArray(),
+    db.emailTemplates.where("type").equals(type).toArray(),
 
   /** Persiste (insert ou update) un modèle */
-  save: (template: EmailTemplate): Promise<string> => db.emailTemplates.put(template),
+  save: (template: EmailTemplate): Promise<string> =>
+    db.emailTemplates.put(template),
 
   /** Persiste plusieurs modèles en une seule transaction */
-  saveBulk: (templates: EmailTemplate[]): Promise<string> => db.emailTemplates.bulkPut(templates),
+  saveBulk: (templates: EmailTemplate[]): Promise<string> =>
+    db.emailTemplates.bulkPut(templates),
 
   /** Supprime un modèle par identifiant */
   delete: (id: string): Promise<void> => db.emailTemplates.delete(id),

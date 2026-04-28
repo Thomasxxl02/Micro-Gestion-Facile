@@ -1,14 +1,14 @@
 import React from "react";
-import { 
-  Package, 
-  Briefcase, 
-  Trash2, 
-  Archive, 
-  RotateCcw, 
-  Minus, 
-  Plus, 
+import {
+  Package,
+  Briefcase,
+  Trash2,
+  Archive,
+  RotateCcw,
+  Minus,
+  Plus,
   Pencil as Edit2,
-  CircleAlert as AlertCircle
+  CircleAlert as AlertCircle,
 } from "lucide-react";
 import type { Product } from "../../types";
 
@@ -79,7 +79,11 @@ export const ProductList: React.FC<ProductListProps> = ({
                 title={product.archived ? "Restaurer" : "Archiver"}
                 aria-label={product.archived ? "Restaurer" : "Archiver"}
               >
-                {product.archived ? <RotateCcw size={16} /> : <Archive size={16} />}
+                {product.archived ? (
+                  <RotateCcw size={16} />
+                ) : (
+                  <Archive size={16} />
+                )}
               </button>
               <button
                 onClick={(e) => onDelete(product.id, e)}
@@ -167,7 +171,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 </div>
               </div>
             )}
-            
+
             {product.type === "service" && (
               <div className="p-2.5 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-2xl">
                 <Edit2 size={16} />

@@ -743,11 +743,11 @@ describe("SupplierManager Component", () => {
         screen.getByLabelText("Modifier le fournisseur Fournisseur A SARL"),
       );
       // useFormValidation ne sync pas initialData à la réouverture : remplir manuellement
-      fireEvent.change(screen.getByPlaceholderText('Nom'), {
-        target: { value: 'Fournisseur A SARL' },
+      fireEvent.change(screen.getByPlaceholderText("Nom"), {
+        target: { value: "Fournisseur A SARL" },
       });
-      fireEvent.change(screen.getByPlaceholderText('Email'), {
-        target: { value: 'contact@fournisseur-a.fr' },
+      fireEvent.change(screen.getByPlaceholderText("Email"), {
+        target: { value: "contact@fournisseur-a.fr" },
       });
       await user.click(screen.getByRole("button", { name: /enregistrer/i }));
 

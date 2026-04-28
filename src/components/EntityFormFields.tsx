@@ -32,7 +32,7 @@ export const SearchFilterFields: React.FC<SearchFilterFieldsProps> = ({
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-600 rounded-xl text-sm text-brand-900 dark:text-white placeholder-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        className="input-modern pl-10"
         aria-label="Rechercher"
       />
     </div>
@@ -69,10 +69,9 @@ interface ContactFieldsProps {
   touchedFields?: TouchedFields;
 }
 
-const fieldClass =
-  "w-full px-3 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm text-brand-900 dark:text-white placeholder-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500";
-const errorFieldClass = "border-red-400 focus:ring-red-400";
-const normalFieldClass = "border-brand-200 dark:border-slate-600";
+const fieldClass = "input-modern";
+const errorFieldClass = "border-red-400 focus:ring-red-400 dark:border-red-500";
+const normalFieldClass = "";
 
 function resolveError(
   errors: ValidationErrors | undefined,

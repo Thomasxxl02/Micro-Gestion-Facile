@@ -6,8 +6,8 @@
  *              invoiceItems '&id, invoiceId'
  */
 
-import type { Invoice, InvoiceItem } from '../../types';
-import { db } from '../invoiceDB';
+import type { Invoice, InvoiceItem } from "../../types";
+import { db } from "../invoiceDB";
 
 export const invoiceRepository = {
   /** Toutes les factures/devis */
@@ -18,11 +18,11 @@ export const invoiceRepository = {
 
   /** Factures d'un client donné (index clientId) */
   findByClient: (clientId: string): Promise<Invoice[]> =>
-    db.invoices.where('clientId').equals(clientId).toArray(),
+    db.invoices.where("clientId").equals(clientId).toArray(),
 
   /** Factures par statut (ex: 'Brouillon', 'Payée') */
   findByStatus: (status: string): Promise<Invoice[]> =>
-    db.invoices.where('status').equals(status).toArray(),
+    db.invoices.where("status").equals(status).toArray(),
 
   /** Factures par type de document (ex: 'invoice', 'quote') */
   findByType: (type: string): Promise<Invoice[]> =>
@@ -30,17 +30,18 @@ export const invoiceRepository = {
 
   /** Factures comprises entre deux dates ISO (ordre chronologique, inclusif) */
   findByDateRange: (from: string, to: string): Promise<Invoice[]> =>
-    db.invoices.where('date').between(from, to, true, true).toArray(),
+    db.invoices.where("date").between(from, to, true, true).toArray(),
 
   /** Factures par statut e-invoice (pour le suivi Factur-X 2026) */
   findByEInvoiceStatus: (eStatus: string): Promise<Invoice[]> =>
-    db.invoices.where('eInvoiceStatus').equals(eStatus).toArray(),
+    db.invoices.where("eInvoiceStatus").equals(eStatus).toArray(),
 
   /** Persiste (insert ou update) une facture */
   save: (invoice: Invoice): Promise<string> => db.invoices.put(invoice),
 
   /** Persiste plusieurs factures en une seule transaction */
-  saveBulk: (invoices: Invoice[]): Promise<string> => db.invoices.bulkPut(invoices),
+  saveBulk: (invoices: Invoice[]): Promise<string> =>
+    db.invoices.bulkPut(invoices),
 
   /** Supprime une facture par identifiant */
   delete: (id: string): Promise<void> => db.invoices.delete(id),
@@ -55,13 +56,14 @@ export const invoiceItemRepository = {
 
   /** Articles d'une facture donnée (index invoiceId) */
   findByInvoice: (invoiceId: string): Promise<InvoiceItem[]> =>
-    db.invoiceItems.where('invoiceId').equals(invoiceId).toArray(),
+    db.invoiceItems.where("invoiceId").equals(invoiceId).toArray(),
 
   /** Persiste un article */
   save: (item: InvoiceItem): Promise<string> => db.invoiceItems.put(item),
 
   /** Persiste plusieurs articles */
-  saveBulk: (items: InvoiceItem[]): Promise<string> => db.invoiceItems.bulkPut(items),
+  saveBulk: (items: InvoiceItem[]): Promise<string> =>
+    db.invoiceItems.bulkPut(items),
 
   /** Supprime un article par identifiant */
   delete: (id: string): Promise<void> => db.invoiceItems.delete(id),
@@ -69,7 +71,7 @@ export const invoiceItemRepository = {
   /** Supprime tous les articles d'une facture (cascade manuelle) */
   deleteByInvoice: (invoiceId: string): Promise<void> =>
     db.invoiceItems
-      .where('invoiceId')
+      .where("invoiceId")
       .equals(invoiceId)
       .delete()
       .then(() => undefined),

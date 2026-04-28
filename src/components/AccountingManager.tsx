@@ -602,13 +602,15 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       </div>
 
       {activeTab === "bilan" && (
-        <div className="space-y-8 animate-slide-up">
+        <div className="space-y-10 animate-slide-up">
           {/* Main Stats Grid */}
           <FiscalSummaryCard
-              totalRevenue={totalRevenue}
-              totalExpenses={totalExpenses}
-              netResult={netResult}
-              netAfterCharges={netAfterCharges}
+            totalRevenue={totalRevenue}
+            totalExpenses={totalExpenses}
+            netResult={netResult}
+            netAfterCharges={netAfterCharges}
+          />
+
           {/* Charts Section - Lazy Loaded */}
           <Suspense
             fallback={

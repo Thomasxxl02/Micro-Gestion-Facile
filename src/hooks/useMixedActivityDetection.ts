@@ -173,9 +173,7 @@ export function useMixedActivityDetection(
         (status.totalRevenue / status.global.limit) * 100,
       ),
       serviceUsagePercent:
-        service > 0
-          ? Math.min(100, (service / status.service.limit) * 100)
-          : 0,
+        service > 0 ? Math.min(100, (service / status.service.limit) * 100) : 0,
       isGlobalNearLimit: status.totalRevenue > status.global.limit * 0.8,
       isServiceNearLimit: service > status.service.limit * 0.8,
       isAnyLimitExceeded: status.isMicroExceeded,
@@ -202,9 +200,7 @@ export function useMixedActivityDetection(
    */
   const shouldShowSuggestion =
     isMixedDetected &&
-    SERVICE_ONLY_TYPES.includes(
-      userProfile.activityType ?? "SERVICE_BNC",
-    ) &&
+    SERVICE_ONLY_TYPES.includes(userProfile.activityType ?? "SERVICE_BNC") &&
     !userProfile.isMixedActivity &&
     !isDismissed;
 

@@ -1,9 +1,6 @@
 import React from "react";
 import type { Supplier } from "../../types";
-import {
-  AddressFields,
-  ContactFields,
-} from "../EntityFormFields";
+import { AddressFields, ContactFields } from "../EntityFormFields";
 import { FormFieldValidated } from "../FormFieldValidated";
 import { TextAreaField } from "../FormFields";
 
@@ -20,8 +17,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
   touchedFields,
   onFormChange,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleValueChange = (name: string) => (value: string) => {
     onFormChange({ [name]: value });
   };
 
@@ -30,20 +26,18 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormFieldValidated
           label="Nom de l'entreprise"
-          name="name"
           value={formData.name || ""}
-          onChange={handleChange}
-          error={validationErrors.name}
+          onChange={handleValueChange("name")}
+          error={validationErrors.name as any}
           touched={touchedFields.name}
           placeholder="Ex: Leroy Merlin, AWS, etc."
           required
         />
         <FormFieldValidated
           label="Catégorie"
-          name="category"
           value={formData.category || ""}
-          onChange={handleChange}
-          error={validationErrors.category}
+          onChange={handleValueChange("category")}
+          error={validationErrors.category as any}
           touched={touchedFields.category}
           placeholder="Ex: Fournitures, Cloud, Publicité..."
         />
@@ -54,10 +48,14 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           Informations de Contact
         </h4>
         <ContactFields
-          formData={formData}
-          onChange={onFormChange}
-          errors={validationErrors}
-          touched={touchedFields}
+          name={formData.contactName || ""}
+          email={formData.email || ""}
+          phone={formData.phone || ""}
+          onNameChange={handleValueChange("contactName")}
+          onEmailChange={handleValueChange("email")}
+          onPhoneChange={handleValueChange("phone")}
+          validationErrors={validationErrors as any}
+          touchedFields={touchedFields as any}
         />
       </div>
 
@@ -66,18 +64,22 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           Adresse et Légal
         </h4>
         <AddressFields
-          formData={formData}
-          onChange={onFormChange}
-          errors={validationErrors}
-          touched={touchedFields}
+          address={formData.address || ""}
+          postalCode=""
+          city=""
+          onAddressChange={handleValueChange("address")}
+          onPostalCodeChange={() => {}}
+          onCityChange={() => {}}
+          showPostalCity={false}
+          validationErrors={validationErrors as any}
+          touchedFields={touchedFields as any}
         />
         <div className="mt-4">
           <FormFieldValidated
             label="Numéro SIRET"
-            name="siret"
             value={formData.siret || ""}
-            onChange={handleChange}
-            error={validationErrors.siret}
+            onChange={handleValueChange("siret")}
+            error={validationErrors.siret as any}
             touched={touchedFields.siret}
             placeholder="14 chiffres"
           />
@@ -87,9 +89,8 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
       <div>
         <TextAreaField
           label="Notes"
-          name="notes"
           value={formData.notes || ""}
-          onChange={handleChange}
+          onChange={handleValueChange("notes")}
           placeholder="Conditions de paiement, interlocuteurs privilégiés..."
         />
       </div>

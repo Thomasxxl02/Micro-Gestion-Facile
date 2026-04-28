@@ -55,7 +55,6 @@ const EmailManager: React.FC<EmailManagerProps> = ({
   onDeleteEmail,
   onSaveTemplate,
   onDeleteTemplate,
-   
 }) => {
   const [activeTab, setActiveTab] = useState<
     "history" | "compose" | "templates"
@@ -273,7 +272,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
             });
             setActiveTab("compose");
           }}
-          className="bg-brand-900 hover:bg-brand-800 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-brand-900/20 font-medium"
+          className="btn-primary text-sm"
         >
           <Plus size={18} />
           Nouveau Message
@@ -284,21 +283,21 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       <div className="flex bg-white p-1 rounded-2xl border border-brand-100 shadow-sm w-fit">
         <button
           onClick={() => setActiveTab("history")}
-          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "history" ? "bg-brand-900 text-white shadow-md" : "text-brand-500 hover:text-brand-700"}`}
+          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "history" ? "btn-primary" : "text-brand-500 hover:text-brand-700"}`}
         >
           <History size={16} />
           Historique
         </button>
         <button
           onClick={() => setActiveTab("templates")}
-          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "templates" ? "bg-brand-900 text-white shadow-md" : "text-brand-500 hover:text-brand-700"}`}
+          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "templates" ? "btn-primary" : "text-brand-500 hover:text-brand-700"}`}
         >
           <FileText size={16} />
           Templates
         </button>
         <button
           onClick={() => setActiveTab("compose")}
-          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "compose" ? "bg-brand-900 text-white shadow-md" : "text-brand-500 hover:text-brand-700"}`}
+          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "compose" ? "btn-primary" : "text-brand-500 hover:text-brand-700"}`}
         >
           <Mail size={16} />
           Composer
@@ -517,7 +516,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                               body: (templateFormData.body ?? "") + v.key,
                             })
                           }
-                          className="text-[10px] bg-brand-900 text-white px-2 py-1 rounded-lg hover:bg-brand-700 transition-all font-bold"
+                          className="badge-info text-[10px]"
                           title={v.label}
                         >
                           {v.key}
@@ -544,14 +543,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsComposeOpen(false)}
-                    className="px-8 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
+                    className="btn-secondary"
                   >
                     Annuler
                   </button>
-                  <button
-                    type="submit"
-                    className="bg-brand-900 text-white px-10 py-3 rounded-2xl hover:bg-brand-800 transition-all shadow-xl font-bold text-xs uppercase tracking-widest"
-                  >
+                  <button type="submit" className="btn-primary">
                     Enregistrer le Template
                   </button>
                 </div>
@@ -670,7 +666,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 </button>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showPreview ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-600 hover:bg-brand-100"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showPreview ? "btn-primary" : "bg-brand-50 text-brand-600 hover:bg-brand-100"}`}
                 >
                   <Eye size={14} />
                   {showPreview ? "Éditer" : "Aperçu"}
@@ -704,7 +700,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowPreview(false)}
-                    className="px-6 py-3 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-2xl"
+                    className="btn-secondary"
                   >
                     Retour à l'édition
                   </button>
@@ -887,7 +883,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                             body: composeData.body + v,
                           })
                         }
-                        className="text-[10px] bg-brand-100 text-brand-600 px-3 py-1 rounded-lg hover:bg-brand-200 transition-all font-bold"
+                        className="badge-warning text-[10px]"
                       >
                         {v}
                       </button>
@@ -899,14 +895,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveTab("history")}
-                    className="px-8 py-3 text-brand-600 font-bold text-sm uppercase tracking-widest hover:bg-brand-50 rounded-2xl transition-all"
+                    className="px-8 py-3 btn-secondary"
                   >
                     Annuler
                   </button>
-                  <button
-                    type="submit"
-                    className="bg-brand-900 text-white px-10 py-3 rounded-2xl flex items-center gap-2 hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20 font-bold text-sm uppercase tracking-widest"
-                  >
+                  <button type="submit" className="btn-primary">
                     <Send size={18} />
                     Envoyer
                   </button>
@@ -1036,14 +1029,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsComposeOpen(false)}
-                  className="px-6 py-2.5 text-brand-600 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 rounded-xl transition-all"
+                  className="btn-secondary"
                 >
                   Annuler
                 </button>
-                <button
-                  type="submit"
-                  className="bg-brand-900 text-white px-8 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20"
-                >
+                <button type="submit" className="btn-primary text-xs">
                   Enregistrer
                 </button>
               </div>

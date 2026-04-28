@@ -1,5 +1,5 @@
-import type { ActivityType } from '../types';
-import { getThresholds } from './fiscalCalculations';
+import type { ActivityType } from "../types";
+import { getThresholds } from "./fiscalCalculations";
 
 /** Données historiques d'un mois (passé en entrée) */
 export interface MonthlyRevenue {
@@ -8,7 +8,7 @@ export interface MonthlyRevenue {
 }
 
 export interface ProjectionAlert {
-  severity: 'danger' | 'warning';
+  severity: "danger" | "warning";
   message: string;
 }
 
@@ -34,10 +34,16 @@ export interface RevenueProjectionResult {
 export function projectRevenue(
   history: MonthlyRevenue[],
   months = 6,
-  activityType: ActivityType | string = 'SERVICE_BNC',
+  activityType: ActivityType | string = "SERVICE_BNC",
 ): RevenueProjectionResult {
   if (history.length === 0) {
-    return { history, forecast: [], monthlyTrend: 0, confidence: 0, alerts: [] };
+    return {
+      history,
+      forecast: [],
+      monthlyTrend: 0,
+      confidence: 0,
+      alerts: [],
+    };
   }
 
   // Tri chronologique
@@ -66,11 +72,11 @@ export function projectRevenue(
 
   // Génération du forecast
   const lastMonth = sorted[n - 1].month;
-  const [lastYear, lastMonthNum] = lastMonth.split('-').map(Number);
+  const [lastYear, lastMonthNum] = lastMonth.split("-").map(Number);
   const forecast: MonthlyForecast[] = [];
   for (let i = 1; i <= months; i++) {
     const d = new Date(lastYear, lastMonthNum - 1 + i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const projected = Math.max(0, intercept + slope * (n + i - 1));
     forecast.push({ month: key, projected });
   }
@@ -79,17 +85,18 @@ export function projectRevenue(
   const alerts: ProjectionAlert[] = [];
   const thresholds = getThresholds(activityType as ActivityType);
   const currentYearRevenue = revenues.reduce((a, b) => a + b, 0);
-  const projectedAnnual = currentYearRevenue + forecast.reduce((a, f) => a + f.projected, 0);
+  const projectedAnnual =
+    currentYearRevenue + forecast.reduce((a, f) => a + f.projected, 0);
 
   if (projectedAnnual >= thresholds.tva * 0.9) {
     if (projectedAnnual >= thresholds.tva) {
       alerts.push({
-        severity: 'danger',
-        message: `CA projeté (${Math.round(projectedAnnual).toLocaleString('fr-FR')} €) dépasse le seuil TVA (${thresholds.tva.toLocaleString('fr-FR')} €). Consultez un comptable.`,
+        severity: "danger",
+        message: `CA projeté (${Math.round(projectedAnnual).toLocaleString("fr-FR")} €) dépasse le seuil TVA (${thresholds.tva.toLocaleString("fr-FR")} €). Consultez un comptable.`,
       });
     } else {
       alerts.push({
-        severity: 'warning',
+        severity: "warning",
         message: `CA projeté approche le seuil de franchise TVA (90%). Anticipez dès maintenant.`,
       });
     }
@@ -98,12 +105,12 @@ export function projectRevenue(
   if (projectedAnnual >= thresholds.micro * 0.9) {
     if (projectedAnnual >= thresholds.micro) {
       alerts.push({
-        severity: 'danger',
+        severity: "danger",
         message: `CA projeté dépasse le plafond micro-entreprise. Souhaitez-vous un bilan comptable ?`,
       });
     } else {
       alerts.push({
-        severity: 'warning',
+        severity: "warning",
         message: `CA projeté approche le plafond micro-entreprise (90%). Préparez une transition.`,
       });
     }

@@ -7,6 +7,7 @@
  *   - useViewRouter → routage par vue
  *   - Sidebar → navigation latérale
  */
+import { motion } from "motion/react";
 import React from "react";
 import { useAppShellSync } from "../hooks/useAppShellSync";
 import { useViewRouter, type ViewType } from "../hooks/useViewRouter";
@@ -39,7 +40,7 @@ const AppShell: React.FC = () => {
 
   return (
     <div
-      className={`flex min-h-screen bg-gray-50 dark:bg-brand-950 text-brand-900 dark:text-brand-50 ${reducedMotion ? "reduced-motion" : ""}`}
+      className={`flex min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-brand-500/30 overflow-hidden ${reducedMotion ? "reduced-motion" : ""}`}
     >
       <Sidebar
         currentView={currentView}
@@ -50,18 +51,34 @@ const AppShell: React.FC = () => {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
 
-      {/* Overlay mobile */}
+      {/* Overlay mobile avec flou */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-20 bg-neutral-950/40 backdrop-blur-md lg:hidden transition-all duration-500"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {viewContent}
+      {/* Container Principal avec scroll géré ici */}
+      <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden relative custom-scrollbar scroll-smooth">
+        {/* Cercles de lumière subtils en arrière-plan */}
+        <div className="fixed top-[-10%] left-[20%] w-[40%] h-[50%] bg-brand-500/5 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" />
+        <div className="fixed bottom-[-10%] right-[-5%] w-[40%] h-[50%] bg-accent-500/5 rounded-full blur-[120px] pointer-events-none animate-float" />
+
+        <div className="container mx-auto px-4 sm:px-8 py-8 lg:py-12 max-w-7xl relative z-10">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.99 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.22, 1, 0.36, 1], // Quintic ease-out pour plus de fluidité
+            }}
+          >
+            {viewContent}
+          </motion.div>
         </div>
       </main>
     </div>

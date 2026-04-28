@@ -38,14 +38,20 @@ export const EncryptionModal: React.FC<EncryptionModalProps> = ({
             <Lock className="text-brand-600 dark:text-brand-400" size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Chiffrer l'export</h3>
-            <p className="text-xs text-zinc-500">Ajouter une protection AES-256 à vos données</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+              Chiffrer l'export
+            </h3>
+            <p className="text-xs text-zinc-500">
+              Ajouter une protection AES-256 à vos données
+            </p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1.5 font-sans">
-            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Mot de passe (min. 8 car.)</label>
+            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+              Mot de passe (min. 8 car.)
+            </label>
             <div className="relative">
               <input
                 type={isVisible ? "text" : "password"}
@@ -67,7 +73,9 @@ export const EncryptionModal: React.FC<EncryptionModalProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Confirmer mot de passe</label>
+            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+              Confirmer mot de passe
+            </label>
             <input
               type={isVisible ? "text" : "password"}
               value={confirm}

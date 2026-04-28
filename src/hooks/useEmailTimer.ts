@@ -11,7 +11,7 @@
  * Performances: useCallback + useEffect avec cleanup
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseEmailTimerConfig {
   /** Durée de validité du lien en secondes (défaut: 900 = 15 min) */
@@ -77,14 +77,18 @@ export function useEmailTimer({
   const [resendCount, setResendCount] = useState(0);
 
   // Refs pour éviter les closures dans les timers
-  const linkTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const resendTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const linkTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
+  const resendTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
 
   // Formater le temps restant en "MM:SS"
   const formattedTimeLeft = useCallback(() => {
     const minutes = Math.floor(timeLeftSeconds / 60);
     const seconds = timeLeftSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }, [timeLeftSeconds]);
 
   // Démarrer le countdown du lien

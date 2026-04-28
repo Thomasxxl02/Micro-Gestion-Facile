@@ -542,7 +542,7 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
                   onClick={() => setFilterStatus(f)}
                   className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${
                     filterStatus === f
-                      ? "bg-brand-900 text-white dark:bg-white dark:text-brand-900"
+                      ? "btn-primary"
                       : "text-brand-400 hover:text-brand-700 dark:hover:text-brand-200"
                   }`}
                 >
@@ -554,7 +554,7 @@ const BankReconciliationManager: React.FC<BankReconciliationManagerProps> = ({
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 border border-brand-100 dark:border-brand-700 rounded-2xl text-sm font-bold text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800 transition-all"
+              className="btn-secondary text-sm"
               title="Importer un autre fichier"
             >
               <Upload size={14} />

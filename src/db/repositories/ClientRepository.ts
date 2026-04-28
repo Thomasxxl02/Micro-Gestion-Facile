@@ -5,22 +5,23 @@
  * Ref schéma : clients '&id, name, email, archived'
  */
 
-import type { Client } from '../../types';
-import { db } from '../invoiceDB';
+import type { Client } from "../../types";
+import { db } from "../invoiceDB";
 
 export const clientRepository = {
   /** Tous les clients (actifs + archivés) */
   findAll: (): Promise<Client[]> => db.clients.toArray(),
 
   /** Clients non archivés uniquement */
-  findAllActive: (): Promise<Client[]> => db.clients.filter((c) => !c.archived).toArray(),
+  findAllActive: (): Promise<Client[]> =>
+    db.clients.filter((c) => !c.archived).toArray(),
 
   /** Client par identifiant */
   findById: (id: string): Promise<Client | undefined> => db.clients.get(id),
 
   /** Clients correspondant à un email (index email) */
   findByEmail: (email: string): Promise<Client[]> =>
-    db.clients.where('email').equals(email).toArray(),
+    db.clients.where("email").equals(email).toArray(),
 
   /** Persiste (insert ou update) un client */
   save: (client: Client): Promise<string> => db.clients.put(client),

@@ -572,13 +572,13 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-8 py-4 text-brand-600 dark:text-brand-300 font-bold text-xs uppercase tracking-widest hover:bg-brand-50 dark:hover:bg-slate-700 rounded-2xl transition-all"
+                    className="btn-secondary"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="bg-brand-900 text-white px-10 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/20 flex items-center gap-2"
+                    className="btn-primary flex items-center gap-2"
                   >
                     <CheckCircle2 size={18} />
                     Enregistrer

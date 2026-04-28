@@ -253,8 +253,13 @@ export const DataTab: React.FC<DataTabProps> = ({
 
   /** Statut visuel de la synchronisation */
   const syncStatus = React.useMemo(() => {
-    if (isSyncing) return { color: "bg-amber-500 animate-pulse", label: "Synchro..." };
-    if (isFirebaseConnected) return { color: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", label: "Connecté" };
+    if (isSyncing)
+      return { color: "bg-amber-500 animate-pulse", label: "Synchro..." };
+    if (isFirebaseConnected)
+      return {
+        color: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+        label: "Connecté",
+      };
     return { color: "bg-red-400", label: "Non connecté" };
   }, [isSyncing, isFirebaseConnected]);
 
@@ -893,9 +898,7 @@ export const DataTab: React.FC<DataTabProps> = ({
             <span className="flex items-center gap-1.5 text-[10px] text-brand-400 font-bold uppercase">
               <HardDrive size={12} /> Stockage local estimé
             </span>
-            <span
-              className={`text-[10px] font-bold ${storageColor}`}
-            >
+            <span className={`text-[10px] font-bold ${storageColor}`}>
               {estimatedSizeKB < 1024
                 ? `${estimatedSizeKB} Ko`
                 : `${(estimatedSizeKB / 1024).toFixed(1)} Mo`}{" "}
@@ -1140,12 +1143,12 @@ export const DataTab: React.FC<DataTabProps> = ({
             <h3 className="text-sm font-bold text-brand-900 dark:text-white font-display uppercase tracking-widest">
               Synchronisation Cloud
             </h3>
-          <div className="flex items-center gap-2 group">
-            <div className={`w-2 h-2 rounded-full ${syncStatus.color}`} />
-            <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-tighter">
-              {syncStatus.label}
-            </span>
-          </div>
+            <div className="flex items-center gap-2 group">
+              <div className={`w-2 h-2 rounded-full ${syncStatus.color}`} />
+              <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-tighter">
+                {syncStatus.label}
+              </span>
+            </div>
           </div>
         </div>
         {isFirebaseConnected && connectedEmail && (
@@ -1213,8 +1216,8 @@ export const DataTab: React.FC<DataTabProps> = ({
                   détectée(s)
                 </p>
                 <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
-                  Pensez à les archiver pour respecter l'obligation légale
-                  (art. L110-4 C.com.).
+                  Pensez à les archiver pour respecter l'obligation légale (art.
+                  L110-4 C.com.).
                 </p>
               </div>
               <button
@@ -1229,7 +1232,7 @@ export const DataTab: React.FC<DataTabProps> = ({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <RenderArchiveAssistant 
+            <RenderArchiveAssistant
               archiveConfirm={archiveConfirm}
               setArchiveConfirm={setArchiveConfirm}
               prepareArchive={prepareArchive}
@@ -1249,7 +1252,7 @@ export const DataTab: React.FC<DataTabProps> = ({
           </div>
 
           <div className="pt-4 mt-2 space-y-3">
-            <RenderMergeAssistant 
+            <RenderMergeAssistant
               mergeConfirm={mergeConfirm}
               setMergeConfirm={setMergeConfirm}
               prepareMerge={prepareMerge}

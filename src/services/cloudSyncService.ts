@@ -3,9 +3,9 @@
  * Service pour la synchronisation des données vers Google Drive et Dropbox
  */
 
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
-export type CloudProvider = 'google_drive' | 'dropbox' | 'onedrive';
+export type CloudProvider = "google_drive" | "dropbox" | "onedrive";
 
 /**
  * Interface pour les jetons OAuth
@@ -17,34 +17,38 @@ export interface OAuthToken {
   expiresAt: number;
 }
 
-const STORAGE_KEY_PREFIX = 'mgf_oauth_';
+const STORAGE_KEY_PREFIX = "mgf_oauth_";
 
 /**
  * Lance le flux OAuth pour le fournisseur spécifié
  */
-export const initiateOAuthFlow = async (provider: CloudProvider): Promise<void> => {
+export const initiateOAuthFlow = async (
+  provider: CloudProvider,
+): Promise<void> => {
   // En production, ces URLs viendraient de variables d'environnement
   const config = {
     google_drive: {
-      authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-      clientId: 'YOUR_GOOGLE_CLIENT_ID',
-      scope: 'https://www.googleapis.com/auth/drive.file',
+      authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+      clientId: "YOUR_GOOGLE_CLIENT_ID",
+      scope: "https://www.googleapis.com/auth/drive.file",
     },
     dropbox: {
-      authUrl: 'https://www.dropbox.com/oauth2/authorize',
-      clientId: 'YOUR_DROPBOX_CLIENT_ID',
-      scope: 'files.metadata.write files.content.write',
+      authUrl: "https://www.dropbox.com/oauth2/authorize",
+      clientId: "YOUR_DROPBOX_CLIENT_ID",
+      scope: "files.metadata.write files.content.write",
     },
     onedrive: {
-      authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-      clientId: 'YOUR_ONEDRIVE_CLIENT_ID',
-      scope: 'files.readwrite offline_access',
+      authUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+      clientId: "YOUR_ONEDRIVE_CLIENT_ID",
+      scope: "files.readwrite offline_access",
     },
   };
 
   const providerConfig = config[provider];
   const redirectUri = `${window.location.origin}/oauth-callback`;
-  const state = window.window.btoa(JSON.stringify({ provider, timestamp: Date.now() }));
+  const state = window.window.btoa(
+    JSON.stringify({ provider, timestamp: Date.now() }),
+  );
 
   const url =
     `${providerConfig.authUrl}?` +
@@ -62,8 +66,8 @@ export const initiateOAuthFlow = async (provider: CloudProvider): Promise<void> 
 
   window.open(
     url,
-    `Connecter ${provider === 'google_drive' ? 'Google Drive' : 'Dropbox'}`,
-    `width=${width},height=${height},left=${left},top=${top}`
+    `Connecter ${provider === "google_drive" ? "Google Drive" : "Dropbox"}`,
+    `width=${width},height=${height},left=${left},top=${top}`,
   );
 };
 
@@ -71,7 +75,10 @@ export const initiateOAuthFlow = async (provider: CloudProvider): Promise<void> 
  * Sauvegarde un jeton OAuth en local
  */
 export const saveOAuthToken = (token: OAuthToken): void => {
-  localStorage.setItem(`${STORAGE_KEY_PREFIX}${token.provider}`, JSON.stringify(token));
+  localStorage.setItem(
+    `${STORAGE_KEY_PREFIX}${token.provider}`,
+    JSON.stringify(token),
+  );
 };
 
 /**
@@ -98,7 +105,9 @@ export const getOAuthToken = (provider: CloudProvider): OAuthToken | null => {
  */
 export const logoutFromCloud = (provider: CloudProvider): void => {
   localStorage.removeItem(`${STORAGE_KEY_PREFIX}${provider}`);
-  toast.info(`Déconnecté de ${provider === 'google_drive' ? 'Google Drive' : 'Dropbox'}`);
+  toast.info(
+    `Déconnecté de ${provider === "google_drive" ? "Google Drive" : "Dropbox"}`,
+  );
 };
 
 /**
@@ -108,7 +117,7 @@ export const uploadToCloud = async (
   provider: CloudProvider,
   filename: string,
   content: string,
-  contentType: string = 'application/json'
+  contentType: string = "application/json",
 ): Promise<boolean> => {
   const token = getOAuthToken(provider);
   if (!token) {
@@ -117,8 +126,13 @@ export const uploadToCloud = async (
   }
 
   try {
-    if (provider === 'google_drive') {
-      return await uploadToGoogleDrive(token.accessToken, filename, content, contentType);
+    if (provider === "google_drive") {
+      return await uploadToGoogleDrive(
+        token.accessToken,
+        filename,
+        content,
+        contentType,
+      );
     } else {
       return await uploadToDropbox(token.accessToken, filename, content);
     }
@@ -135,7 +149,7 @@ async function uploadToGoogleDrive(
   token: string,
   filename: string,
   content: string,
-  contentType: string
+  contentType: string,
 ): Promise<boolean> {
   const metadata = {
     name: filename,
@@ -143,18 +157,21 @@ async function uploadToGoogleDrive(
   };
 
   const form = new FormData();
-  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-  form.append('file', new Blob([content], { type: contentType }));
+  form.append(
+    "metadata",
+    new Blob([JSON.stringify(metadata)], { type: "application/json" }),
+  );
+  form.append("file", new Blob([content], { type: contentType }));
 
   const response = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
     {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: form,
-    }
+    },
   );
 
   return response.ok;
@@ -163,21 +180,28 @@ async function uploadToGoogleDrive(
 /**
  * Implementation spécifique Dropbox
  */
-async function uploadToDropbox(token: string, filename: string, content: string): Promise<boolean> {
-  const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Dropbox-API-Arg': JSON.stringify({
-        path: `/${filename}`,
-        mode: 'overwrite',
-        autorename: true,
-        mute: false,
-      }),
-      'Content-Type': 'application/octet-stream',
+async function uploadToDropbox(
+  token: string,
+  filename: string,
+  content: string,
+): Promise<boolean> {
+  const response = await fetch(
+    "https://content.dropboxapi.com/2/files/upload",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Dropbox-API-Arg": JSON.stringify({
+          path: `/${filename}`,
+          mode: "overwrite",
+          autorename: true,
+          mute: false,
+        }),
+        "Content-Type": "application/octet-stream",
+      },
+      body: content,
     },
-    body: content,
-  });
+  );
 
   return response.ok;
 }

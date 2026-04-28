@@ -361,13 +361,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           <div className="bg-white dark:bg-brand-900 p-1.5 rounded-2xl shadow-sm border border-brand-200 dark:border-brand-800 flex gap-1">
             <button
               onClick={() => setShowArchived(false)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${!showArchived ? "btn-primary" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
             >
               Actifs
             </button>
             <button
               onClick={() => setShowArchived(true)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "bg-brand-900 dark:bg-white text-white dark:text-brand-900 shadow-lg" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "btn-primary" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
             >
               Archivés
             </button>
@@ -452,10 +452,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({
             >
               Annuler
             </button>
-            <button
-              onClick={handleSubmit}
-              className="px-6 py-2.5 bg-brand-900 text-white rounded-2xl hover:bg-brand-800 font-medium shadow-lg shadow-brand-200 transition-all hover:scale-[1.02]"
-            >
+            <button onClick={handleSubmit} className="btn-primary">
               {editingId ? "Mettre à jour" : "Enregistrer"}
             </button>
           </div>

@@ -1,13 +1,13 @@
 import React from "react";
-import { 
-  CircleAlert as AlertCircle, 
-  Archive, 
-  RotateCcw, 
-  Trash2, 
+import {
+  CircleAlert as AlertCircle,
+  Archive,
+  RotateCcw,
+  Trash2,
   ExternalLink,
   Phone,
   Mail,
-  Locate
+  Locate,
 } from "lucide-react";
 import type { Supplier } from "../../types";
 
@@ -102,7 +102,11 @@ export const SupplierList: React.FC<SupplierListProps> = ({
                 title={supplier.archived ? "Restaurer" : "Archiver"}
                 aria-label={supplier.archived ? "Restaurer" : "Archiver"}
               >
-                {supplier.archived ? <RotateCcw size={16} /> : <Archive size={16} />}
+                {supplier.archived ? (
+                  <RotateCcw size={16} />
+                ) : (
+                  <Archive size={16} />
+                )}
               </button>
             </div>
           </div>

@@ -5,11 +5,11 @@
 
 import Decimal from "decimal.js";
 import type { ActivityType, UserProfile } from "../types";
-import { 
-  ACRE_RATES, 
-  TAX_PFL_RATES, 
-  getRatesForYear, 
-  getThresholdsForYear 
+import {
+  ACRE_RATES,
+  TAX_PFL_RATES,
+  getRatesForYear,
+  getThresholdsForYear,
 } from "./complianceConstants";
 
 export interface SocialContributions {

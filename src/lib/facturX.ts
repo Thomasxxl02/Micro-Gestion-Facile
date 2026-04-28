@@ -288,7 +288,6 @@ export const generatePDFWithFacturX = async (
   invoice: Invoice,
   client: Client,
   userProfile: UserProfile,
-   
 ) => {
   // Chargement différé : jspdf (~500 kB) n'est importé qu'à l'appel effectif
   const { jsPDF } = await import("jspdf");

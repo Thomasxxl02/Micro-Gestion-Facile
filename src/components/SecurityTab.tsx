@@ -200,7 +200,6 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
   userProfile,
   setUserProfile,
   onSaveProfile,
-   
 }) => {
   // ─── STATES ───
   const [activeSecurityTab, setActiveSecurityTab] =

@@ -67,7 +67,7 @@ describe("fiscalCalculations", () => {
       const thresholds2025 = getThresholds("SERVICE_BNC", date2025);
       const thresholds2026 = getThresholds("SERVICE_BNC", date2026);
 
-      // Dans mon implémentation actuelle ils sont identiques, 
+      // Dans mon implémentation actuelle ils sont identiques,
       // mais on vérifie que la date est bien prise en compte
       expect(thresholds2025.micro).toBe(77700);
       expect(thresholds2026.micro).toBe(77700);
@@ -81,12 +81,20 @@ describe("fiscalCalculations", () => {
       };
 
       // En décembre 2025 (6 mois après), ACRE est actif
-      const result2025 = calculateSocialContributions(1000, profileAcre, new Date("2025-12-01"));
+      const result2025 = calculateSocialContributions(
+        1000,
+        profileAcre,
+        new Date("2025-12-01"),
+      );
       expect(result2025.isAcreApplied).toBe(true);
       expect(result2025.rate).toBe(12.1);
 
       // En juillet 2026 (>12 mois après), ACRE n'est plus actif
-      const result2026 = calculateSocialContributions(1000, profileAcre, new Date("2026-07-01"));
+      const result2026 = calculateSocialContributions(
+        1000,
+        profileAcre,
+        new Date("2026-07-01"),
+      );
       expect(result2026.isAcreApplied).toBe(false);
       expect(result2026.rate).toBe(23.2); // Taux 2026
     });
@@ -96,10 +104,15 @@ describe("fiscalCalculations", () => {
     it("calcule correctement les cotisations mixtes", () => {
       const saleRev = 1000; // Taux 12.3% -> 123
       const serviceRev = 1000; // Taux 23.2% (2026) -> 232
-      
+
       // On force 2026 pour le test
-      const result = calculateMixedActivityContributions(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
-      
+      const result = calculateMixedActivityContributions(
+        saleRev,
+        serviceRev,
+        mockProfile,
+        new Date("2026-01-01"),
+      );
+
       expect(result.sale.amount).toBe(123);
       expect(result.service.amount).toBe(232);
       expect(result.totalAmount).toBe(355);
@@ -108,9 +121,14 @@ describe("fiscalCalculations", () => {
     it("détecte le dépassement de seuil spécifique au service en activité mixte", () => {
       const saleRev = 10000;
       const serviceRev = 80000; // Dépasse le seuil service (77700) mais pas le global (188700)
-      
-      const status = calculateMixedThresholdStatus(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
-      
+
+      const status = calculateMixedThresholdStatus(
+        saleRev,
+        serviceRev,
+        mockProfile,
+        new Date("2026-01-01"),
+      );
+
       expect(status.isMicroExceeded).toBe(true);
       expect(status.service.current).toBeGreaterThan(status.service.limit);
       expect(status.global.current).toBeLessThan(status.global.limit);
@@ -118,11 +136,16 @@ describe("fiscalCalculations", () => {
 
     it("détecte le dépassement de seuil global en activité mixte", () => {
       const saleRev = 150000;
-      const serviceRev = 50000; 
+      const serviceRev = 50000;
       // Global = 200000 > 188700
-      
-      const status = calculateMixedThresholdStatus(saleRev, serviceRev, mockProfile, new Date("2026-01-01"));
-      
+
+      const status = calculateMixedThresholdStatus(
+        saleRev,
+        serviceRev,
+        mockProfile,
+        new Date("2026-01-01"),
+      );
+
       expect(status.isMicroExceeded).toBe(true);
       expect(status.global.current).toBeGreaterThan(status.global.limit);
     });

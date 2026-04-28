@@ -12,7 +12,17 @@
  *   └── SecurityTab.tsx    (Sécurité — existant ✓)
  */
 
+import {
+  Building2,
+  CreditCard,
+  Database,
+  Fingerprint,
+  Palette,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 import { parseImportJSON, validateImportData } from "../lib/exportUtils";
 import { useAppStore } from "../store/appStore";
@@ -76,7 +86,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   onSaveProfile,
   allData,
   setAllData,
-   
 }) => {
   const [activeTab, setActiveTab] = useState<
     "profile" | "billing" | "data" | "preferences" | "security"
@@ -381,34 +390,52 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto animate-fade-in pb-12">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-900 dark:text-white font-display tracking-tight">
-            Paramètres
-          </h1>
-          <p className="text-brand-500 dark:text-brand-400 mt-1">
-            Gérez votre profil, votre image de marque et vos données.
+    <div className="max-w-7xl mx-auto pb-12">
+      {/* HEADER - Style 2026 Premium */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4 mb-12">
+        <div className="space-y-1">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 text-accent-600 dark:text-accent-400 font-bold text-[11px] tracking-[0.2em] uppercase"
+          >
+            <Settings size={14} className="animate-spin-slow" />
+            <span>Configuration</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-5xl font-black text-brand-950 dark:text-white tracking-tighter"
+          >
+            Ajustez votre{" "}
+            <span className="text-brand-600 dark:text-brand-400 italic">
+              Expérience
+            </span>
+          </motion.h1>
+
+          <p className="text-brand-500/70 dark:text-brand-400/70 font-medium max-w-xl text-lg mt-2">
+            Personnalisez votre interface, vos documents et votre sécurité.
           </p>
         </div>
 
-        {/* TAB BUTTONS */}
+        {/* TAB LIST - Glass Style */}
         <div
           role="tablist"
           aria-label="Paramètres de l'application"
           onKeyDown={handleTabKeyDown}
-          className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1 rounded-2xl border border-brand-100 dark:border-brand-800 overflow-x-auto no-scrollbar"
+          className="flex bg-brand-100/50 dark:bg-brand-900/30 p-1.5 rounded-2xl border border-brand-200/50 dark:border-brand-800/50 backdrop-blur-sm overflow-x-auto no-scrollbar"
         >
           {(
             [
-              { id: "profile", label: "🏢 Profil" },
-              { id: "billing", label: "💳 Facturation" },
-              { id: "preferences", label: "🎨 Style" },
-              { id: "security", label: "🔐 Sécurité" },
-              { id: "data", label: "💾 Données" },
-            ] as { id: typeof activeTab; label: string }[]
-          ).map(({ id: tabId, label }) => {
+              { id: "profile", label: "Profil", icon: Building2 },
+              { id: "billing", label: "Facturation", icon: CreditCard },
+              { id: "preferences", label: "Style", icon: Palette },
+              { id: "security", label: "Sécurité", icon: Fingerprint },
+              { id: "data", label: "Données", icon: Database },
+            ] as { id: typeof activeTab; label: string; icon: any }[]
+          ).map(({ id: tabId, label, icon: Icon }) => {
             const isTabSelected = activeTab === tabId;
             return (
               <button
@@ -419,18 +446,24 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 role="tab"
                 aria-selected={isTabSelected}
                 tabIndex={isTabSelected ? 0 : -1}
-                className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap relative ${
                   isTabSelected
-                    ? "bg-white dark:bg-brand-800 text-brand-900 dark:text-white shadow-sm"
-                    : "bg-transparent text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
+                    ? "bg-white dark:bg-brand-800 text-brand-950 dark:text-white shadow-sm"
+                    : "text-brand-500/70 hover:text-brand-900 dark:hover:text-brand-100"
                 }`}
               >
+                <Icon
+                  size={14}
+                  className={
+                    isTabSelected ? "text-brand-600 dark:text-brand-400" : ""
+                  }
+                />
                 {label}
               </button>
             );
           })}
         </div>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
         {/* MAIN CONTENT */}

@@ -241,9 +241,7 @@ const MixedActivitySuggestionBanner: React.FC<
               limit={ventilation.globalLimit}
               percent={ventilation.globalUsagePercent}
               isNear={ventilation.isGlobalNearLimit}
-              isExceeded={
-                ventilation.totalRevenue > ventilation.globalLimit
-              }
+              isExceeded={ventilation.totalRevenue > ventilation.globalLimit}
             />
             {ventilation.serviceRevenue > 0 && (
               <UsageBar

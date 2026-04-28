@@ -1,5 +1,11 @@
 import React from "react";
-import { Calendar, TrendingDown, Plus, Trash2, FileSpreadsheet } from "lucide-react";
+import {
+  Calendar,
+  TrendingDown,
+  Plus,
+  Trash2,
+  FileSpreadsheet,
+} from "lucide-react";
 import { type Expense, type Supplier } from "../../types";
 import { formatCurrency } from "../../lib/formatters";
 
@@ -138,7 +144,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     Aucune dépense trouvée
                   </h4>
                   <p className="text-brand-400 text-sm max-w-xs mx-auto mt-2">
-                    Ajustez vos filtres ou ajoutez une nouvelle dépense pour alimenter votre journal.
+                    Ajustez vos filtres ou ajoutez une nouvelle dépense pour
+                    alimenter votre journal.
                   </p>
                 </td>
               </tr>

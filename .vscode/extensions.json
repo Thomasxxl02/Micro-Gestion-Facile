@@ -1,5 +1,3 @@
 {
-    "recommendations": [
-        "darbotlabs.darbot-browser-mcp"
-    ]
+  "recommendations": ["darbotlabs.darbot-browser-mcp"]
 }

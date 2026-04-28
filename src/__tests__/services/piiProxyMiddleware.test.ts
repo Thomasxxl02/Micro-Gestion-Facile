@@ -69,13 +69,15 @@ describe("PIIProxyMiddleware", () => {
 
   describe("Pattern Detection", () => {
     it("should detect and mask email addresses", () => {
-      const result = PIIProxyMiddleware.maskSensitiveData("Contact john@example.fr");
+      const result = PIIProxyMiddleware.maskSensitiveData(
+        "Contact john@example.fr",
+      );
       expect(result).toContain(PII_MASKS.email);
     });
 
     it("should detect and mask IBAN codes", () => {
       const result = PIIProxyMiddleware.maskSensitiveData(
-        "FR1420041010050500013M02606"
+        "FR1420041010050500013M02606",
       );
       expect(result).toContain(PII_MASKS.iban);
     });
@@ -98,9 +100,9 @@ describe("PIIProxyMiddleware", () => {
 
   describe("Sensitivity Detection", () => {
     it("should detect sensitive data presence", () => {
-      expect(PIIProxyMiddleware.hasSensitiveData("Email: alice@example.com")).toBe(
-        true
-      );
+      expect(
+        PIIProxyMiddleware.hasSensitiveData("Email: alice@example.com"),
+      ).toBe(true);
     });
 
     it("should return false for non-sensitive data", () => {
@@ -141,14 +143,14 @@ describe("PIIProxyMiddleware", () => {
       PIIProxyMiddleware.maskSensitiveData(
         "Contact alice@example.com",
         "test_context",
-        "general"
+        "general",
       );
       expect(PIIAuditLogger.logDetection).toHaveBeenCalledWith(
         "email",
         "alice@example.com",
         "[EMAIL_CACHÉ]",
         "test_context",
-        "general"
+        "general",
       );
     });
 
@@ -156,14 +158,14 @@ describe("PIIProxyMiddleware", () => {
       PIIProxyMiddleware.maskSensitiveData(
         "Transfer to FR1420041010050500013M02606",
         "payment_context",
-        "financial"
+        "financial",
       );
       expect(PIIAuditLogger.logDetection).toHaveBeenCalledWith(
         "iban",
         expect.stringContaining("FR1420041010050500013M"),
         "[IBAN_CACHÉ]",
         "payment_context",
-        "financial"
+        "financial",
       );
     });
 
@@ -178,7 +180,7 @@ describe("PIIProxyMiddleware", () => {
         expect.any(String),
         "[EMAIL_CACHÉ]",
         "general_query",
-        "general"
+        "general",
       );
     });
   });
@@ -232,7 +234,7 @@ describe("PIIProxyMiddleware", () => {
   describe("Security & RGPD Compliance", () => {
     it("should never leak SIRET to LLM", () => {
       const result = PIIProxyMiddleware.maskSensitiveData(
-        "SIRET 12345678901234"
+        "SIRET 12345678901234",
       );
       expect(result).not.toContain("12345678901234");
       expect(result).toContain(PII_MASKS.siret);
@@ -240,7 +242,7 @@ describe("PIIProxyMiddleware", () => {
 
     it("should never leak bank details", () => {
       const result = PIIProxyMiddleware.maskSensitiveData(
-        "IBAN FR1420041010050500013M02606"
+        "IBAN FR1420041010050500013M02606",
       );
       expect(result).not.toContain("FR1420041010050500013M02606");
       expect(result).toContain(PII_MASKS.iban);

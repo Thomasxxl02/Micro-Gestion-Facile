@@ -1,12 +1,15 @@
-import { 
-  CircleAlert as AlertCircle, 
+import {
+  CircleAlert as AlertCircle,
   CircleCheck as CheckCircle2,
-  type LucideIcon 
+  type LucideIcon,
 } from "lucide-react";
 import React from "react";
 import { type ValidationResult } from "../lib/zod-schemas";
 
-export const getFieldBorderClass = (hasErr: boolean, hasSuc: boolean): string => {
+export const getFieldBorderClass = (
+  hasErr: boolean,
+  hasSuc: boolean,
+): string => {
   if (hasErr) {
     return "border-red-500 focus:ring-red-500/10 focus:border-red-600";
   }
@@ -114,7 +117,10 @@ interface ErrorIconProps {
   hasError: boolean;
 }
 
-export const ErrorIcon: React.FC<ErrorIconProps> = ({ showValidationIcon, hasError }) => {
+export const ErrorIcon: React.FC<ErrorIconProps> = ({
+  showValidationIcon,
+  hasError,
+}) => {
   if (!showValidationIcon || !hasError) return null;
   return (
     <AlertCircle

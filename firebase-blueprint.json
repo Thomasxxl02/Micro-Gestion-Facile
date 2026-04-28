@@ -14,7 +14,10 @@
         "notes": { "type": "string" },
         "archived": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "uid": { "type": "string", "description": "ID de l'utilisateur propriétaire" }
+        "uid": {
+          "type": "string",
+          "description": "ID de l'utilisateur propriétaire"
+        }
       },
       "required": ["id", "name", "email", "uid"]
     },
@@ -78,7 +81,10 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "type": { "type": "string", "enum": ["invoice", "quote", "order", "credit_note"] },
+        "type": {
+          "type": "string",
+          "enum": ["invoice", "quote", "order", "credit_note"]
+        },
         "number": { "type": "string" },
         "date": { "type": "string", "format": "date" },
         "dueDate": { "type": "string", "format": "date" },
@@ -87,7 +93,16 @@
         "total": { "type": "number" },
         "uid": { "type": "string" }
       },
-      "required": ["id", "type", "number", "date", "clientId", "status", "total", "uid"]
+      "required": [
+        "id",
+        "type",
+        "number",
+        "date",
+        "clientId",
+        "status",
+        "total",
+        "uid"
+      ]
     },
     "Email": {
       "title": "Email",
@@ -163,7 +178,10 @@
         "creditNotePrefix": { "type": "string" },
         "defaultVatRate": { "type": "number" },
         "logoColor": { "type": "string" },
-        "activityType": { "type": "string", "enum": ["SERVICE_BNC", "SERVICE_BIC", "SALE", "LIBERAL"] },
+        "activityType": {
+          "type": "string",
+          "enum": ["SERVICE_BNC", "SERVICE_BIC", "SALE", "LIBERAL"]
+        },
         "isAcreBeneficiary": { "type": "boolean" },
         "vatThresholdAlert": { "type": "boolean" },
         "revenueThresholdAlert": { "type": "boolean" },
@@ -173,14 +191,41 @@
     }
   },
   "firestore": {
-    "/clients/{clientId}": { "schema": "Client", "description": "Clients de l'utilisateur" },
-    "/suppliers/{supplierId}": { "schema": "Supplier", "description": "Fournisseurs de l'utilisateur" },
-    "/products/{productId}": { "schema": "Product", "description": "Catalogue produits/services" },
-    "/expenses/{expenseId}": { "schema": "Expense", "description": "Dépenses professionnelles" },
-    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Factures et devis" },
-    "/emails/{emailId}": { "schema": "Email", "description": "Historique des emails" },
-    "/emailTemplates/{templateId}": { "schema": "EmailTemplate", "description": "Modèles d'emails" },
-    "/calendarEvents/{eventId}": { "schema": "CalendarEvent", "description": "Événements agenda" },
-    "/profiles/{userId}": { "schema": "UserProfile", "description": "Profil utilisateur" }
+    "/clients/{clientId}": {
+      "schema": "Client",
+      "description": "Clients de l'utilisateur"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": "Supplier",
+      "description": "Fournisseurs de l'utilisateur"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Catalogue produits/services"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Dépenses professionnelles"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Factures et devis"
+    },
+    "/emails/{emailId}": {
+      "schema": "Email",
+      "description": "Historique des emails"
+    },
+    "/emailTemplates/{templateId}": {
+      "schema": "EmailTemplate",
+      "description": "Modèles d'emails"
+    },
+    "/calendarEvents/{eventId}": {
+      "schema": "CalendarEvent",
+      "description": "Événements agenda"
+    },
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Profil utilisateur"
+    }
   }
 }

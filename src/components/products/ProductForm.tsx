@@ -1,12 +1,12 @@
 import React from "react";
-import { 
-  Package, 
-  Briefcase, 
-  Tag, 
-  Hash, 
-  Ruler, 
-  Zap, 
-  AlertCircle 
+import {
+  Package,
+  Briefcase,
+  Tag,
+  Hash,
+  Ruler,
+  Zap,
+  AlertCircle,
 } from "lucide-react";
 import type { Product } from "../../types";
 
@@ -21,7 +21,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   validationErrors,
   onFormChange,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value } = e.target;
     onFormChange({ [name]: value });
   };
@@ -56,7 +60,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
       <div className="space-y-6">
         <div>
-          <label htmlFor="product-name" className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
+          <label
+            htmlFor="product-name"
+            className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2"
+          >
             Nom de l&apos;élément <span className="text-red-500">*</span>
           </label>
           <input
@@ -66,7 +73,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={formData.name || ""}
             onChange={handleChange}
             className={`w-full px-4 py-3 rounded-xl border ${
-              validationErrors.name ? "border-red-500 bg-red-50" : "border-brand-100"
+              validationErrors.name
+                ? "border-red-500 bg-red-50"
+                : "border-brand-100"
             } focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none`}
             placeholder="Nom"
           />
@@ -78,7 +87,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
 
         <div>
-          <label htmlFor="product-description" className="block text-sm font-bold text-brand-900 mb-2">
+          <label
+            htmlFor="product-description"
+            className="block text-sm font-bold text-brand-900 mb-2"
+          >
             Description
           </label>
           <textarea
@@ -94,7 +106,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="product-price" className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
+            <label
+              htmlFor="product-price"
+              className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2"
+            >
               <Tag size={16} className="text-brand-400" /> Prix HT (€)
             </label>
             <input
@@ -105,7 +120,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               onChange={handleChange}
               step="0.01"
               className={`w-full px-4 py-3 rounded-xl border ${
-                validationErrors.price ? "border-red-500 bg-red-50" : "border-brand-100"
+                validationErrors.price
+                  ? "border-red-500 bg-red-50"
+                  : "border-brand-100"
               } focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none`}
               placeholder="Prix"
             />
@@ -116,7 +133,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             )}
           </div>
           <div>
-            <label htmlFor="product-unit" className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
+            <label
+              htmlFor="product-unit"
+              className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2"
+            >
               <Ruler size={16} className="text-brand-400" /> Unité
             </label>
             <input
@@ -133,7 +153,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="product-sku" className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
+            <label
+              htmlFor="product-sku"
+              className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2"
+            >
               <Hash size={16} className="text-brand-400" /> Référence (SKU)
             </label>
             <input
@@ -147,7 +170,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
           <div>
-            <label htmlFor="product-category" className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
+            <label
+              htmlFor="product-category"
+              className="block text-sm font-bold text-brand-900 mb-2 flex items-center gap-2"
+            >
               <Tag size={16} className="text-brand-400" /> Catégorie
             </label>
             <input
@@ -182,7 +208,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   value={formData.stock}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 rounded-lg border ${
-                    validationErrors.stock ? "border-red-500 bg-red-50" : "border-white"
+                    validationErrors.stock
+                      ? "border-red-500 bg-red-50"
+                      : "border-white"
                   } focus:ring-2 focus:ring-brand-500 outline-none`}
                 />
               </div>
@@ -196,7 +224,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   value={formData.minStock}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 rounded-lg border ${
-                    validationErrors.minStock ? "border-red-500 bg-red-50" : "border-white"
+                    validationErrors.minStock
+                      ? "border-red-500 bg-red-50"
+                      : "border-white"
                   } focus:ring-2 focus:ring-brand-500 outline-none`}
                 />
               </div>

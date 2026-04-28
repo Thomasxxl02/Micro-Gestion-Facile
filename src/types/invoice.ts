@@ -1,22 +1,27 @@
-export type DocumentType = 'invoice' | 'quote' | 'order' | 'credit_note' | 'deposit_invoice';
+export type DocumentType =
+  | "invoice"
+  | "quote"
+  | "order"
+  | "credit_note"
+  | "deposit_invoice";
 
 export enum InvoiceStatus {
-  DRAFT = 'Brouillon',
-  SENT = 'Envoyée',
-  PAID = 'Payée',
-  PARTIALLY_PAID = 'Partiellement payée',
-  CANCELLED = 'Annulée',
+  DRAFT = "Brouillon",
+  SENT = "Envoyée",
+  PAID = "Payée",
+  PARTIALLY_PAID = "Partiellement payée",
+  CANCELLED = "Annulée",
   // Status spécifiques aux devis
-  ACCEPTED = 'Accepté',
-  REJECTED = 'Refusé',
+  ACCEPTED = "Accepté",
+  REJECTED = "Refusé",
   // Status spécifiques à la facturation électronique 2026
-  DEPOSITED = 'Déposée',
-  REJECTED_BY_PLATFORM = 'Rejetée par plateforme',
-  ACCEPTED_BY_CLIENT = 'Acceptée par client',
-  PENDING_PAYMENT = 'En attente de paiement',
+  DEPOSITED = "Déposée",
+  REJECTED_BY_PLATFORM = "Rejetée par plateforme",
+  ACCEPTED_BY_CLIENT = "Acceptée par client",
+  PENDING_PAYMENT = "En attente de paiement",
 }
 
-export type EInvoiceFormat = 'Factur-X' | 'UBL' | 'CII';
+export type EInvoiceFormat = "Factur-X" | "UBL" | "CII";
 
 export interface InvoiceItem {
   id: string;
@@ -52,7 +57,7 @@ export interface Invoice {
   eInvoiceFormat?: EInvoiceFormat;
   eInvoiceStatus?: string;
   transmissionDate?: string;
-  operationCategory?: 'BIENS' | 'SERVICES' | 'MIXTE';
+  operationCategory?: "BIENS" | "SERVICES" | "MIXTE";
   deliveryAddress?: string;
   isTest?: boolean;
   subtotal?: number;

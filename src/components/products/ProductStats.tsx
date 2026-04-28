@@ -1,5 +1,11 @@
 import React from "react";
-import { Package, Briefcase, AlertCircle, Zap, CircleArrowRight as ArrowRightCircle } from "lucide-react";
+import {
+  Package,
+  Briefcase,
+  AlertCircle,
+  Zap,
+  CircleArrowRight as ArrowRightCircle,
+} from "lucide-react";
 
 interface ProductStatsProps {
   total: number;
@@ -78,9 +84,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({
           </span>
         </div>
         <div>
-          <h3 className="text-lg font-bold font-display">
-            Optimiser le stock
-          </h3>
+          <h3 className="text-lg font-bold font-display">Optimiser le stock</h3>
           <button className="mt-2 text-xs font-bold flex items-center gap-2 hover:underline">
             Générer une commande <ArrowRightCircle size={14} />
           </button>

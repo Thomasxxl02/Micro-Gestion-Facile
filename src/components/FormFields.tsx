@@ -73,10 +73,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={`space-y-1.5 ${className}`}>
       <div className="flex items-center gap-2">
-        <label
-          htmlFor={fieldId}
-          className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
-        >
+        <label htmlFor={fieldId} className="label-modern text-caption">
           {label}
           {required && (
             <span className="text-red-500 ml-1" aria-hidden="true">
@@ -176,10 +173,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
 
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label
-        htmlFor={fieldId}
-        className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
-      >
+      <label htmlFor={fieldId} className="label-modern text-caption">
         {label}
         {required && (
           <span className="text-red-500 ml-1" aria-label="Champ requis">
@@ -209,18 +203,12 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       </div>
 
       {description && (
-        <p
-          id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
-        >
+        <p id={`${fieldId}-description`} className="form-helper">
           {description}
         </p>
       )}
       {error && (
-        <p
-          id={`${fieldId}-error`}
-          className="text-[10px] text-red-600 dark:text-red-400 font-medium"
-        >
+        <p id={`${fieldId}-error`} className="form-error">
           ⚠️ {error}
         </p>
       )}
@@ -269,10 +257,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label
-        htmlFor={fieldId}
-        className="block text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest"
-      >
+      <label htmlFor={fieldId} className="label-modern text-caption">
         {label}
         {required && (
           <span className="text-red-500 ml-1" aria-label="Champ requis">
@@ -298,18 +283,12 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       </select>
 
       {description && (
-        <p
-          id={`${fieldId}-description`}
-          className="text-[10px] text-brand-400 dark:text-brand-500 mt-1 font-medium italic"
-        >
+        <p id={`${fieldId}-description`} className="form-helper">
           {description}
         </p>
       )}
       {error && (
-        <p
-          id={`${fieldId}-error`}
-          className="text-[10px] text-red-600 dark:text-red-400 font-medium"
-        >
+        <p id={`${fieldId}-error`} className="form-error">
           ⚠️ {error}
         </p>
       )}
@@ -419,10 +398,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   return (
     <div className={`space-y-3 ${id ? "" : ""}`}>
-      <label
-        htmlFor={pickerId}
-        className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest"
-      >
+      <label htmlFor={pickerId} className="label-modern text-caption">
         {label}
       </label>
 
@@ -478,9 +454,7 @@ export const ColorCirclePicker: React.FC<{
 }> = ({ label, value, onChange, colors }) => {
   return (
     <div className="space-y-3">
-      <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest">
-        {label}
-      </label>
+      <label className="label-modern text-caption">{label}</label>
       <div className="flex flex-wrap gap-2">
         {colors.map((color) => (
           <button
@@ -541,7 +515,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({
       <div className="flex items-center gap-2">
         <label
           htmlFor={id}
-          className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest cursor-pointer"
+          className="label-modern text-caption cursor-pointer"
         >
           Logo d&apos;entreprise
         </label>
@@ -592,7 +566,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-brand-800 transition-all shadow-lg shadow-brand-900/10"
+            className="btn-primary text-xs"
           >
             <Upload size={16} aria-hidden="true" />
             {logoUrl ? "Changer le logo" : "Importer un logo"}

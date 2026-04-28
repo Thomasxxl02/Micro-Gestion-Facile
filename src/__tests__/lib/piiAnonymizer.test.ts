@@ -1,21 +1,24 @@
 /**
  * Tests d'anonymisation des données personnelles — src/lib/piiAnonymizer.ts
- * 
+ *
  * Conformité RGPD : validation que les PII ne quittent pas le navigateur.
  */
 import { describe, expect, it } from "vitest";
-import { 
-  anonymizeForComplianceCheck, 
-  anonymizeInvoicesForFinancial 
+import {
+  anonymizeForComplianceCheck,
+  anonymizeInvoicesForFinancial,
 } from "../../lib/piiAnonymizer";
 import type { Client, Invoice, UserProfile } from "../../types";
 
-const makeUserProfile = (overrides: Partial<UserProfile> = {}): UserProfile => ({
+const makeUserProfile = (
+  overrides: Partial<UserProfile> = {},
+): UserProfile => ({
   companyName: "Ma Micro-Entreprise",
   professionalTitle: "Développeur Freelance",
   siret: "12345678901234",
   address: "123 Rue de Paris, 75001 Paris",
   email: "contact@entreprise.fr",
+  phone: "0123456789",
   isVatExempt: true,
   ...overrides,
 });
@@ -36,7 +39,13 @@ const makeInvoice = (overrides: Partial<Invoice> = {}): Invoice => ({
   dueDate: "2026-02-01",
   clientId: "cli-123",
   items: [
-    { id: "it-1", description: "Service A", quantity: 1, unitPrice: 100, vatRate: 20 }
+    {
+      id: "it-1",
+      description: "Service A",
+      quantity: 1,
+      unitPrice: 100,
+      vatRate: 20,
+    },
   ],
   total: 120,
   vatAmount: 20,
@@ -53,7 +62,7 @@ describe("piiAnonymizer — Anonymisation RGPD", () => {
   describe("anonymizeForComplianceCheck", () => {
     it("remplace les données réelles par des booléens de présence", () => {
       const result = anonymizeForComplianceCheck(invoice, profile, client);
-      
+
       expect(result.invoice.number).toBe(invoice.number);
       expect(result.invoice.hasSellerSiret).toBe(true);
       expect(result.invoice.hasBuyerSiret).toBe(true);
@@ -72,16 +81,26 @@ describe("piiAnonymizer — Anonymisation RGPD", () => {
       const result = anonymizeForComplianceCheck(invoice, profileEI, client);
       expect(result.invoice.hasEiMention).toBe(true);
 
-      const profileEILower = makeUserProfile({ professionalTitle: "entrepreneur individuel" });
-      const result2 = anonymizeForComplianceCheck(invoice, profileEILower, client);
+      const profileEILower = makeUserProfile({
+        professionalTitle: "entrepreneur individuel",
+      });
+      const result2 = anonymizeForComplianceCheck(
+        invoice,
+        profileEILower,
+        client,
+      );
       expect(result2.invoice.hasEiMention).toBe(true);
     });
 
     it("gère l'absence de données (false pour les indicateurs)", () => {
       const emptyProfile = makeUserProfile({ siret: "", address: "" });
       const emptyClient = makeClient({ siret: "", address: "" });
-      const result = anonymizeForComplianceCheck(invoice, emptyProfile, emptyClient);
-      
+      const result = anonymizeForComplianceCheck(
+        invoice,
+        emptyProfile,
+        emptyClient,
+      );
+
       expect(result.invoice.hasSellerSiret).toBe(false);
       expect(result.invoice.hasSellerAddress).toBe(false);
       expect(result.invoice.hasBuyerSiret).toBe(false);
@@ -91,14 +110,19 @@ describe("piiAnonymizer — Anonymisation RGPD", () => {
 
   describe("anonymizeInvoicesForFinancial", () => {
     it("utilise des pseudonymes de session pour les clients", () => {
-      const result = anonymizeInvoicesForFinancial([invoice, makeInvoice({ id: "inv-2", clientId: "cli-123" })]);
-      
+      const result = anonymizeInvoicesForFinancial([
+        invoice,
+        makeInvoice({ id: "inv-2", clientId: "cli-123" }),
+      ]);
+
       // Même client -> même pseudonyme dans la session
       expect(result[0].pseudoClientId).toBe(result[1].pseudoClientId);
       expect(result[0].pseudoClientId).toMatch(/^Entité_\d+$/);
-      
+
       // Nouveau client -> nouveau pseudonyme
-      const result2 = anonymizeInvoicesForFinancial([makeInvoice({ clientId: "cli-456" })]);
+      const result2 = anonymizeInvoicesForFinancial([
+        makeInvoice({ clientId: "cli-456" }),
+      ]);
       expect(result2[0].pseudoClientId).not.toBe(result[0].pseudoClientId);
     });
 
