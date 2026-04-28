@@ -51,6 +51,30 @@ const AppShell: React.FC = () => {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
 
+      {/* Bouton Hamburger Mobile (lg:hidden) */}
+      {!isMobileMenuOpen && (
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-40 p-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white shadow-lg transition-all active:scale-95"
+          aria-label="Ouvrir le menu"
+          title="Menu (Cmd+M)"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      )}
+
       {/* Overlay mobile avec flou */}
       {isMobileMenuOpen && (
         <div

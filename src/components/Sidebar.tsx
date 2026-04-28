@@ -47,7 +47,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   isDarkMode,
   toggleDarkMode,
 }) => {
-   
   const { isOffline } = useNetworkStatus();
   const { userProfile } = useDataStore();
   const [isCompactMode, setIsCompactMode] = useState(false);
@@ -228,9 +227,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen w-72 glass-strong text-brand-600 dark:text-brand-300 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) flex flex-col border-r border-white/20 dark:border-white/5
+          fixed top-0 left-0 z-30 h-screen w-72 glass-strong text-brand-600 dark:text-brand-300 transition-all duration-700 flex flex-col border-r border-white/20 dark:border-white/5 lg:relative lg:z-auto
           ${isMobileMenuOpen ? "translate-x-0 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.3)]" : "-translate-x-full lg:translate-x-0"}
         `}
+        style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
         aria-label="Menu de navigation"
       >
         {/* Logo Area */}
