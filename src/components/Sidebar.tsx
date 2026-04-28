@@ -132,6 +132,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Paramètres",
       icon: <Settings size={18} />,
       group: "platform",
+      shortcut: "0",
+      description: "Configuration de votre micro-entreprise",
     },
   ];
 
@@ -185,6 +187,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           setView(allItems[itemIndex].id);
           setIsMobileMenuOpen(false);
         }
+      }
+      // Alt+0 pour Paramètres
+      if (e.altKey && e.key === "0") {
+        setView("settings");
+        setIsMobileMenuOpen(false);
       }
       // Cmd/Ctrl+K pour recherche
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -383,6 +390,23 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div className={isCompactMode ? "space-y-0.5" : "space-y-1.5"}>
                 {groupedMenuItems.outils.map((item) => (
+                  <MenuItemButton
+                    key={item.id}
+                    item={item}
+                    isActive={currentView === item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    isCompact={isCompactMode}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Groupe PLATFORM (Paramètres, etc.) */}
+          {groupedMenuItems.platform.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-brand-100/50 dark:border-brand-800/50">
+              <div className={isCompactMode ? "space-y-0.5" : "space-y-1.5"}>
+                {groupedMenuItems.platform.map((item) => (
                   <MenuItemButton
                     key={item.id}
                     item={item}
