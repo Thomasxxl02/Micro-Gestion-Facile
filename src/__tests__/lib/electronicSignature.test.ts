@@ -73,7 +73,7 @@ describe("electronicSignature", () => {
 
     it("rejette une signature invalide", async () => {
       const invoice = makeInvoice();
-      const isValid = await verifySignature(invoice, "signaturedvalide==", "publicKey");
+      const isValid = await verifySignature(invoice, "signatureInvalide==", "publicKey");
       expect(isValid).toBe(false);
     });
 
