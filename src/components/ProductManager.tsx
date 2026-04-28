@@ -1,28 +1,21 @@
 import {
   CircleAlert as AlertCircle,
-  Archive,
-  CircleArrowRight as ArrowRightCircle,
-  Briefcase,
   Download,
-  Pencil as Edit2,
   File as Filter,
-  Hash,
-  Minus,
   Package,
   Plus,
   RotateCcw,
-  Ruler,
   Search,
   ArrowUpWideNarrow as SortAsc,
-  Tag,
-  Trash2,
   Upload,
   X,
-  Zap,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { validateAmount } from "../lib/zod-schemas";
 import type { Product } from "../types";
+import { ProductStats } from "./products/ProductStats";
+import { ProductList } from "./products/ProductList";
+import { ProductForm } from "./products/ProductForm";
 
 interface ProductManagerProps {
   products: Product[];
@@ -36,7 +29,6 @@ const ProductManager: React.FC<ProductManagerProps> = ({
   products,
   onSave,
   onDelete,
-   
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -414,81 +406,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({
         </div>
       </div>
 
-      {/* Stats Summary Bento */}
-      <div className="bento-grid">
-        <div className="bento-item">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-brand-100 dark:bg-brand-800 rounded-2xl text-brand-600 dark:text-brand-300">
-              <Package size={24} />
-            </div>
-            <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-              Total Catalogue
-            </span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display">
-              {globalStats.total}
-            </h3>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
-              Éléments actifs
-            </p>
-          </div>
-        </div>
-        <div className="bento-item">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-accent-100 dark:bg-accent-900/30 rounded-2xl text-accent-600 dark:text-accent-400">
-              <Briefcase size={24} />
-            </div>
-            <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-              Prestations
-            </span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-accent-600 dark:text-accent-400 font-display">
-              {globalStats.servicesCount}
-            </h3>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
-              Services proposés
-            </p>
-          </div>
-        </div>
-        <div className="bento-item">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600 dark:text-amber-400">
-              <AlertCircle size={24} />
-            </div>
-            <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
-              Stock Bas
-            </span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 font-display">
-              {globalStats.lowStockCount}
-            </h3>
-            <p className="text-xs text-brand-500 dark:text-brand-400 mt-1">
-              Articles à réapprovisionner
-            </p>
-          </div>
-        </div>
-        <div className="bento-item bg-brand-900 dark:bg-white text-white dark:text-brand-900">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-white/10 dark:bg-brand-100 rounded-2xl">
-              <Zap size={24} className="text-white dark:text-brand-900" />
-            </div>
-            <span className="text-[10px] font-bold text-brand-300 dark:text-brand-500 uppercase tracking-widest">
-              Action Rapide
-            </span>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold font-display">
-              Optimiser le stock
-            </h3>
-            <button className="mt-2 text-xs font-bold flex items-center gap-2 hover:underline">
-              Générer une commande <ArrowRightCircle size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
+      <ProductStats
+        total={globalStats.total}
+        servicesCount={globalStats.servicesCount}
+        lowStockCount={globalStats.lowStockCount}
+      />
 
       {/* Side Panel Form */}
       <div
@@ -509,260 +431,17 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           </div>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-            className="flex-1 overflow-y-auto p-8 space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+            className="flex-1 overflow-y-auto"
           >
-            <div className="space-y-6">
-              <div>
-                <label
-                  htmlFor="formData-name"
-                  className="block text-sm font-semibold text-brand-700 mb-1.5"
-                >
-                  Nom de l&apos;élément <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="formData-name"
-                  type="text"
-                  required
-                  className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
-                    validationErrors.name
-                      ? "border-red-500"
-                      : "border-brand-200"
-                  }`}
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
-                  }}
-                  placeholder="Ex: Création site web"
-                />
-                {validationErrors.name && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {validationErrors.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="formData-sku"
-                    className="block text-sm font-semibold text-brand-700 mb-1.5"
-                  >
-                    Référence / SKU
-                  </label>
-                  <div className="relative">
-                    <Hash
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400"
-                      size={16}
-                    />
-                    <input
-                      id="formData-sku"
-                      type="text"
-                      className="w-full pl-10 pr-3 py-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                      value={formData.sku ?? ""}
-                      onChange={(e) => {
-                        setFormData({ ...formData, sku: e.target.value });
-                      }}
-                      placeholder="REF-001"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="formData-category"
-                    className="block text-sm font-semibold text-brand-700 mb-1.5"
-                  >
-                    Catégorie
-                  </label>
-                  <input
-                    id="formData-category"
-                    type="text"
-                    className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all"
-                    value={formData.category ?? ""}
-                    onChange={(e) => {
-                      setFormData({ ...formData, category: e.target.value });
-                    }}
-                    placeholder="Ex: Développement"
-                    list="product-categories"
-                  />
-                  <datalist id="product-categories">
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="formData-type"
-                    className="block text-sm font-semibold text-brand-700 mb-1.5"
-                  >
-                    Type
-                  </label>
-                  <select
-                    id="formData-type"
-                    title="Sélectionner le type d'élément"
-                    className="w-full p-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
-                    value={formData.type}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        type: e.target.value as "service" | "product",
-                      });
-                    }}
-                  >
-                    <option value="service">Prestation</option>
-                    <option value="product">Marchandise</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="formData-unit"
-                    className="block text-sm font-semibold text-brand-700 mb-1.5"
-                  >
-                    Unité
-                  </label>
-                  <div className="relative">
-                    <Ruler
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-400"
-                      size={16}
-                    />
-                    <select
-                      id="formData-unit"
-                      title="Sélectionner l'unité"
-                      className="w-full pl-10 pr-3 py-3 border border-brand-200 rounded-2xl outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-all appearance-none bg-white"
-                      value={formData.unit ?? "unité"}
-                      onChange={(e) => {
-                        setFormData({ ...formData, unit: e.target.value });
-                      }}
-                    >
-                      <option value="unité">Unité</option>
-                      <option value="heure">Heure</option>
-                      <option value="jour">Jour</option>
-                      <option value="km">Kilomètre</option>
-                      <option value="forfait">Forfait</option>
-                      <option value="mois">Mois</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="formData-price"
-                  className="block text-sm font-semibold text-brand-700 mb-1.5"
-                >
-                  Prix HT (EUR)
-                </label>
-                <input
-                  id="formData-price"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  title="Prix HT (hors taxe) en euros"
-                  className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
-                    validationErrors.price
-                      ? "border-red-500"
-                      : "border-brand-200"
-                  }`}
-                  value={formData.price}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      price: Number.parseFloat(e.target.value),
-                    });
-                  }}
-                />
-                {validationErrors.price && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {validationErrors.price}
-                  </p>
-                )}
-              </div>
-
-              {formData.type === "product" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="formData-stock"
-                      className="block text-sm font-semibold text-brand-700 mb-1.5"
-                    >
-                      Stock actuel
-                    </label>
-                    <input
-                      id="formData-stock"
-                      type="number"
-                      placeholder="0"
-                      title="Quantité en stock actuel"
-                      className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
-                        validationErrors.stock
-                          ? "border-red-500"
-                          : "border-brand-200"
-                      }`}
-                      value={formData.stock}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          stock: Number.parseInt(e.target.value) || 0,
-                        });
-                      }}
-                    />
-                    {validationErrors.stock && (
-                      <p className="text-xs text-red-600 mt-1">
-                        {validationErrors.stock}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="formData-minStock"
-                      className="block text-sm font-semibold text-brand-700 mb-1.5"
-                    >
-                      Seuil d&apos;alerte
-                    </label>
-                    <input
-                      id="formData-minStock"
-                      type="number"
-                      placeholder="0"
-                      title="Seuil minimum d'alerte pour le stock"
-                      className={`w-full p-3 bg-brand-50 border rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all ${
-                        validationErrors.minStock
-                          ? "border-red-500"
-                          : "border-brand-200"
-                      }`}
-                      value={formData.minStock}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          minStock: Number.parseInt(e.target.value) || 0,
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label
-                  htmlFor="formData-description"
-                  className="block text-sm font-semibold text-brand-700 mb-1.5"
-                >
-                  Description (pour devis/factures)
-                </label>
-                <textarea
-                  id="formData-description"
-                  rows={4}
-                  className="w-full p-3 bg-brand-50 border border-brand-200 rounded-2xl focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 outline-none transition-all resize-none"
-                  value={formData.description}
-                  onChange={(e) => {
-                    setFormData({ ...formData, description: e.target.value });
-                  }}
-                  placeholder="Description détaillée qui apparaîtra sur les documents..."
-                />
-              </div>
-            </div>
+            <ProductForm
+              formData={formData}
+              validationErrors={validationErrors}
+              onFormChange={(data) => setFormData({ ...formData, ...data })}
+            />
           </form>
 
           <div className="p-6 border-t border-brand-100 bg-brand-50/50 flex justify-end gap-3">
@@ -861,150 +540,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {/* eslint-disable-next-line complexity */}
-          {processedProducts.map((p) => (
-            <div
-              key={p.id}
-              className="card-modern p-8 group relative flex flex-col"
-            >
-              {/* Actions Top Right */}
-              <div className="absolute top-6 right-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
-                <button
-                  onClick={() => openEdit(p)}
-                  aria-label={`Modifier ${p.name}`}
-                  className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-brand-50 dark:hover:bg-brand-800 rounded-xl transition-all"
-                >
-                  <Edit2 size={16} aria-hidden="true" />
-                </button>
-                <button
-                  onClick={(e) => toggleArchive(p.id, e)}
-                  aria-label={
-                    p.archived ? `Restaurer ${p.name}` : `Archiver ${p.name}`
-                  }
-                  className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all"
-                >
-                  {p.archived ? (
-                    <RotateCcw size={16} aria-hidden="true" />
-                  ) : (
-                    <Archive size={16} aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  onClick={(e) => handleDelete(p.id, e)}
-                  aria-label={`Supprimer ${p.name}`}
-                  className="p-2.5 text-brand-400 dark:text-brand-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all"
-                >
-                  <Trash2 size={16} aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="flex items-start justify-between mb-6">
-                <div
-                  className={`
-                            w-16 h-16 rounded-3xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110
-                            ${p.type === "service" ? "bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700" : "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30"}
-                        `}
-                >
-                  {p.type === "service" ? (
-                    <Briefcase size={28} />
-                  ) : (
-                    <Package size={28} />
-                  )}
-                </div>
-                {p.sku && (
-                  <span className="text-[10px] font-mono font-bold text-brand-400 dark:text-brand-500 bg-brand-50 dark:bg-brand-800 px-2.5 py-1 rounded-lg border border-brand-100 dark:border-brand-700">
-                    {p.sku}
-                  </span>
-                )}
-              </div>
-
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span
-                    className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border
-                                ${p.type === "service" ? "bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-300 border-brand-100 dark:border-brand-700" : "bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 border-accent-100 dark:border-accent-900/30"}
-                            `}
-                  >
-                    {p.type === "service" ? "Prestation" : "Marchandise"}
-                  </span>
-                  {p.category && (
-                    <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-800 text-brand-500 dark:text-brand-400 border border-brand-100 dark:border-brand-700 flex items-center gap-1.5">
-                      <Tag size={10} /> {p.category}
-                    </span>
-                  )}
-                </div>
-                <h4 className="font-bold text-brand-900 dark:text-white text-xl leading-tight mb-3 pr-10 font-display">
-                  {p.name}
-                </h4>
-                <p className="text-sm text-brand-500 dark:text-brand-400 line-clamp-2 h-10 leading-relaxed">
-                  {p.description || "Aucune description"}
-                </p>
-              </div>
-
-              <div className="mt-auto pt-6 border-t border-brand-50 dark:border-brand-800 flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-black text-brand-400 dark:text-brand-500 tracking-widest mb-1">
-                    Prix HT
-                  </span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-brand-900 dark:text-white font-display">
-                      {p.price.toFixed(2)} €
-                    </span>
-                    <span className="text-[10px] text-brand-400 dark:text-brand-500 font-bold uppercase tracking-widest">
-                      / {p.unit ?? "unité"}
-                    </span>
-                  </div>
-                </div>
-
-                {p.type === "product" && p.stock !== undefined && (
-                  <div className="text-right">
-                    <span className="text-[9px] uppercase font-black text-brand-400 dark:text-brand-500 tracking-widest block mb-1">
-                      Stock
-                    </span>
-                    <div className="flex items-center gap-2 bg-brand-50 dark:bg-brand-800 p-1.5 rounded-xl border border-brand-100 dark:border-brand-700">
-                      <button
-                        onClick={(e) => updateStock(p.id, -1, e)}
-                        aria-label={`Diminuer le stock de ${p.name}`}
-                        className="p-1 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-white dark:hover:bg-brand-700 rounded-lg transition-all shadow-sm"
-                      >
-                        <Minus size={12} aria-hidden="true" />
-                      </button>
-                      <div
-                        className={`flex items-center gap-1.5 font-black px-2 ${p.stock <= (p.minStock ?? 0) ? "text-red-500 dark:text-red-400" : "text-brand-900 dark:text-white"}`}
-                      >
-                        {p.stock <= (p.minStock ?? 0) && (
-                          <AlertCircle size={12} aria-hidden="true" />
-                        )}
-                        <span className="text-sm">{p.stock}</span>
-                      </div>
-                      <button
-                        onClick={(e) => updateStock(p.id, 1, e)}
-                        aria-label={`Augmenter le stock de ${p.name}`}
-                        className="p-1 text-brand-400 dark:text-brand-500 hover:text-brand-900 dark:hover:text-white hover:bg-white dark:hover:bg-brand-700 rounded-lg transition-all shadow-sm"
-                      >
-                        <Plus size={12} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {processedProducts.length === 0 && (
-            <div className="col-span-full py-32 text-center">
-              <div className="inline-block p-10 rounded-[2.5rem] bg-brand-50 dark:bg-brand-800/50 mb-8 animate-pulse">
-                <Zap size={48} className="text-brand-200 dark:text-brand-700" />
-              </div>
-              <h3 className="text-brand-900 dark:text-white font-bold text-xl font-display mb-2">
-                Catalogue vide
-              </h3>
-              <p className="text-brand-400 dark:text-brand-500 text-sm max-w-xs mx-auto">
-                Essayez une autre recherche ou changez de filtre pour trouver ce
-                que vous cherchez.
-              </p>
-            </div>
-          )}
+          <ProductList
+            products={processedProducts}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            onToggleArchive={toggleArchive}
+            onUpdateStock={updateStock}
+          />
         </div>
       </div>
     </div>

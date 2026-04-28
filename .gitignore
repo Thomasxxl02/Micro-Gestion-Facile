@@ -29,9 +29,9 @@ dist-ssr
 *.sw?
 
 # Test coverage
-coverage/
 lcov-report/
 
 # Fichiers d'analyse ESLint temporaires (ne pas committer)
 lint-*.json
 lint2.json
+coverage/
