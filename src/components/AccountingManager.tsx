@@ -33,6 +33,11 @@ import {
   calculateIncomeTaxPFL,
   calculateSocialContributions,
 } from "../lib/fiscalCalculations";
+import { formatCurrency } from "../lib/formatters";
+import { AddTransactionForm } from "./accounting/AddTransactionForm";
+import { FiscalSummaryCard } from "./accounting/FiscalSummaryCard";
+import { TransactionTable } from "./accounting/TransactionTable";
+import { QuarterlyStats } from "./accounting/QuarterlyStats";
 
 interface AccountingManagerProps {
   expenses: Expense[];
@@ -54,7 +59,6 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   clients = [],
   onSaveExpense,
   onDeleteExpense,
-   
 }) => {
   const [activeTab, setActiveTab] = useState<"journal" | "bilan" | "fiscal">(
     "journal",
@@ -600,99 +604,11 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
       {activeTab === "bilan" && (
         <div className="space-y-8 animate-slide-up">
           {/* Main Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group">
-              <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-brand-900 dark:text-brand-50">
-                <TrendingUp size={120} />
-              </div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-brand-50 dark:bg-brand-800 text-brand-900 dark:text-brand-50 rounded-xl">
-                  <TrendingUp size={20} />
-                </div>
-                <span className="badge bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-400">
-                  CA
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">
-                  Recettes Encaissées
-                </p>
-                <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {totalRevenue.toLocaleString("fr-FR")} €
-                </h3>
-              </div>
-            </div>
-
-            <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group">
-              <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-red-500">
-                <TrendingDown size={120} />
-              </div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-xl">
-                  <TrendingDown size={20} />
-                </div>
-                <span className="badge bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-                  Dépenses
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">
-                  Dépenses Totales
-                </p>
-                <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {totalExpenses.toLocaleString("fr-FR")} €
-                </h3>
-              </div>
-            </div>
-
-            <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group bg-brand-900 dark:bg-brand-50">
-              <div className="absolute -right-4 -top-4 p-8 opacity-10 group-hover:opacity-20 transition-opacity text-white dark:text-brand-900">
-                <DollarSign size={120} />
-              </div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-white/10 dark:bg-brand-900/20 text-white dark:text-brand-900 rounded-xl">
-                  <DollarSign size={20} />
-                </div>
-                <span className="badge bg-white/10 dark:bg-brand-900/20 text-white dark:text-brand-900">
-                  Net
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-brand-300 dark:text-brand-600 uppercase tracking-widest">
-                  Résultat Brut
-                </p>
-                <h3 className="text-2xl font-bold text-white dark:text-brand-900 font-display tracking-tight mt-1">
-                  {netResult.toLocaleString("fr-FR")} €
-                </h3>
-              </div>
-            </div>
-
-            <div className="card-modern p-6 flex flex-col justify-between relative overflow-hidden group border-dashed">
-              <div className="absolute -right-4 -top-4 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity text-amber-500">
-                <Calculator size={120} />
-              </div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
-                  <Calculator size={20} />
-                </div>
-                <span className="badge bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
-                  Charges
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-widest">
-                  Estimation Net
-                </p>
-                <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display tracking-tight mt-1">
-                  {netAfterCharges.toLocaleString("fr-FR", {
-                    maximumFractionDigits: 0,
-                  })}{" "}
-                  €
-                </h3>
-              </div>
-            </div>
-          </div>
-
+          <FiscalSummaryCard
+              totalRevenue={totalRevenue}
+              totalExpenses={totalExpenses}
+              netResult={netResult}
+              netAfterCharges={netAfterCharges}
           {/* Charts Section - Lazy Loaded */}
           <Suspense
             fallback={
@@ -709,59 +625,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           </Suspense>
 
           {/* Quarterly Breakdown Section */}
-          <div className="card-modern p-8">
-            <h3 className="text-lg font-bold text-brand-900 mb-8 font-display">
-              Récapitulatif Trimestriel
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {quarterlyStats.map((q, _idx) => (
-                <div
-                  key={q.name}
-                  className="p-6 rounded-3xl bg-brand-50/50 border border-brand-100 hover:border-brand-200 transition-all group"
-                >
-                  <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-4">
-                    {q.name}
-                  </p>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-brand-500">
-                        Recettes
-                      </span>
-                      <span className="text-sm font-bold text-brand-900">
-                        {q.income.toLocaleString()} €
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-brand-500">
-                        Dépenses
-                      </span>
-                      <span className="text-sm font-bold text-red-500">
-                        -{q.expense.toLocaleString()} €
-                      </span>
-                    </div>
-                    <div className="pt-3 border-t border-brand-100 flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-brand-400 uppercase">
-                        Profit
-                      </span>
-                      <span
-                        className={`text-sm font-bold ${q.income - q.expense >= 0 ? "text-accent-600" : "text-red-600"}`}
-                      >
-                        {(q.income - q.expense).toLocaleString()} €
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-brand-100 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[9px] font-bold text-brand-400 uppercase">
-                      Cotisations Est.
-                    </span>
-                    <span className="text-xs font-bold text-brand-600">
-                      {(q.income * (taxRate / 100)).toLocaleString()} €
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <QuarterlyStats quarterlyStats={quarterlyStats} taxRate={taxRate} />
         </div>
       )}
 
@@ -1034,323 +898,31 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
           </div>
 
           {showForm && (
-            <div className="card-modern p-10 animate-slide-up bg-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.02] text-brand-900 pointer-events-none">
-                <Calculator size={160} />
-              </div>
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-xl font-bold text-brand-900 dark:text-brand-50 font-display flex items-center gap-3">
-                  {editingExpense
-                    ? "Modifier la dépense"
-                    : "Ajouter une dépense"}
-                  {isAnalyzing && (
-                    <span className="flex items-center gap-2 text-xs font-bold text-accent-600 animate-pulse">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyse IA en cours...
-                    </span>
-                  )}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingExpense(null);
-                  }}
-                  title="Fermer le formulaire"
-                  className="text-brand-400 hover:text-brand-900 dark:hover:text-brand-50 transition-colors"
-                >
-                  <Plus size={24} className="rotate-45" />
-                </button>
-              </div>
-              <form
-                onSubmit={handleAddExpense}
-                className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10"
-              >
-                <FormFieldValidated
-                  id="expense-date"
-                  label="Date de l'achat"
-                  type="date"
-                  required
-                  value={newExpense.date ?? ""}
-                  onChange={handleFormChange("date")}
-                  error={errors.date}
-                  touched={touched.date}
-                />
-                <FormFieldValidated
-                  id="expense-amount"
-                  label="Montant TTC (€)"
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="0.00"
-                  value={newExpense.amount ?? ""}
-                  onChange={(val) => {
-                    const amount = Number.parseFloat(val);
-                    handleFormChange("amount")(amount);
-                    const vatRate = newExpense.vatRate ?? 0;
-                    const vatAmount = vatRate
-                      ? amount * (vatRate / (100 + vatRate))
-                      : (newExpense.vatAmount ?? 0);
-                    setNewExpense((prev) => ({ ...prev, vatAmount }));
-                  }}
-                  error={errors.amount}
-                  touched={touched.amount}
-                />
-                <FormFieldValidated
-                  id="expense-vat-amount"
-                  label="Montant TVA (€)"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={newExpense.vatAmount ?? ""}
-                  onChange={(val) =>
-                    handleFormChange("vatAmount")(Number.parseFloat(val))
-                  }
-                  error={errors.vatAmount}
-                  touched={touched.vatAmount}
-                />
-                <div>
-                  <label
-                    htmlFor="expense-vat-rate"
-                    className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2"
-                  >
-                    Taux TVA (%)
-                  </label>
-                  <select
-                    id="expense-vat-rate"
-                    title="Sélectionner le taux TVA"
-                    className="w-full p-4 border border-brand-100 dark:border-brand-700 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white dark:bg-brand-800 transition-all font-bold text-brand-900 dark:text-brand-50 appearance-none cursor-pointer"
-                    value={newExpense.vatRate ?? 0}
-                    onChange={(e) => {
-                      const vatRate = Number.parseFloat(e.target.value);
-                      const amount = newExpense.amount ?? 0;
-                      const vatAmount = amount
-                        ? amount * (vatRate / (100 + vatRate))
-                        : 0;
-                      setNewExpense({ ...newExpense, vatRate, vatAmount });
-                    }}
-                  >
-                    <option value="0">0% (Exonéré)</option>
-                    <option value="5.5">5.5%</option>
-                    <option value="10">10%</option>
-                    <option value="20">20%</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    htmlFor="expense-category"
-                    className="block text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2"
-                  >
-                    Catégorie
-                  </label>
-                  <select
-                    id="expense-category"
-                    title="Sélectionner la catégorie de dépense"
-                    className="w-full p-4 border border-brand-100 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 bg-white transition-all font-bold text-brand-900 appearance-none cursor-pointer"
-                    value={newExpense.category}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, category: e.target.value })
-                    }
-                  >
-                    {expenseCategories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <FormFieldValidated
-                    id="expense-description"
-                    label="Description / Libellé"
-                    type="text"
-                    required
-                    placeholder="Ex: Abonnement Internet, Achat écran..."
-                    value={newExpense.description ?? ""}
-                    onChange={(val) =>
-                      setNewExpense({ ...newExpense, description: val })
-                    }
-                    validator={() => ({
-                      valid: !errors.description?.error,
-                      error: errors.description?.error,
-                    })}
-                  />
-                </div>
-                <div>
-                  <Combobox
-                    label="Fournisseur"
-                    options={suppliers
-                      .filter((s) => !s.archived)
-                      .map((s) => ({
-                        id: s.id,
-                        label: s.name,
-                        subLabel: s.category ?? "Fournisseur",
-                      }))}
-                    value={newExpense.supplierId ?? ""}
-                    onChange={(val) =>
-                      setNewExpense({ ...newExpense, supplierId: val })
-                    }
-                    placeholder="Chercher un fournisseur..."
-                  />
-                </div>
-
-                <div className="md:col-span-3 flex justify-end gap-4 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowForm(false);
-                      setEditingExpense(null);
-                    }}
-                    className="px-8 py-3 text-brand-600 hover:bg-brand-50 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-10 py-3 bg-brand-900 text-white rounded-2xl hover:bg-brand-950 font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-brand-900/10 transition-all hover:scale-[1.02]"
-                  >
-                    {editingExpense
-                      ? "Mettre à jour"
-                      : "Enregistrer la dépense"}
-                  </button>
-                </div>
-              </form>
-            </div>
+            <AddTransactionForm
+              isEditing={!!editingExpense}
+              isAnalyzing={isAnalyzing}
+              newExpense={newExpense}
+              errors={errors}
+              touched={touched}
+              expenseCategories={expenseCategories}
+              suppliers={suppliers}
+              handleFormChange={handleFormChange}
+              setNewExpense={setNewExpense}
+              handleAddExpense={handleAddExpense}
+              setShowForm={setShowForm}
+              setEditingExpense={setEditingExpense}
+            />
           )}
 
-          <div className="card-modern overflow-hidden border-none shadow-xl shadow-brand-900/5">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-brand-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
-                    <th className="px-6 py-5 w-12">
-                      <input
-                        type="checkbox"
-                        title="Sélectionner toutes les dépenses affichées"
-                        className="rounded border-brand-700 bg-brand-800 text-accent-500 focus:ring-accent-500"
-                        checked={
-                          filteredExpenses.length > 0 &&
-                          selectedExpenses.length === filteredExpenses.length
-                        }
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
-                    <th className="px-8 py-5">Date</th>
-                    <th className="px-8 py-5">Description</th>
-                    <th className="px-8 py-5">Catégorie</th>
-                    <th className="px-8 py-5">Fournisseur</th>
-                    <th className="px-8 py-5 text-right">Montant</th>
-                    <th className="px-8 py-5 w-24"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-50 bg-white">
-                  {filteredExpenses.map((exp) => {
-                    const supplier = suppliers.find(
-                      (s) => s.id === exp.supplierId,
-                    );
-                    const isSelected = selectedExpenses.includes(exp.id);
-                    return (
-                      <tr
-                        key={exp.id}
-                        className={`hover:bg-brand-50/50 transition-colors group ${isSelected ? "bg-brand-50/80" : ""}`}
-                      >
-                        <td className="px-6 py-6">
-                          <input
-                            type="checkbox"
-                            title="Sélectionner cette dépense"
-                            className="rounded border-brand-200 text-brand-900 focus:ring-brand-900"
-                            checked={isSelected}
-                            onChange={() => toggleSelect(exp.id)}
-                          />
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-400">
-                              <Calendar size={14} />
-                            </div>
-                            <span className="text-xs font-bold text-brand-900 font-mono">
-                              {new Date(exp.date).toLocaleDateString("fr-FR")}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <p className="text-sm font-bold text-brand-900">
-                            {exp.description}
-                          </p>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="inline-flex px-3 py-1 rounded-full bg-brand-50 text-brand-600 text-[9px] font-bold uppercase tracking-wider border border-brand-100">
-                            {exp.category}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6">
-                          {supplier ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-md bg-brand-100 flex items-center justify-center text-brand-600">
-                                <TrendingDown size={10} />
-                              </div>
-                              <span className="text-xs font-bold text-brand-600">
-                                {supplier.name}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-brand-300 font-medium italic">
-                              Non spécifié
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                          <span className="text-sm font-bold text-red-500">
-                            -
-                            {exp.amount.toLocaleString("fr-FR", {
-                              minimumFractionDigits: 2,
-                            })}{" "}
-                            €
-                          </span>
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button
-                              onClick={() => handleEdit(exp)}
-                              className="text-brand-400 hover:text-brand-900 p-2 rounded-xl hover:bg-brand-50"
-                              title="Modifier"
-                            >
-                              <Plus size={16} className="rotate-0" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(exp.id)}
-                              className="text-brand-200 hover:text-red-500 p-2 rounded-xl hover:bg-red-50"
-                              title="Supprimer"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredExpenses.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="py-24 text-center">
-                        <div className="inline-block p-8 rounded-full bg-brand-50 mb-4">
-                          <FileSpreadsheet
-                            size={40}
-                            className="text-brand-200"
-                          />
-                        </div>
-                        <h4 className="text-brand-900 font-bold text-lg font-display">
-                          Aucune dépense trouvée
-                        </h4>
-                        <p className="text-brand-400 text-sm max-w-xs mx-auto mt-2">
-                          Ajustez vos filtres ou ajoutez une nouvelle dépense
-                          pour alimenter votre journal.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TransactionTable
+            filteredExpenses={filteredExpenses}
+            selectedExpenses={selectedExpenses}
+            suppliers={suppliers}
+            toggleSelectAll={toggleSelectAll}
+            toggleSelect={toggleSelect}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
         </div>
       )}
     </div>
