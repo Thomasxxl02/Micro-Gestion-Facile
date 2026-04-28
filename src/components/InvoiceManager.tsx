@@ -14,9 +14,11 @@ import {
 import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
+import { useMixedActivityDetection } from "../hooks/useMixedActivityDetection";
 import useNotificationsSound from "../hooks/useNotificationsSound";
 import { signInvoice } from "../lib/electronicSignature";
 import { useAppStore } from "../store/appStore";
+import { useDataStore } from "../store/useDataStore";
 import type {
   Client,
   DocumentType,
@@ -25,6 +27,7 @@ import type {
   UserProfile,
 } from "../types";
 import { InvoiceStatus } from "../types/invoice";
+import MixedActivitySuggestionBanner from "./MixedActivitySuggestionBanner";
 import { TableRowSkeleton } from "./Skeleton";
 
 const InvoicePaper = React.lazy(() => import("./InvoicePaper"));
@@ -39,6 +42,8 @@ interface InvoiceManagerProps {
   products: Product[];
   onSave?: (invoice: Invoice) => void;
   onDelete?: (id: string) => void;
+  /** Callback pour persister la mise à jour du profil (ex. activation du mode Mixte) */
+  onSaveProfile?: (profile: UserProfile) => void;
 }
 
 const InvoiceManager: React.FC<InvoiceManagerProps> = ({
@@ -48,6 +53,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   userProfile,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   products,
+  onSaveProfile,
   onSave,
   onDelete,
 }) => {
@@ -61,6 +67,28 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
 
   const { playSound } = useNotificationsSound();
   const isSyncing = useAppStore((state) => state.isSyncing);
+  const updateUserProfile = useDataStore((state) => state.updateUserProfile);
+
+  // ─── DÉTECTION ACTIVITÉ MIXTE ───
+  const {
+    shouldShowSuggestion: showMixedBanner,
+    ventilation: mixedVentilation,
+    dismiss: dismissMixedBanner,
+  } = useMixedActivityDetection(invoices, userProfile);
+
+  const handleActivateMixedProfile = useCallback(
+    (update: Partial<UserProfile>) => {
+      updateUserProfile(() => update);
+      if (onSaveProfile) {
+        onSaveProfile({ ...userProfile, ...update });
+      }
+      toast.success("Profil Mixte activé", {
+        description:
+          "La ventilation Ventes / Services est maintenant prise en compte pour vos déclarations URSSAF.",
+      });
+    },
+    [userProfile, updateUserProfile, onSaveProfile],
+  );
 
   // ─── ACTIONS ───
   const {
@@ -224,6 +252,16 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           Nouveau
         </button>
       </div>
+
+      {/* ── BANNIÈRE ACTIVITÉ MIXTE ──────────────────────────────────────────── */}
+      {showMixedBanner && mixedVentilation && (
+        <MixedActivitySuggestionBanner
+          ventilation={mixedVentilation}
+          userProfile={userProfile}
+          onActivate={handleActivateMixedProfile}
+          onDismiss={dismissMixedBanner}
+        />
+      )}
 
       {/* STATS WIDGETS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
