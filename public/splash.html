@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chargement...</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8fafc;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        overflow: hidden;
+        -webkit-app-region: drag;
+      }
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+      }
+      .subtitle {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 32px;
+      }
+      .loader {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .dark body {
+        background-color: #0f172a;
+      }
+      .dark .title {
+        color: #f8fafc;
+      }
+      .dark .subtitle {
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <img src="./logo.svg" alt="Logo" />
+    </div>
+    <div class="title">Micro Gestion Facile</div>
+    <div class="subtitle">Préparation de votre espace de travail...</div>
+    <div class="loader"></div>
+  </body>
+</html>

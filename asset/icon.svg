@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1024"
+   height="1024"
+   viewBox="0 0 270.93333 270.93333"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="g7"><stop style="stop-color:#ffe680;stop-opacity:0.88" offset="0"/><stop style="stop-color:#ffe680;stop-opacity:0" offset="1"/></linearGradient>
+    <linearGradient id="g5"><stop style="stop-color:#00a29f;stop-opacity:0.88" offset="0"/><stop style="stop-color:#00a29f;stop-opacity:0" offset="1"/></linearGradient>
+    <linearGradient id="g3"><stop style="stop-color:#ff5555;stop-opacity:0.88" offset="0"/><stop style="stop-color:#ff5555;stop-opacity:0" offset="1"/></linearGradient>
+    <linearGradient id="g9"><stop style="stop-color:#000000;stop-opacity:1;" offset="0.8"/><stop style="stop-color:#000000;stop-opacity:0" offset="1"/></linearGradient>
+    <linearGradient xlink:href="#g3" id="l4" x1="186" y1="158" x2="243" y2="158" gradientUnits="userSpaceOnUse" />
+    <linearGradient xlink:href="#g5" id="l6" x1="102" y1="123" x2="160" y2="123" gradientUnits="userSpaceOnUse" />
+    <linearGradient xlink:href="#g7" id="l8" x1="19" y1="140" x2="77" y2="140" gradientUnits="userSpaceOnUse" />
+  </defs>
+  <rect style="fill:url(#l8);stroke:#000;stroke-width:0.5" width="57" height="203" x="19" y="39" ry="18" />
+  <rect style="fill:url(#l6);stroke:#000;stroke-width:0.5" width="57" height="203" x="102" y="21" ry="18" />
+  <rect style="fill:url(#l4);stroke:#000;stroke-width:0.5" width="57" height="203" x="186" y="57" ry="18" />
+  <path style="fill:#00a2ff;fill-opacity:0.88" d="M 89,88 H 102 A 114,114 0 0 1 216,203 v 36 H 49 V 128 A 39,39 0 0 1 89,88 Z" transform="matrix(1.61,0,0,1,-79,31)" />
+</svg>

@@ -248,10 +248,30 @@ const Sidebar: React.FC<SidebarProps> = ({
             aria-label="Aller au tableau de bord"
           >
             <div
-              className="relative bg-linear-to-tr from-brand-600 to-indigo-500 text-white p-3.5 rounded-2xl shadow-xl shadow-brand-500/30 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500"
+              className="relative group-hover:scale-110 transition-all duration-500"
               aria-hidden="true"
             >
-              <Briefcase size={26} strokeWidth={2.5} />
+              <img
+                src="/logo.svg"
+                alt="Logo Micro-Gestion"
+                className="w-12 h-12 drop-shadow-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                  (e.target as HTMLImageElement).parentElement?.classList.add(
+                    "bg-linear-to-tr",
+                    "from-brand-600",
+                    "to-indigo-500",
+                    "text-white",
+                    "p-3.5",
+                    "rounded-2xl",
+                  );
+                  const icon = document.createElement("div");
+                  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>';
+                  (e.target as HTMLImageElement).parentElement?.appendChild(
+                    icon.firstChild!,
+                  );
+                }}
+              />
               <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-[2px]" />
             </div>
             <div className="flex flex-col">

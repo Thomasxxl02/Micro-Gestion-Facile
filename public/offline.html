@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hors-ligne — Micro-Gestion-Facile</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --indigo: #6366f1;
+        --indigo-dark: #4f46e5;
+        --text: #1e1b4b;
+        --muted: #6b7280;
+        --bg: #f5f3ff;
+        --card: #ffffff;
+        --border: #e0e7ff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text: #e0e7ff;
+          --muted: #a5b4fc;
+          --bg: #0f172a;
+          --card: #1e293b;
+          --border: #312e81;
+        }
+      }
+
+      body {
+        font-family:
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100dvh;
+        padding: 1.5rem;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 2.5rem 2rem;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+      }
+
+      .icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.25rem;
+        line-height: 1;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--indigo);
+      }
+
+      p {
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 1.75rem;
+        font-size: 0.95rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--indigo);
+        color: #fff;
+        border: none;
+        border-radius: 0.625rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+      }
+
+      .btn:hover {
+        background: var(--indigo-dark);
+      }
+
+      .status {
+        margin-top: 1.25rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">📡</div>
+      <h1>Vous êtes hors-ligne</h1>
+      <p>
+        La connexion internet est indisponible. Vos données locales restent accessibles après
+        reconnexion ou si l'application a déjà été chargée.
+      </p>
+      <button class="btn" onclick="location.reload()">↺ Réessayer</button>
+      <p class="status" id="status">Vérification de la connexion…</p>
+    </div>
+
+    <script>
+      // Réessai automatique quand la connexion revient
+      window.addEventListener('online', () => {
+        document.getElementById('status').textContent = 'Connexion rétablie, rechargement…';
+        setTimeout(() => location.reload(), 800);
+      });
+
+      window.addEventListener('offline', () => {
+        document.getElementById('status').textContent = 'Toujours hors-ligne.';
+      });
+
+      navigator.onLine
+        ? ((document.getElementById('status').textContent = 'Connexion disponible — rechargement…'),
+          setTimeout(() => location.reload(), 500))
+        : (document.getElementById('status').textContent = 'Aucune connexion détectée.');
+    </script>
+  </body>
+</html>
