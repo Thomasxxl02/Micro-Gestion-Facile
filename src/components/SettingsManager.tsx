@@ -102,6 +102,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     setHighVisibility,
     offlinePriority,
     setOfflinePriority,
+    colorTheme,
+    setColorTheme,
   } = useUIStore();
   const { activityLogs } = useLogStore();
 
@@ -503,6 +505,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                 setHighVisibility,
                 offlinePriority,
                 setOfflinePriority,
+                colorTheme,
+                setColorTheme,
               }}
             />
           )}

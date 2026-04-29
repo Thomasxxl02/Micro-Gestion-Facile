@@ -22,6 +22,8 @@ export interface UIStoreState {
   // Theme
   isDarkMode: boolean;
   setIsDarkMode: (_isDark: boolean) => void;
+  colorTheme: string;
+  setColorTheme: (_theme: string) => void;
 
   // Accessibility & UX Preferences
   reducedMotion: boolean;
@@ -73,6 +75,25 @@ export const useUIStore = create<UIStoreState>()(
             localStorage.setItem("theme", "light");
           }
           set({ isDarkMode: isDark });
+        },
+
+        colorTheme:
+          typeof globalThis !== "undefined" && globalThis.window
+            ? localStorage.getItem("color-theme") || "default"
+            : "default",
+        setColorTheme: (theme: string) => {
+          // Remove old theme classes
+          document.documentElement.classList.remove(
+            "theme-emerald",
+            "theme-ocean",
+            "theme-royal",
+          );
+          // Add new theme class if not default
+          if (theme !== "default") {
+            document.documentElement.classList.add(`theme-${theme}`);
+          }
+          localStorage.setItem("color-theme", theme);
+          set({ colorTheme: theme });
         },
 
         // Accessibility & UX Preferences

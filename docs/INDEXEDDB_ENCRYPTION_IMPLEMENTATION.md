@@ -126,11 +126,10 @@ private isEncryptionEnabled: boolean = false;
   throw new Error('Encryption not initialized. Call initialize() first.');
   }
 
-
-    try {
-      // Serialize data to JSON
-      const json = JSON.stringify(plaintext);
-      const plaintextBytes = new TextEncoder().encode(json);
+  try {
+  // Serialize data to JSON
+  const json = JSON.stringify(plaintext);
+  const plaintextBytes = new TextEncoder().encode(json);
 
       // Encrypt using NaCl SecretBox
       const ciphertext = nacl.secretbox(plaintextBytes, this.nonce, this.key);
@@ -140,10 +139,11 @@ private isEncryptionEnabled: boolean = false;
         ciphertext: nacl.util.encodeBase64(ciphertext),
         nonce: nacl.util.encodeBase64(this.nonce),
       };
-    } catch (error) {
-      console.error('❌ Encryption failed:', error);
-      throw error;
-    }
+
+  } catch (error) {
+  console.error('❌ Encryption failed:', error);
+  throw error;
+  }
 
 }
 
@@ -161,11 +161,10 @@ private isEncryptionEnabled: boolean = false;
   throw new Error('Encryption not initialized. Call initialize() first.');
   }
 
-
-    try {
-      // Decode from base64
-      const ciphertextBytes = nacl.util.decodeBase64(encrypted.ciphertext);
-      const nonceBytes = nacl.util.decodeBase64(encrypted.nonce);
+  try {
+  // Decode from base64
+  const ciphertextBytes = nacl.util.decodeBase64(encrypted.ciphertext);
+  const nonceBytes = nacl.util.decodeBase64(encrypted.nonce);
 
       // Decrypt using NaCl SecretBox
       const plaintextBytes = nacl.secretbox.open(ciphertextBytes, nonceBytes, this.key);
@@ -177,10 +176,11 @@ private isEncryptionEnabled: boolean = false;
       // Decode and parse JSON
       const json = new TextDecoder().decode(plaintextBytes);
       return JSON.parse(json);
-    } catch (error) {
-      console.error('❌ Decryption failed:', error);
-      throw error;
-    }
+
+  } catch (error) {
+  console.error('❌ Decryption failed:', error);
+  throw error;
+  }
 
 }
 
@@ -259,16 +259,15 @@ private encryption: IndexedDBEncryption,
   const doc = await this.table.get(key);
   if (!doc || !('\_\_e_ct' in doc)) return doc as T; // Not encrypted yet
 
-
-    try {
-      return this.encryption.decrypt({
-        ciphertext: (doc as any).__e_ct,
-        nonce: (doc as any).__e_nc,
-      }) as T;
-    } catch (error) {
-      console.error('❌ Failed to decrypt document:', key, error);
-      return undefined;
-    }
+  try {
+  return this.encryption.decrypt({
+  ciphertext: (doc as any).**e_ct,
+  nonce: (doc as any).**e_nc,
+  }) as T;
+  } catch (error) {
+  console.error('❌ Failed to decrypt document:', key, error);
+  return undefined;
+  }
 
 }
 

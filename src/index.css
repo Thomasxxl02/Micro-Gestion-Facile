@@ -15,8 +15,8 @@
   --color-brand-200: #d6e0ff;
   --color-brand-300: #b3c5ff;
   --color-brand-400: #8ea5ff;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
+  --color-brand-500: var(--brand-primary);
+  --color-brand-600: var(--brand-secondary);
   --color-brand-700: #3730a3;
   --color-brand-800: #1e1b4b;
   --color-brand-900: #131133;
@@ -28,7 +28,7 @@
   --color-accent-200: #fecdd3;
   --color-accent-300: #fda4af;
   --color-accent-400: #fb7185;
-  --color-accent-500: #f43f5e;
+  --color-accent-500: var(--accent-primary);
   --color-accent-600: #e11d48;
   --color-accent-700: #be123c;
   --color-accent-800: #9f1239;
@@ -72,6 +72,43 @@
 
 /* --- Variables CSS Globales (Theme Management) --- */
 :root {
+  /* --- Support Multi-Thèmes (Data-theme) --- */
+  --bg-color-stop1: #f8fafc;
+  --bg-color-stop2: #f1f5f9;
+  --bg-glow1: rgba(99, 102, 241, 0.12); /* Indigo */
+  --bg-glow2: rgba(244, 63, 94, 0.1); /* Rose */
+
+  --brand-primary: #6366f1;
+  --brand-secondary: #4f46e5;
+  --accent-primary: #f43f5e;
+
+  /* Thème Emerald (Nature/Artisan) */
+  &:has(.theme-emerald) {
+    --brand-primary: #10b981;
+    --brand-secondary: #059669;
+    --accent-primary: #f59e0b;
+    --bg-glow1: rgba(16, 185, 129, 0.12);
+    --bg-glow2: rgba(245, 158, 11, 0.1);
+  }
+
+  /* Thème Ocean (Sérieux/Expert) */
+  &:has(.theme-ocean) {
+    --brand-primary: #0ea5e9;
+    --brand-secondary: #0284c7;
+    --accent-primary: #10b981;
+    --bg-glow1: rgba(14, 165, 233, 0.12);
+    --bg-glow2: rgba(16, 185, 129, 0.1);
+  }
+
+  /* Thème Royal (Luxe/Prestige) */
+  &:has(.theme-royal) {
+    --brand-primary: #8b5cf6;
+    --brand-secondary: #7c3aed;
+    --accent-primary: #fbbf24;
+    --bg-glow1: rgba(139, 92, 246, 0.12);
+    --bg-glow2: rgba(251, 191, 36, 0.1);
+  }
+
   color-scheme: light;
   /* Taille de police dynamique pour l'accessibilité */
   --app-font-size: 16px;
@@ -146,6 +183,28 @@
 
 /* --- Mode Sombre (Dark Mode Customization) --- */
 .dark {
+  --brand-primary: #818cf8; /* Indigo plus clair pour dark */
+  --brand-secondary: #6366f1;
+  --accent-primary: #fb7185;
+
+  &:has(.theme-emerald) {
+    --brand-primary: #34d399;
+    --brand-secondary: #10b981;
+    --accent-primary: #fbbf24;
+  }
+
+  &:has(.theme-ocean) {
+    --brand-primary: #38bdf8;
+    --brand-secondary: #0ea5e9;
+    --accent-primary: #34d399;
+  }
+
+  &:has(.theme-royal) {
+    --brand-primary: #a78bfa;
+    --brand-secondary: #8b5cf6;
+    --accent-primary: #fcd34d;
+  }
+
   color-scheme: dark;
   --bg-color-stop1: #020617;
   --bg-color-stop2: #0f172a;

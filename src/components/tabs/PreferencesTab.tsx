@@ -38,6 +38,8 @@ interface PreferencesTabProps {
     setHighVisibility: (val: boolean) => void;
     offlinePriority: boolean;
     setOfflinePriority: (val: boolean) => void;
+    colorTheme: string;
+    setColorTheme: (theme: string) => void;
   };
 }
 
@@ -96,6 +98,14 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     };
 
     const config = presets[presetName];
+    // Also apply global color theme
+    const themeMap = {
+      expert: "ocean",
+      artisan: "emerald",
+      creative: "royal",
+    };
+    uiState.setColorTheme(themeMap[presetName]);
+
     Object.entries(config).forEach(([key, value]) => {
       handleChange(key as keyof UserProfile, value);
     });
@@ -180,7 +190,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <SelectField
-              label="Thème"
+              label="Mode Lumineux/Sombre"
               value={userProfile.theme ?? "auto"}
               onChange={(val) => handleChange("theme", val)}
               options={[
@@ -188,6 +198,18 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
                 { value: "dark", label: "🌙 Sombre (Dark)" },
                 { value: "auto", label: "🔄 Auto (selon système)" },
               ]}
+            />
+            <SelectField
+              label="Ambiance de Couleurs (Interface)"
+              value={uiState.colorTheme}
+              onChange={(val) => uiState.setColorTheme(val)}
+              options={[
+                { value: "default", label: "🏳️ Défaut (Indigo & Rose)" },
+                { value: "emerald", label: "🌿 Émeraude (Nature & Artisan)" },
+                { value: "ocean", label: "🌊 Océan (Bleu & Expert)" },
+                { value: "royal", label: "👑 Royal (Violet & Prestige)" },
+              ]}
+              description="Change les couleurs principales de l'interface"
             />
             <SelectField
               label="Police de caractères (factures)"
