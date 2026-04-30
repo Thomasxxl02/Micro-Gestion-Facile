@@ -13,12 +13,9 @@ import {
   Wallet, 
   Zap, 
   ShieldCheck, 
-  Clock, 
   AlertCircle,
   ArrowUpRight,
   Calculator,
-  Gavel,
-  History,
   FileText
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -29,19 +26,17 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+  ResponsiveContainer
 } from "recharts";
 import { useDataStore } from "../store/useDataStore";
 import { calculateSocialContributions, calculateThresholdStatus } from "../lib/fiscalCalculations";
 import { InvoiceStatus } from "../types";
 import { GDPRHealthReport } from "./GDPRHealthReport";
 import { P2PSync } from "./P2PSync";
+import type { ViewType } from "../hooks/useViewRouter";
 
 interface DashboardProProps {
-  onNavigate: (view: string) => void;
+  onNavigate: (view: ViewType) => void;
 }
 
 export const DashboardPro: React.FC<DashboardProProps> = ({ onNavigate }) => {
@@ -61,8 +56,8 @@ export const DashboardPro: React.FC<DashboardProProps> = ({ onNavigate }) => {
   const netProfit = totalRevenue - totalExpenses;
   
   const fiscalStatus = useMemo(() => 
-    calculateThresholdStatus(totalRevenue, userProfile.activityType || "BNC"),
-  [totalRevenue, userProfile.activityType]);
+    userProfile ? calculateThresholdStatus(totalRevenue, userProfile) : null,
+  [totalRevenue, userProfile]);
 
   const socialContributions = calculateSocialContributions(totalRevenue, userProfile);
 
@@ -70,7 +65,7 @@ export const DashboardPro: React.FC<DashboardProProps> = ({ onNavigate }) => {
   const chartData = useMemo(() => {
     // Simulation de données mensuelles basées sur les factures réelles
     const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun"];
-    return months.map((m, i) => ({
+    return months.map((m, _i) => ({
       name: m,
       revenue: Math.random() * 5000 + 2000,
       expenses: Math.random() * 1000 + 500,
@@ -121,11 +116,11 @@ export const DashboardPro: React.FC<DashboardProProps> = ({ onNavigate }) => {
         />
         <KPICard 
           title="Seuil Micro" 
-          value={`${fiscalStatus.micro.percentage.toFixed(1)}%`}
-          description={`${fiscalStatus.micro.remaining.toLocaleString()} € restants`}
+          value={fiscalStatus ? `${fiscalStatus.micro.percentage.toFixed(1)}%` : "N/A"}
+          description={fiscalStatus ? `${fiscalStatus.micro.remaining.toLocaleString()} € restants` : "Données indisponibles"}
           icon={<TrendingUp size={20} />}
           color="orange"
-          progress={fiscalStatus.micro.percentage}
+          progress={fiscalStatus?.micro.percentage}
         />
         <KPICard 
           title="Conformité" 

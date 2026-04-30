@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 
 export const GDPRHealthReport: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<Record<string, unknown> | null>(null);
 
   const generateReport = () => {
     setIsGenerating(true);
@@ -117,7 +117,7 @@ export const GDPRHealthReport: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.piiInventory.map((item: any, idx: number) => (
+                    {report.piiInventory.map((item: Record<string, unknown>, idx: number) => (
                       <tr key={idx} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">{item.type}</td>
                         <td className="py-3 px-4">

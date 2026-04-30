@@ -1,14 +1,14 @@
 import { Eraser, Save, Undo, MousePointer2 } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 
 interface HandSignatureCanvasProps {
   onSave: (svgData: string) => void;
-  initialSignature?: string;
+  _initialSignature?: string;
 }
 
 export const HandSignatureCanvas: React.FC<HandSignatureCanvasProps> = ({
   onSave,
-  initialSignature,
+  // _initialSignature is not used
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);

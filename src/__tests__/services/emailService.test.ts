@@ -26,12 +26,17 @@ describe('EmailService', () => {
 
   it('should prepare invoice variables correctly', () => {
     const invoice = {
+      id: "inv-123",
       number: "FAC-999",
       date: "2026-04-29",
       dueDate: "2026-05-29",
-      total: 1500
+      total: 1500,
+      type: "invoice" as const,
+      clientId: "client-1",
+      items: [],
+      status: "sent" as const
     };
-    const client = { name: "Client Test" };
+    const client = { id: "client-1", name: "Client Test", email: "client@test.com", address: "123 Rue Test" };
     const userProfile: Partial<UserProfile> = {
       companyName: "Ma Boite",
       currency: "€",

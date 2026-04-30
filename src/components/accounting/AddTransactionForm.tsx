@@ -1,5 +1,5 @@
 import React from "react";
-import { Calculator, LoaderCircle as Loader2, Plus } from "lucide-react";
+import { LoaderCircle as Loader2, Plus } from "lucide-react";
 import { FormFieldValidated } from "../FormFieldValidated";
 import Combobox from "../Combobox";
 import { type Expense, type Supplier } from "../../types";
@@ -37,7 +37,7 @@ export const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
   return (
     <div className="card-modern p-10 animate-slide-up bg-white relative overflow-hidden">
       <div className="absolute top-0 right-0 p-12 opacity-[0.02] text-brand-900 pointer-events-none">
-        <Calculator size={160} />
+        {/* Decorative element removed */}
       </div>
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-xl font-bold text-brand-900 dark:text-brand-50 font-display flex items-center gap-3">

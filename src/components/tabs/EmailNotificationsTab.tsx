@@ -4,16 +4,11 @@ import {
   Server, 
   FileText, 
   Signature, 
-  Plus, 
-  Trash2, 
-  Save, 
-  Variable, 
-  CheckCircle2, 
   AlertCircle,
-  Eye,
   History,
   Send,
-  Loader2
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
 import { UserProfile, EmailSettings, EmailTemplate, Email } from "../../types";
@@ -36,7 +31,7 @@ export const EmailNotificationsTab: React.FC<EmailNotificationsTabProps> = ({
   };
 
   const [activeTab, setActiveTab] = useState<"server" | "logs" | "templates" | "signature">("server");
-  const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
+  const [_editingTemplate, _setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [emailLogs, setEmailLogs] = useState<Email[]>([]);
   const [isTesting, setIsTesting] = useState(false);
 
@@ -73,24 +68,24 @@ export const EmailNotificationsTab: React.FC<EmailNotificationsTabProps> = ({
       } else {
         toast.error(result.error || "Échec de l'envoi du test");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Erreur lors de l'envoi");
     } finally {
       setIsTesting(false);
     }
   };
 
-  const handleTemplateSave = (template: EmailTemplate) => {
+  const _handleTemplateSave = (template: EmailTemplate) => {
     const newTemplates = settings.templates.some(t => t.id === template.id)
       ? settings.templates.map(t => t.id === template.id ? template : t)
       : [...settings.templates, template];
     
     saveSettings({ templates: newTemplates });
-    setEditingTemplate(null);
+    _setEditingTemplate(null);
     toast.success("Modèle enregistré");
   };
 
-  const deleteTemplate = (id: string) => {
+  const _deleteTemplate = (id: string) => {
     const template = settings.templates.find(t => t.id === id);
     if (template?.isSystem) {
       toast.error("Impossible de supprimer un modèle système");

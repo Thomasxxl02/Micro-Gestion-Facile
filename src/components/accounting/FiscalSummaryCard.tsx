@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, TrendingDown, DollarSign, Calculator } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { formatCurrency } from "../../lib/formatters";
 
 interface FiscalSummaryCardProps {
@@ -85,11 +85,11 @@ export const FiscalSummaryCard: React.FC<FiscalSummaryCardProps> = ({
 
       <div className="card-modern p-8 flex flex-col justify-between relative overflow-hidden group border-dashed border-2 border-neutral-200 dark:border-neutral-800">
         <div className="absolute -right-6 -bottom-6 p-8 opacity-[0.05] group-hover:opacity-[0.1] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 text-accent-500">
-          <Calculator size={140} />
+          {/* Decorative element */}
         </div>
         <div className="flex justify-between items-start mb-6">
           <div className="p-3 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-2xl shadow-sm">
-            <Calculator size={24} />
+            <DollarSign size={24} />
           </div>
           <span className="badge-gold">
             Estimation

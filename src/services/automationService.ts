@@ -3,8 +3,7 @@
  * Service gérant la logique d'automatisation (relances et factures récurrentes)
  */
 
-import { Invoice, RecurringInvoiceConfig, AutomationSettings, InvoiceStatus } from "../types";
-import { useDataStore } from "../store/useDataStore";
+import { Invoice, type RecurringInvoiceConfig, AutomationSettings } from "../types";
 
 export const automationService = {
   /**

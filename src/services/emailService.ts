@@ -1,4 +1,4 @@
-import { Email, EmailSettings, UserProfile } from "../types";
+import { Email, EmailSettings, UserProfile, Invoice, Client } from "../types";
 
 /**
  * Service pour la gestion des emails.
@@ -45,8 +45,8 @@ export class EmailService {
    * Prépare les variables pour l'interpolation
    */
   static getInvoiceVariables(
-    invoice: any,
-    client: any,
+    invoice: Invoice,
+    client: Client,
     userProfile: UserProfile,
   ): Record<string, string> {
     return {
@@ -54,9 +54,9 @@ export class EmailService {
       invoice_number: invoice.number,
       invoice_date: new Date(invoice.date).toLocaleDateString(),
       due_date: new Date(invoice.dueDate).toLocaleDateString(),
-      total: `${invoice.total} ${userProfile.currency || "€"}`,
+      total: `${invoice.total} ${userProfile.currency ?? "€"}`,
       company_name: userProfile.companyName,
-      professional_title: userProfile.professionalTitle || "",
+      professional_title: userProfile.professionalTitle ?? "",
     };
   }
 
@@ -66,10 +66,10 @@ export class EmailService {
   static async sendEmail(
     settings: EmailSettings,
     emailData: Partial<Email>,
-    userProfile: UserProfile,
+    _userProfile: UserProfile,
   ): Promise<{ success: boolean; error?: string }> {
-    console.log("Tentative d'envoi d'email via provider:", settings.provider);
-    console.log("Email info:", emailData);
+    console.warn("Tentative d'envoi d'email via provider:", settings.provider);
+    console.warn("Email info:", emailData);
 
     const newEmail: Email = {
       id: crypto.randomUUID(),
@@ -92,7 +92,7 @@ export class EmailService {
     // Pour la démo/PWA client-side seule, on peut aussi ouvrir le client mail par défaut (mailto:)
     // si aucun serveur n'est configuré
     if (settings.provider === "generic") {
-      const mailtoUrl = `mailto:${newEmail.to}?subject=${encodeURIComponent(newEmail.subject || "")}&body=${encodeURIComponent(newEmail.body || "")}`;
+      const mailtoUrl = `mailto:${newEmail.to}?subject=${encodeURIComponent(newEmail.subject ?? "")}&body=${encodeURIComponent(newEmail.body ?? "")}`;
       window.open(mailtoUrl);
       this.addLog(newEmail);
       return { success: true };

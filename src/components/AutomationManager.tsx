@@ -7,28 +7,22 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { 
   Zap, 
-  Bell, 
   RotateCw, 
-  CheckCircle2, 
-  Settings2, 
   Plus,
   Trash2,
-  Calendar,
   Mail,
   Clock,
   AlertCircle
 } from "lucide-react";
 import { useDataStore } from "../store/useDataStore";
-import { RecurringInvoiceConfig, AutomationSettings } from "../types";
-import { automationService } from "../services/automationService";
 
 const AutomationManager: React.FC = () => {
   const { 
     automationSettings, 
     setAutomationSettings, 
     automationLogs,
-    invoices,
-    clients
+    invoices: _invoices,
+    clients: _clients
   } = useDataStore();
   
   const [activeTab, setActiveTab] = useState<"reminders" | "recurring" | "logs">("reminders");

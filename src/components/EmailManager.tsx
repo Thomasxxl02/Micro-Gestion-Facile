@@ -223,7 +223,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
       subject = subject.replace(new RegExp(key, "g"), value);
     });
 
-    setComposeData({ ...composeData, subject, body, type: template.type });
+    setComposeData({ ...composeData, subject, body, type: template.type as typeof composeData.type });
   };
 
   const MAGIC_VARIABLES = [

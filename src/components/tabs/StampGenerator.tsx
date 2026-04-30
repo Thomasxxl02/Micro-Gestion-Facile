@@ -1,17 +1,17 @@
-import { Check, Download, RefreshCcw, ShieldCheck, Printer } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Check, RefreshCcw, ShieldCheck } from "lucide-react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 
 interface StampGeneratorProps {
   companyName: string;
   siret: string;
-  logoUrl?: string;
+  _logoUrl?: string;
   onSave: (dataUrl: string) => void;
 }
 
 export const StampGenerator: React.FC<StampGeneratorProps> = ({
   companyName,
   siret,
-  logoUrl,
+  // _logoUrl is not used
   onSave,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

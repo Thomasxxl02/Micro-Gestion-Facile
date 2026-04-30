@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { automationService } from "../automationService";
-import { Invoice, InvoiceStatus, RecurringInvoiceConfig, AutomationSettings } from "../../types";
+import { Invoice, InvoiceStatus, AutomationSettings } from "../../types";
 
 describe("automationService", () => {
   describe("checkDueReminders", () => {

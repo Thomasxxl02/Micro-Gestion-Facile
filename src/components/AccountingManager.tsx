@@ -1,14 +1,7 @@
 import {
-  Calculator,
-  Calendar,
   Camera,
-  DollarSign,
-  FileSpreadsheet,
-  File as Filter,
   LoaderCircle as Loader2,
   Plus,
-  Search,
-  Trash2,
 } from "lucide-react";
 import React, { Suspense, useMemo, useState } from "react";
 import { useFormValidation } from "../hooks/useFormValidation";
@@ -29,9 +22,7 @@ import {
   calculateIncomeTaxPFL,
   calculateSocialContributions,
 } from "../lib/fiscalCalculations";
-import { AddTransactionForm } from "./accounting/AddTransactionForm";
 import { FiscalSummaryCard } from "./accounting/FiscalSummaryCard";
-import { TransactionTable } from "./accounting/TransactionTable";
 import { QuarterlyStats } from "./accounting/QuarterlyStats";
 
 interface AccountingManagerProps {
@@ -58,16 +49,16 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   const [activeTab, setActiveTab] = useState<"journal" | "bilan" | "fiscal">(
     "journal",
   );
-  const [showForm, setShowForm] = useState(false);
+  const [_showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [minAmount, setMinAmount] = useState<string>("");
-  const [maxAmount, setMaxAmount] = useState<string>("");
+  const [searchTerm, _setSearchTerm] = useState("");
+  const [categoryFilter, _setCategoryFilter] = useState("");
+  const [minAmount, _setMinAmount] = useState<string>("");
+  const [maxAmount, _setMaxAmount] = useState<string>("");
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
   const [taxRate] = useState(21.1); // Default for services
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedYear, _setSelectedYear] = useState(new Date().getFullYear());
+  const [_isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Form handling logic
   const initialFormState = {
@@ -83,9 +74,9 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
   const {
     data: newExpense,
     setData: setNewExpense,
-    errors,
-    touched,
-    handleChange: handleFormChange,
+    errors: _errors,
+    touched: _touched,
+    handleChange: _handleFormChange,
     validate: validateAll,
   } = useFormValidation<Partial<Expense>>(
     initialFormState,
@@ -144,26 +135,26 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     () => fiscalData.reduce((sum, d) => sum + d.revenue, 0),
     [fiscalData],
   );
-  const totalYearlyTax = useMemo(
+  const _totalYearlyTax = useMemo(
     () => fiscalData.reduce((sum, d) => sum + d.tax, 0),
     [fiscalData],
   );
 
-  const fiscalSummary = useMemo(() => {
+  const _fiscalSummary = useMemo(() => {
     if (!userProfile) {
       return null;
     }
     return calculateSocialContributions(totalYearlyRevenue, userProfile);
   }, [totalYearlyRevenue, userProfile]);
 
-  const yearlyIncomeTax = useMemo(() => {
+  const _yearlyIncomeTax = useMemo(() => {
     if (!userProfile?.activityType) {
       return 0;
     }
     return calculateIncomeTaxPFL(totalYearlyRevenue, userProfile.activityType);
   }, [totalYearlyRevenue, userProfile]);
 
-  const years = useMemo(() => {
+  const _years = useMemo(() => {
     const allDates = [
       ...invoices.map((i) => new Date(i.date).getFullYear()),
       ...expenses.map((e) => new Date(e.date).getFullYear()),
@@ -221,7 +212,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const handleAddExpense = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const _handleAddExpense = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateAll()) {
       return;
@@ -258,7 +249,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     setShowForm(false);
   };
 
-  const handleEdit = (expense: Expense) => {
+  const _handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
     setNewExpense({
       date: expense.date,
@@ -272,7 +263,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const _handleDelete = (id: string) => {
     if (confirm("Supprimer cette dépense ?")) {
       setExpenses(expenses.filter((e) => e.id !== id));
       setSelectedExpenses(selectedExpenses.filter((sid) => sid !== id));
@@ -282,7 +273,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const handleBulkDelete = () => {
+  const _handleBulkDelete = () => {
     if (selectedExpenses.length === 0) {
       return;
     }
@@ -299,7 +290,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const toggleSelectAll = () => {
+  const _toggleSelectAll = () => {
     if (selectedExpenses.length === filteredExpenses.length) {
       setSelectedExpenses([]);
     } else {
@@ -307,7 +298,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const toggleSelect = (id: string) => {
+  const _toggleSelect = (id: string) => {
     if (selectedExpenses.includes(id)) {
       setSelectedExpenses(selectedExpenses.filter((sid) => sid !== id));
     } else {
@@ -315,7 +306,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     }
   };
 
-  const exportJournalCSV = () => {
+  const _exportJournalCSV = () => {
     const headers = [
       "Date",
       "Type",
@@ -365,7 +356,7 @@ const AccountingManager: React.FC<AccountingManagerProps> = ({
     link.remove();
   };
 
-  const handleExportLivreRecettesPFD = async () => {
+  const _handleExportLivreRecettesPFD = async () => {
     const paidInvoices = invoices
       .filter(
         (inv) =>

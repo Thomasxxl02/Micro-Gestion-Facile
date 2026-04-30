@@ -11,7 +11,7 @@ export const P2PSync: React.FC = () => {
   const [targetId, setTargetId] = useState<string>('');
   const [connection, setConnection] = useState<DataConnection | null>(null);
   const [status, setStatus] = useState<'idle' | 'linking' | 'connected' | 'error'>('idle');
-  const [receivedData, setReceivedData] = useState<boolean>(false);
+  const [_receivedData, _setReceivedData] = useState<boolean>(false);
   const peerRef = useRef<Peer | null>(null);
 
   const { userProfile, setUserProfile } = useAppStore();
@@ -31,8 +31,8 @@ export const P2PSync: React.FC = () => {
       setupConnection(conn);
     });
 
-    newPeer.on('error', (err) => {
-      console.error('PeerJS error:', err);
+    newPeer.on('error', (_err) => {
+      console.error('PeerJS error:', _err);
       setStatus('error');
       toast.error('Erreur de connexion P2P');
     });
@@ -45,9 +45,9 @@ export const P2PSync: React.FC = () => {
   }, []);
 
   const setupConnection = (conn: DataConnection) => {
-    conn.on('data', (data: any) => {
+    conn.on('data', (data: unknown) => {
       try {
-        if (data.type === 'SYNC_PAYLOAD') {
+        if ((data as Record<string, unknown>).type === 'SYNC_PAYLOAD') {
           const { profile, ui } = data.payload;
           
           if (profile) setUserProfile(profile);
