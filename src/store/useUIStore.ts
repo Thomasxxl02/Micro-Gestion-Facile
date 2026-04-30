@@ -51,7 +51,7 @@ export const useUIStore = create<UIStoreState>()(
       // eslint-disable-next-line complexity
       (set) => ({
         // Navigation
-        currentView: "dashboard" as ViewState,
+        currentView: "dashboard_pro" as ViewState,
         setCurrentView: (view: ViewState) => set({ currentView: view }),
 
         // Mobile

@@ -30,6 +30,7 @@ export interface ChatMessage {
 
 export type ViewState =
   | "dashboard"
+  | "dashboard_pro"
   | "invoices"
   | "clients"
   | "suppliers"

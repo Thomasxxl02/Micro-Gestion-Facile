@@ -23,6 +23,7 @@ const DEFAULT_USER_PROFILE: UserProfile = {
 
 // Lazy load des managers
 const Dashboard = React.lazy(() => import("../components/Dashboard"));
+const DashboardPro = React.lazy(() => import("../components/DashboardPro").then(m => ({ default: m.DashboardPro })));
 const InvoiceManager = React.lazy(() => import("../components/InvoiceManager"));
 const ClientManager = React.lazy(() => import("../components/ClientManager"));
 const SupplierManager = React.lazy(
@@ -51,6 +52,7 @@ const AutomationManager = React.lazy(
 
 export type ViewType =
   | "dashboard"
+  | "dashboard_pro"
   | "invoices"
   | "clients"
   | "suppliers"
@@ -137,6 +139,9 @@ export const useViewRouter = ({
   // eslint-disable-next-line complexity
   const renderView = (): React.ReactNode => {
     switch (currentView) {
+      case "dashboard_pro":
+        return <DashboardPro onNavigate={onNavigate} />;
+
       case "dashboard":
         return (
           <Dashboard

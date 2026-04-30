@@ -57,12 +57,13 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems: MenuItemConfig[] = [
     {
-      id: "dashboard",
+      id: "dashboard_pro",
       label: "Tableau de bord",
       icon: <LayoutDashboard size={18} />,
-      group: "platform",
+      group: "gestion",
       shortcut: "1",
-      description: "Vue d'ensemble de votre activité",
+      description: "Centre de contrôle de votre activité",
+      badge: "PRO",
     },
     {
       id: "invoices",
@@ -72,6 +73,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       shortcut: "2",
       description: "Gérer vos documents commerciaux",
       badge: 3,
+    },
+    {
+      id: "dashboard",
+      label: "Widgets Classiques",
+      icon: <Sparkles size={18} />,
+      group: "platform",
+      description: "Vue d'ensemble personnalisable",
     },
     {
       id: "calendar",
@@ -253,7 +261,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between px-8 py-10">
           <button
             className="flex items-center gap-4 group cursor-pointer border-none bg-transparent p-0 text-left"
-            onClick={() => setView("dashboard")}
+            onClick={() => setView("dashboard_pro")}
             aria-label="Aller au tableau de bord"
           >
             <div className="relative">
