@@ -22,10 +22,10 @@ export const FiscalSummaryCard: React.FC<FiscalSummaryCardProps> = ({
           <TrendingUp size={140} />
         </div>
         <div className="flex justify-between items-start mb-6">
-          <div className="p-3 bg-brand-50 dark:bg-brand-800 text-brand-600 dark:text-brand-400 rounded-2xl shadow-sm">
+          <div className="p-3 bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-2xl shadow-sm">
             <TrendingUp size={24} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-brand-100 dark:bg-brand-900/40 px-3 py-1 rounded-full text-brand-600 dark:text-brand-400">
+          <span className="badge-gold">
             Revenu CA
           </span>
         </div>
@@ -47,7 +47,7 @@ export const FiscalSummaryCard: React.FC<FiscalSummaryCardProps> = ({
           <div className="p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl shadow-sm">
             <TrendingDown size={24} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-rose-100 dark:bg-rose-900/40 px-3 py-1 rounded-full text-rose-600 dark:text-rose-400">
+          <span className="px-3 py-1 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-rose-500/20">
             Dépenses
           </span>
         </div>
@@ -69,7 +69,7 @@ export const FiscalSummaryCard: React.FC<FiscalSummaryCardProps> = ({
           <div className="p-3 bg-white/10 text-white rounded-2xl">
             <DollarSign size={24} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 px-3 py-1 rounded-full text-white">
+          <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-white/20">
             Net Profit
           </span>
         </div>
@@ -84,14 +84,14 @@ export const FiscalSummaryCard: React.FC<FiscalSummaryCardProps> = ({
       </div>
 
       <div className="card-modern p-8 flex flex-col justify-between relative overflow-hidden group border-dashed border-2 border-neutral-200 dark:border-neutral-800">
-        <div className="absolute -right-6 -bottom-6 p-8 opacity-[0.05] group-hover:opacity-[0.1] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 text-amber-500">
+        <div className="absolute -right-6 -bottom-6 p-8 opacity-[0.05] group-hover:opacity-[0.1] transition-all duration-700 group-hover:scale-125 group-hover:rotate-12 text-accent-500">
           <Calculator size={140} />
         </div>
         <div className="flex justify-between items-start mb-6">
-          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl shadow-sm">
+          <div className="p-3 bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-400 rounded-2xl shadow-sm">
             <Calculator size={24} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-amber-100 dark:bg-amber-900/40 px-3 py-1 rounded-full text-amber-600 dark:text-amber-400">
+          <span className="badge-gold">
             Estimation
           </span>
         </div>

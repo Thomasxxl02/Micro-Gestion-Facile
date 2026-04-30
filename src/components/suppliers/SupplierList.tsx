@@ -3,11 +3,9 @@ import {
   CircleAlert as AlertCircle,
   Archive,
   RotateCcw,
-  Trash2,
   ExternalLink,
   Phone,
   Mail,
-  Locate,
 } from "lucide-react";
 import type { Supplier } from "../../types";
 
@@ -45,7 +43,7 @@ export const SupplierList: React.FC<SupplierListProps> = ({
         return (
           <div
             key={supplier.id}
-            className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-brand-200 dark:border-slate-700 hover:shadow-md transition-all flex justify-between items-center group"
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-brand-200 dark:border-gray-700 hover:shadow-md transition-all flex justify-between items-center group"
           >
             <button
               onClick={() => onEdit(supplier)}

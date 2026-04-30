@@ -376,7 +376,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                             email.status === "sent"
-                              ? "bg-emerald-50 text-emerald-600"
+                              ? "bg-sky-50 text-sky-600"
                               : "bg-red-50 text-red-600"
                           }`}
                         >
@@ -613,9 +613,9 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider mb-3 ${
                         template.type === "reminder"
-                          ? "bg-orange-50 text-orange-600"
+                          ? "bg-gray-50 text-gray-600"
                           : (template.type === "invoice" &&
-                              "bg-emerald-50 text-emerald-600") ||
+                              "bg-sky-50 text-sky-600") ||
                             "bg-brand-50 text-brand-600"
                       }`}
                     >
@@ -846,7 +846,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({
                       className="text-[10px] font-bold text-brand-400 hover:text-brand-600 flex items-center gap-1 transition-colors"
                     >
                       {copied ? (
-                        <Check size={12} className="text-emerald-500" />
+                        <Check size={12} className="text-sky-500" />
                       ) : (
                         <Copy size={12} />
                       )}

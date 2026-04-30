@@ -6,13 +6,11 @@ import {
   Truck,
   Upload,
   Wallet,
-  TrendingUp,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import { useEntityFilters, useEntityForm } from "../hooks/useEntity";
 import { useFormValidation } from "../hooks/useFormValidation";
-import { schemaToRules, SupplierSchema } from "../lib/zod-schemas";
+import { schemaToRules, SupplierSchema, type ValidationResult } from "../lib/zod-schemas";
 import type { Expense, Supplier } from "../types";
 import {
   AddressFields,
@@ -38,7 +36,6 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
   onSave,
   onDelete,
 }) => {
-  const [activeTab, setActiveTab] = useState<"list" | "analytics">("list");
   const form = useEntityForm<Supplier>();
   const filters = useEntityFilters(
     suppliers as unknown as Record<string, unknown>[],
@@ -238,17 +235,11 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
 
     if (newSuppliers.length > 0) {
       setSuppliers([...suppliers, ...newSuppliers]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
-  };
-
-  const toggleArchive = (id: string) => {
-    const updated = suppliers.map((s) =>
-      s.id === id ? { ...s, archived: !s.archived } : s,
-    );
-    setSuppliers(updated);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -477,8 +468,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
             onPhoneChange={(val) => handleFormChange("phone")(val)}
             contactNameLabel="Nom du contact"
             required={true}
-            validationErrors={validationErrors as any}
-            touchedFields={touchedFields as any}
+            validationErrors={validationErrors as Record<string, ValidationResult | undefined>}
+            touchedFields={touchedFields as Record<string, boolean>}
           />
 
           <div className="space-y-4">
@@ -538,8 +529,8 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({
               onPostalCodeChange={() => undefined}
               onCityChange={() => undefined}
               showPostalCity={false}
-              validationErrors={validationErrors as any}
-              touchedFields={touchedFields as any}
+              validationErrors={validationErrors as Record<string, ValidationResult | undefined>}
+              touchedFields={touchedFields as Record<string, boolean>}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormFieldValidated

@@ -128,6 +128,14 @@ export interface UserProfile {
   fontFamily?: "sans" | "serif" | "mono" | "slab";
   invoiceTemplate?: "modern" | "classic" | "minimal" | "corporate";
   hiddenInvoiceColumns?: string[]; // Liste des colonnes à masquer (ex: "unit", "vat")
+  
+  // Documents & Archivage
+  termsAndConditions?: string; // Texte des CGV (Markdown ou HTML)
+  termsAndConditionsPdfUrl?: string; // URL ou Base64 du PDF des CGV
+  autoAttachTerms?: boolean; // Attacher automatiquement les CGV aux factures
+  archiveCloudProvider?: "google_drive" | "dropbox" | "onedrive" | "none"; // Doublon partiel avec integrations?
+  archiveRetentionYears?: number; // Durée légale de conservation (ex: 10 ans en France)
+  autoArchiveInvoices?: boolean; // Archivage auto après validation
 
   // Sécurité & Conformité
   auditLogEnabled?: boolean;
@@ -172,6 +180,8 @@ export interface UserProfile {
       after7Days: boolean;
     };
   };
+  // Paramètres Email & Notifications (SMTP/Templates/Signature)
+  emailSettings?: import("./email").EmailSettings;
   // Paramètres de sécurité
   securitySettings?: SecuritySettings;
 

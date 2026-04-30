@@ -7,8 +7,9 @@ export function StatCardSkeleton() {
     <div
       role="status"
       aria-label="Chargement..."
-      className="card-modern p-6 animate-pulse"
+      className="card-modern p-6 relative overflow-hidden"
     >
+      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 dark:via-white/5 to-transparent animate-shimmer" />
       <div className="h-3 bg-brand-100 dark:bg-brand-800 rounded-full w-24 mb-4" />
       <div className="h-7 bg-brand-100 dark:bg-brand-800 rounded-full w-32 mb-2" />
       <div className="h-2 bg-brand-100 dark:bg-brand-800 rounded-full w-20" />
@@ -21,14 +22,16 @@ export function ChartSkeleton() {
     <div
       role="status"
       aria-label="Chargement du graphique..."
-      className="card-modern p-6 animate-pulse"
+      className="card-modern p-6 relative overflow-hidden"
     >
+      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 dark:via-white/5 to-transparent animate-shimmer" />
       <div className="h-3 bg-brand-100 dark:bg-brand-800 rounded-full w-32 mb-6" />
       <div className="flex items-end gap-2 h-40">
         {[60, 85, 45, 70, 90, 55, 75, 40, 80, 65, 50, 95].map((h, i) => (
           <div
             key={i}
-            className={`flex-1 bg-brand-100 dark:bg-brand-800 rounded-t h-[${h}%]`}
+            style={{ height: `${h}%` }}
+            className="flex-1 bg-brand-100 dark:bg-brand-800 rounded-t"
           />
         ))}
       </div>

@@ -433,11 +433,30 @@ export const generatePDFWithFacturX = async (
   });
 
   // Mentions obligatoires micro-entrepreneur (TVA non applicable)
-  if (!invoice.vatAmount || invoice.vatAmount === 0) {
+  const legalText = userProfile.legalMentions || (invoice.vatAmount && invoice.vatAmount > 0 ? "" : "TVA non applicable, art. 293 B du CGI");
+  
+  if (legalText) {
     doc.setFontSize(8);
     doc.setFont(fontFamily.toLowerCase(), "normal");
     doc.setTextColor(120, 120, 120);
-    doc.text("TVA non applicable, art. 293 B du CGI", 14, finalY + 25);
+    // Support multi-ligne pour les mentions légales
+    const splitLegal = doc.splitTextToSize(legalText, 180);
+    doc.text(splitLegal, 14, finalY + 25);
+  }
+
+  // --- Conditions Générales de Vente (CGV) ---
+  if (userProfile.termsAndConditions) {
+    doc.addPage();
+    doc.setTextColor(primaryRGB[0], primaryRGB[1], primaryRGB[2]);
+    doc.setFontSize(14);
+    doc.setFont(fontFamily.toLowerCase(), "bold");
+    doc.text("CONDITIONS GÉNÉRALES DE VENTE", 14, 20);
+    
+    doc.setFontSize(8);
+    doc.setFont(fontFamily.toLowerCase(), "normal");
+    doc.setTextColor(0, 0, 0);
+    const splitTerms = doc.splitTextToSize(userProfile.termsAndConditions, 182);
+    doc.text(splitTerms, 14, 30);
   }
 
   // --- Cachet / Stamp ---

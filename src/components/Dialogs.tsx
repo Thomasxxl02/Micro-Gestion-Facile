@@ -46,7 +46,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       >
         <div className="flex flex-col items-center text-center mb-8">
           <div
-            className={`p-5 rounded-[24px] mb-6 shadow-xl ${isDangerous ? "bg-rose-50 text-rose-600 shadow-rose-500/10" : "bg-brand-50 text-brand-600 shadow-brand-500/10"}`}
+            className={`p-5 rounded-3xl mb-6 shadow-xl ${isDangerous ? "bg-rose-50 text-rose-600 shadow-rose-500/10" : "bg-brand-50 text-brand-600 shadow-brand-500/10"}`}
           >
             {isDangerous ? (
               <AlertTriangle size={32} strokeWidth={2.5} aria-hidden="true" />
@@ -112,13 +112,6 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   if (!isOpen) {
     return null;
   }
-
-  const typeStyles = {
-    success: "bg-green-50 text-green-600",
-    error: "bg-red-50 text-red-600",
-    warning: "bg-amber-50 text-amber-600",
-    info: "bg-brand-50 text-brand-600",
-  };
 
   const IconComponent = {
     success: CheckCircle,

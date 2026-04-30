@@ -157,7 +157,7 @@ const getLogSeverityClass = (severity: string): string => {
       "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30",
     ERROR: "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30",
     WARNING:
-      "bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-900/30",
+      "bg-gray-50 dark:bg-gray-900/10 border-gray-100 dark:border-gray-900/30",
   };
   return (
     severityClasses[severity] ||
@@ -173,7 +173,7 @@ const getLogSeverityBadgeClass = (severity: string): string => {
     CRITICAL: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
     ERROR: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
     WARNING:
-      "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
+      "bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400",
   };
   return (
     badgeClasses[severity] ||
@@ -188,7 +188,7 @@ const getPasswordStrengthColor = (score: number): string => {
   const colorClasses = [
     "bg-red-500",
     "bg-red-500",
-    "bg-orange-500",
+    "bg-gray-500",
     "bg-yellow-500",
     "bg-lime-500",
     "bg-green-500",
@@ -919,7 +919,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                               {key.service === "CUSTOM" && "⚙️"}
                             </span>
                             {APIKeyService.shouldRotate(key) && (
-                              <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400 text-xs font-semibold">
+                              <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs font-semibold">
                                 <Zap size={12} /> Rotation recommandée
                               </span>
                             )}

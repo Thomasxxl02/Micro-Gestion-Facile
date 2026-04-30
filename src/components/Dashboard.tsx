@@ -33,7 +33,6 @@ import {
   Mail,
   Package,
   ShoppingCart,
-  History,
   ShieldAlert,
   ShoppingBag,
   Sparkles,
@@ -44,7 +43,7 @@ import {
   Zap,
   LayoutDashboard,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -173,17 +172,17 @@ const DroppableAction: React.FC<{
       ref={setNodeRef}
       onClick={action.onClick}
       aria-label={action.label ? `${action.label}` : "Action non nommée"}
-      className={`btn-primary text-[11px] ${isOver ? "scale-110 bg-green-600!" : "scale-100"}`}
+      className={`${action.color === "btn-primary" ? "btn-primary" : "btn-secondary"} ${isOver ? "scale-105 border-brand-500" : ""}`}
     >
       {action.icon &&
         React.createElement(action.icon, {
-          className: "w-4 h-4",
+          size: 18,
           strokeWidth: 2,
           "aria-hidden": "true",
         })}
-      {action.label}
+      <span>{action.label}</span>
       {isOver && action.id === "quick-action-invoice" && (
-        <span className="absolute -bottom-6 left-0 right-0 text-center text-[8px] text-accent-600 font-bold whitespace-nowrap">
+        <span className="absolute -bottom-8 left-0 right-0 text-center text-[10px] text-accent-600 font-bold whitespace-nowrap bg-white dark:bg-neutral-900 px-2 py-1 rounded shadow-sm border border-accent-100">
           Relâcher pour convertir
         </span>
       )}
@@ -255,7 +254,6 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "fiscal">("overview");
   const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
     const saved = localStorage.getItem("dashboard_widgets");
@@ -271,12 +269,6 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           "prediction",
         ];
   });
-
-  // Animation de chargement simulée pour l'effet "premium"
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem("dashboard_widgets", JSON.stringify(widgetOrder));
@@ -351,40 +343,6 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       }
     }
   };
-
-  const revenueData = useMemo(() => {
-    const months = [
-      "Jan",
-      "Fév",
-      "Mar",
-      "Avr",
-      "Mai",
-      "Juin",
-      "Juil",
-      "Août",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Déc",
-    ];
-    return months.map((month, index) => ({
-      name: month,
-      revenue: invoices
-        .filter(
-          (inv) =>
-            new Date(inv.date).getMonth() === index &&
-            inv.status === InvoiceStatus.PAID,
-        )
-        .reduce((sum, inv) => sum + inv.total, 0),
-      prospects: invoices
-        .filter(
-          (inv) =>
-            new Date(inv.date).getMonth() === index &&
-            inv.status === InvoiceStatus.DRAFT,
-        )
-        .reduce((sum, inv) => sum + inv.total, 0),
-    }));
-  }, [invoices]);
 
   const totalRevenue = useMemo(() => {
     return invoices
@@ -622,14 +580,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   ];
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-12 pb-12 animate-fade-in">
       {/* Header avec Actions - Style 2026 Premium */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4">
         <div className="space-y-1">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 text-accent-600 dark:text-accent-400 font-bold text-[11px] tracking-[0.2em] uppercase"
+            className="flex items-center gap-3 text-accent-500 font-bold text-[11px] tracking-[0.2em] uppercase"
           >
             <Sparkles size={14} className="animate-pulse" />
             <span>Pilotage Intégré</span>
@@ -640,10 +598,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-5xl font-black text-brand-950 dark:text-white tracking-tighter"
+              className="text-4xl md:text-5xl font-black text-neutral-900 dark:text-white tracking-tighter font-display"
             >
               Bonjour,{" "}
-              <span className="text-brand-600 dark:text-brand-400 italic">
+              <span className="text-brand-600 dark:text-brand-400">
                 {userProfile.companyName.split(" ")[0]}
               </span>
             </motion.h1>
@@ -673,12 +631,12 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
             })()}
           </div>
 
-          <p className="text-brand-500/70 dark:text-brand-400/70 font-medium max-w-xl text-lg mt-2">
+          <p className="text-neutral-500 dark:text-neutral-400 font-medium max-w-xl text-lg mt-2">
             Votre activité est{" "}
-            <span className="text-brand-950 dark:text-brand-50 font-bold underline decoration-accent-400/30">
+            <span className="text-neutral-900 dark:text-neutral-50 font-bold">
               sous contrôle
             </span>{" "}
-            pour ce mois d'octobre.
+            pour ce mois d'avril.
           </p>
         </div>
 
@@ -702,7 +660,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as "overview" | "fiscal")}
             className={`
               flex items-center gap-2.5 py-2.5 px-6 rounded-xl text-xs font-bold transition-all relative
               ${
@@ -770,7 +728,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                       id="stats-revenue"
                       className="lg:col-span-1"
                     >
-                      <div className="card-modern h-full flex flex-col justify-between overflow-hidden group">
+                      <div className="card-modern card-hover-lift h-full flex flex-col justify-between overflow-hidden group">
                         <div className="absolute -right-6 -top-6 p-8 opacity-[0.03] group-hover:opacity-[0.1] group-hover:scale-110 transition-all duration-700 text-brand-900 dark:text-brand-50">
                           <TrendingUp size={140} />
                         </div>
@@ -793,7 +751,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                 {totalRevenue.toLocaleString("fr-FR")} €
                               </h3>
                               <div
-                                className={`flex items-center text-[11px] font-black px-2 py-0.5 rounded-lg ${cashFlowStats.percent >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-rose-600 bg-rose-50 dark:bg-rose-900/20"}`}
+                                className={`flex items-center text-[11px] font-black px-2 py-0.5 rounded-lg ${cashFlowStats.percent >= 0 ? "text-sky-600 bg-sky-50 dark:bg-sky-900/20" : "text-rose-600 bg-rose-50 dark:bg-rose-900/20"}`}
                               >
                                 {cashFlowStats.percent >= 0 ? "+" : ""}
                                 {cashFlowStats.percent.toFixed(1)}%
@@ -864,7 +822,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                                     </span>
                                   </p>
                                   {userProfile.isAcreBeneficiary && (
-                                    <p className="flex justify-between text-emerald-500 font-bold">
+                                    <p className="flex justify-between text-sky-500 font-bold">
                                       Bonus ACRE : <span>-50%</span>
                                     </p>
                                   )}
@@ -909,11 +867,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                           </div>
                           <div className="w-full bg-brand-50 dark:bg-brand-800 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(fiscalStatus.micro.percentage, 100)}%] ${fiscalStatus.micro.isNear ? "bg-orange-500" : "bg-brand-900 dark:bg-brand-50"}`}
+                              className={`h-full rounded-full transition-all duration-1000 ease-out w-[${Math.min(fiscalStatus.micro.percentage, 100)}%] ${fiscalStatus.micro.isNear ? "bg-gray-500" : "bg-brand-900 dark:bg-brand-50"}`}
                             ></div>
                           </div>
                           {fiscalStatus.micro.isNear && (
-                            <p className="text-[8px] text-orange-500 font-bold mt-1.5">
+                            <p className="text-[8px] text-gray-500 font-bold mt-1.5">
                               Plafond proche :{" "}
                               {fiscalStatus.micro.remaining.toLocaleString()} €
                               restants

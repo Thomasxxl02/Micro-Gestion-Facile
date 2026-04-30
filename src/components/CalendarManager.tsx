@@ -187,7 +187,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
       case "meeting":
         return "bg-blue-50 text-blue-600 border-blue-100";
       case "task":
-        return "bg-emerald-50 text-emerald-600 border-emerald-100";
+        return "bg-sky-50 text-sky-600 border-sky-100";
       case "deadline":
         return "bg-red-50 text-red-600 border-red-100";
       default:
@@ -230,30 +230,30 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main calendar */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-800 border border-brand-100 dark:border-slate-700 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
+        <div className="lg:col-span-3 bg-white dark:bg-gray-800 border border-brand-100 dark:border-gray-700 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
           {/* Calendar header */}
-          <div className="p-8 border-b border-brand-50 dark:border-slate-700 flex justify-between items-center bg-brand-50/30 dark:bg-slate-900/30">
+          <div className="p-8 border-b border-brand-50 dark:border-gray-700 flex justify-between items-center bg-brand-50/30 dark:bg-gray-900/30">
             <div className="flex items-center gap-4">
               <h3 className="text-2xl font-bold text-brand-900 dark:text-white font-display">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
-              <div className="flex bg-white dark:bg-slate-700 rounded-xl border border-brand-100 dark:border-slate-600 p-1 shadow-sm">
+              <div className="flex bg-white dark:bg-gray-700 rounded-xl border border-brand-100 dark:border-gray-600 p-1 shadow-sm">
                 <button
                   onClick={prevMonth}
-                  className="p-1.5 hover:bg-brand-50 dark:hover:bg-slate-600 rounded-lg text-brand-500 transition-colors"
+                  className="p-1.5 hover:bg-brand-50 dark:hover:bg-gray-600 rounded-lg text-brand-500 transition-colors"
                   aria-label="Mois précédent"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button
                   onClick={goToToday}
-                  className="px-3 py-1 text-xs font-bold text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                  className="px-3 py-1 text-xs font-bold text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   Aujourd'hui
                 </button>
                 <button
                   onClick={nextMonth}
-                  className="p-1.5 hover:bg-brand-50 dark:hover:bg-slate-600 rounded-lg text-brand-500 transition-colors"
+                  className="p-1.5 hover:bg-brand-50 dark:hover:bg-gray-600 rounded-lg text-brand-500 transition-colors"
                   aria-label="Mois suivant"
                 >
                   <ChevronRight size={20} />
@@ -263,11 +263,11 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
           </div>
 
           {/* Day name headers */}
-          <div className="flex-1 grid grid-cols-7 border-b border-brand-50 dark:border-slate-700">
+          <div className="flex-1 grid grid-cols-7 border-b border-brand-50 dark:border-gray-700">
             {dayNames.map((day) => (
               <div
                 key={day}
-                className="py-4 text-center text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-[0.2em] border-r border-brand-50 dark:border-slate-700 last:border-0"
+                className="py-4 text-center text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-[0.2em] border-r border-brand-50 dark:border-gray-700 last:border-0"
               >
                 {day}
               </div>
@@ -288,12 +288,12 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                 new Date().getFullYear() === date.year;
               const dayClass = date.currentMonth
                 ? "text-brand-900 dark:text-white"
-                : "text-brand-300 dark:text-slate-600";
+                : "text-brand-300 dark:text-gray-600";
 
               return (
                 <div
                   key={idx}
-                  className={`min-h-30 p-2 border-r border-b border-brand-50 dark:border-slate-700 last:border-r-0 transition-colors hover:bg-brand-50/30 dark:hover:bg-slate-700/30 group ${!date.currentMonth ? "bg-brand-50/20 dark:bg-slate-900/20" : ""}`}
+                  className={`min-h-30 p-2 border-r border-b border-brand-50 dark:border-gray-700 last:border-r-0 transition-colors hover:bg-brand-50/30 dark:hover:bg-gray-700/30 group ${!date.currentMonth ? "bg-brand-50/20 dark:bg-gray-900/20" : ""}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span
@@ -339,7 +339,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-800 border border-brand-100 dark:border-slate-700 rounded-4xl p-8 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 border border-brand-100 dark:border-gray-700 rounded-4xl p-8 shadow-sm">
             <h3 className="text-lg font-bold text-brand-900 dark:text-white mb-6 flex items-center gap-2 font-display">
               <Clock className="text-brand-400" size={20} />À venir
             </h3>
@@ -359,7 +359,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                       setFormData(ev);
                       setIsModalOpen(true);
                     }}
-                    className="p-4 bg-brand-50 dark:bg-slate-700 rounded-2xl border border-brand-100 dark:border-slate-600 hover:border-brand-300 transition-all group cursor-pointer"
+                    className="p-4 bg-brand-50 dark:bg-gray-700 rounded-2xl border border-brand-100 dark:border-gray-600 hover:border-brand-300 transition-all group cursor-pointer"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span
@@ -413,8 +413,8 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
           aria-modal="true"
           aria-label="Événement"
         >
-          <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-slide-up">
-            <div className="p-8 border-b border-brand-100 dark:border-slate-700 flex justify-between items-center bg-brand-50/50 dark:bg-slate-900/50">
+          <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-slide-up">
+            <div className="p-8 border-b border-brand-100 dark:border-gray-700 flex justify-between items-center bg-brand-50/50 dark:bg-gray-900/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-brand-900 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-900/20">
                   <CalendarIcon size={20} />
@@ -432,7 +432,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 hover:bg-brand-200 dark:hover:bg-slate-700 rounded-full text-brand-500 transition-colors"
+                className="p-2 hover:bg-brand-200 dark:hover:bg-gray-700 rounded-full text-brand-500 transition-colors"
                 aria-label="Fermer"
               >
                 <X size={20} />
@@ -449,7 +449,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                   <input
                     type="text"
                     required
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
                     value={formData.title ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -465,7 +465,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                   </label>
                   <select
                     title="Type d'événement"
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all appearance-none font-bold text-brand-900 dark:text-white"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all appearance-none font-bold text-brand-900 dark:text-white"
                     value={formData.type}
                     onChange={(e) =>
                       setFormData({
@@ -488,7 +488,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                   </label>
                   <select
                     title="Client lié à l'événement"
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all appearance-none font-bold text-brand-900 dark:text-white"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl outline-none focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 transition-all appearance-none font-bold text-brand-900 dark:text-white"
                     value={formData.clientId ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, clientId: e.target.value })
@@ -512,7 +512,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                     type="datetime-local"
                     required
                     title="Date et heure de début"
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
                     value={formData.start ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, start: e.target.value })
@@ -529,7 +529,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                     type="datetime-local"
                     required
                     title="Date et heure de fin"
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all text-brand-900 dark:text-white font-bold"
                     value={formData.end ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, end: e.target.value })
@@ -544,7 +544,7 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({
                   </label>
                   <textarea
                     rows={3}
-                    className="w-full p-4 bg-brand-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all resize-none text-brand-900 dark:text-white font-medium"
+                    className="w-full p-4 bg-brand-50 dark:bg-gray-700 border border-brand-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-brand-900/5 focus:border-brand-900 outline-none transition-all resize-none text-brand-900 dark:text-white font-medium"
                     value={formData.description ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })

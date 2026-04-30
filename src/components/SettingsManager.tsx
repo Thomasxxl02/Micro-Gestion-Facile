@@ -16,15 +16,17 @@ import {
   Building2,
   CreditCard,
   Database,
+  FileCode,
   Fingerprint,
+  Mail,
   Palette,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { parseImportJSON, validateImportData } from "../lib/exportUtils";
+import { validateSIRET, validateIBAN, validateEmail } from "../lib/validations";
 import { useAppStore } from "../store/appStore";
 import useLogStore from "../store/useLogStore";
 import useUIStore from "../store/useUIStore";
@@ -39,8 +41,10 @@ import type {
 import { ConfirmDialog } from "./Dialogs";
 import ExportModal from "./ExportModal";
 import SecurityTab from "./SecurityTab";
+import { EmailNotificationsTab } from "./tabs/EmailNotificationsTab";
 import { BillingTab } from "./tabs/BillingTab";
 import { DataTab } from "./tabs/DataTab";
+import { DocumentsTab } from "./tabs/DocumentsTab";
 import { PreferencesTab } from "./tabs/PreferencesTab";
 import { ProfileTab } from "./tabs/ProfileTab";
 
@@ -67,6 +71,8 @@ interface SettingsManagerProps {
 const SETTINGS_TABS = [
   "profile",
   "billing",
+  "documents",
+  "email_notifications",
   "preferences",
   "security",
   "data",
@@ -88,7 +94,13 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
   setAllData,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "profile" | "billing" | "data" | "preferences" | "security"
+    | "profile"
+    | "billing"
+    | "documents"
+    | "email_notifications"
+    | "preferences"
+    | "security"
+    | "data"
   >("profile");
 
   const { addLog, fontSize, setFontSize } = useAppStore();
@@ -189,47 +201,6 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         email: validateEmail(value as string),
       }));
     }
-  };
-
-  const validateSIRET = (value: string): string | undefined => {
-    if (!value) return undefined;
-    const digits = value.replace(/[\s-]/g, "");
-    if (!/^\d{14}$/.test(digits)) {
-      return "Le SIRET doit contenir exactement 14 chiffres";
-    }
-    // Algorithme de Luhn adapté au SIRET (norme INSEE)
-    // Chaque chiffre en position paire (depuis la droite) est doublé ;
-    // si le résultat > 9, on soustrait 9. La somme totale doit être divisible par 10.
-    let sum = 0;
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let d = parseInt(digits[i], 10);
-      if ((digits.length - 1 - i) % 2 === 1) {
-        d *= 2;
-        if (d > 9) d -= 9;
-      }
-      sum += d;
-    }
-    if (sum % 10 !== 0) {
-      return "Numéro SIRET invalide (clé de contrôle incorrecte)";
-    }
-    return undefined;
-  };
-
-  const validateIBAN = (value: string): string | undefined => {
-    if (!value) return undefined;
-    const normalized = value.replace(/\s/g, "").toUpperCase();
-    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(normalized)) {
-      return "Format IBAN invalide (ex : FR76 3000 6000 0112 3456 7890 189)";
-    }
-    return undefined;
-  };
-
-  const validateEmail = (value: string): string | undefined => {
-    if (!value) return undefined;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Adresse email invalide";
-    }
-    return undefined;
   };
 
   const handleSave = () => {
@@ -433,10 +404,12 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
             [
               { id: "profile", label: "Profil", icon: Building2 },
               { id: "billing", label: "Facturation", icon: CreditCard },
+              { id: "documents", label: "Documents", icon: FileCode },
+              { id: "email_notifications", label: "Emails", icon: Mail },
               { id: "preferences", label: "Style", icon: Palette },
               { id: "security", label: "Sécurité", icon: Fingerprint },
               { id: "data", label: "Données", icon: Database },
-            ] as { id: typeof activeTab; label: string; icon: any }[]
+            ] as { id: typeof activeTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]
           ).map(({ id: tabId, label, icon: Icon }) => {
             const isTabSelected = activeTab === tabId;
             return (
@@ -485,6 +458,22 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               userProfile={userProfile}
               handleChange={handleChange}
               validationErrors={validationErrors}
+            />
+          )}
+
+          {/* DOCUMENTS & ARCHIVAGE TAB */}
+          {activeTab === "documents" && (
+            <DocumentsTab
+              userProfile={userProfile}
+              handleChange={handleChange}
+            />
+          )}
+
+          {/* EMAIL & NOTIFICATIONS TAB */}
+          {activeTab === "email_notifications" && (
+            <EmailNotificationsTab
+              userProfile={userProfile}
+              updateUserProfile={(part) => setUserProfile({ ...userProfile, ...part })}
             />
           )}
 
@@ -619,6 +608,24 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
                         </span>
                       </p>
                     )}
+                  </div>
+                )}
+                {activeTab === "documents" && (
+                  <div className="mt-4 space-y-1.5 text-[11px] text-brand-500">
+                    <p>
+                      CGV :{" "}
+                      <span className="font-semibold text-brand-600">
+                        {userProfile.termsAndConditions
+                          ? "Configurées"
+                          : "Non définies"}
+                      </span>
+                    </p>
+                    <p>
+                      Archivage :{" "}
+                      <span className="font-semibold text-brand-600">
+                        {userProfile.archiveRetentionYears ?? 10} ans
+                      </span>
+                    </p>
                   </div>
                 )}
                 {activeTab === "data" && (

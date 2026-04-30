@@ -2,6 +2,7 @@ export * from "./calendar";
 export * from "./client";
 export * from "./common";
 export * from "./email";
+export * from "./automation";
 export * from "./expense";
 export * from "./invoice";
 export * from "./product";

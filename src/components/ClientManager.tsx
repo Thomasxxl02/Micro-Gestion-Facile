@@ -257,45 +257,22 @@ const ClientManager: React.FC<ClientManagerProps> = ({
   };
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 text-accent-600 dark:text-accent-400 font-bold text-[11px] tracking-[0.2em] uppercase"
-          >
-            <Users size={14} className="animate-pulse" />
-            <span>Portefeuille Clients</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-black text-brand-950 dark:text-white tracking-tighter"
-          >
-            Gestion des{" "}
-            <span className="text-brand-600 dark:text-brand-400 italic">
-              Partenaires
-            </span>
-          </motion.h1>
-
-          <p className="text-brand-500/70 dark:text-brand-400/70 font-medium max-w-xl text-lg mt-2">
+          <h2 className="text-4xl font-black text-brand-900 dark:text-white font-display tracking-tight">
+            Clients
+          </h2>
+          <p className="text-neutral-500 dark:text-neutral-400 font-medium">
             Organisez vos relations commerciales et suivez votre croissance.
           </p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap gap-2.5"
-        >
-          <label className="interactive-item flex items-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer">
-            <Upload size={16} />
-            Importer
+        <div className="flex items-center gap-3">
+          <label className="btn-secondary cursor-pointer">
+            <Upload size={18} />
+            <span className="hidden sm:inline">Importer</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -308,49 +285,44 @@ const ClientManager: React.FC<ClientManagerProps> = ({
           </label>
           <button
             onClick={exportCSV}
-            className="interactive-item flex items-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-bold uppercase tracking-wider transition-all shadow-sm"
+            className="btn-secondary"
           >
-            <Download size={16} />
-            Exporter
+            <Download size={18} />
+            <span className="hidden sm:inline">Exporter</span>
           </button>
           <button
             onClick={() => form.openCreate()}
-            className="btn-primary text-[11px]"
+            className="btn-primary"
           >
-            <Plus size={16} />
-            Nouveau Client
+            <Plus size={20} />
+            <span>Nouveau Client</span>
           </button>
-        </motion.div>
+        </div>
       </header>
 
-      {/* Navigation Interne - Tabs Glass */}
-      <nav className="flex gap-4 p-1.5 bg-brand-100/50 dark:bg-brand-900/30 rounded-2xl w-fit backdrop-blur-sm border border-brand-200/50 dark:border-brand-800/50">
+      {/* Navigation Interne - Tabs Modern */}
+      <div className="flex items-center gap-4 bg-white/50 dark:bg-neutral-900/50 p-1.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 w-fit backdrop-blur-md">
         {[
-          { id: "list", label: "Liste des Clients", icon: Users },
-          { id: "stats", label: "Analyses & CA", icon: TrendingUp },
+          { id: "list", label: "Liste", icon: Users },
+          { id: "stats", label: "Analyses", icon: TrendingUp },
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as "list" | "stats")}
             className={`
-              flex items-center gap-2.5 py-2.5 px-6 rounded-xl text-xs font-bold transition-all relative
+              flex items-center gap-3 py-2.5 px-6 rounded-xl font-bold transition-all relative
               ${
                 activeTab === tab.id
-                  ? "bg-white dark:bg-brand-800 text-brand-950 dark:text-white shadow-sm"
-                  : "text-brand-500/70 hover:text-brand-900 dark:hover:text-brand-100"
+                  ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20"
+                  : "text-neutral-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20"
               }
             `}
           >
-            <tab.icon
-              size={14}
-              className={
-                activeTab === tab.id ? "text-brand-600 dark:text-brand-400" : ""
-              }
-            />
+            <tab.icon size={18} />
             {tab.label}
           </button>
         ))}
-      </nav>
+      </div>
 
       {/* Content based on Active Tab */}
       <div className="space-y-8">
@@ -408,7 +380,7 @@ const ClientManager: React.FC<ClientManagerProps> = ({
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                       key={client.id}
-                      className="bg-white dark:bg-brand-900 p-6 rounded-[32px] border border-brand-100 dark:border-brand-800 hover:border-brand-300 dark:hover:border-brand-700 transition-all duration-300 group flex items-center gap-6 shadow-sm hover:shadow-xl hover:shadow-brand-500/5"
+                      className="bg-white dark:bg-brand-900 p-6 rounded-4xl border border-brand-100 dark:border-brand-800 hover:border-brand-300 dark:hover:border-brand-700 transition-all duration-300 group flex items-center gap-6 shadow-sm hover:shadow-xl hover:shadow-brand-500/5"
                     >
                       <button
                         onClick={() => form.openEdit(client)}

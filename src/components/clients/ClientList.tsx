@@ -44,7 +44,7 @@ export const ClientList: React.FC<ClientListProps> = ({
               </div>
               <div className="flex flex-col items-end">
                 <span
-                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${client.archived ? "bg-neutral-100 text-neutral-400" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"}`}
+                  className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${client.archived ? "bg-neutral-100 text-neutral-400" : "bg-sky-100 text-sky-600 dark:bg-sky-900/20 dark:text-sky-400"}`}
                 >
                   {client.archived ? "Archivé" : "Actif"}
                 </span>

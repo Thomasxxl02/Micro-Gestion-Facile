@@ -53,7 +53,7 @@ export function ErrorFallback({
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 border-t-4 border-red-500">
         {/* Header */}
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <AlertTriangle className="h-8 w-8 text-red-600 mt-1" />
           </div>
           <div className="flex-1">
@@ -108,10 +108,10 @@ export function ErrorFallback({
         <div className="mt-8 flex flex-col gap-3">
           <button
             onClick={resetErrorBoundary}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="btn-primary w-full py-4 text-base"
             type="button"
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={20} />
             Réessayer
           </button>
 

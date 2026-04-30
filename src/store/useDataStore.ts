@@ -18,6 +18,8 @@ import type {
   Product,
   Supplier,
   UserProfile,
+  AutomationSettings,
+  AutomationLog,
 } from "../types";
 
 export interface DataStoreState {
@@ -58,6 +60,13 @@ export interface DataStoreState {
     _updater: (_events: CalendarEvent[]) => CalendarEvent[],
   ) => void;
 
+  // Automation
+  automationSettings: AutomationSettings;
+  setAutomationSettings: (_settings: AutomationSettings) => void;
+  automationLogs: AutomationLog[];
+  setAutomationLogs: (_logs: AutomationLog[]) => void;
+  addAutomationLog: (_log: AutomationLog) => void;
+
   // User Profile
   userProfile: UserProfile;
   setUserProfile: (_profile: UserProfile) => void;
@@ -75,6 +84,39 @@ export interface DataStoreState {
 }
 
 // Default user profile
+const defaultEmailTemplates: EmailTemplate[] = [
+  {
+    id: "1",
+    name: "Envoi Facture",
+    subject: "Votre facture {{invoice_number}}",
+    body: "Bonjour {{client_name}},\n\nVeuillez trouver ci-joint votre facture {{invoice_number}} d'un montant de {{total}}.\n\nCordialement,\n{{company_name}}",
+    type: "invoice",
+    isSystem: true,
+  },
+  {
+    id: "2",
+    name: "Relance Paiement (J+7)",
+    subject: "Rappel : Facture {{invoice_number}} en attente de règlement",
+    body: "Bonjour {{client_name}},\n\nSauf erreur de notre part, le paiement de la facture {{invoice_number}}, datée du {{invoice_date}}, ne nous est pas encore parvenu.\n\nNous vous remercions de bien vouloir régulariser votre situation dans les meilleurs délais.\n\nCordialement,\n{{company_name}}",
+    type: "reminder_j7",
+    isSystem: true,
+  },
+  {
+    id: "3",
+    name: "Relance Ferme (J+30)",
+    subject: "DERNIER RAPPEL : Retard de paiement facture {{invoice_number}}",
+    body: "Bonjour {{client_name}},\n\nMalgré nos précédentes relances, nous constatons que la facture {{invoice_number}} d'un montant de {{total}} demeure impayée.\n\nNous vous prions de procéder au règlement immédiat pour éviter des frais de retard supplémentaires.\n\nCordialement,\n{{company_name}}",
+    type: "reminder_j30",
+    isSystem: true,
+  },
+];
+
+const defaultAutomationSettings: AutomationSettings = {
+  autoReminderEnabled: false,
+  autoReminderDelayDays: 5,
+  recurringInvoices: [],
+};
+
 const defaultUserProfile: UserProfile = {
   companyName: "Ma Micro-Entreprise",
   professionalTitle: "Consultant Indépendant",
@@ -112,24 +154,13 @@ const defaultUserProfile: UserProfile = {
       after7Days: true,
     },
   },
+  emailSettings: {
+    provider: "generic",
+    signature: "--\n{{company_name}}\n{{professional_title}}",
+    templates: defaultEmailTemplates,
+    autoReminderEmails: false,
+  },
 };
-
-const defaultEmailTemplates: EmailTemplate[] = [
-  {
-    id: "1",
-    name: "Envoi Facture",
-    subject: "Votre facture {{invoice_number}}",
-    body: "Bonjour {{client_name}},\n\nVeuillez trouver ci-joint votre facture {{invoice_number}} d'un montant de {{total}}.\n\nCordialement,\n{{company_name}}",
-    type: "invoice",
-  },
-  {
-    id: "2",
-    name: "Relance Paiement",
-    subject: "Relance : Facture {{invoice_number}} impayée",
-    body: "Bonjour {{client_name}},\n\nSauf erreur de notre part, le paiement de la facture {{invoice_number}} ne nous est pas parvenu.\n\nMerci de régulariser la situation au plus vite.\n\nCordialement,\n{{company_name}}",
-    type: "reminder",
-  },
-];
 
 export const useDataStore = create<DataStoreState>()(
   devtools((set) => ({
@@ -178,6 +209,15 @@ export const useDataStore = create<DataStoreState>()(
       updater: (events: CalendarEvent[]) => CalendarEvent[],
     ) => set((state) => ({ calendarEvents: updater(state.calendarEvents) })),
 
+    // Automation
+    automationSettings: defaultAutomationSettings,
+    setAutomationSettings: (settings: AutomationSettings) =>
+      set({ automationSettings: settings }),
+    automationLogs: [],
+    setAutomationLogs: (logs: AutomationLog[]) => set({ automationLogs: logs }),
+    addAutomationLog: (log: AutomationLog) =>
+      set((state) => ({ automationLogs: [log, ...state.automationLogs] })),
+
     // User Profile
     userProfile: defaultUserProfile,
     setUserProfile: (profile: UserProfile) => set({ userProfile: profile }),
@@ -203,6 +243,8 @@ export const useDataStore = create<DataStoreState>()(
         emails: [],
         emailTemplates: defaultEmailTemplates,
         calendarEvents: [],
+        automationSettings: defaultAutomationSettings,
+        automationLogs: [],
         userProfile: defaultUserProfile,
       }),
 

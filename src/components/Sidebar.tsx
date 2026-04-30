@@ -10,9 +10,11 @@ import {
   Package,
   ReceiptText,
   Settings,
+  Sparkles,
   Sun,
   Truck,
   Users,
+  Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import React, { useEffect, useState } from "react";
@@ -119,6 +121,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <ReceiptText size={18} />,
       group: "finances",
       shortcut: "9",
+    },
+    {
+      id: "automation",
+      label: "Automatisation",
+      icon: <Zap size={18} />,
+      group: "outils",
+      description: "Relances et factures récurrentes",
     },
     {
       id: "emails",
@@ -234,8 +243,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen w-72 glass-strong text-brand-600 dark:text-brand-300 transition-all duration-700 flex flex-col border-r border-white/20 dark:border-white/5 lg:relative lg:z-auto
-          ${isMobileMenuOpen ? "translate-x-0 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.3)]" : "-translate-x-full lg:translate-x-0"}
+          fixed top-0 left-0 z-30 h-screen w-72 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-900 transition-all duration-700 flex flex-col lg:relative lg:z-auto
+          ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"}
         `}
         style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
         aria-label="Menu de navigation"
@@ -247,41 +256,24 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => setView("dashboard")}
             aria-label="Aller au tableau de bord"
           >
-            <div
-              className="relative group-hover:scale-110 transition-all duration-500"
-              aria-hidden="true"
-            >
-              <img
-                src="/logo.svg"
-                alt="Logo Micro-Gestion"
-                className="w-12 h-12 drop-shadow-lg"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).parentElement?.classList.add(
-                    "bg-linear-to-tr",
-                    "from-brand-600",
-                    "to-indigo-500",
-                    "text-white",
-                    "p-3.5",
-                    "rounded-2xl",
-                  );
-                  const icon = document.createElement("div");
-                  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>';
-                  (e.target as HTMLImageElement).parentElement?.appendChild(
-                    icon.firstChild!,
-                  );
-                }}
-              />
-              <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-[2px]" />
+            <div className="relative">
+              <div className="w-12 h-12 bg-linear-to-tr from-brand-600 to-brand-400 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 group-hover:scale-110 transition-all duration-300">
+                <Briefcase size={26} className="text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-neutral-900 rounded-lg flex items-center justify-center shadow-sm">
+                <Sparkles size={10} className="text-accent-500" />
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-black text-brand-950 dark:text-white tracking-tighter leading-[0.85] font-display uppercase italic">
-                Micro
-              </span>
-              <span className="text-[14px] font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase ml-0.5">
-                Gestion
-              </span>
-            </div>
+            {!isCompactMode && (
+              <div className="flex flex-col">
+                <span className="text-xl font-black tracking-tighter text-neutral-900 dark:text-white">
+                  Micro<span className="text-brand-600">Gestion</span>
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+                  Business OS 2026
+                </span>
+              </div>
+            )}
           </button>
         </div>
 
@@ -441,35 +433,35 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Theme Toggle & Compact Mode & Footer */}
-        <div className="p-4 mt-auto border-t border-brand-100/50 dark:border-brand-800/50 space-y-3">
+        <div className="p-4 mt-auto border-t border-neutral-100 dark:border-neutral-900 space-y-3">
           <div className="flex items-center gap-2">
             <button
               onClick={toggleDarkMode}
               aria-label={
                 isDarkMode ? "Passer au mode clair" : "Passer au mode sombre"
               }
-              className="flex-1 flex items-center justify-between p-4 rounded-3xl bg-brand-50 dark:bg-brand-900/50 hover:bg-brand-100 dark:hover:bg-brand-800 transition-colors group shadow-sm border border-brand-100 dark:border-brand-800"
+              className="flex-1 flex items-center justify-between p-4 rounded-3xl bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group shadow-sm border border-neutral-100 dark:border-neutral-900"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="p-2 bg-white dark:bg-brand-700 rounded-xl shadow-sm group-hover:rotate-12 transition-transform"
+                  className="p-2 bg-white dark:bg-neutral-800 rounded-xl shadow-sm group-hover:rotate-12 transition-transform"
                   aria-hidden="true"
                 >
                   {isDarkMode ? (
-                    <Sun size={18} className="text-amber-500" />
+                    <Sun size={18} className="text-accent-500" />
                   ) : (
                     <Moon size={18} className="text-brand-600" />
                   )}
                 </div>
                 <span
-                  className={`text-xs font-black uppercase tracking-widest text-brand-600 dark:text-brand-300 ${isCompactMode ? "hidden" : ""}`}
+                  className={`text-xs font-black uppercase tracking-widest text-neutral-600 dark:text-neutral-400 ${isCompactMode ? "hidden" : ""}`}
                 >
                   Thème
                 </span>
               </div>
               <div
                 className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${
-                  isDarkMode ? "bg-brand-600" : "bg-brand-200"
+                  isDarkMode ? "bg-brand-600" : "bg-neutral-300 dark:bg-neutral-700"
                 }`}
                 aria-hidden="true"
               >
@@ -485,11 +477,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={() => setIsCompactMode(!isCompactMode)}
               aria-label={isCompactMode ? "Mode normal" : "Mode compact"}
-              className="p-4 rounded-3xl bg-brand-50 dark:bg-brand-900/50 hover:bg-brand-100 dark:hover:bg-brand-800 transition-colors group shadow-sm border border-brand-100 dark:border-brand-800"
+              className="p-4 rounded-3xl bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group shadow-sm border border-neutral-100 dark:border-neutral-900"
               title={isCompactMode ? "Mode normal" : "Mode compact"}
             >
               <svg
-                className="w-5 h-5 text-brand-600 dark:text-brand-300 group-hover:rotate-12 transition-transform"
+                className="w-5 h-5 text-neutral-600 dark:text-neutral-400 group-hover:rotate-12 transition-transform"
                 fill={isCompactMode ? "currentColor" : "none"}
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -504,7 +496,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
 
-          <div className="flex items-center gap-4 p-4 bg-white/60 dark:bg-brand-900/60 rounded-4xl border border-white/50 dark:border-brand-800/50 shadow-sm group hover:shadow-md transition-all">
+          <div className="flex items-center gap-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-4xl border border-neutral-100 dark:border-neutral-900 shadow-sm group hover:shadow-md transition-all">
             <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 dark:from-white dark:to-neutral-100 flex items-center justify-center text-lg font-black text-white dark:text-brand-900 shadow-lg group-hover:scale-110 transition-transform">
               {userProfile.companyName?.[0] || "M"}
               {userProfile.companyName?.[1] || "G"}
@@ -512,14 +504,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div
               className={`overflow-hidden flex-1 ${isCompactMode ? "hidden" : ""}`}
             >
-              <p className="text-sm font-black text-brand-950 dark:text-white truncate tracking-tight uppercase">
+              <p className="text-sm font-black text-neutral-900 dark:text-white truncate tracking-tight uppercase">
                 {userProfile.companyName || "Espace Pro"}
               </p>
               <div className="flex items-center gap-1.5 mt-1">
                 <span
                   className={`w-2 h-2 rounded-full border border-white/20 ${isOffline ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"}`}
                 ></span>
-                <p className="text-[10px] font-black text-brand-500 dark:text-neutral-400 truncate uppercase tracking-widest flex items-center gap-1">
+                <p className="text-[10px] font-black text-neutral-500 dark:text-neutral-500 truncate uppercase tracking-widest flex items-center gap-1">
                   {isOffline ? "Hors ligne" : "En ligne"}
                 </p>
               </div>
@@ -558,18 +550,18 @@ const MenuItemButton: React.FC<MenuItemButtonProps> = ({
         interactive-item w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 group relative
         ${
           isActive
-            ? "bg-brand-600 text-white shadow-xl shadow-brand-500/30 scale-[1.02]"
-            : "hover:bg-brand-100/60 dark:hover:bg-brand-800/30 text-brand-500/90 dark:text-brand-400/90 hover:text-brand-950 dark:hover:text-brand-50"
+            ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20"
+            : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900/40 hover:text-brand-600 dark:hover:text-brand-400"
         }
       `}
       title={isCompact ? item.label : undefined}
     >
       {/* Icône */}
       <span
-        className={`flex-shrink-0 transition-all duration-500 ${
+        className={`shrink-0 transition-all duration-500 ${
           isActive
-            ? "scale-110 drop-shadow-sm"
-            : "group-hover:scale-110 group-hover:rotate-3"
+            ? "scale-110 text-white"
+            : "text-neutral-400 dark:text-neutral-500 group-hover:scale-110 group-hover:text-brand-600 group-hover:rotate-3"
         }`}
       >
         {React.isValidElement(item.icon)
@@ -590,7 +582,7 @@ const MenuItemButton: React.FC<MenuItemButtonProps> = ({
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className={`inline-flex items-center justify-center w-5 h-5 text-xs font-black rounded-full text-white ${
+          className={`inline-flex items-center justify-center px-1.5 py-0.5 min-w-5 text-[10px] font-black rounded-full text-white ${
             item.badge && typeof item.badge === "number" && item.badge > 0
               ? "bg-rose-500 shadow-lg shadow-rose-500/50"
               : "bg-brand-700"
@@ -600,19 +592,9 @@ const MenuItemButton: React.FC<MenuItemButtonProps> = ({
         </motion.span>
       )}
 
-      {/* Indicateur actif */}
-      {isActive && (
-        <motion.div
-          layoutId="active-nav-dot"
-          className={`rounded-full bg-accent-400 shadow-[0_0_12px_rgba(251,113,133,0.8)] ${
-            isCompact ? "w-2 h-2" : "w-1.5 h-1.5"
-          }`}
-        />
-      )}
-
       {/* Raccourci clavier (visible au hover) */}
       {item.shortcut && !isCompact && (
-        <span className="absolute right-2 opacity-0 group-hover:opacity-100 text-[10px] font-mono font-bold text-brand-500 dark:text-brand-400 transition-opacity">
+        <span className="absolute right-2 opacity-0 group-hover:opacity-100 text-[10px] font-mono font-bold text-neutral-400 dark:text-neutral-600 transition-opacity">
           alt+{item.shortcut}
         </span>
       )}

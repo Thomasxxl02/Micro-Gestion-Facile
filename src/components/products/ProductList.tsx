@@ -29,7 +29,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 }) => {
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-brand-100 dark:border-slate-800">
+      <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-900 rounded-3xl border-2 border-dashed border-brand-100 dark:border-gray-800">
         <div className="p-4 bg-brand-50 dark:bg-brand-900/30 rounded-full mb-4">
           <Package size={40} className="text-brand-300 dark:text-brand-700" />
         </div>
@@ -49,7 +49,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         <div
           key={product.id}
           onClick={() => onEdit(product)}
-          className="group bg-white dark:bg-slate-800 p-5 rounded-2xl border border-brand-100 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-brand-500/5 relative"
+          className="group bg-white dark:bg-gray-800 p-5 rounded-2xl border border-brand-100 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-500 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-brand-500/5 relative"
         >
           <div className="flex justify-between items-start mb-4">
             <div
@@ -67,7 +67,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={(e) => onEdit(product)}
+                onClick={() => onEdit(product)}
                 className="p-2 text-brand-400 hover:text-brand-600 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800 rounded-lg transition-colors"
                 aria-label="Modifier"
               >
@@ -118,12 +118,12 @@ export const ProductList: React.FC<ProductListProps> = ({
             <h4 className="font-bold text-lg text-brand-900 dark:text-white group-hover:text-brand-600 transition-colors line-clamp-1">
               {product.name}
             </h4>
-            <p className="text-sm text-brand-500 dark:text-brand-400 line-clamp-2 mt-1 min-h-[2.5rem]">
+            <p className="text-sm text-brand-500 dark:text-brand-400 line-clamp-2 mt-1 min-h-10">
               {product.description || "Aucune description"}
             </p>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-brand-50 dark:border-slate-700 flex justify-between items-end">
+          <div className="mt-6 pt-4 border-t border-brand-50 dark:border-gray-700 flex justify-between items-end">
             <div>
               <div className="text-xs text-brand-400 font-medium mb-1 uppercase tracking-tighter">
                 Prix unitaire

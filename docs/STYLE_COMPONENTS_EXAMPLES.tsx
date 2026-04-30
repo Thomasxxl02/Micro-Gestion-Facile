@@ -15,19 +15,24 @@ import { TrendingUp, AlertCircle } from "lucide-react";
 export const FinancialCard: React.FC<{
   title: string;
   amount: string;
-  trend: "profit" | "loss" | "neutral";
+  trend: "profit" | "loss" | "neutral" | "pending";
   icon?: React.ReactNode;
 }> = ({ title, amount, trend, icon }) => {
   const trendClasses = {
     profit: "financial-profit",
     loss: "financial-loss",
     neutral: "financial-neutral",
+    pending: "financial-pending",
   };
 
   return (
     <div className={`financial-stat ${trendClasses[trend]} group`}>
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-caption">{title}</h3>
+        <div className="shrink-0">{icon}</div>
+        <div className="grow">
+          <h3 className="text-caption">{title}</h3>
+          <p className="text-2xl font-black tracking-tighter">{amount}</p>
+        </div>
         {icon || <TrendingUp className="w-5 h-5 opacity-60" />}
       </div>
       <p className="text-lead">{amount}</p>
@@ -55,8 +60,8 @@ export const Alert: React.FC<{
 
   return (
     <div className={`alert ${alertClasses[type]}`}>
-      <div className="flex-shrink-0">{icon}</div>
-      <div className="flex-grow">
+      <div className="shrink-0">{icon}</div>
+      <div className="grow">
         <h3 className="font-semibold">{title}</h3>
         <p className="text-sm opacity-90 mt-1">{message}</p>
       </div>

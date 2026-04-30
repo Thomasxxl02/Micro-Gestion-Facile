@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { AddTransactionForm } from "../../../components/accounting/AddTransactionForm";
 
@@ -26,8 +26,6 @@ const mockSuppliers = [
   { id: "1", name: "Supplier One", category: "IT" },
   { id: "2", name: "Supplier Two", category: "Marketing" },
 ];
-
-const mockOnAddExpense = vi.fn();
 
 const mockProps = {
   isEditing: false,

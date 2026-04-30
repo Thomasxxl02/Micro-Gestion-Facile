@@ -40,4 +40,5 @@ export type ViewState =
   | "settings"
   | "ai_assistant"
   | "bank_reconciliation"
-  | "vat_dashboard";
+  | "vat_dashboard"
+  | "automation";

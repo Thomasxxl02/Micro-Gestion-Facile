@@ -51,7 +51,7 @@ const UsageBar: React.FC<UsageBarProps> = ({
     ? "bg-red-500"
     : isNear
       ? "bg-amber-500"
-      : "bg-emerald-500";
+      : "bg-sky-500";
   const width = `${Math.min(100, percent).toFixed(1)}%`;
 
   return (

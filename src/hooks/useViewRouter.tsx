@@ -45,6 +45,9 @@ const BankReconciliationManager = React.lazy(
 const VATDashboardManager = React.lazy(
   () => import("../components/VATDashboardManager"),
 );
+const AutomationManager = React.lazy(
+  () => import("../components/AutomationManager"),
+);
 
 export type ViewType =
   | "dashboard"
@@ -58,7 +61,8 @@ export type ViewType =
   | "settings"
   | "ai_assistant"
   | "bank_reconciliation"
-  | "vat_dashboard";
+  | "vat_dashboard"
+  | "automation";
 
 interface ViewRouterProps {
   currentView: ViewType;
@@ -277,6 +281,9 @@ export const useViewRouter = ({
             userProfile={syncData.userProfile ?? DEFAULT_USER_PROFILE}
           />
         );
+
+      case "automation":
+        return <AutomationManager />;
 
       default:
         return (

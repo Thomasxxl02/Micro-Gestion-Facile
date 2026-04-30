@@ -3,16 +3,17 @@ import { Calculator, LoaderCircle as Loader2, Plus } from "lucide-react";
 import { FormFieldValidated } from "../FormFieldValidated";
 import Combobox from "../Combobox";
 import { type Expense, type Supplier } from "../../types";
+import { type ValidationResult } from "../../lib/zod-schemas";
 
 interface AddTransactionFormProps {
   isEditing: boolean;
   isAnalyzing: boolean;
   newExpense: Partial<Expense>;
-  errors: any;
-  touched: any;
+  errors: Partial<Record<keyof Expense, ValidationResult | undefined>>;
+  touched: Partial<Record<keyof Expense, boolean>>;
   expenseCategories: string[];
   suppliers: Supplier[];
-  handleFormChange: (field: keyof Expense) => (value: any) => void;
+  handleFormChange: (field: keyof Expense) => (value: string | number | boolean | null) => void;
   setNewExpense: React.Dispatch<React.SetStateAction<Partial<Expense>>>;
   handleAddExpense: (e: React.SyntheticEvent<HTMLFormElement>) => void;
   setShowForm: (show: boolean) => void;

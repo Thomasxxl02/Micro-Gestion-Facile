@@ -3,12 +3,13 @@ import { ContactFields, AddressFields } from "../EntityFormFields";
 import { FormFieldValidated } from "../FormFieldValidated";
 import { TextAreaField } from "../FormFields";
 import { type Client } from "../../types";
+import { type ValidationResult } from "../../lib/zod-schemas";
 
 interface ClientFormProps {
   validatedData: Partial<Client>;
-  validationErrors: any;
-  touchedFields: any;
-  handleFormChange: (field: keyof Client) => (value: any) => void;
+  validationErrors: Partial<Record<keyof Client, ValidationResult | undefined>>;
+  touchedFields: Partial<Record<keyof Client, boolean>>;
+  handleFormChange: (field: keyof Client) => (value: string | number | boolean | null) => void;
 }
 
 export const ClientForm: React.FC<ClientFormProps> = ({

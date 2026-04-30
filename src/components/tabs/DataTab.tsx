@@ -4,6 +4,8 @@
  * ✅ Nettoyage & gouvernance des données
  */
 
+import { GDPRHealthReport } from "../GDPRHealthReport";
+import { P2PSync } from "../P2PSync";
 import {
   RenderArchiveAssistant,
   RenderMergeAssistant,
@@ -239,14 +241,14 @@ export const DataTab: React.FC<DataTabProps> = ({
   const storageColor = React.useMemo(() => {
     if (estimatedSizeKB > 40_960) return "text-red-500";
     if (estimatedSizeKB > 20_480) return "text-amber-500";
-    return "text-emerald-500";
+    return "text-sky-500";
   }, [estimatedSizeKB]);
 
   /** Couleur d'alerte pour la barre de stockage */
   const storageBarColor = React.useMemo(() => {
     if (estimatedSizeKB > 40_960) return "bg-red-500";
     if (estimatedSizeKB > 20_480) return "bg-amber-500";
-    return "bg-emerald-400";
+    return "bg-sky-400";
   }, [estimatedSizeKB]);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -257,7 +259,7 @@ export const DataTab: React.FC<DataTabProps> = ({
       return { color: "bg-amber-500 animate-pulse", label: "Synchro..." };
     if (isFirebaseConnected)
       return {
-        color: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+        color: "bg-sky-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
         label: "Connecté",
       };
     return { color: "bg-red-400", label: "Non connecté" };
@@ -1133,6 +1135,12 @@ export const DataTab: React.FC<DataTabProps> = ({
         </p>
       </div>
 
+      {/* Synchronisation Multi-appareils (P2P) */}
+      {!isFirebaseConnected && <P2PSync />}
+
+      {/* Rapport de Santé GDPR */}
+      <GDPRHealthReport />
+
       {/* Cloud Synchronization */}
       <div className="bg-linear-to-br from-brand-50 to-white dark:from-brand-900/40 dark:to-brand-800/20 rounded-4xl p-8 shadow-sm border border-brand-100 dark:border-brand-700">
         <div className="flex items-center justify-between mb-6">
@@ -1152,12 +1160,12 @@ export const DataTab: React.FC<DataTabProps> = ({
           </div>
         </div>
         {isFirebaseConnected && connectedEmail && (
-          <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800/50">
+          <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 rounded-2xl border border-sky-200 dark:border-sky-800/50">
             <Mail
               size={13}
-              className="text-emerald-600 dark:text-emerald-400 shrink-0"
+              className="text-sky-600 dark:text-sky-400 shrink-0"
             />
-            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 truncate">
+            <p className="text-xs font-medium text-sky-700 dark:text-sky-300 truncate">
               {connectedEmail}
             </p>
           </div>

@@ -3,10 +3,11 @@ import type { Supplier } from "../../types";
 import { AddressFields, ContactFields } from "../EntityFormFields";
 import { FormFieldValidated } from "../FormFieldValidated";
 import { TextAreaField } from "../FormFields";
+import type { ValidationResult } from "../../lib/zod-schemas";
 
 interface SupplierFormProps {
   formData: Partial<Supplier>;
-  validationErrors: Record<string, string>;
+  validationErrors: Record<string, ValidationResult | undefined>;
   touchedFields: Record<string, boolean>;
   onFormChange: (data: Partial<Supplier>) => void;
 }
@@ -28,7 +29,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           label="Nom de l'entreprise"
           value={formData.name || ""}
           onChange={handleValueChange("name")}
-          error={validationErrors.name as any}
+          error={validationErrors.name}
           touched={touchedFields.name}
           placeholder="Ex: Leroy Merlin, AWS, etc."
           required
@@ -37,7 +38,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           label="Catégorie"
           value={formData.category || ""}
           onChange={handleValueChange("category")}
-          error={validationErrors.category as any}
+          error={validationErrors.category}
           touched={touchedFields.category}
           placeholder="Ex: Fournitures, Cloud, Publicité..."
         />
@@ -54,8 +55,8 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           onNameChange={handleValueChange("contactName")}
           onEmailChange={handleValueChange("email")}
           onPhoneChange={handleValueChange("phone")}
-          validationErrors={validationErrors as any}
-          touchedFields={touchedFields as any}
+          validationErrors={validationErrors}
+          touchedFields={touchedFields}
         />
       </div>
 
@@ -71,15 +72,15 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           onPostalCodeChange={() => {}}
           onCityChange={() => {}}
           showPostalCity={false}
-          validationErrors={validationErrors as any}
-          touchedFields={touchedFields as any}
+          validationErrors={validationErrors}
+          touchedFields={touchedFields}
         />
         <div className="mt-4">
           <FormFieldValidated
             label="Numéro SIRET"
             value={formData.siret || ""}
             onChange={handleValueChange("siret")}
-            error={validationErrors.siret as any}
+            error={validationErrors.siret}
             touched={touchedFields.siret}
             placeholder="14 chiffres"
           />

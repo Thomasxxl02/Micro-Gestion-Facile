@@ -2,9 +2,7 @@ import {
   CircleAlert as AlertCircle,
   Download,
   File as Filter,
-  Package,
   Plus,
-  RotateCcw,
   Search,
   ArrowUpWideNarrow as SortAsc,
   Upload,
@@ -345,65 +343,66 @@ const ProductManager: React.FC<ProductManagerProps> = ({
   ]);
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto relative pb-10">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-brand-900 dark:text-white tracking-tight font-display text-gradient">
+    <div className="space-y-8 animate-fade-in pb-10">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black text-brand-900 dark:text-white font-display tracking-tight">
             Catalogue
-          </h1>
-          <p className="text-brand-500 dark:text-brand-400 mt-1">
+          </h2>
+          <p className="text-neutral-500 dark:text-neutral-400 font-medium">
             Gérez vos produits et prestations de service.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
-          {/* Archive Toggle */}
-          <div className="bg-white dark:bg-brand-900 p-1.5 rounded-2xl shadow-sm border border-brand-200 dark:border-brand-800 flex gap-1">
-            <button
-              onClick={() => setShowArchived(false)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${!showArchived ? "btn-primary" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
-            >
-              Actifs
-            </button>
-            <button
-              onClick={() => setShowArchived(true)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${showArchived ? "btn-primary" : "text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800"}`}
-            >
-              Archivés
-            </button>
-          </div>
-
-          <div className="flex gap-2">
-            <label
-              className="btn-secondary px-4 py-2.5 cursor-pointer"
-              aria-label="Importer depuis un CSV"
-              title="Importer depuis un CSV"
-            >
-              <Upload size={18} aria-hidden="true" />
-              <span className="hidden sm:inline">Import</span>
-              <input
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={(e) => {
-                  void importCSV(e);
-                }}
-              />
-            </label>
-            <button
-              onClick={exportCSV}
-              aria-label="Exporter en CSV"
-              className="btn-secondary px-4 py-2.5"
-            >
-              <Download size={18} aria-hidden="true" />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <button onClick={openCreate} className="btn-primary px-6 py-2.5">
-              <Plus size={18} />
-              Nouveau
-            </button>
-          </div>
+        <div className="flex items-center gap-3">
+          <label className="btn-secondary cursor-pointer">
+            <Upload size={18} />
+            <span className="hidden sm:inline">Importer</span>
+            <input
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => {
+                void importCSV(e);
+              }}
+            />
+          </label>
+          <button
+            onClick={exportCSV}
+            className="btn-secondary"
+          >
+            <Download size={18} />
+            <span className="hidden sm:inline">Exporter</span>
+          </button>
+          <button onClick={openCreate} className="btn-primary">
+            <Plus size={20} />
+            <span>Nouveau Produit</span>
+          </button>
         </div>
+      </header>
+
+      {/* Navigation Interne - Filtre Archivés Modern */}
+      <div className="flex items-center gap-4 bg-white/50 dark:bg-neutral-900/50 p-1.5 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 w-fit backdrop-blur-md">
+        <button
+          onClick={() => setShowArchived(false)}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            !showArchived
+              ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20"
+              : "text-neutral-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20"
+          }`}
+        >
+          Actifs
+        </button>
+        <button
+          onClick={() => setShowArchived(true)}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            showArchived
+              ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20"
+              : "text-neutral-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20"
+          }`}
+        >
+          Archivés
+        </button>
       </div>
 
       <ProductStats

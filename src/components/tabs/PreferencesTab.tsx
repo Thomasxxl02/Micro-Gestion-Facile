@@ -81,18 +81,18 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
   const applyPreset = (presetName: "expert" | "artisan" | "creative") => {
     const presets = {
       expert: {
-        primaryColor: "#102a43",
-        secondaryColor: "#486581",
+        primaryColor: "#0f172a", // Slate 900
+        secondaryColor: "#64748b", // Slate 500
         fontFamily: "Inter",
       },
       artisan: {
-        primaryColor: "#854d0e",
-        secondaryColor: "#a16207",
-        fontFamily: "Lora",
+        primaryColor: "#451a03", // Amber 950
+        secondaryColor: "#92400e", // Amber 800
+        fontFamily: "Merriweather",
       },
       creative: {
-        primaryColor: "#7c3aed",
-        secondaryColor: "#db2777",
+        primaryColor: "#4c1d95", // Violet 900
+        secondaryColor: "#7c3aed", // Violet 600
         fontFamily: "Montserrat",
       },
     };
@@ -100,8 +100,8 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
     const config = presets[presetName];
     // Also apply global color theme
     const themeMap = {
-      expert: "ocean",
-      artisan: "emerald",
+      expert: "gray",
+      artisan: "amber",
       creative: "royal",
     };
     uiState.setColorTheme(themeMap[presetName]);
@@ -205,7 +205,7 @@ export const PreferencesTab: React.FC<PreferencesTabProps> = ({
               onChange={(val) => uiState.setColorTheme(val)}
               options={[
                 { value: "default", label: "🏳️ Défaut (Indigo & Rose)" },
-                { value: "emerald", label: "🌿 Émeraude (Nature & Artisan)" },
+                { value: "gray", label: "🌿 Émeraude (Nature & Artisan)" },
                 { value: "ocean", label: "🌊 Océan (Bleu & Expert)" },
                 { value: "royal", label: "👑 Royal (Violet & Prestige)" },
               ]}

@@ -62,10 +62,10 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
   },
   validation: {
     icon: AlertCircle,
-    bgColor: "bg-orange-50 dark:bg-orange-900/20",
-    borderColor: "border-orange-500",
-    textColor: "text-orange-900 dark:text-orange-100",
-    iconColor: "text-orange-500",
+    bgColor: "bg-gray-50 dark:bg-gray-900/20",
+    borderColor: "border-gray-500",
+    textColor: "text-gray-900 dark:text-gray-100",
+    iconColor: "text-gray-500",
     suggestion: "Corrigez les erreurs et réessayez",
   },
   security: {
